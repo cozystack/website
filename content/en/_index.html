@@ -1,64 +1,65 @@
 ---
-title: Cozystack - Free PaaS platform and framework for building clouds
+title: "Cozystack: Free and open source PaaS framework for building clouds"
 description: > 
-  With Cozystack, you can transform your bunch of servers into an intelligent system with a simple REST API for spawning Kubernetes clusters, Database-as-a-Service, virtual machines, load balancers, HTTP caching services, and other services with ease.
+  Transform a set of bare metal servers into an intelligent system with a simple REST API for spawning Kubernetes clusters, Databases-as-a-Service, virtual machines, load balancers, HTTP caching services, and other services with ease.
 
-  You can use Cozystack to build your own cloud or to provide a cost-effective development environments.
+  Use Cozystack to build your own cloud or provide cost-effective development environments.
 benefits:
   - title: API-first
     icon: fas fa-code
     description: >
-      Cozystack is based on Kubernetes and involves close interaction with its API. We don’t aim to completely hide the all elements behind a pretty UI or any sort of customizations; instead, we provide a standard interface and teach users how to work with basic primitives.
-  - title: Standardization and unification
+      Cozystack is based on Kubernetes and involves close interaction with its API. It does not aim to completely hide the all elements behind a pretty UI or any sort of customizations. Instead, it provides a standard interface and educates users to work with basic primitives.
+  - title: Standardization and Unification
     icon: fas fa-certificate
     description: >
       All components of the platform are based on proven open source tools and technologies which are widely known in the industry.
-      We strive to use the most standard and correct approaches, as a result the whole platform is very simple and have no vendor lock-in.
-  - title: Collaborate, not compete
+      We strive to use the most well-established and proven approaches, making the whole platform very simple and avoiding vendor lock-in.
+  - title: Collaborate, not Compete
     icon: fas fa-handshake
     description: >
      We are proud of our community and closely interact with projects around it.
-     Thus if a feature being developed for the platform could be useful to a upstream project,
-     it should be contributed to upstream project, rather than being implemented within the platform.
+     If we build a platform feature that can be useful in an upstream project,
+     we prefer to contribute it to that project, rather than keep it in the platform.
 features:
-  - title: Easy to install
+  - title: Easy to Install
     icon: fas fa-wrench
     description: >
       With [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/), we provide the ultimate easy installation method,
-      allowing you to bootstrap Cozystack using PXE or ISO method on a set of your servers out-of-nothing in a bare data center.
-      Using immutable OS allows us to maintain system consistency and ensure that everything will work as expected.
-  - title: Easy to integrate
+      allowing you to bootstrap Cozystack using PXE or ISO methods on servers in a bare data center.
+      Using immutable OS helps maintain system consistency and ensure that everything works as expected.
+  - title: Easy to Integrate
     icon: fas fa-plug
     description: >
       We provide a native Kubernetes RESTful API, widely recognized for its declarativity.
       Therefore, to integrate with your billing, it's enough to instruct your system to submit a specific YAML manifest defining the desired service to the Kubernetes API. 
       Cozystack will do the rest of the work for you.
-  - title: Easy to extend
+  - title: Easy to Extend
     icon: fas fa-up-right-and-down-left-from-center
     description: >
-      Each package in the platform consists of a set of YAML files. Therefore, anyone with some familiarity with Kubernetes primitives can modify or expand the platform. Delivery of packages to the system is handled by FluxCD, a well-known and widely used tool in the community.
-  - title: Cost efficiency and high performance
+      Each package in the platform consists of a set of YAML files. Therefore, everyone having some familiarity with Kubernetes primitives can modify or expand the platform. Package delivery is reliably handled by FluxCD, a well-known and widely used tool.
+  - title: High Performance, Low Overhead
     icon: fas fa-gauge-high
     description: >
       We care about performance. That's why we adopt the most performant technologies balancing stability and functionality.
-      Moreover, our unique tenant model enables efficient allocation of cloud resources for the control plane, ensuring cost-efficiency and the necessary level of security
-  - title: Monitoring included
+      Moreover, our unique tenant model enables efficient allocation of cloud resources for the control plane, ensuring cost-efficiency and the necessary level of security.
+  - title: Built-in Monitoring & Alerts
     icon: fas fa-area-chart
     description: >
       Each instance of each service is accompanied by a set of pre-configured dashboards and alerts.
       You can create separate monitoring hubs for every tenant or combine them into one.
-  - title: Dashboard
+  - title: Built-In UI for App Management
     icon: fas fa-window-maximize
     description: >
-      While the primary goal of the platform is to provide a beautiful API, it also has a dashboard for deploying applications. The Web UI facilitates a quick dive into the platform and provides a visual demonstration of its capabilities.
+      While the primary goal of the platform is to provide a beautiful API, it also has a dashboard for deploying applications.
+      The Web UI facilitates a quick dive into the platform and provides a visual demonstration of its capabilities.
 ---
 
 <div class="hero-gitops">
-  {{% blocks/hero title="Cozystack: Free PaaS platform and framework for building clouds" color="primary"
-  height="full" link_title="Get started" link_url="./docs/getting-started/first-deployment/" %}}
-  With Cozystack, you can transform your bunch of servers into an intelligent system with a simple REST API for spawning Kubernetes clusters, Database-as-a-Service, virtual machines, load balancers, HTTP caching services, and other services with ease.
+  {{% blocks/hero title="Cozystack: Free and open source PaaS framework for building clouds" color="primary"
+  height="full" link_title="Get started" link_url="/docs/get-started/" %}}
+  Transform a set of bare metal servers into an intelligent system with a simple REST API for spawning Kubernetes clusters, Databases-as-a-Service, virtual machines, load balancers, HTTP caching services, and other services with ease.
 
-  You can use Cozystack to build your own cloud or to provide a cost-effective development environments.
+  Use Cozystack to build your own cloud or provide cost-effective development environments.
 
   {{% /blocks/hero %}}
 
@@ -80,7 +81,7 @@ features:
     Community
   </h2>
 
-  <p>We deeply appreciate the steadfast support and contributions from our community towards the growth of Cozystack. Join our community and become part of our journey.</p>
+  <p>We deeply appreciate the steadfast support and contributions from our community towards the growth of Cozystack.<br/> Join our community and become part of our journey.</p>
 
   {{< /blocks/lead >}}
 
