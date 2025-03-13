@@ -91,7 +91,7 @@ outputs:
 
 params:
   description: Free and Open Source PaaS-platform for seamless management of virtual machines, managed Kubernetes, and Databases-as-a-Service
-  copyright: Ænix,
+  copyright: The Cozystack authors
   github_repo: https://github.com/cozystack/website
   github_branch: main
   github_project_repo: https://github.com/cozystack/cozystack
@@ -113,11 +113,11 @@ params:
   #    url: https://v2-1.docs.fluxcd.io
   #  - version: "v2.0"
   #    url: https://v2-0.docs.fluxcd.io
-  #logos:
+  logos:
   #  navbar: flux-horizontal-white.png
   #  hero: flux-horizontal-color.png
   #  footer: flux-stacked-white.png
-  #  cncf: cncf-color.png
+    cncf: cncf-color.svg
   ui:
     # Enable to show the side bar menu in its compact state.
     sidebar_menu_compact: true
