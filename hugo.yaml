@@ -151,7 +151,7 @@ params:
         icon: fa fa-rss
         desc: Subscribe to the RSS feed of our blog!
       - name: Support
-        url: https://aenix.io/contact-us/
+        url: https://cozystack.io/support/
         icon: fas fa-comments
         desc: Get enterprise-grade support.
     # Developer relevant links. These will show up on right side of footer and in the community page if you have one.
