@@ -91,7 +91,7 @@ outputs:
 
 params:
   description: Free and Open Source PaaS-platform for seamless management of virtual machines, managed Kubernetes, and Databases-as-a-Service
-  copyright: The Cozystack authors
+  copyright: Cozystack a Series of LF Projects, LLC
   github_repo: https://github.com/cozystack/website
   github_branch: main
   github_project_repo: https://github.com/cozystack/cozystack
