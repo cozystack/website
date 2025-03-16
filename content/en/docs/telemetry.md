@@ -1,7 +1,7 @@
 ---
 title: "Telemetry"
 linkTitle: "Telemetry"
-description: "Cozystack Telememetry"
+description: "Cozystack Telemetry"
 weight: 60
 ---
 
