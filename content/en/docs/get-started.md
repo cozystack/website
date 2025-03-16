@@ -107,7 +107,7 @@ Create namespace and install Cozystack system components:
 ```bash
 kubectl create ns cozy-system
 kubectl apply -f cozystack-config.yaml
-kubectl apply -f https://github.com/cozystack/cozystack/raw/v0.27.0/manifests/cozystack-installer.yaml
+kubectl apply -f https://github.com/cozystack/cozystack/raw/v0.28.0/manifests/cozystack-installer.yaml
 ```
 
 {{% alert color="warning" %}}
