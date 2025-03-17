@@ -338,117 +338,62 @@ windows.2k25.virtio | Microsoft Windows Server 2025 (virtio)
 
 ## Virtual Routers
 
-Since version v0.27.0, Cozystack provides a virtual routers functionality.
-This feature allows you to create a virtual router that can be used to route traffic between different networks.
-Virtual router backed by a virtual machine instance with a special configuration.
-
-
-### Virtual Router Creation
-
-You can create a virtual machine instance using standard `vm-instance` and `virtual-machine` packages.
-Later, you need to contact your administrator to enable the virtual router functionality for this instance.
-
-### Enabling Virtual Router functionality for the Tenant
-
-These actions should be done by Cozystack administrator and are not available for end-users yet.
-
-First, you need to disable anti-spoofiging protection for the vm-instance:
-
-```
-kubectl patch virtualmachines.kubevirt.io virtual-machine-example --type=merge -p '{"spec":{"template":{"metadata":{"annotations":{"ovn.kubernetes.io/port_security": "false"}}}}}'
-```
-
-Then restart the virtual machine:
-
-```
-virtctl stop virtual-machine-example
-virtctl start virtual-machine-example
-```
-
-Get IP-address for your virtual router:
-```
-kubectl get vmi
-```
-
-After that you can configure custom routes for the tenant namespace:
-
-Run
-
-```
-kubectl edit namespace tenant-example
-```
-
-
-and add annotation as following:
-```
-ovn.kubernetes.io/routes: |
-  [{
-    "dst": "10.10.13.0/24",
-    "gw": "10.244.3.12"
-  }]
-```
-
-Custom routes will be applied to all pods in the tenant namespace.
-
-
-## Virtual Routers
-
-Starting with version v0.27.0, Cozystack provides virtual router functionality.
-This feature allows you to create a virtual router backed by a specialized virtual machine instance.
+Starting with version [v0.27.0](https://github.com/cozystack/cozystack/releases/tag/v0.27.0),
+Cozystack can deploy virtual routers (also known as "router appliances" or "middlebox appliances").
+This feature allows you to create a virtual router based on a virtual machine instance.
 The virtual router can route traffic between different networks.
 
-## Creating a Virtual Router
+### Creating a Virtual Router
 
-- **Create a VM Instance**
-  Use the standard vm-instance and virtual-machine packages to create a virtual machine instance.
-- **Request Virtual Router Enablement**
-  After you have created the VM instance, contact your administrator to enable the virtual router functionality for that instance.
+Creating a virtual router requires a Cozystack administrator account.
 
-## Enabling Virtual Router Functionality for a Tenant
+1.  **Create a VM Instance**<br/>
+    Use the standard `vm-instance` and `virtual-machine` packages to create a virtual machine instance.
+    
+1.  **Disable Anti-Spoofing Protection**<br/>
+    To act as a virtual router, the VM instance should have anti-spoofing protection disabled:
 
-The following steps must be performed by a Cozystack administrator. They are not currently available to end users.
-- **Disable Anti-Spoofing Protection**
-  Run the following command to disable anti-spoofing protection for the VM instance:
+    ```bash
+    kubectl patch virtualmachines.kubevirt.io virtual-machine-example --type=merge \
+        -p '{"spec":{"template":{"metadata":{"annotations":{"ovn.kubernetes.io/port_security": "false"}}}}}'
+    ```
 
-```bash
-kubectl patch virtualmachines.kubevirt.io virtual-machine-example --type=merge -p '{"spec":{"template":{"metadata":{"annotations":{"ovn.kubernetes.io/port_security": "false"}}}}}'
-```
+1.  **Restart the Virtual Machine**
 
-- **Restart the Virtual Machine**
+    ```bash
+    virtctl stop virtual-machine-example
+    virtctl start virtual-machine-example
+    ```
 
-```bash
-virtctl stop virtual-machine-example
-virtctl start virtual-machine-example
-```
+1.  **Retrieve the IP Address of the VM**
 
-- **Retrieve the VM IP Address**
+    ```bash
+    kubectl get vmi
+    ```
 
-```bash
-kubectl get vmi
-```
+    The output will have a line with the new VM's IP address:
 
-The output would be similar to the following:
-```console
-NAME                      AGE     PHASE     IP            NODENAME        READY
-virtual-machine-example   3d4h    Running   10.244.8.56   gld-csxhk-003   True
-```
+    ```console
+    NAME                      AGE     PHASE     IP            NODENAME        READY
+    virtual-machine-example   3d4h    Running   10.244.8.56   gld-csxhk-003   True
+    ```
 
-- **Configure Custom Routes**
+1.  **Configure Custom Routes for a Tenant**<br/>
+    Edit the tenant namespace:
 
-Edit the tenant namespace:
+    ```bash
+    kubectl edit namespace tenant-example
+    ```
 
-```bash
-kubectl edit namespace tenant-example
-```
+    Add the following annotation using the router IP you found earlier as `gw`
+    and the subnet mask for the router to handle as `dst`:
+    
+    ```yaml
+    ovn.kubernetes.io/routes: |
+      [{
+        "gw": "10.244.8.56",
+        "dst": "10.10.13.0/24"
+      }]
+    ```
 
-Add the following annotation:
-
-```yaml
-ovn.kubernetes.io/routes: |
-  [{
-    "dst": "10.10.13.0/24",
-    "gw": "10.244.8.56"
-  }]
-```
-
-These custom routes will be applied to all pods within the tenant namespace.
+These custom routes will now be applied to all pods within the tenant namespace.
