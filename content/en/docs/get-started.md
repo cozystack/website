@@ -5,27 +5,27 @@ description: "Get Started with Cozystack."
 weight: 30
 ---
 
-This tutorial shows you how to bootstrap Cozystack on a few servers in your infrastructure
+This tutorial shows how to bootstrap Cozystack on a few servers in your infrastructure.
 
 ## Before you begin
 
 ![Cozystack deployment](/img/cozystack-deployment.png)
 
-You need 3 physical servers or VMs with nested virtualisation:
+Deploying Cozystack requires three physical servers or VMs with nested virtualization, having these resources:
 
 ```yaml
 CPU: 4 cores
 CPU model: host
-RAM: 8-16 GB
+RAM: 16 GB
 HDD1: 32 GB
 HDD2: 100GB (raw)
 ```
 
-And in case of PXE installation one management VM or physical server connected to the same network.
-Any Linux system installed on it (eg. Ubuntu should be enough)
+A PXE installation requires an extra management VM or physical server connected to the same network,
+with any Linux system installed on it (for example, Ubuntu should be enough).
 
 {{% alert color="warning" %}}
-:warning: This VM should support `x86-64-v2` architecture, the most probably you can achieve this by setting cpu model to `host`
+:warning: This VM should support `x86-64-v2` architecture, which most probably can be achived by setting CPU model to `host`
 {{% /alert %}}
 
 ## Objectives
@@ -44,37 +44,38 @@ Cozystack.
 
 ### Talos Linux Installation
 
-Follow one of the guide to boot your machines with Talos Linux image:
+Boot your machines with Talos Linux image in one of these ways:
 
-- [**PXE**](/docs/talos/installation/pxe/) - for installation using temporary DHCP and PXE servers running as Docker containers.
-- [**ISO**](/docs/talos/installation/iso/) - for installation using ISO-file.
-- [**Hetzner**](/docs/talos/installation/hetzner/) - for installation on Hetzner servers.
+- [Install using temporary DHCP and PXE servers](/docs/talos/installation/pxe/) running as Docker containers.
+- [Install using ISO-file](/docs/talos/installation/iso/).
+- [Install on Hetzner servers](/docs/talos/installation/hetzner/).
 
 
 ### Bootstrap Talos cluster
 
-Follow the guide to bootstrap your Talos Linux cluster using one of the following tools:
+Bootstrap your Talos Linux cluster using one of the following tools:
 
-- [**talos-bootstrap**](/docs/talos/configuration/talos-bootstrap/) - for a quick walkthrough
-- [**Talm**](/docs/talos/configuration/talm/) - for declarative cluster management
+- [**talos-bootstrap**](/docs/talos/configuration/talos-bootstrap/), for a quick walkthrough.
+- [**Talm**](/docs/talos/configuration/talm/), offering declarative cluster management.
 
 ### Other Kubernetes distributions
 
 If you bootstrap your Talos cluster in your own way, or even try to use a different Kubernetes distribution, make sure
-to implement all settings from the guides above. The most important settings are:
+to apply all settings from the guides above.
+These are the most important settings:
 
-* Any CNI plugin must be disabled, as Cozystack will install its own.
+* All CNI plugins must be disabled, as Cozystack will install its own plugin.
 * Kubernetes cluster domain must be set to `cozy.local`.
-* Listen address of some Kubernetes components must be changed from localhost to a network-reachable address.
-* Kubernetes API server must be reachable on localhost.
+* Listening address of some Kubernetes components must be changed from `localhost` to a network-reachable address.
+* Kubernetes API server must be reachable on `localhost`.
 
 
 ## Install Cozystack
 
-write config for cozystack, refer to [bundles](/docs/bundles/) documentation for configuration parameters
+Write a config for Cozystack, referring to the [bundles documentation](/docs/bundles/) for configuration parameters.
 
 {{% alert color="warning" %}}
-:warning: please make sure that you written the same setting specified in `patch.yaml` and `patch-controlplane.yaml` files.
+:warning: make sure that to have the same settings specified in `patch.yaml` and `patch-controlplane.yaml` files.
 {{% /alert %}}
 
 ```yaml
