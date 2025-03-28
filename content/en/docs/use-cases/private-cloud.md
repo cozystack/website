@@ -19,4 +19,4 @@ Thanks to the standardization of the approach to deploying applications, you can
 
 Here you can find reference repository to learn how to configure Cozystack services using GitOps approach:
 
-- https://github.com/cozystack/cozystack-gitops-example
+- https://github.com/aenix-io/cozystack-gitops-example
