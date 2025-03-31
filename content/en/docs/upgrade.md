@@ -35,10 +35,14 @@ kind: ConfigMap
 ```
 And add missing key: value data.
 
-### Apply new version
+### Apply new manifest file
+
+Each Cozystack release includes a manifest file `cozystack-installer.yml`.
+Download and apply it, or apply directly from GitHub:
 ```bash
+# note the 'v' before version numbers
 version=vX.Y.Z
-kubectl apply -f https://github.com/cozystack/cozystack/raw/$version/manifests/cozystack-installer.yaml
+kubectl apply -f  https://github.com/cozystack/cozystack/releases/download/$version/cozystack-installer.yaml
 ```
 
 ### Check cozystack status
