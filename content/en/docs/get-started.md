@@ -301,22 +301,33 @@ local (default)   linstor.csi.linbit.com   Delete          WaitForFirstConsumer 
 replicated        linstor.csi.linbit.com   Delete          Immediate              true                   11m
 ```
 
-## Configure Networking interconnection
+## Configure Networking
 
-{{% alert color="info" %}}
-If you plan to use an external load balancer or a client-side balancer to access your services through the same IPs for your nodes, you can skip this step
-{{% /alert %}}
+Cozystack is using MetalLB as the default load balancer.
+This documentation section explains how to configure networking with this default option.
 
-To access your services select the range of unused IPs, eg. `192.168.100.200-192.168.100.250`
+<!--
+For other options, see [Configure Networking with Custom Load Balancers](#)
+-->
 
-{{% alert color="warning" %}}
-:warning: these IPs should be from the same network as nodes or they should have all necessary routes for them.
-{{% /alert %}}
+Cozystack has three types of IP addresses used:
+
+-   Node IPs: constant and valid only within the cluster.
+-   Virtual floating IP: used to access one of the nodes in the cluster and valid only within the cluster.
+-   External access IPs: used by the load balancer to expose services outside the cluster.
+
+To access your services select the range of unused IPs, for example, `192.168.100.200-192.168.100.250`.
+These IPs should be from the same network as the nodes, or they should have all necessary routes to them.
 
 Configure MetalLB to use and announce this range:
+
+```bash
+kubectl create -f metallb-l2-advertisement.yml
+kubectl create -f metallb-ip-address-pool.yml
+```
+
+**metallb-l2-advertisement.yml**:
 ```yaml
-kubectl create -f- <<EOT
----
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
@@ -324,8 +335,11 @@ metadata:
   namespace: cozy-metallb
 spec:
   ipAddressPools:
-  - cozystack
----
+    - cozystack
+```
+
+**metallb-ip-address-pool.yml**:
+```yaml
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
@@ -333,33 +347,23 @@ metadata:
   namespace: cozy-metallb
 spec:
   addresses:
-  - 192.168.100.200-192.168.100.250
+    # used to expose services outside the cluster
+    - 192.168.100.200-192.168.100.250
   autoAssign: true
   avoidBuggyIPs: false
-EOT
 ```
 
-## Setup basic applications
+## Setup Basic Applications
 
-- Set `etcd`, `monitoring` and `ingress` to enabled in your `tenant-root`
+Enable `etcd`, `monitoring`, and `ingress` in your `tenant-root`:
+
 ```bash
-kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{"spec":{
+kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
+{"spec":{
   "ingress": true,
   "monitoring": true,
   "etcd": true,
   "isolated": true
-}}'
-```
-
-If you don't use external load balancer, specify all your external IPs of your nodes for the `ingress` controller:
-
-```bash
-kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
-  "externalIPs": [
-    "192.168.100.11",
-    "192.168.100.12",
-    "192.168.100.13"
-  ]
 }}'
 ```
 
