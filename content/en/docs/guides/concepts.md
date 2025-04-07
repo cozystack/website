@@ -1,6 +1,6 @@
 ---
 title: Core Concepts
-description: Core Concepts of Cozystack.
+description: "Learn about the core concepts in Cozystack: platform architecture, tenants and installation bundles."
 weight: 10
 ---
 

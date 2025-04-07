@@ -1,6 +1,6 @@
 ---
 title: "Upgrade Cozystack"
-linkTitle: "Upgrade"
+linkTitle: "Upgrade Cozystack"
 description: "Upgrade Cozystack system components."
 weight: 31
 ---

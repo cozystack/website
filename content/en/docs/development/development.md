@@ -1,7 +1,7 @@
 ---
 title: Development
 description: Cozystack Internals and Development
-weight: 15
+weight: 10
 ---
 
 Cozystack Internals and Development information
