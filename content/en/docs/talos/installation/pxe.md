@@ -17,7 +17,7 @@ weight: 10
 Start matchbox with prebuilt Talos image for Cozystack:
 
 ```bash
-sudo docker run --name=matchbox -d --net=host ghcr.io/cozystack/cozystack/matchbox:v0.29.0 \
+sudo docker run --name=matchbox -d --net=host ghcr.io/cozystack/cozystack/matchbox:v0.29.1 \
   -address=:8080 \
   -log-level=debug
 ```
