@@ -117,12 +117,17 @@ If you're installing Cozystack on a system other than Talos Linux, you must upda
 {{% /alert %}}
 
 {{% alert color="info" %}}
-Currently Cozystack does not separate control-plane and worker nodes, so if your nodes have control-plane taint, pods will stuck in `Pending` status.
+Normally Cozystack requires at least three worker nodes to run workloads in HA mode. There are no tolerations in
+Cozystack components that will allow them to run on control-plane nodes.
 
-You have to remove control-plane taint from the nodes:
+However, it's common to have only three nodes for testing purposes. Or you might only have big hardware nodes, and you
+want to use them for both control-plane and worker workloads. In this case, you have to remove the control-plane taint
+from the nodes. Example of how to do this:
+
 ```bash
 kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 ```
+
 {{% /alert %}}
 
 (optional) You can track the logs of installer:
