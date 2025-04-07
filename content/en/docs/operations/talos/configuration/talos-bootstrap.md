@@ -43,6 +43,8 @@ machine:
         - usermode_helper=disabled
     - name: zfs
     - name: spl
+    - name: vfio_pci
+    - name: vfio_iommu_type1
   install:
     image: ghcr.io/cozystack/cozystack/talos:v1.9.5
   registries:
