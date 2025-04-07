@@ -59,7 +59,13 @@ jobs:
           hugo \
             --gc \
             --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"          
+            --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Patch robots.txt
+        # if built in a contributor's repo and deployed to personal pages, disallow search indexing
+        if: github.repository_owner != 'cozystack'
+        run: |
+          echo -e "\nDisallow: /" >> public/robots.txt
+          cat public/robots.txt
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
