@@ -6,7 +6,7 @@ weight: 144
 ---
 
 {{% alert title="Troubleshooting" %}}
-Troubleshooting advice can be found on our [Troubleshooting Cheatsheet](/docs/troubleshooting/).
+Troubleshooting advice can be found on our [Troubleshooting Cheatsheet](/docs/operations/troubleshooting/).
 {{% /alert %}}
 
 ## General questions
@@ -141,7 +141,7 @@ in the result, you’ll receive the tenant-kubeconfig file, which you can provid
 
 Here you can find reference repository to learn how to configure Cozystack services using GitOps approach:
 
-- https://github.com/cozystack/cozystack-gitops-example
+- https://github.com/aenix-io/cozystack-gitops-example
 
 ### How to rotate CA
 In general, you almost never need to rotate the root CA certificate and key for the Talos API and Kubernetes API. Talos sets up root certificate authorities with the lifetime of 10 years, and all Talos and Kubernetes API certificates are issued by these root CAs. So the rotation of the root CA is only needed if:

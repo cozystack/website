@@ -153,5 +153,5 @@ Repeat the step for the other nodes in a cluster.
 :warning: All nodes should currently show as `READY: False`, don't worry about that, this is because you disabled the default CNI plugin in the previous step. Cozystack will install it's own CNI-plugin on the next step.
 {{% /alert %}}
 
-Now follow **Get Started** guide starting from the [**Install Cozystack**](/docs/get-started/#install-cozystack) section, to continue the installation.
+Now follow **Get Started** guide starting from the [**Install Cozystack**](/docs/getting-started/first-deployment/#install-cozystack) section, to continue the installation.
 

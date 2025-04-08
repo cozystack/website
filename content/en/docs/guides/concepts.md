@@ -20,13 +20,13 @@ Once access is granted to the tenant Kubernetes, the user can order physical vol
 
 All use cases are presented here:
 
-* [**Using Cozystack to build public cloud**](/docs/use-cases/public-cloud/)  
+* [**Using Cozystack to build public cloud**](/docs/guides/use-cases/public-cloud/)  
   How to use Cozystack to build public cloud
 
-* [**Using Cozystack to build private cloud**](/docs/use-cases/private-cloud/)  
+* [**Using Cozystack to build private cloud**](/docs/guides/use-cases/private-cloud/)  
   How to use Cozystack to build private cloud
 
-* [**Using Cozystack as Kubernetes distribution**](/docs/use-cases/kubernetes-distribution/)
+* [**Using Cozystack as Kubernetes distribution**](/docs/guides/use-cases/kubernetes-distribution/)
   How to use Cozystack as Kubernetes distribution
 
 

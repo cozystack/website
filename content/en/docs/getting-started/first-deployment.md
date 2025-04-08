@@ -46,17 +46,17 @@ Cozystack.
 
 Boot your machines with Talos Linux image in one of these ways:
 
-- [Install using temporary DHCP and PXE servers](/docs/talos/installation/pxe/) running as Docker containers.
-- [Install using ISO-file](/docs/talos/installation/iso/).
-- [Install on Hetzner servers](/docs/talos/installation/hetzner/).
+- [Install using temporary DHCP and PXE servers](/docs/operations/talos/installation/pxe/) running as Docker containers.
+- [Install using ISO-file](/docs/operations/talos/installation/iso/).
+- [Install on Hetzner servers](/docs/operations/talos/installation/hetzner/).
 
 
 ### Bootstrap Talos cluster
 
 Bootstrap your Talos Linux cluster using one of the following tools:
 
-- [**talos-bootstrap**](/docs/talos/configuration/talos-bootstrap/), for a quick walkthrough.
-- [**Talm**](/docs/talos/configuration/talm/), offering declarative cluster management.
+- [**talos-bootstrap**](/docs/operations/talos/configuration/talos-bootstrap/), for a quick walkthrough.
+- [**Talm**](/docs/operations/talos/configuration/talm/), offering declarative cluster management.
 
 ### Other Kubernetes distributions
 
@@ -100,7 +100,7 @@ EOT
 - `api-server-endpoint` is primarily used for generating kubeconfig files for your users. It is recommended to use globally accessible IP addresses instead of local ones.
 
 {{% alert color="info" %}}
-Cozystack enables telemetry collection. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/telemetry/).
+Cozystack enables telemetry collection. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
 {{% /alert %}}
 
 Create namespace and install Cozystack system components:
@@ -473,4 +473,4 @@ Use `grafana.example.org` (under 192.168.100.200) to access system monitoring, w
   kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
   ```
 
-Now you can consider [enabling OIDC](/docs/oidc/)
+Now you can consider [enabling OIDC](/docs/operations/oidc/)

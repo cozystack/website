@@ -15,4 +15,4 @@ Click **<F3>** and fill your network settings:
 
 Now you can use [talos-bootstrap](https://github.com/cozystack/talos-bootstrap) or [Talm](https://github.com/cozystack/talm) for connecting to the node and bootstrap the cluster
 
-Just follow **Get Started** guide starting from the [**Bootstrap cluster**](/docs/get-started/#bootstrap-cluster) section, to continue the installation.
+Just follow **Get Started** guide starting from the [**Bootstrap cluster**](/docs/getting-started/first-deployment/#bootstrap-cluster) section, to continue the installation.

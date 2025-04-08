@@ -148,7 +148,7 @@ reboot
 Now, when it is booted to Talos Linux maintenance mode, you can use [talos-bootstrap](https://github.com/cozystack/talos-bootstrap) or [Talm](https://github.com/cozystack/talm) to bootstrap the cluster
 
 
-Just follow **Get Started** guide starting from the [**Bootstrap cluster**](/docs/get-started/#bootstrap-cluster) section, to continue the installation.
+Just follow **Get Started** guide starting from the [**Bootstrap cluster**](/docs/getting-started/first-deployment/#bootstrap-cluster) section, to continue the installation.
 
 {{% alert color="warning" %}}
 :warning: If you encounter issues booting Talos Linux on your node, it might be related to the serial console options in your GRUB configuration, console=tty1 console=ttyS0. Try rebooting into rescue mode and remove these options from the GRUB configuration on the third partition of your system `$DISK`.
