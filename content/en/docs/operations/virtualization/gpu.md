@@ -5,15 +5,20 @@ description: "Running VMs with GPU Passthrough"
 weight: 40
 ---
 
-This section runs through the deployment scenario of running VMs with GPU Passthrough.
-We will first deploy the GPU Operator to provision our worker node for GPU Passthrough.
-Then we will deploy a KubeVirt VM that requests a GPU.
+This section demonstrates how to deploy virtual machines (VMs) with GPU passthrough using Cozystack.
+First, we’ll deploy the GPU Operator to configure the worker node for GPU passthrough
+Then we will deploy a [KubeVirt](https://kubevirt.io/) VM that requests a GPU.
 
 By default, to provision a GPU Passthrough, the GPU Operator will deploy the following components:
 
 - **VFIO Manager** to bind `vfio-pci` driver to all GPUs on the node.
 - **Sandbox Device Plugin** to discover and advertise the passthrough GPUs to kubelet.
 - **Sandbox Validator** to validate the other operands.
+
+## Prerequisites
+
+- A Cozystack cluster with at least one GPU-enabled node.
+- kubectl installed and cluster access credentials configured.
 
 ## 1. Install the GPU Operator
 
@@ -25,7 +30,7 @@ Follow these steps:
     kubectl label node <node-name> --overwrite nvidia.com/gpu.workload.config=vm-passthrough
     ```
 
-2.  Install the GPU Operator by enabling the GPU operator bundle in your Cozystack configuration:
+2.  Enable the GPU Operator bundle in your Cozystack configuration:
 
     ```bash
     kubectl edit -n cozy-system configmap cozystack-config
@@ -36,7 +41,7 @@ Follow these steps:
     ```yaml
     bundle-enable: gpu-operator
     ```
-    The following operands get deployed.
+    This will deploy the components (operands).
 
 4.  Ensure all pods are in a running state and all validations succeed with the sandbox-validator component:
 
@@ -44,7 +49,7 @@ Follow these steps:
     kubectl get pods -n cozy-gpu-operator
     ```
 
-    Example output:
+    Example output (your pod names may vary):
     
     ```console
     NAME                                            READY   STATUS    RESTARTS   AGE
@@ -54,7 +59,7 @@ Follow these steps:
     nvidia-vfio-manager-thfwf                       1/1     Running   0          78s
     ```
 
-You can use `kubectl debug node` or `kubectl node-shell -x` to access the node and check the GPU status.
+To verify the GPU binding, access the node using `kubectl debug node` or `kubectl node-shell -x` and run:
 
 ```bash
 lspci --nnk -d 10de:
@@ -72,7 +77,7 @@ The vfio-manager pod will bind all GPUs on the node to the vfio-pci driver. Exam
 ```
 
 The sandbox-device-plugin will discover and advertise these resources to kubelet.
-In this example, we have two A10 GPUs:
+In this example, the node shows two A10 GPUs as available resources:
 
 ```bash
 kubectl describe node <node-name>
@@ -93,7 +98,7 @@ Allocatable:
 ```
 
 {{% alert color="info" %}}
-The resource name is currently constructed by joining the device and device_name columns from the [PCI IDs database](https://pci-ids.ucw.cz/v2.2/pci.ids).
+**Note:** Resource names are constructed by combining the `device` and `device_name` columns from the [PCI IDs database](https://pci-ids.ucw.cz/v2.2/pci.ids).
 For example, the database entry for A10 reads `2236  GA102GL [A10]`, which results in a resource name `nvidia.com/GA102GL_A10`.
 {{% /alert %}}
 
@@ -103,8 +108,8 @@ Next, we will update the KubeVirt Custom Resource, as documented in the
 [KubeVirt user guide](https://kubevirt.io/user-guide/virtual_machines/host-devices/#listing-permitted-devices),
 so that the passthrough GPUs are permitted and can be requested by a KubeVirt VM.
 
-Replace the values for `pciVendorSelector` and `resourceName` to correspond to your GPU model.
-Setting `externalResourceProvider=true` indicates that this resource is being provided by an external device plugin,
+Adjust the `pciVendorSelector` and `resourceName` values to match your specific GPU model.
+Setting `externalResourceProvider=true` indicates that this resource is provided by an external device plugin,
 in this case the `sandbox-device-plugin` which is deployed by the Operator.
 
 ```bash
@@ -126,7 +131,7 @@ example config:
 
 We are now ready to create a VM.
 
-1.  Let’s create a sample VM using a simple VMI spec that requests the `nvidia.com/GA102GL_A10` resource.
+1.  Create a sample virtual machine using the following VMI specification that requests the `nvidia.com/GA102GL_A10` resource.
 
     **vmi-gpu.yaml**:
     
@@ -163,7 +168,7 @@ We are now ready to create a VM.
     virtualmachines.apps.cozystack.io/gpu created
     ```
 
-2.  Check the new state:
+2.  Verify the VM status:
 
     ```bash
     kubectl get vmi
@@ -174,7 +179,7 @@ We are now ready to create a VM.
     virtual-machine-gpu        73m   Running   10.244.3.191   luc-csxhk-002   True
     ```
 
-3.  Log in to the VM and verify that it has access to GPU:
+3.  Log in to the VM and confirm that it has access to GPU:
 
     ```bash
     virtctl console virtual-machine-gpu
