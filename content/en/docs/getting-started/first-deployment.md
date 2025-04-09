@@ -72,7 +72,7 @@ These are the most important settings:
 
 ## Install Cozystack
 
-Write a config for Cozystack, referring to the [bundles documentation](/docs/bundles/) for configuration parameters.
+Write a config for Cozystack, referring to the [bundles documentation](/docs/operations/bundles/) for configuration parameters.
 
 {{% alert color="warning" %}}
 :warning: make sure that to have the same settings specified in `patch.yaml` and `patch-controlplane.yaml` files.
