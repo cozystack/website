@@ -44,7 +44,12 @@ machine:
     - name: zfs
     - name: spl
   install:
-    image: ghcr.io/cozystack/cozystack/talos:v1.9.3
+    image: ghcr.io/cozystack/cozystack/talos:v1.9.5
+  registries:
+    mirrors:
+      docker.io:
+        endpoints:
+        - https://mirror.gcr.io
   files:
   - content: |
       [plugins]
