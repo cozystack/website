@@ -1,17 +1,16 @@
 ---
 title: "Deploy and Configure Cozystack"
-linkTitle: "Deploy and Configure Cozystack"
+linkTitle: "First Deployment"
 description: "Learn how to get a running Cozystack cluster on bare metal or VMs in a series of guided steps."
 weight: 10
 ---
 
-This tutorial shows how to bootstrap Cozystack on a few servers in your infrastructure.
 
 ## Before you begin
 
-![Cozystack deployment](/img/cozystack-deployment.png)
 
-Deploying Cozystack requires three physical servers or VMs with nested virtualization, having these resources:
+Make sure you have defined your [hardware requirements]({{% ref "/docs/getting-started/hardware-requirements" %}}).
+As a bare minimum, you should have three nodes in the following configuration to install Cozystack:
 
 ```yaml
 CPU: 4 cores
@@ -21,20 +20,18 @@ HDD1: 32 GB
 HDD2: 100GB (raw)
 ```
 
-A PXE installation requires an extra management VM or physical server connected to the same network,
-with any Linux system installed on it (for example, Ubuntu should be enough).
-
-{{% alert color="warning" %}}
-:warning: This VM should support `x86-64-v2` architecture, which most probably can be achived by setting CPU model to `host`
-{{% /alert %}}
+![Cozystack deployment](/img/cozystack-deployment.png)
 
 ## Objectives
 
-- Bootstrap Cozystack on three servers
-- Configure Storage
-- Configure Networking interconnection
-- Access Cozystack dashboard
-- Deploy etcd, ingress and monitoring stack
+This tutorial shows how to bootstrap Cozystack on servers in your infrastructure.
+It will guide you through the following steps:
+
+1.  Bootstrap Cozystack on three servers
+1.  Configure Storage
+1.  Configure Networking interconnection
+1.  Access Cozystack dashboard
+1.  Deploy etcd, ingress and monitoring stack
 
 
 ## Create Kubernetes cluster
