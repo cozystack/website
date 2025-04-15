@@ -3,6 +3,8 @@ title: "The distro-full bundle"
 linkTitle: "distro-full"
 description: "Kubernetes distribution, full stack version"
 weight: 20
+aliases:
+  - /docs/bundles/distro-full
 ---
 
 This is a Cozystack platform configuration intended for use as a Kubernetes distribution, designed for installation on Talos Linux.

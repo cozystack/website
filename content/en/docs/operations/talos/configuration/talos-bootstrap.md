@@ -3,6 +3,8 @@ title: Bootstrap a Talos Linux cluster for Cozystack using talos-bootstrap
 linkTitle: talos-bootstrap
 description: "Bootstrap a Talos Linux cluster for Cozystack using talos-bootstrap"
 weight: 10
+aliases:
+  - /docs/talos/configuration/talos-bootstrap
 ---
 
 [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) is an interactive script for bootstrapping Kubernetes clusters on Talos OS.

@@ -3,6 +3,8 @@ title: "The distro-hosted bundle"
 linkTitle: "distro-hosted"
 description: "Kubernetes distribution, hosted version"
 weight: 20
+aliases:
+  - /docs/bundles/distro-hosted
 ---
 
 This is a Cozystack platform configuration intended for use as a Kubernetes distribution, designed for installation on existing Kubernetes clusters.

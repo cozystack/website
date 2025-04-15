@@ -3,6 +3,8 @@ title: "Linstor DRBD parameters"
 linkTitle: "Linstor configuration"
 description: "Parameters required to make Linstor work in a stretched cluster"
 weight: 30
+aliases:
+  - /docs/stretched/linstor
 ---
 
 ## Potential problems

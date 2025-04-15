@@ -3,6 +3,8 @@ title: "Tune etcd timeouts"
 linkTitle: "etcd configuration"
 description: "Parameters required to make etcd work in a stretched cluster"
 weight: 10
+aliases:
+  - /docs/stretched/etcd
 ---
 
 ## Potential problems

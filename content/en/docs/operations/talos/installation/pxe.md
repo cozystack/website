@@ -3,6 +3,8 @@ title: How to install Cozystack using PXE
 linkTitle: PXE
 description: "How to install Cozystack using PXE"
 weight: 10
+aliases:
+  - /docs/talos/installation/pxe
 ---
 
 ![Cozystack deployment](/img/cozystack-deployment.png)

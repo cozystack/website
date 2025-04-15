@@ -3,6 +3,8 @@ title: "Frequently asked questions"
 linkTitle: "FAQ"
 description: "Flux and the GitOps Toolkit frequently asked questions."
 weight: 144
+aliases:
+  - /docs/faq
 ---
 
 {{% alert title="Troubleshooting" %}}

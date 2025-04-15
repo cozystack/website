@@ -3,6 +3,8 @@ title: Bootstrap a Talos Linux cluster for Cozystack using Talm
 linkTitle: Talm
 description: "Bootstrap a Talos Linux cluster for Cozystack using Talm"
 weight: 20
+aliases:
+  - /docs/talos/configuration/talm
 ---
 
 [Talm](https://github.com/cozystack/talm) is a Helm-like utility for declarative configuration management of Talos Linux.

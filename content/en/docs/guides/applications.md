@@ -3,6 +3,8 @@ title: "Cozystack-managed Applications"
 linkTitle: "Managed Apps"
 description: "Learn about the applications that Cozystack can deploy and manage"
 weight: 20
+aliases:
+  - /docs/components
 ---
 
 ## Managed PostgreSQL

@@ -3,6 +3,8 @@ title: Using Cozystack to build public cloud
 linkTitle: Public Cloud
 description: "How to use Cozystack to build public cloud"
 weight: 10
+aliases:
+  - /docs/use-cases/public-cloud
 ---
 
 You can use Cozystack as backend for a public cloud

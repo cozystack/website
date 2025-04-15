@@ -3,6 +3,8 @@ title: "The paas-hosted bundle"
 linkTitle: "paas-hosted"
 description: "PaaS platform, hosted version"
 weight: 10
+aliases:
+  - /docs/bundles/paas-hosted
 ---
 
 This is a Cozystack platform configuration intended for use as a PaaS platform, designed for installation on existing Kubernetes clusters.

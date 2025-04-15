@@ -3,6 +3,8 @@ title: "The paas-full bundle"
 linkTitle: "paas-full"
 description: "PaaS platform, full stack version"
 weight: 10
+aliases:
+  - /docs/bundles/pass-full
 ---
 
 This is a Cozystack platform configuration intended for use as a PaaS platform, designed for installation on Talos Linux.

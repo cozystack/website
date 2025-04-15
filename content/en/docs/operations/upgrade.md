@@ -3,6 +3,8 @@ title: "Upgrade Cozystack"
 linkTitle: "Upgrade Cozystack"
 description: "Upgrade Cozystack system components."
 weight: 31
+aliases:
+  - /docs/upgrade
 ---
 
 ## Upgrade Cozystack

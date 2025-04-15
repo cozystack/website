@@ -3,6 +3,8 @@ title: "Troubleshooting cheatsheet"
 linkTitle: "Troubleshooting"
 description: "Showcase various ways to get more information out of Flux controllers to debug potential problems."
 weight: 60
+aliases:
+  - /docs/troubleshooting
 ---
 
 ## Cozystack

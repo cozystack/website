@@ -2,6 +2,8 @@
 title: Core Concepts
 description: "Learn about the core concepts in Cozystack: platform architecture, tenants and installation bundles."
 weight: 10
+aliases:
+  - /docs/concepts
 ---
 
 These are some core concepts in Cozystack.
