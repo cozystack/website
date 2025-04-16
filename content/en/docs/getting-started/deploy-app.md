@@ -1,83 +1,117 @@
 ---
-title: "Deploy your application"
-linkTitle: "Deploy your application"
-description: "Learn how to deploy an example application in Cozystack tenant"
+title: "Deploy a sample application in Cozystack"
+linkTitle: "Deploy Sample Application"
+description: "Learn how to quickly deploy a sample application with a managed PostgreSQL database and Redis cache on a Cozystack Kubernetes cluster — fully isolated within your tenant and accessible through a nested Kubernetes environment."
 weight: 50
 ---
 
-In this guide we will deploy an application (that is not a part of Cozystack) in the tenant.
+## Introduction
 
-We will reach the following goals:
+This guide will walk you through setting up the environment needed to run a typical web application with common service
+dependencies—PostgreSQL and Redis—on Cozystack, a Kubernetes-based PaaS framework.
 
-* Create a Kubernetes cluster.
-* Create a managed database and managed cache.
-* Get credentials and deploy a sample application as a usual Kubernetes deployment, in the tenant cluster.
+You’ll learn how to:
 
-We will deploy an imaginary application `instaphoto` that uses a PostgreSQL database and Redis cache. The application
-itself is Kubernetes-native (i.e., has a Helm chart) and is not a part of Cozystack.
+-   Deploy managed applications in your tenant: a PostgreSQL database and Redis cache.
+-   Create a managed Kubernetes cluster, configure DNS, and access the cluster.
+-   Deploy a containerized application to the new cluster.
+
+You don’t need in-depth Kubernetes knowledge to complete this tutorial—most steps are done through the Cozystack web interface.  
+
+This is your fast track to a successful first deployment on Cozystack.  
+Once you're done, you’ll have a working setup ready for your own applications—and a solid foundation to build upon and showcase to your team.
 
 ## Prerequisites
 
-We will need a running Cozystack installation. You can use
-the [installation guide]({{% ref "/docs/getting-started/first-deployment" %}}) to install it.
+Before you begin:
 
-The Cozystack dashboard should be accessible. You can also use `kubectl` instead, but using the dashboard is the easiest
-way to learn about the Cozystack platform features.
+-   **Cozystack cluster** should already be [installed and running]({{% ref "/docs/getting-started/first-deployment" %}}).
+    You won’t need to install or configure anything on the infrastructure level—this
+    guide assumes that part is already done, possibly by you or someone else on your team.
+-   **Credentials:** You must have access to your tenant in Cozystack.
+    This can be either through a `kubeconfig` file or OIDC login for the dashboard.
+    If you don’t have access, ask your Ops team or refer to the guide on creating a tenant.
+-   **DNS for dev/testing:** To access the deployed app over HTTPS you need a DNS record set up.
+    A wildcard DNS record is preferred, as it's more convenient to use.
 
-Client credentials are required to access the dashboard and/or tenant namespace of the main Kubernetes cluster.
+> 🛠️ **CLI is optional.** 
+> You don’t need to use `kubectl` or `helm` unless you want to. 
+> All major steps (like creating the Kubernetes cluster and managed services) can be done entirely in the Cozystack Dashboard. 
+> The only point where you’ll need the CLI is when deploying the app to a Kubernetes cluster.
 
-Credentials could come in two flavors: OIDC or kubeconfig. The OIDC credentials are used to access the dashboard and
-main Kubernetes cluster after authentication with Keycloak service (a part of Cozystack platform). The kubeconfig file
-is a plain Kubernetes config file with static token. It's less secure, but simpler to use with automation tools.
+## 1. Access the Cozystack Dashboard
 
-Both types of credentials provide the same roles and permissions set.
+Open the Cozystack dashboard in your browser.
+The link usually looks like `https://dashboard.<cozystack_domain>`.
 
-The DNS name is required to test the application. For dev environments, it's easiest to use wildcard DNS record, as all
-subdomains will be landed to the same IP by default.
+Depending on how authentication is configured in your Cozystack cluster, you'll see one of the following:
 
-## Access the dashboard
+-   An **OIDC login screen** with a button that redirects you to Keycloak.
+-   A **Token login screen**, where you manually paste a token from your kubeconfig file.
 
-Open the link to the dashboard in your browser. The link usually looks like `https://dashboard.<cozystack_domain>`.
-Depending on the authentication method, either login form or OIDC Login button appears.
+Choose your login method below:
 
 {{< tabs name="access_dashboard" >}}
 {{% tab name="OIDC" %}}
-Click the `OIDC Login` button. The Keycloak login page will open. Enter your credentials and click `Login`. If
-everything is fine, you will be logged in and redirected back to the dashboard.
+Click the `OIDC Login` button.  
+This will take you to the Keycloak login page.
+
+Enter your credentials and click `Login`.  
+If everything is configured correctly, you'll be logged in and redirected back to the dashboard.
 {{% /tab %}}
+
 {{% tab name="kubeconfig" %}}
-Non-OIDC login form does not have the `username` field. Only the token is required. Token is a very long string and can
-be found in the kubeconfig file. Paste it whole into the form field and click `Submit`. Ensure that you copied it from
-the kubeconfig without newlines and extra spaces.
+This login form doesn’t have a `username` field—only a `token` input.
+You can get this token from your kubeconfig file.
+
+1.  Open your kubeconfig file and copy the token value (it’s a long string).
+    Make sure you copy it without extra spaces or line breaks.
+1.  Paste it into the form and click `Submit`.
+
 {{% /tab %}}
 {{< /tabs >}}
 
-As a result, you should see the dashboard with your tenant context selected. Only own tenant can be accessed with client
-credentials. You will immediately see applications like "ingress", "monitoring" if they were enabled by the
-administrator. Such kind of applications could not be installed as user as they must be configured with admin rights.
+Once you're logged in, the dashboard will automatically show your tenant context.
 
-## Create a database
+You may see system-level applications like `ingress` or `monitoring` already running—these are managed by your cluster admin.
+As a tenant user, you can’t install or modify them, but your own apps will run alongside them in your isolated tenant environment.
 
-The Cozystack framework includes a managed database system. It allows you to create a database in the hardware layer for
-maximum performance. The database is created in the tenant namespace and is accessible from the nested Kubernetes
-cluster. This resembles the behavior of a managed database service like AWS RDS or GCP Cloud SQL.
+## 2. Create a Managed PostgreSQL
+
+Cozystack lets you provision managed databases directly on the hardware layer for maximum performance.  
+Each database is created inside your tenant namespace and is automatically accessible from your nested Kubernetes cluster.
+
+If you're familiar with services like AWS RDS or GCP Cloud SQL, the experience is similar—  
+except it's fully integrated with Cozystack and isolated within your own tenant.
+
+> Throughout this tutorial, you’ll have the option to use either the Cozystack dashboard (UI) or `kubectl`:
+>
+> -   **Cozystack Dashboard** offers the quickest and most straightforward experience—recommended if this is your first time using Cozystack.
+> -   **`kubectl`** provides in-depth visibility into how managed services are deployed behind the scenes.
+> 
+> While neither approach reflects how services are typically deployed in production,
+> both are well-suited for learning and experimentation—making them ideal for this tutorial.
+
+### 2.1 Deploy PostgresSQL
 
 {{< tabs name="create_database" >}}
-{{% tab name="in Dashboard" %}}
+{{% tab name="Cozystack Dashboard" %}}
 
-1. Open the dashboard.
-2. Click on the `Catalog` tab in the left menu.
-3. Search for `Postgres` application badge and click on it. Application builtin documentation will open.
-4. Read the documentation and click on the `Deploy` button. Application parameters page will open.
-5. Parameters are pre-filled with sane and minimal defaults. You can change them in a Visual editor or in YAML editor.
-   YAML editor contains full commentaries. You can also switch between editors back and forth. Do not worry if unsure
-   for right parameters. It can be changed later. The only mandatory parameter is `name`. It should be unique in this
-   tenant. Name is the only thing you can't change later.
-6. When finished with parameters, click the `Deploy` button again. The application will be installed in the client
-   tenant namespace.
+1.  Open the Cozystack dashboard and go to the **Catalog** tab.
+1.  Search for the **Postgres** application badge and click it to open its built-in documentation.
+1.  Click the **Deploy** button to open the deployment configuration page.
+1.  Fill in `instaphoto-postgres` in the **`name`** field. Application name must be unique within your tenant and **cannot be changed after deployment**.
+1.  Review the other parameters. They come pre-filled with sensible defaults, so you can keep them unchanged.
+    -    Try using both the **Visual editor** and the **YAML editor**. You can switch between editors at any time.
+    -    The YAML editor includes inline comments to guide you.
+    -    Don’t worry if you’re unsure about some settings. Most of them can be updated later.
+1.  Click **Deploy** again. The database will be installed in your tenant’s namespace.
+
+![Postgres deployment values](deploy-postgresql.png)
+
 {{% /tab %}}
 
-{{% tab name="with kubectl" %}}
+{{% tab name="kubectl" %}}
 Create a manifest `postgres.yaml` with the following content:
 
 ```yaml
@@ -112,50 +146,54 @@ spec:
         password: strongpassword
 ```
 
-and apply it:
+Apply the manifest using:
 
 ```bash
 kubectl apply -f postgres.yaml
 ```
 
-The contents of manifest can be copied from the resource that was created in the dashboard and then edited.
+> 💡 Tip: You can generate a similar manifest by deploying the Postgres app through the dashboard first.
+> Then, export the configuration and edit it as needed.
+> It's useful if you’re trying to reproduce or automate the setup.
+
 {{% /tab %}}
 {{< /tabs >}}
 
-After an application is installed and ready, the "Application Resources" section will be filled with connect
-credentials.
 
-The "Secrets" tab will contain the database password for each user defined.
+### 2.2 Get the Connection Credentials
 
-The "Services" tab will contain the service addresses. Use the `postgres-<name>-ro` service name to connect to the
-readonly replica, and the `postgres-<name>-rw` service name to connect to the master instance of the database. These
-names are resolvable from the nested Kubernetes cluster.
+Navigate to the **Applications** tab, then find and open the `instaphoto-postgres` application.  
+Once the application is installed and ready, you’ll find connection details in the **Application Resources** section of the dashboard.
 
-If you need to have access to the database from outside the cluster, update the `external` parameter to `true`. After
-that, the `postgres-<name>-external-write` service will be created with an external IP. You can use it to connect to the
-database using CLI or GUI from anywhere in the internet.
+-   The **Secrets** tab contains the database password for each user you defined.
+-   The **Services** tab lists the internal service endpoints:
+    -   Use `postgres-<name>-ro` to connect to the **read-only replica**.
+    -   Use `postgres-<name>-rw` to connect to the **primary (read-write)** instance.
 
-Do not allow external access to the database if you do not need it.
+These service names are resolvable from within the nested Kubernetes cluster and can be used in your app’s configuration.
 
-## Create a cache service
+If you need to connect to the database from outside the cluster, you can expose it externally by setting the `external` parameter to `true`.
+This will create a service named `postgres-<name>-external-write` with a public IP address.
 
-From this point we will use the tenant credentials to access the platform. Use the tenant's kubeconfig for kubectl and
-token from it to access the dashboard.
+> ⚠️ **Only enable external access if absolutely necessary.** Exposing databases to the internet introduces security risks and should be avoided in most cases.
+
+## 3. Create a Cache Service
+
+From this point on, you'll use your tenant credentials to access the platform.  
+Use the tenant's kubeconfig for `kubectl`, and the token from it to access the dashboard.
 
 {{< tabs name="create_redis" >}}
-{{% tab name="in Dashboard" %}}
+{{% tab name="Cozystack Dashboard" %}}
 
-1. Open the dashboard.
-2. Follow the same steps as with postgresql.
-3. The redis application has `authEnabled` parameter that will create us a default user. That's enough for our
-   application.
-4. When finished with parameters, click the `Deploy` button. The application will be installed in the `team1` tenant.
+1.  Open the dashboard.
+1.  Follow the same steps as with PostgreSQL, but for Redis application.
+1.  The Redis application has an `authEnabled` parameter, which will create a default user. That’s sufficient for our application.
+1.  Once you're done configuring the parameters, click the **Deploy** button. The application will be installed in your tenant.
 
 {{% /tab %}}
+{{% tab name="kubectl" %}}
 
-{{% tab name="with kubectl" %}}
-
-Create a manifest `redis.yaml` with the following content:
+Create a manifest file named `redis.yaml` with the following content:
 
 ```yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
@@ -183,29 +221,27 @@ spec:
     size: 1Gi
 ```
 
-and apply it:
+Then apply it:
 
 ```bash
 kubectl apply -f redis.yaml
 ```
-
 {{% /tab %}}
 {{< /tabs >}}
 
-After a while, the redis application will be installed in the `team1` tenant. The generated password could be found in
-the dashboard.
+After a short time, the Redis application will be installed in the `team1` tenant.  
+The generated password can be found in the dashboard.
 
 {{< tabs name="redis_password" >}}
-{{% tab name="in Dashboard" %}}
+{{% tab name="Cozystack Dashboard" %}}
 
-1. Open the dashboard as a tenant-team1 user.
-2. Click on the `Applications` tab in the left menu.
-3. Find the `redis-instaphoto` application and click on it.
-4. The password is shown in the `Secrets` section. There are the show/copy buttons next to it.
+1.  Open the dashboard as the `tenant-team1` user.
+1.  Click on the **Applications** tab in the left menu.
+1.  Find the `redis-instaphoto` application and click on it.
+1.  The password is shown in the **Secrets** section, with buttons to copy or reveal it.
 
 {{% /tab %}}
-
-{{% tab name="with kubectl" %}}
+{{% tab name="kubectl" %}}
 
 ```bash
 # Use the tenant kubeconfig
@@ -217,59 +253,83 @@ kubectl -n tenant-team1 get secret redis-instaphoto-auth
 {{% /tab %}}
 {{< /tabs >}}
 
-## Deploy the nested Kubernetes cluster
+## 4. Deploy a Nested Kubernetes Cluster
 
-The nested Kubernetes cluster is created in the same way as the database and cache. Here are additional points to get
-attention:
+The nested Kubernetes cluster is created in the same way as the database and cache. 
+However, there are a few important additional points to consider:
 
-* The `etcd` application must be enabled for the tenant. It is required for nested Kubernetes cluster. And it can be
-  enabled only by the
-  administrator.
-* Ensure the quota is sufficient.
-* Do not try to set Kubernetes instances preset too low. The Kubernetes node itself consumes around 2.5GB of RAM per
-  node. So, if you choose the 4GB RAM preset, only 1.5GB will be available for the actual workload. 4GB will work for a
-  test, but it's always better to get less amount of machines with more RAM than many machines with less RAM.
-* If you develop web applications, most probably you will need the ingress and cert-manager. Both of them can be
-  installed with a checkbox in the Cozystack application configuration.
+-   **`etcd` must be enabled in the tenant**<br/>
+    The `etcd` service is required to run a nested Kubernetes cluster and can only be enabled by a Cozystack administrator.
+-   **Verify your quota.**<br/>  
+    Ensure your tenant has enough CPU, RAM, and disk resources to create and run a cluster.
+-   **Choose an appropriate instance preset.**<br/>  
+    Avoid selecting presets that are too small. A Kubernetes node consumes approximately 2.5 GB of RAM just for system components.  
+    For example, if you select a 4 GB RAM preset, only about 1.5 GB will be available for your actual workloads.  
+    4 GB is sufficient for testing, but in general, it’s better to provision **fewer nodes with more RAM** than many nodes with minimal RAM.
+-   **Enable `ingress` and `cert-manager` if needed.**<br/>  
+    If you're deploying web applications, you will likely need ingress and certificate management.  
+    Both can be enabled with a checkbox when configuring the nested Kubernetes application in Cozystack.
 
-When the nested Kubernetes cluster is ready, the `Secrets` tab will be available in the application page in the
-dashboard. It contains the secrets with kubeconfig file for the nested Kubernetes cluster, in four flavors.
+Once the nested Kubernetes cluster is ready, you'll find its kubeconfig files in the **Secrets** tab of the application page in the dashboard.
+Several options are provided:
 
-* admin.conf - The first kubeconfig to access your new cluster. You can also create another Kubernetes users using this
-  config.
-* admin.svc - The same token, but Kubernetes API server is set to the internal service name. This is useful for apps
-  that work with Kubernetes API from inside the cluster.
-* super-admin.conf - The same as admin, but with slightly more permissions. It can be used for
-  troubleshooting.
-* super-admin.svc - The same as super-admin, but with internal service name.
+-   **`admin.conf`** — The standard kubeconfig for accessing your new cluster.
+    You can create additional Kubernetes users using this configuration.
+-   **`admin.svc`** — Same token as `admin.conf`, but with the API server address set to the internal service name.
+    Use it for applications running inside the cluster that need API access.
+-   **`super-admin.conf`** — Similar to `admin.conf`, but with extended administrative permissions.
+    Intended for troubleshooting and cluster maintenance tasks.
+-   **`super-admin.svc`** — Same as `super-admin.conf`, but pointing to the internal API server address.
 
-## Update DNS and access the cluster
+## 5. Update DNS and Access the Cluster
 
-The nested Kubernetes cluster will take one of the floating IPs from the main cluster. You can check the actual dns name
-and taken IP address on the Application page in the dashboard, or by checking the ingress status with kubectl. Update
-DNS settings to match the ingress name and IP address.
+After deployment, the nested Kubernetes cluster will automatically claim one of the floating IP addresses from the main cluster.
 
-When DNS records are updated, you can access the nested Kubernetes cluster using the downloaded kubeconfig file.
+You can find the assigned DNS name and IP address in one of two ways:
+- Open the application page for the cluster in the dashboard.
+- Check the ingress status using `kubectl`.
 
-Example of how to access the Kubernetes with it:
+Once you have the correct DNS name and IP address, update your DNS settings to point your domain or subdomain to the assigned IP.
 
-```bash
-cat > ~/.kube/kubeconfig-team1.example.org
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: LS0tL....
-# (paste secret-admin.conf here)
-$ export KUBECONFIG=~/.kube/kubeconfig-team1.example.org
-$ kubectl get nodes
-NAME                             STATUS   ROLES           AGE   VERSION
-kubernetes-dev-md0-vn8dh-jjbm9   Ready    ingress-nginx   29m   v1.30.11
-kubernetes-dev-md0-vn8dh-xhsvl   Ready    ingress-nginx   25m   v1.30.11
-```
+After the DNS records are updated and propagated, you can access your nested Kubernetes cluster using the downloaded kubeconfig file.
 
-## Deploy an application with helm
+Here’s an example of how to configure and use it:
 
-The rest of journey is the same as with any other Kubernetes cluster. You can use `kubectl` or `helm` or your CI/CD
-system to deploy kubernetes-native applications. Fill the credentials to the database and cache in the application helm
-chart values. Then run `helm upgrade --install` as usual. Service names do not need to have any dns suffixes, as if they
-existed in the same namespace.
+1.  Save the contents of `admin.conf` in a file, for example, `~/.kube/kubeconfig-team1.example.org`:
+
+    ```console
+    $ cat ~/.kube/kubeconfig-team1.example.org
+    apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority-data: LS0tL
+        ...
+    ```
+
+1.  Set up `KUBECONFIG` env variable to this file and check that the nodes are ready:
+
+    ```console
+    $ export KUBECONFIG=~/.kube/kubeconfig-team1.example.org
+    $ kubectl get nodes
+    NAME                             STATUS   ROLES           AGE   VERSION
+    kubernetes-dev-md0-vn8dh-jjbm9   Ready    ingress-nginx   29m   v1.30.11
+    kubernetes-dev-md0-vn8dh-xhsvl   Ready    ingress-nginx   25m   v1.30.11
+    ```
+
+## 6. Deploy an Application with Helm
+
+From this point, working with your cluster is the same as working with any standard Kubernetes environment.
+
+You can use `kubectl`, `helm`, or your CI/CD pipeline to deploy Kubernetes-native applications.
+
+To deploy your application:
+
+1.  Update your Helm chart values to include the correct credentials for the database and cache.
+1.  Run a standard Helm deployment command, for example:
+
+    ```bash
+    helm upgrade --install <release-name> <chart-path> -f values.yaml                          
+    ```
+    
+Service names such as the database and cache do not need DNS suffixes.
+They are accessible within the same namespace by their service names.
