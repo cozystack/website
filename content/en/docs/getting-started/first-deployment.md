@@ -1,6 +1,6 @@
 ---
 title: "Deploy and Configure Cozystack"
-linkTitle: "First Deployment"
+linkTitle: "Deploy Cozystack"
 description: "Learn how to get a running Cozystack cluster on bare metal or VMs in a series of guided steps."
 weight: 10
 aliases:
