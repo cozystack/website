@@ -12,7 +12,7 @@ aliases:
 
 
 Make sure you have defined your [hardware requirements]({{% ref "/docs/getting-started/hardware-requirements" %}}).
-As a bare minimum, you should have three nodes in the following configuration to install Cozystack:
+As a bare minimum, you should have three nodes of the following configuration to install Cozystack:
 
 ```yaml
 CPU: 4 cores
@@ -26,27 +26,27 @@ HDD2: 100GB (raw)
 
 ## Objectives
 
-This tutorial shows how to bootstrap Cozystack on servers in your infrastructure.
+This tutorial shows how to bootstrap Cozystack.
 It will guide you through the following steps:
 
-1.  Bootstrap Cozystack on three servers
+1.  Create a Kubernetes cluster
+1.  Bootstrap Cozystack
 1.  Configure Storage
-1.  Configure Networking interconnection
+1.  Configure Networking
 1.  Access Cozystack dashboard
 1.  Deploy etcd, ingress and monitoring stack
 
 
 ## Create Kubernetes cluster
 
-Cozystack installs on top of a Kubernetes cluster. Talos is the only Kubernetes distribution that is fully supported by
-Cozystack.
+Cozystack runs on top of a Kubernetes cluster, either bring one up with Talos, or use an existing one.
 
-### Talos Linux Installation
+### Install Talos Linux
 
 Boot your machines with Talos Linux image in one of these ways:
 
-- [Install using temporary DHCP and PXE servers](/docs/operations/talos/installation/pxe/) running as Docker containers.
-- [Install using ISO-file](/docs/operations/talos/installation/iso/).
+- [Install using temporary DHCP and PXE servers](/docs/operations/talos/installation/pxe/) running in Docker containers.
+- [Install using ISO](/docs/operations/talos/installation/iso/).
 - [Install on Hetzner servers](/docs/operations/talos/installation/hetzner/).
 
 
@@ -54,18 +54,18 @@ Boot your machines with Talos Linux image in one of these ways:
 
 Bootstrap your Talos Linux cluster using one of the following tools:
 
-- [**talos-bootstrap**](/docs/operations/talos/configuration/talos-bootstrap/), for a quick walkthrough.
-- [**Talm**](/docs/operations/talos/configuration/talm/), offering declarative cluster management.
+- [**talos-bootstrap**](/docs/operations/talos/configuration/talos-bootstrap/), for an interactive walkthrough.
+- [**Talm**](/docs/operations/talos/configuration/talm/), for a declarative way of cluster management.
 
-### Other Kubernetes distributions
+### Existing cluster or other Kubernetes distributions
 
-If you bootstrap your Talos cluster in your own way, or even try to use a different Kubernetes distribution, make sure
+If you bootstrap your Talos cluster in your own way, or use a different Kubernetes distribution, make sure
 to apply all settings from the guides above.
-These are the most important settings:
+These settings are mandatory:
 
 * All CNI plugins must be disabled, as Cozystack will install its own plugin.
-* Kubernetes cluster domain must be set to `cozy.local`.
-* Listening address of some Kubernetes components must be changed from `localhost` to a network-reachable address.
+* Kubernetes cluster DNS domain must be set to `cozy.local`.
+* Listening address of some Kubernetes components must be changed from `localhost` to a routeable address.
 * Kubernetes API server must be reachable on `localhost`.
 
 
@@ -96,10 +96,10 @@ EOT
 ```
 
 - `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
-- `api-server-endpoint` is primarily used for generating kubeconfig files for your users. It is recommended to use globally accessible IP addresses instead of local ones.
+- `api-server-endpoint` is primarily used for generating kubeconfig files for your users. It is recommended to use routeable IP addresses instead of local ones.
 
 {{% alert color="info" %}}
-Cozystack enables telemetry collection. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
+Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
 {{% /alert %}}
 
 Create namespace and install Cozystack system components:
@@ -308,7 +308,7 @@ replicated        linstor.csi.linbit.com   Delete          Immediate            
 
 ## Configure Networking
 
-Cozystack is using MetalLB as the default load balancer.
+Cozystack uses MetalLB as the default load balancer.
 This documentation section explains how to configure networking with this default option.
 
 {{% alert color="info" %}}
@@ -450,7 +450,7 @@ root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:316
 
 **Cozystack Dashboard**
 
-If you want to access dashboard via root-ingress controller, you can enable this option:
+To access dashboard via root-ingress controller, enable this option:
 
 ```bash
 kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
@@ -460,7 +460,7 @@ kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p
 
 Use `dashboard.example.org` (under 192.168.100.200) to access system dashboard, where `example.org` is your domain specified for `tenant-root`
 
-Get authentification token from `tenant-root`:
+Get authentication token from `tenant-root`:
 ```bash
 kubectl get secret -n tenant-root tenant-root -o go-template='{{ printf "%s\n" (index .data "token" | base64decode) }}'
 ```
@@ -474,5 +474,7 @@ Use `grafana.example.org` (under 192.168.100.200) to access system monitoring, w
   ```bash
   kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
   ```
+
+**OIDC**
 
 Now you can consider [enabling OIDC](/docs/operations/oidc/)
