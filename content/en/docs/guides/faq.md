@@ -102,6 +102,29 @@ data:
 Update your `ingress` application and enable `dashboard: true` option in it.  
 Dashboard will become available under: `https://dashboard.<your_domain>`
 
+#### What to do if my cloud provider does not support MetalLB
+
+You still have the oportunity to expose main ingress controller using externalIPs method.
+
+Take IP-addresses on **external** network interfaces for your nodes, add them to the `externalIPs` list in the ingress configuration:
+
+```bash
+kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
+  "externalIPs": [
+    "192.168.100.11",
+    "192.168.100.12",
+    "192.168.100.13"
+  ]
+}}'
+```
+
+After that your ingress will be available on the specified IPs:
+
+```bash
+# kubect get svc -n tenant-root root-ingress-controller
+root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135.181.169.168   80/TCP,443/TCP   133d
+```
+
 #### How to cleanup etcd state
 
 Sometimes you might want to flush the etcd state from a node. You can use the following command:

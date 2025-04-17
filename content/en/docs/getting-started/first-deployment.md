@@ -311,9 +311,10 @@ replicated        linstor.csi.linbit.com   Delete          Immediate            
 Cozystack is using MetalLB as the default load balancer.
 This documentation section explains how to configure networking with this default option.
 
-<!--
-For other options, see [Configure Networking with Custom Load Balancers](#)
--->
+{{% alert color="warning" %}}
+:warning: If your cloud provider does not support MetalLB, you can consider exposing ingress controller using externalIPs of your nodes.
+Read our FAQ section [What to do if my cloud provider does not support MetalLB](/docs/guides/faq/#what-to-do-if-my-cloud-provider-does-not-support-metallb) for more details.
+{{% /alert %}}
 
 Cozystack has three types of IP addresses used:
 
