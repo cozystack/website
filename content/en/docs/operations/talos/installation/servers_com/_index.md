@@ -171,23 +171,21 @@ Use Talm to apply config and install Talos Linux on the drive.
            - 1.1.1.1
      ```
    - Add private interface configuration, and move `vip` to this section. This section isn’t generated automatically:
-     - `busPath` - Obtained from the "Discovered interfaces busPath" by matching the MAC address of the private interface specified in the provider's email. (Out of the two interfaces, select the one with the uplink).
+     - `interface` - Obtained from the "Discovered interfaces" by matching the MAC address of the private interface specified in the provider's email. (Out of the two interfaces, select the one with the uplink).
      - `addresses` - Use the address specified for Layer 2 (L2).
 
      Example:
      ```yaml
-     matching:
+     machine:
        network:
          interfaces:
-           - deviceSelector:
-               busPath: "0000:03:00.1"
+           - interface: eno2
              addresses:
                - 1.2.3.4/29
              routes:
                - network: 0.0.0.0/0
                  gateway: 1.2.3.1
-           - deviceSelector:
-               busPath: "0000:03:00.0"
+           - interface: eno1
              addresses:
                - 192.168.100.11/24
              vip:
