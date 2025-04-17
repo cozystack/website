@@ -299,6 +299,7 @@ kubectl get storageclasses
 ```
 
 example output:
+
 ```console
 NAME              PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
 local (default)   linstor.csi.linbit.com   Delete          WaitForFirstConsumer   true                   11m
@@ -310,9 +311,11 @@ replicated        linstor.csi.linbit.com   Delete          Immediate            
 Cozystack is using MetalLB as the default load balancer.
 This documentation section explains how to configure networking with this default option.
 
-<!--
-For other options, see [Configure Networking with Custom Load Balancers](#)
--->
+{{% alert color="info" %}}
+If your cloud provider does not support MetalLB, you can expose the ingress controller using the external IPs of your nodes.
+Read the FAQ section [What if my cloud provider does not support MetalLB](
+{{% ref "/docs/guides/faq#what-if-my-cloud-provider-does-not-support-metallb" %}}) for more details.
+{{% /alert %}}
 
 Cozystack has three types of IP addresses used:
 
