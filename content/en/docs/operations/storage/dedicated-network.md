@@ -375,3 +375,8 @@ LINSTOR ==> node-connection path list node01 node02
 ┊ Paths/dedicated/node02 ┊ optic-san ┊
 ╰────────────────────────────────────╯
 ```
+
+### Advanced CRD method
+
+See the example in
+[Multi Datacenter dedicated storage network guide]({{% ref "/docs/operations/stretched/linstor-dedicated-network" %}})
