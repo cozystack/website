@@ -1,60 +1,78 @@
 ---
-title: "Create tenant and get access to it"
-linkTitle: "Create tenant"
+title: "Create a User Tenant and Configure Access"
+linkTitle: "Create Tenant"
 description: "Learn how to create a tenant and get credentials for users to access it"
 weight: 40
 ---
 
-In short, tenants are the isolation feature of Cozystack. They are used to separate clients, teams or environments.
-Tenants also may have quotes set to prevent overuse of resources. Each tenant has its own set of applications and one or
-more nested Kubernetes. Tenant users have full access to their Kubernetes.
+Tenants are the isolation mechanism in Cozystack.
+They are used to separate clients, teams, or environments.
+Each tenant has its own set of applications and one or more nested Kubernetes clusters.
+Tenant users have full access to their clusters.
+Optionally, you can configure quotas for each tenant to limit resource usage and prevent overconsumption.
+
+To learn more about tenants, read the [Core Concepts]({{% ref "/docs/guides/concepts#tenant-system" %}}) guide.
+
 
 ## Prerequisites
 
-We will need a running Cozystack installation. You can use
-the [installation guide]({{% ref "/docs/getting-started/first-deployment" %}}) to install it.
+You will need a running Cozystack installation.
+Follow the [installation guide]({{% ref "/docs/getting-started/first-deployment" %}}) to deploy it.
 
-While installing Talos for Cozystack you should have get the `KUBECONFIG` for you new cluster. This config file was
-required to bootstrap the framework. It may also be useful later for system troubleshooting if something goes wrong.
-But for day-to-day operations you must create the user credentials.
+During Talos installation for Cozystack, you should have obtained the kubeconfig file for your new cluster.
+This config was required during the bootstrap process.
+Keep it safe — it may be useful later for troubleshooting.
+However, for day-to-day operations, you'll want to create user-specific credentials.
 
-Ensure you can access the dashboard as described in
-the [installation guide]({{% ref "/docs/getting-started/first-deployment#cozystack-dashboard" %}}).
+Make sure you can access the dashboard, as described in the
+[installation guide]({{% ref "/docs/getting-started/first-deployment#cozystack-dashboard" %}}).
 
-If using OIDC, users and roles must be configured, see the [OIDC guide]({{% ref "/docs/operations/oidc" %}}) for more
-details how to work with built-in OIDC server.
+If you're using OIDC, users and roles must be configured.
+See the [OIDC guide]({{% ref "/docs/operations/oidc" %}}) for details on how to work with the built-in OIDC server.
 
-## Create a tenant
 
-Tenants are created using the Cozystack application named `Tenant`. After Cozystack installation, there is a built-in
-tenant `tenant-root`. It must be used by platform administrators only, and should be used to create child tenants only.
-It's technically possible to install applications in the root tenant, but it's not recommended for production use.
+## Create a Tenant
 
-{{< tabs name="redis_password" >}}
-{{% tab name="in Dashboard" %}}
+Tenants are created using the Cozystack application named `Tenant`. 
+After installation, Cozystack includes a built-in tenant called `tenant-root`.
+This root tenant is reserved for platform administrators and should only be used to create child tenants.
+Although it’s technically possible to install applications in `tenant-root`,
+doing so is **not recommended** for production environments.
 
-1. Open the dashboard as a tenant-root user.
-2. Ensure current context is `tenant-root`. Switch context and reload the page if needed.
-3. Click on the `Catalog` tab in the left menu.
-4. Search for `Tenant` application badge and click on it. Application builtin documentation will open.
-5. Read the documentation and click on the `Deploy` button. Application parameters page will open.
-6. The only required parameter is `name`. The domain specified in the `host` must exist. Ensure that tenant user has
-   enough control over it to set up DNS records. When left blank, domain will be formed by adding `name`
-   subdomain to the main Cozystack domain. All parameters except `name` may be changed later.
-7. The checkboxes `etcd`/`monitoring`/`ingress`/`seaweedfs` refer to applications that user will be not able to install
-   or uninstall with their credentials. Only administrators can do this.
-8. The `etcd` checkbox is required for nested kubernetes cluster. It must be enabled before installation of the
-   "Kubernetes" application in the client tenant. Only disable it if you are sure that the client tenant will not be
-   used for nested Kubernetes.
-9. The `isolated` checkbox controls if sibling tenants can access each other over the network. This is not the same as
-   visibility in the dashboard. In most cases, it should be enabled (isolated).
-10. Resource quotas are empty by default, this means no limits. You can set them to prevent overuse of resources.
-11. Click the `Deploy <version>` button again. The tenant application will be installed in the root tenant.
-    {{% /tab %}}
+{{< tabs name="create_tenant" >}}
+{{% tab name="Using Dashboard" %}}
 
-{{% tab name="with kubectl" %}}
+1.  Open the dashboard as a `tenant-root` user.
+1.  Ensure the current context is set to `tenant-root`.
+    Switch context and reload the page if needed.
+1.  Navigate to the **Catalog** tab.
+1.  Search for the **Tenant** application and open it.
+1.  Review the documentation, then click the **Deploy** button to proceed to the parameters page.
+1.  Fill in the tenant `name`.
+    It is the only parameter that can't be changed later.
+1.  (Optional) Fill in the domain name in `host`.
+    This domain name must already exist.
+    Ensure that the tenant user has enough control over the domain to configure DNS records.
+    If left blank, the domain will default to `<name>.<cozystack-domain>`.
+1.  Select the checkboxes to install system-level apps: `etcd`, `monitoring`, `ingress`, and `seaweedfs`.
+    Tenant users will **not** be able to install or uninstall these apps — only administrators can.
 
-Create the tenant HelmRelease manifest (use the one created via dashboard as an example):
+    The `etcd` option is required for nested Kubernetes.
+    Select it before installing the **Kubernetes** application in the tenant.
+    Only disable it if you're certain the tenant won’t use nested Kubernetes.
+1.  The `isolated` option determines whether sibling tenants can communicate over the network.
+    This does **not** affect visibility in the dashboard.
+    In most cases, it should be enabled (i.e., isolation is on).
+1.  By default, no resource quotas are set.
+    This means no usage limits.
+    You can define quotas to prevent resource overuse.
+1.  Click **Deploy <version>** to install the tenant application into the root tenant.
+
+{{% /tab %}}
+
+{{% tab name="Using kubectl" %}}
+
+Create a HelmRelease manifest for the tenant. You can use a manifest created via the dashboard as a starting point:
 
 ```yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
@@ -83,46 +101,57 @@ spec:
     seaweedfs: false
 ```
 
-And apply it:
+Apply the manifest:
 
 ```bash
 # Use the kubeconfig for the root tenant
 export KUBECONFIG=./kubeconfig-tenant-root
-# Get the password
+# Apply the manifest
 kubectl -n tenant-root apply -f hr-tenant-team1.yaml
 ```
 
 {{% /tab %}}
 {{< /tabs >}}
 
-It's possible to assist tenant users with installation of database applications and nested Kubernetes clusters. As
-administrator, you can switch context in the dashboard to get into the tenant. Tenant users can access only their
-tenant and downwards.
+You can assist tenant users with installing database applications or nested Kubernetes clusters.
+As an administrator, you can switch context in the dashboard to access any tenant.
+Tenant users, however, can only access their own tenant and any child tenants.
 
-### Get tenant kubeconfig with OIDC enabled
 
-Retrieve the kubeconfig file from the dashboard as described
-in [OIDC guide]({{% ref "/docs/operations/oidc/enable_oidc#step-4-retrieve-kubeconfig" %}}).
+## Get Tenant Kubeconfig
 
-### Get tenant kubeconfig with OIDC disabled
+Tenant users need a kubeconfig file to access their Kubernetes cluster.
+The method to retrieve it depends on whether OIDC is enabled in your Cozystack setup.
 
-As an administrator, get the service account token secret in the tenant namespace. The secret name is the same as the
-tenant name. You actually only need the token from there.
+### With OIDC Enabled
 
-Example of command to retrieve the token for tenant `team1`:
+You can retrieve the kubeconfig file directly from the dashboard, as described in the
+[OIDC guide]({{% ref "/docs/operations/oidc/enable_oidc#step-4-retrieve-kubeconfig" %}}).
+
+### Without OIDC
+
+As an administrator, you'll need to retrieve a service account token from the tenant namespace.
+The secret holding the token has the same name as the tenant.
+
+To retrieve the token for a tenant named `team1`, run:
 
 ```bash
-$ kubectl -n tenant-team1 get secret tenant-team1 -o json | jq -r '.data.token | @base64d'
-eyJhbG....
+kubectl -n tenant-team1 get secret tenant-team1 -o json | jq -r '.data.token | @base64d'
 ```
 
-Then fill this token into the kubeconfig template, and save it as `kubeconfig-tenant-<name>.yaml` file. The namespace
-should be also set to the tenant name, otherwise many GUI clients will complain about missing permissions.
+Next, insert this token into a kubeconfig template, and save the file as `kubeconfig-tenant-<name>.yaml`.
 
-The same token should be used by the tenant user to access the dashboard if OIDC is disabled.
+Make sure to also set the default namespace to the tenant name.
+Many GUI clients will display permission errors if the namespace is not explicitly defined.
 
-### Get nested Kubernetes kubeconfig
+The same token can also be used by the tenant user to log into the Cozystack dashboard if OIDC is disabled.
 
-In general case, administrators should not do that. The nested Kubernetes cluster is installed in the tenant namespace
-by the tenant user. Tenant users have full control over their nested Kubernetes clusters. The nested Kubernetes cluster
-kubeconfig can be downloaded from the corresponding application page in the dashboard.
+### Get Nested Kubernetes Kubeconfig
+
+In general, administrators do **not** need to retrieve kubeconfig files for nested Kubernetes clusters.
+
+These clusters are installed by the tenant user, within their own tenant namespace.
+Tenant users have full control over their nested Kubernetes environments.
+
+To access a nested Kubernetes cluster, the tenant user can download the kubeconfig file 
+directly from the corresponding application's page in the dashboard.
