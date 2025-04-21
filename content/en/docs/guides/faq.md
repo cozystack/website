@@ -11,11 +11,10 @@ aliases:
 Troubleshooting advice can be found on our [Troubleshooting Cheatsheet](/docs/operations/troubleshooting/).
 {{% /alert %}}
 
-## General questions
 
-### Bundles
+## Bundles
 
-#### How to overwrite parameters for specific components
+### How to overwrite parameters for specific components
 
 You might want to overwrite specific options for the components.
 To achieve this, you must specify values in JSON or YAML format using the values-<component> option.
@@ -41,7 +40,7 @@ data:
       k8sServicePort: 6443
 ```
 
-#### How to disable some components from bundle
+### How to disable some components from bundle
 
 Sometimes you may need to disable specific components within a bundle.
 To do this, use the `bundle-disable` option and provide a comma-separated list of the components you want to disable. For example:
@@ -63,9 +62,9 @@ data:
 :warning: Disabling components using this option will not remove them if they are already installed. To remove them, you must delete the Helm release manually using the `kubectl delete hr -n <namespace> <component>` command.
 {{% /alert %}}
 
-### Configuration
+## Configuration
 
-#### How to Enable KubeSpan
+### How to Enable KubeSpan
 
 Talos Linux provides a full mesh WireGuard network for your cluster.
 
@@ -97,14 +96,14 @@ data:
       mtu: 1222
 ```
 
-### Operations
+## Operations
 
-#### How to enable access to dashboard via ingress-controller
+### How to enable access to dashboard via ingress-controller
 
 Update your `ingress` application and enable `dashboard: true` option in it.  
 Dashboard will become available under: `https://dashboard.<your_domain>`
 
-#### What if my cloud provider does not support MetalLB
+### What if my cloud provider does not support MetalLB
 
 You still have the opportunity to expose the main ingress controller using the external IPs method.
 
@@ -128,7 +127,7 @@ After that, your Ingress will be available on the specified IPs:
 root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135.181.169.168   80/TCP,443/TCP   133d
 ```
 
-#### How to cleanup etcd state
+### How to cleanup etcd state
 
 Sometimes you might want to flush the etcd state from a node. You can use the following command:
 
@@ -141,7 +140,7 @@ talosctl reset --system-labels-to-wipe=EPHEMERAL --graceful=false --reboot
 {{% /alert %}}
 
 
-#### How to generate kubeconfig for tenant users
+### How to generate kubeconfig for tenant users
 
 Use the following script:
 
@@ -163,7 +162,7 @@ kubectl config --kubeconfig tenant-kubeconfig set current-context "$user@$cluste
 
 in the result, you’ll receive the tenant-kubeconfig file, which you can provide to the user.
 
-#### How to configure Cozystack using FluxCD or ArgoCD
+### How to configure Cozystack using FluxCD or ArgoCD
 
 Here you can find reference repository to learn how to configure Cozystack services using GitOps approach:
 
