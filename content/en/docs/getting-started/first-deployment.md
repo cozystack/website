@@ -55,7 +55,21 @@ Boot your machines with Talos Linux image in one of these ways:
 Bootstrap your Talos Linux cluster using one of the following tools:
 
 - [**talos-bootstrap**](/docs/operations/talos/configuration/talos-bootstrap/), for an interactive walkthrough.
+```bash
+sudo curl -fLo /usr/local/bin/talos-bootstrap https://github.com/cozystack/talos-bootstrap/raw/master/talos-bootstrap
+sudo chmod +x /usr/local/bin/talos-bootstrap
+talos-bootstrap --help
+```
+
 - [**Talm**](/docs/operations/talos/configuration/talm/), for a declarative way of cluster management.
+  
+  talm is a utility tool for bootstraping and managing Talos clusters non interactively. Visit https://github.com/cozystack/talm/releases for the latest version and prebuilt binaries.
+
+```bash
+sudo curl -fLo /usr/local/bin/talm https://github.com/cozystack/talm/releases/latest/download/talm-linux-amd64
+sudo chmod +x /usr/local/bin/talm
+talm --help
+```
 
 ### Existing cluster or other Kubernetes distributions
 
