@@ -66,7 +66,7 @@ talos-bootstrap --help
   talm is a utility tool for bootstraping and managing Talos clusters non interactively. Visit https://github.com/cozystack/talm/releases for the latest version and prebuilt binaries.
 
 ```bash
-sudo curl -fLo /usr/local/bin/talm https://github.com/cozystack/talm/releases/download/v0.12.0/talm-linux-amd64
+sudo curl -fLo /usr/local/bin/talm https://github.com/cozystack/talm/releases/download/latest/talm-linux-amd64
 sudo chmod +x /usr/local/bin/talm
 talm --help
 ```
