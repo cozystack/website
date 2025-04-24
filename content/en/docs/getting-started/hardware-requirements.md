@@ -6,16 +6,26 @@ weight: 5
 ---
 
 Cozystack utilizes Talos Linux, a minimalistic Linux distribution designed solely to run Kubernetes.
-Usually it means that it will **not** be possible to share a server with services other than Cozystack runs.
-The good news is that whichever service you need, Cozystack will run it prefectly: securely, efficiently, and
+Usually, this means you cannot share a server with any services other than those run by Cozystack.
+The good news is that whichever service you need, Cozystack will run it perfectly: securely, efficiently, and
 in a fully containerized or virtualized environment.
 
 Hardware requirements depend on your usage scenario.
-Below are several common deployment options, review them to determine which setup fits best to your needs.
+Below are several common deployment options; review them to determine which setup fits your needs best.
 
 ## Small lab
 
 Here are the baseline requirements for running a tiny installation.
+The minimum recommended configuration for each node is as follows:
+
+| Component        | Requirement  |
+|------------------|--------------|
+| CPU              | 4 cores      |
+| CPU Type         | host         |
+| RAM              | 16 GB        |
+| Primary Disk     | 32 GB        |
+| Secondary Disk   | 100 GB (raw) |
+
 
 **Compute:**
 
@@ -26,8 +36,23 @@ Here are the baseline requirements for running a tiny installation.
 
 **Storage:**
 
-The primary disk should be at least 32 GB. Talos Linux uses it for the OS, images, and logs, so it's better to have more space.
-- Secondary disk is dedicated to the storage system. 100 GB is a good starting point, but the actual size depends entirely on your workload.
+Storage in a Cozystack cluster serves two primary roles: one for the system and one for your workloads.
+Understanding each role ensures the stability and scalability of your environment.
+
+- **Primary Disk**: This disk contains the Talos Linux operating system, essential system kernel modules and
+  Cozystack system base pods, logs, and base container images.
+  
+  Minimum: 32 GB; approximately 26 GB is used in a standard Cozystack setup.
+  The Talos installation expects `/dev/sda` as the system disk (virtio drives usually appear as `/dev/vda`).
+
+- **Secondary Disk**: Dedicated to workload data and can be increased based on workload requirements.
+  Used for provisioning volumes via PersistentVolumeClaims (PVCs).
+
+  Suggested: 100 GB. Disk path (usually `/dev/sdb`) will be defined in the storage configuration.
+  It does not affect the Talos installation.
+
+  Learn more about configuring Linstor StorageClass from the
+  [Deploy Cozystack tutorial](https://cozystack.io/docs/getting-started/first-deployment/#configure-storage)
 
 **Networking:**
 
@@ -50,7 +75,7 @@ For a production environment, consider the following:
 
 **Networking:**
 
-- In a multi-datacenter setup, it’s ideal to have direct, dedicated optical links between datacenters.
+- In a setup with multiple data centers, it’s ideal to have direct, dedicated optical links between them.
 - Servers must support out-of-band management (IPMI, iLO, iDRAC, etc.) to allow remote monitoring, recovery, and management.
 
 ## Distributed Cluster
@@ -59,18 +84,18 @@ You can build a [distributed cluster]({{% ref "/docs/operations/stretched/" %}})
 
 **Networking:**
 
-- Distributed cluster requires both fast and reliable network, and it **must** have low RTT (Round Trip Time), as
+- Distributed cluster requires both a fast and reliable network, and it **must** have low RTT (Round Trip Time), as
   Kubernetes is not designed to operate efficiently over high-latency networks.
 
-  Datacenters in the same city typically have less than 1 ms latency, which is ideal.
+  Data centers in the same city typically have less than 1 ms latency, which is ideal.
   The *maximum acceptable* RTT is 10 ms.
   Running Kubernetes or replicated storage over a network with RTT above 20 ms is strongly discouraged.
-  To measure actual RTT you can use the `ping` command.
+  To measure actual RTT, you can use the `ping` command.
 
-- It's also recommended to have at least 2–3 nodes per datacenter in a distributed cluster.
-  This ensures that the cluster would be able to survive one datacenter loss without major disruption.
+- It's also recommended to have at least 2–3 nodes per data center in a distributed cluster.
+  This ensures that the cluster would be able to survive one data center loss without major disruption.
 
-- If it's hard to keep a single address space between datacenters, instead of using some external VPN,
+- If it's hard to keep a single address space between data centers, instead of using some external VPN,
   you can enable **KubeSpan**, a Talos Linux feature that creates a WireGuard-backed full-mesh VPN between nodes.
 
 ## Highly Available Applications
