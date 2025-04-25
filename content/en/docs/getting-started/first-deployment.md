@@ -56,10 +56,9 @@ Bootstrap your Talos Linux cluster using one of the following tools:
 
 - [**talos-bootstrap**](/docs/operations/talos/configuration/talos-bootstrap/), for an interactive walkthrough.
 ```bash
-sudo curl -fLo /usr/local/bin/talos-bootstrap https://github.com/cozystack/talos-bootstrap/raw/master/talos-bootstrap
+sudo curl -fsSL -o /usr/local/bin/talos-bootstrap https://github.com/cozystack/talos-bootstrap/raw/master/talos-bootstrap
 sudo chmod +x /usr/local/bin/talos-bootstrap
 talos-bootstrap --help
-```
 
 - [**Talm**](/docs/operations/talos/configuration/talm/), for a declarative way of cluster management.
   
