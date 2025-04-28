@@ -50,25 +50,38 @@ Boot your machines with Talos Linux image in one of these ways:
 - [Install on Hetzner servers](/docs/operations/talos/installation/hetzner/).
 
 
-### Bootstrap Talos cluster
+### Bootstrap Talos Cluster
 
 Bootstrap your Talos Linux cluster using one of the following tools:
 
-- [**talos-bootstrap**](/docs/operations/talos/configuration/talos-bootstrap/), for an interactive walkthrough.
-```bash
-sudo curl -fsSL -o /usr/local/bin/talos-bootstrap https://github.com/cozystack/talos-bootstrap/raw/master/talos-bootstrap
-sudo chmod +x /usr/local/bin/talos-bootstrap
-talos-bootstrap --help
-
 - [**Talm**](/docs/operations/talos/configuration/talm/), for a declarative way of cluster management.
-  
-  talm is a utility tool for bootstraping and managing Talos clusters non interactively. Visit https://github.com/cozystack/talm/releases for the latest version and prebuilt binaries.
+- [**talos-bootstrap**](/docs/operations/talos/configuration/talos-bootstrap/), for an interactive walkthrough.
+
+{{< tabs name="Bootstrapping tools" >}}
+{{% tab name="Talm" %}}
+Talm is a utility tool for bootstrapping and managing Talos clusters in a declarative way.
+
+Visit [Talm releases](https://github.com/cozystack/talm/releases ) for the latest version and prebuilt binaries.
 
 ```bash
-sudo curl -fLo /usr/local/bin/talm https://github.com/cozystack/talm/releases/latest/download/talm-linux-amd64
+sudo curl -fLo /usr/local/bin/talm \
+    https://github.com/cozystack/talm/releases/latest/download/talm-linux-amd64
 sudo chmod +x /usr/local/bin/talm
 talm --help
 ```
+{{% /tab %}}
+
+{{% tab name="talos-bootstrap" %}}
+[talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) is an interactive script for bootstrapping Kubernetes clusters on Talos OS.
+
+```bash
+sudo curl -fsSL -o /usr/local/bin/talos-bootstrap \
+    https://github.com/cozystack/talos-bootstrap/raw/master/talos-bootstrap
+sudo chmod +x /usr/local/bin/talos-bootstrap
+talos-bootstrap --help
+```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### Existing cluster or other Kubernetes distributions
 
