@@ -107,7 +107,6 @@ except it's fully integrated with Cozystack and isolated within your own tenant.
     -    Don’t worry if you’re unsure about some settings. Most of them can be updated later.
 1.  Click **Deploy** again. The database will be installed in your tenant’s namespace.
 
-![Postgres deployment values](deploy-postgresql.png)
 
 {{% /tab %}}
 
