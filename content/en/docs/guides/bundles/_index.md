@@ -60,7 +60,82 @@ or just need a minimal Kubernetes cluster.
 [distro-full]: {{% ref "/docs/operations/bundles/distro-full" %}}
 [distro-hosted]: {{% ref "/docs/operations/bundles/distro-hosted" %}}
 
-## What's Next
+
+## Cozystack Composition
+
+To understand Cozystack bundles, it's helpful to view all Cozystack components organized by layers.
+
+- **Layer 4: User-Facing Services**: Managed Kubernetes, Databases-as-a-Service, and other managed applications.
+- **Layer 3: Platform Services**: Operators, Cluster API and Dashboard, and Monitoring.
+- **Layer 2: Infrastructure Services**: Storage (using LINSTOR, by default), Networking (using OVN), and Virtualization (using KubeVirt).
+- **Layer 1: OS and Hardware**: The foundation, typically Talos Linux and a root Kubernetes cluster installed on Talos.
+
+![Cozystack Architecture Layers](cozystack-layers.png)
+
+## Choosing the Right Bundle
+
+Bundles combine components from different layers to match particular needs.
+Some are designed for full platform scenarios, others for cloud-hosted workloads or Kubernetes distributions.
+
+### `paas-full`
+
+`paas-full` is a full-featured PaaS and IaaS bundle.
+It includes all four layers and provides the full set of Cozystack components.
+Some higher-layer components are optional and can be excluded during installation.
+
+`paas-full` is intended for installation on bare metal servers.
+
+Read more:
+
+- Bundle [configuration reference][paas-full].
+- Bundle source: [paas-full.yaml][paas-full-gh].
+
+### `iaas-full`
+
+This planned bundle offers a complete infrastructure-as-a-service setup.
+It provides all Cozystack components except for Kubernetes operators
+and preset managed applications.
+
+Bundle `iaas-full` is yet to be implemented in Cozystack.
+See [cozystack/cozystack#730][iaas-full-gh].
+
+### `paas-hosted`
+
+Cozystack can be installed as platform-as-a-service (PaaS) on top of an existing managed Kubernetes cluster,
+typically provisioned from a cloud provider.
+Bundle `paas-hosted` is made for this use case.
+It includes layers 3 and 4, providing Cozystack API and UI, managed applications, VMs, and tenant Kubernetes clusters.
+
+Read more:
+
+- Bundle [configuration reference][paas-hosted].
+- Bundle source: [paas-hosted.yaml][paas-hosted-gh].
+
+### `distro-full`
+
+Cozystack can be used as a pure Kubernetes distribution for installing on bare metal.
+Bundle `distro-full` includes everything needed to make a ready-to-work Kubernetes cluster:
+Talos as the operating system, a Kubernetes distribution, plus ready-to-use networking, virtualization, and storage subsystems.
+As optional components, it also provides monitoring and a set of Kubernetes operators.
+
+Read more:
+
+- Bundle [configuration reference][distro-full].
+- Bundle source: [distro-full.yaml][distro-full-gh].
+
+### `distro-hosted`
+
+This minimal Cozystack bundle adds extra functionality on top of a hosted Kubernetes cluster.
+It includes three optional components:
+
+- Virtualization subsystem (as KubeVirt).
+- Monitoring subsystem.
+- Kubernetes operators.
+
+- Bundle [configuration reference][distro-hosted].
+- Bundle source: [distro-hosted.yaml][distro-hosted-gh].
+
+## Learn More
 
 To see the full list of components and configuration options for each bundle, refer to the 
 [bundle reference documentation]({{% ref "/docs/operations/bundles" %}}).
