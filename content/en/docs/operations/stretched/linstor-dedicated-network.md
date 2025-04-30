@@ -1,33 +1,38 @@
 ---
-title: "Linstor traffic optimization"
-linkTitle: "Linstor dedicated network"
-description: "A guide to an advanced dedicated network for storage traffic"
+title: "Configuring a Dedicated Network for Distributed Storage with LINSTOR"
+linkTitle: "Distributed Storage Network"
+description: "Configure LINSTOR to prefer local links for storage and fall back to inter-datacenter connections"
 weight: 40
 ---
 
-## Objective
+## Introduction
 
-It is common to have a dedicated network for storage in a hyper-converged cluster. However, it is not always
-possible to have several dedicated network links between datacenters. If you don't have dedicated lines for storage
-between datacenters, then either your storage nodes become segmented, or you need to use the single link between
-datacenters for both storage traffic and other traffic.
+This guide explains how to improve storage reliability and performance in distributed Cozystack clusters.
 
-This guide shows how to configure Linstor to use a dedicated network for storage traffic inside the single datacenter,
-but fallback to the only available link between datacenters.
+In hyper-converged clusters, it’s common to dedicate a network to storage traffic.
+However, it’s not always possible to provision separate storage links between datacenters.
 
-## Node connections
+If you lack dedicated inter-datacenter links for storage, you have two options:
 
-Ensure you have read and understood the
-[Linstor dedicated network guide]({{% ref "/docs/operations/storage/dedicated-network" %}}) before proceeding.
+- make storage nodes in each datacenter isolated,
+- make storage traffic share the existing uplinks with other workloads.
 
-## Node labels
+This guide shows how to configure LINSTOR to use a dedicated network for storage traffic within each datacenter,
+while falling back to shared links between datacenters when needed.
 
-To configure node connections differently for nodes inside and outside the datacenter, you need to label your nodes
-first. See the [Topology node labels guide]({{% ref "/docs/operations/stretched/labels" %}}) for details.
 
-The required label to proceed with this guide is `topology.kubernetes.io/zone`.
+## Prerequisites
 
-## CRD configuration
+This guide builds on the [Dedicated Network for LINSTOR]({{% ref "/docs/operations/storage/dedicated-network" %}}) guide,  
+adding additional methods and configuration patterns specific to multi-datacenter environments.
+To apply the patterns in this guide, it's important to understand how node interfaces and connection paths work.  
+Be sure to review the previous guide first, as it explains these concepts in detail.
+
+To apply different node connection settings depending on node location, you’ll need to label your nodes accordingly.
+Refer to the [Topology node labels guide]({{% ref "/docs/operations/stretched/labels" %}}) for instructions.
+This guide uses the `topology.kubernetes.io/zone` label to distinguish datacenters.
+
+## Connection configuration
 
 In this example, we have three datacenters: `dc1`, `dc2`, and `dc3`. The datacenters are interconnected with direct
 optical lines, and the interface is named `region10g`. The nodes inside datacenters `dc1` and `dc2` have a separate
@@ -36,14 +41,21 @@ dedicated network switch for storage, and all traffic between nodes in `dc3` is 
 connect to other datacenters, there is a VPN server connected to the optical lines. The nodes in `dc3` have a VLAN
 interface with an IP from the `region10g` subnet.
 
-The best available network configuration for storage traffic will be as follows:
+Consider a scenario with three datacenters: `dc1`, `dc2`, and `dc3`:
 
-* Nodes in `dc1` and `dc2` will use the dedicated network for storage traffic inside the datacenter
-* Nodes in `dc3` will use the default network for storage traffic inside the datacenter, not using additional hop via
-  VPN server
-* Nodes not in the same datacenter will use the `region10g` interface for storage traffic.
+-   The datacenters are linked via direct optical lines, exposed to the nodes as an interface named `region10g`.
+-   Nodes in `dc1` and `dc2` are connected to a dedicated network switch for storage,  
+    and use a separate interface named `san` exclusively for storage traffic.
+-   Datacenter `dc3` lacks a dedicated storage network.
+    All intra-datacenter traffic in `dc3` uses the default network.
 
-Here is an example of how to configure the Linstor CRD to achieve this:
+Based on this setup, the optimal storage traffic routing is:
+
+-   Nodes in `dc1` and `dc2` use the `san` interface for local storage replication.
+-   Nodes in `dc3` use their default network interface for local storage replication, avoiding unnecessary hops through the VPN server.
+-   Cross-datacenter storage traffic flows over the `region10g` interface.
+
+Here’s the LINSTOR custom resource definition (CRD) to implement this logic:
 
 ```yaml
 ---
@@ -66,8 +78,8 @@ spec:
   - name: intra-datacenter
     interface: san
 
-# As nodes in `dc3` do not have a dedicated network switch, they will use the default network
-#   for storage traffic. There is no need to configure any special node connections.
+# Nodes in `dc3` use the default network.
+# No special connection is needed for replication within that datacenter.
 
 ---
 apiVersion: piraeus.io/v1
@@ -84,9 +96,9 @@ spec:
     interface: region10g
 ```
 
-After applying this configuration, the resulting node connections list will look like this:
+After applying this configuration, you can inspect the resulting connection paths:
 
-```
+```console
 LINSTOR ==> node-connection list
 ╭─────────────────────────────────────────────────────╮
 ┊ Node A ┊ Node B ┊ Properties                        ┊
@@ -97,4 +109,5 @@ LINSTOR ==> node-connection list
 ....
 ```
 
-and node pairs inside the `dc3` datacenter will not have any node connections configured.
+Node pairs inside the `dc3` datacenter will not have any custom node connection configured,
+and will use the default interface instead.

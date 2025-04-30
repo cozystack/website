@@ -1,6 +1,6 @@
 ---
 title: "Configuring a Dedicated Network for LINSTOR"
-linkTitle: "Dedicated Network"
+linkTitle: "Dedicated Network for LINSTOR"
 description: "Redirect LINSTOR replication traffic to a dedicated network interface for better reliability and performance."
 weight: 10
 ---

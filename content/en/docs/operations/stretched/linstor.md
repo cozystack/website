@@ -6,7 +6,6 @@ weight: 30
 aliases:
   - /docs/stretched/linstor
 ---
-
 ## Potential problems
 
 Linstor server manages DRBD volumes and is responsible for creating, deleting, and managing them. DRBD itself is a
