@@ -1,8 +1,8 @@
 ---
-title: "Storage subsystem guides"
+title: "Storage Subsystem Guides"
 linkTitle: "Storage"
-description: "Operational guides on storage subsystem"
+description: "Operational guides on the storage subsystem"
 weight: 55
 ---
 
-These guides will show you how to perform typical tasks related to the Linstor storage system in Cozystack.
+These guides will show you how to perform typical tasks related to the LINSTOR storage system in Cozystack.
