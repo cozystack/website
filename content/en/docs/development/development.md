@@ -128,7 +128,8 @@ Just install it as `readme-generator` binary in your system and run generation u
 
 To build images, you need to install and configure the [`docker buildx`](https://github.com/docker/buildx) plugin.
 
-The following command allows you to build images directly in a Kubernetes cluster:
+Instead of a built-in builder, you can [configure additional ones](https://docs.docker.com/build/builders/), which may be remote, or support multiple architectures.
+This example shows how to create a builder with `kubernetes` driver, which allows you to build images directly in a Kubernetes cluster:
 
 ```bash
 docker buildx create \
