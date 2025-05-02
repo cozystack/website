@@ -30,18 +30,18 @@ This tutorial shows how to bootstrap Cozystack.
 It will guide you through the following steps:
 
 1.  Create a Kubernetes cluster
-1.  Bootstrap Cozystack
-1.  Configure Storage
-1.  Configure Networking
-1.  Access Cozystack dashboard
+1.  Install Cozystack
+1.  Configure storage
+1.  Configure networking
 1.  Deploy etcd, ingress and monitoring stack
+1.  Finalize deployment and access Cozystack dashboard 
 
 
-## Create Kubernetes cluster
+## 1. Create Kubernetes cluster
 
 Cozystack runs on top of a Kubernetes cluster, either bring one up with Talos, or use an existing one.
 
-### Install Talos Linux
+### 1.1 Install Talos Linux
 
 Boot your machines with Talos Linux image in one of these ways:
 
@@ -50,7 +50,7 @@ Boot your machines with Talos Linux image in one of these ways:
 - [Install on Hetzner servers](/docs/operations/talos/installation/hetzner/).
 
 
-### Bootstrap Talos Cluster
+### 1.2 Bootstrap Talos Cluster
 
 Bootstrap your Talos Linux cluster using one of the following tools:
 
@@ -83,7 +83,7 @@ talos-bootstrap --help
 {{% /tab %}}
 {{< /tabs >}}
 
-### Existing cluster or other Kubernetes distributions
+### 1.3 Existing cluster or other Kubernetes distributions
 
 If you bootstrap your Talos cluster in your own way, or use a different Kubernetes distribution, make sure
 to apply all settings from the guides above.
@@ -95,7 +95,7 @@ These settings are mandatory:
 * Kubernetes API server must be reachable on `localhost`.
 
 
-## Install Cozystack
+## 2. Install Cozystack
 
 Write a config for Cozystack, referring to the [bundles documentation](/docs/operations/bundles/) for configuration parameters.
 
@@ -194,7 +194,7 @@ cozy-victoria-metrics-operator   victoria-metrics-operator   4m1s   True    Rele
 tenant-root                      tenant-root                 4m1s   True    Release reconciliation succeeded
 ```
 
-## Configure Storage
+## 3. Configure Storage
 
 Setup alias to access LINSTOR:
 ```bash
@@ -332,7 +332,7 @@ local (default)   linstor.csi.linbit.com   Delete          WaitForFirstConsumer 
 replicated        linstor.csi.linbit.com   Delete          Immediate              true                   11m
 ```
 
-## Configure Networking
+## 4. Configure Networking
 
 Cozystack uses MetalLB as the default load balancer.
 This documentation section explains how to configure networking with this default option.
@@ -386,7 +386,7 @@ spec:
   avoidBuggyIPs: false
 ```
 
-## Setup Basic Applications
+## 5. Setup Basic Applications
 
 Enable `etcd`, `monitoring`, and `ingress` in your `tenant-root`:
 
@@ -400,7 +400,7 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 }}'
 ```
 
-## Final steps
+## 6. Final steps
 
 Check persistent volumes provisioned:
 
