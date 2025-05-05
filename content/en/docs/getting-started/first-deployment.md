@@ -340,7 +340,7 @@ This documentation section explains how to configure networking with this defaul
 {{% alert color="info" %}}
 If your cloud provider does not support MetalLB, you can expose the ingress controller using the external IPs of your nodes.
 Read the FAQ section [What if my cloud provider does not support MetalLB](
-{{% ref "/docs/guides/faq#what-if-my-cloud-provider-does-not-support-metallb" %}}) for more details.
+{{% ref "/docs/operations/faq#what-if-my-cloud-provider-does-not-support-metallb" %}}) for more details.
 {{% /alert %}}
 
 Cozystack has three types of IP addresses used:
