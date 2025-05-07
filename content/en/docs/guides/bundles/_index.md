@@ -18,20 +18,19 @@ or just need a minimal Kubernetes cluster.
 ## Bundles Overview
 
 
-
-| Component                                | [paas-full]            | [iaas-full]<sup>*</sup> | [paas-hosted]  | [distro-full]         | [distro-hosted]       |
-|:-----------------------------------------|:-----------------------|:------------------------|:---------------|:----------------------|:----------------------|
-| Cozystack Dashboard                      | ✔                      | ✔                       | ✔              | ❌                    | ❌                    |
-| [Cozystack API][api]                     | ✔                      | ✔                       | ✔              | ❌                    | ❌                    |
-| [Managed Applications][apps]             | ✔                      | ❌                      | ✔              | ❌                    | ❌                    |
-| [Virtual Machines][vm]                   | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
-| [Managed Kubernetes][k8s]                | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
-| Operators                                | ✔                      | ❌                      | ✔              | ✔ (optional)          | ✔ (optional)          |
-| [Monitoring subsystem]                   | ✔                      | ✔                       | ✔              | ✔ (optional)          | ✔ (optional)          |
-| Storage subsystem                        | [LINSTOR]              | [LINSTOR]               | ❌             | [LINSTOR]             | ❌                    |
-| Networking subsystem                     | [Kube-OVN] + [Cilium]  | [Kube-OVN] + [Cilium]   | ❌             | [Cilium]              | ❌                    |
-| Virtualization subsystem                 | [KubeVirt]             | [KubeVirt]              | ❌             | [KubeVirt] (optional) | [KubeVirt] (optional) |
-| OS and Hardware ([Talos] + [Kubernetes]) | ✔                      | ✔                       | ❌             | ✔                     | ❌                    |
+| Component                     | [paas-full]            | [iaas-full]<sup>*</sup> | [paas-hosted]  | [distro-full]         | [distro-hosted]       |
+|:------------------------------|:-----------------------|:------------------------|:---------------|:----------------------|:----------------------|
+| Cozystack Dashboard           | ✔                      | ✔                       | ✔              | ❌                    | ❌                    |
+| [Cozystack API][api]          | ✔                      | ✔                       | ✔              | ❌                    | ❌                    |
+| [Managed Applications][apps]  | ✔                      | ❌                      | ✔              | ❌                    | ❌                    |
+| [Virtual Machines][vm]        | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
+| [Managed Kubernetes][k8s]     | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
+| Operators                     | ✔                      | ❌                      | ✔              | ✔ (optional)          | ✔ (optional)          |
+| [Monitoring subsystem]        | ✔                      | ✔                       | ✔              | ✔ (optional)          | ✔ (optional)          |
+| Storage subsystem             | [LINSTOR]              | [LINSTOR]               | ❌             | [LINSTOR]             | ❌                    |
+| Networking subsystem          | [Kube-OVN] + [Cilium]  | [Kube-OVN] + [Cilium]   | ❌             | [Cilium]              | ❌                    |
+| Virtualization subsystem      | [KubeVirt]             | [KubeVirt]              | ❌             | [KubeVirt] (optional) | [KubeVirt] (optional) |
+| OS and [Kubernetes] subsystem | [Talos Linux]          | [Talos Linux]           | ❌             | [Talos Linux]         | ❌                    |
 
 
 <sup>*</sup> Bundle `iaas-full` is currently on the roadmap, see [cozystack/cozystack#730][iaas-full-gh].
@@ -45,7 +44,7 @@ or just need a minimal Kubernetes cluster.
 [kube-ovn]: {{% ref "/docs/guides/platform-stack#kube-ovn" %}}
 [cilium]: {{% ref "/docs/guides/platform-stack#cilium" %}}
 [kubevirt]: {{% ref "/docs/guides/platform-stack#kubevirt" %}}
-[talos]: {{% ref "/docs/guides/platform-stack#talos-linux" %}}
+[talos linux]: {{% ref "/docs/guides/platform-stack#talos-linux" %}}
 [kubernetes]: {{% ref "/docs/guides/platform-stack#kubernetes" %}}
 
 [paas-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/paas-full.yaml
