@@ -60,6 +60,67 @@ or just need a minimal Kubernetes cluster.
 [distro-full]: {{% ref "/docs/operations/bundles/distro-full" %}}
 [distro-hosted]: {{% ref "/docs/operations/bundles/distro-hosted" %}}
 
+
+## Cozystack Composition
+
+Cozystack is built around four layers:
+
+- **Layer 4: User-Facing Services**: Managed Kubernetes, Databases-as-a-Service, and other managed applications.
+- **Layer 3: Platform Services**: Operators, Cluster API and Dashboard, and Monitoring.
+- **Layer 2: Infrastructure Services**: Storage (using LINSTOR, by default), Networking (using OVN), and Virtualization (using KubeVirt).
+- **Layer 1: OS and Hardware**: The foundation, typically Talos Linux and a root Kubernetes cluster installed on Talos.
+
+![Cozystack Architecture Layers](cozystack-layers.jpg)
+
+## Choosing the Right Bundle
+
+Bundles combine components from different layers to match particular needs.
+Some are designed for full platform scenarios, others for cloud-hosted workloads or Kubernetes distributions.
+
+### `paas-full`
+
+`paas-full` is a full-featured PaaS and IaaS bundle.
+It includes all four layers and provides all Cozystack components.
+Some of these components on the upper layers are optional and can be excluded from an installation.
+
+`paas-full` is made to be installed on bare metal servers.
+
+See the bundle source: [paas-full.yaml][paas-full-gh]
+
+### `iaas-full` *(planned)*
+
+- **Description**: Full infrastructure-as-a-service bundle.
+- **Includes**: Layers 1–3 with strong VM and networking support.
+- **Use cases**: Virtual machine hosting, private cloud.
+- **Requirements**: Bare metal; similar base to `paas-full` but focused on VM workloads.
+
+Bundle `iaas-full` is yet to be implemented in Cozystack.
+See [cozystack/cozystack#730][iaas-full-gh].
+
+### `paas-hosted`
+- **Description**: PaaS on top of existing Kubernetes clusters.
+- **Includes**: Layer 3 (Operators, Cluster API, Monitoring) and Layer 4 (Managed Databases).
+- **Use cases**: Offering managed databases and queues on cloud clusters.
+- **Requirements**: An existing Kubernetes cluster with storage and networking.
+
+See the bundle source: [paas-hosted.yaml][paas-hosted-gh]
+
+### `distro-full`
+- **Description**: Kubernetes distribution for bare metal.
+- **Includes**: Layers 1–3 (optional KubeVirt and Operators).
+- **Use cases**: Deploying a production-grade Kubernetes cluster without platform features.
+- **Requirements**: Bare metal servers.
+
+See the bundle source: [distro-full.yaml][distro-full-gh]
+
+### `distro-hosted`
+- **Description**: Add monitoring and optional extras to a hosted Kubernetes cluster.
+- **Includes**: Layer 3 (Monitoring, optional Operators and KubeVirt).
+- **Use cases**: Enhance a cloud-provided Kubernetes cluster.
+- **Requirements**: Existing Kubernetes cluster.
+
+See the bundle source: [distro-hosted.yaml][distro-hosted-gh]
+
 ## What's Next
 
 To see the full list of components and configuration options for each bundle, refer to the 
