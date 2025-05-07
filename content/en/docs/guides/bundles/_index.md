@@ -25,7 +25,7 @@ or just need a minimal Kubernetes cluster.
 | [Managed Applications][apps]  | ✔                      | ❌                      | ✔              | ❌                    | ❌                    |
 | [Virtual Machines][vm]        | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
 | [Managed Kubernetes][k8s]     | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
-| Operators                     | ✔                      | ❌                      | ✔              | ✔ (optional)          | ✔ (optional)          |
+| [Kubernetes Operators]        | ✔                      | ❌                      | ✔              | ✔ (optional)          | ✔ (optional)          |
 | [Monitoring subsystem]        | ✔                      | ✔                       | ✔              | ✔ (optional)          | ✔ (optional)          |
 | Storage subsystem             | [LINSTOR]              | [LINSTOR]               | ❌             | [LINSTOR]             | ❌                    |
 | Networking subsystem          | [Kube-OVN] + [Cilium]  | [Kube-OVN] + [Cilium]   | ❌             | [Cilium]              | ❌                    |
@@ -46,6 +46,7 @@ or just need a minimal Kubernetes cluster.
 [kubevirt]: {{% ref "/docs/guides/platform-stack#kubevirt" %}}
 [talos linux]: {{% ref "/docs/guides/platform-stack#talos-linux" %}}
 [kubernetes]: {{% ref "/docs/guides/platform-stack#kubernetes" %}}
+[kubernetes operators]: https://github.com/cozystack/cozystack/blob/29b49496f25958d57628072d0edd102922e883f0/packages/core/platform/bundles/distro-full.yaml#L104-L158
 
 [paas-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/paas-full.yaml
 [iaas-full-gh]: https://github.com/cozystack/cozystack/issues/730
