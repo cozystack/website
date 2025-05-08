@@ -27,6 +27,7 @@ data:
   ipv4-join-cidr: "100.64.0.0/16"
   root-host: example.org
   api-server-endpoint: https://192.168.100.10:6443
+  expose-services: "api,dashboard,cdi-uploadproxy,vm-exportproxy"
 ```
 
 ### Configuration parameters
@@ -44,6 +45,9 @@ data:
 | `api-server-endpoint` | used for generating kubeconfig files for your users. It is recommended to use globally accessible IP addresses instead of local ones.                                                                                      |
 | `oidc-enabled` | used to enable [oidc](/docs/operations/oidc/) feature in Cozystack (default: `false`)                                                                                                                                      |
 | `telemetry-enabled` | used to enable [telemetry](/docs/operations/telemetry/) feature in Cozystack (default: `true`)                                                                                                                             |
+| `expose-services` | Comma-separated list of services to expose to the internet. Possible values: `api,dashboard,cdi-uploadproxy,vm-exportproxy` |
+| `expose-ingress` | Ingress controller to use for exposing services. (default: `tenant-root`) |
+| `expose-external-ips` | Comma-separated list of external IPs used for specified ingress controller. If not specified it will use LoadBalancer service by default |
 
 [disable-components]: {{% ref "docs/operations/bundles#how-to-disable-some-components-from-bundle" %}}
 [overwrite-parameters]: {{% ref "docs/operations/bundles#how-to-overwrite-parameters-for-specific-components" %}}

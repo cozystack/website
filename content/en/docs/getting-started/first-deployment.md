@@ -507,8 +507,8 @@ kubectl patch -n cozy-system cm cozystack --type=merge -p '{"data":{
 In Cozystack v0.30.6 and earlier, this was done differently:
 
 ```bash
-kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
-  "dashboard": true
+kubectl patch cm -n cozy-system cozystack --type merge -p='{"data":{
+  "external-services": "dashboard"
 }}'
 ```
 {{% /alert %}}

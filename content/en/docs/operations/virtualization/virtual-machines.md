@@ -49,12 +49,13 @@ This package defines a virtual machine disk used to store data. You can download
    
    {{< note >}}
    If you want to let virtctl know about right endpoint for uploading images, you need to configure a cluster to specify an endpoint for it:
-   1. Modify your `ingress` application to enable `cni-uploadproxy` option.
+   1. Modify your cozystack config map, to enable cdi-uploadproxy along with the dashboard:
       ```bash
-      kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
-        "cdiUploadProxy": true
+      kubectl patch cm -n cozy-system cozystack --type merge -p='{"data":{
+        "expose-services": "dashboard,cdi-uploadproxy"
       }}'
-
+      ```
+     
    <!-- TODO: automate this -->
    2. Modify your cozystack config to provide a valid CDI uploadproxy endpoint:
    ```yaml

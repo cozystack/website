@@ -40,10 +40,14 @@ If all prerequisites are met, you can proceed with the configuration steps.
 
 ### Step 1: Enable OIDC in Cozystack
 
-Edit your Cozystack ConfigMap to enable OIDC:
+Edit your Cozystack ConfigMap to enable OIDC, this also will expose keycloak service automatically:
 
 ```bash
-kubectl patch -n cozy-system configmap cozystack --type=merge -p '{"data":{"oidc-enabled": "true"}}'
+kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
+  "data": {
+    "oidc-enabled": "true",
+  }
+}'
 ```
 
 If you need to add extra redirect URLs for the dashboard client (for example, when accessing the dashboard via port-forwarding), edit your Cozystack ConfigMap.
