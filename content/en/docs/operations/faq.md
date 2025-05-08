@@ -70,6 +70,12 @@ kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p
     "192.168.100.13"
   ]
 }}'
+
+kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
+  "data": {
+    "expose-external-ips": "192.168.100.11,192.168.100.12,192.168.100.13"
+  }
+}'
 ```
 
 After that, your Ingress will be available on the specified IPs:
