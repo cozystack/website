@@ -12,7 +12,7 @@ aliases:
 
 
 Make sure you have defined your [hardware requirements]({{% ref "/docs/getting-started/hardware-requirements" %}}).
-As a bare minimum, you should have three nodes of the following configuration to install Cozystack:
+As a bare minimum, you should have a management host plus three nodes of the following configuration to install Cozystack:
 
 ```yaml
 CPU: 4 cores
@@ -83,7 +83,10 @@ talos-bootstrap --help
 {{% /tab %}}
 {{< /tabs >}}
 
-### 1.3 Existing cluster or other Kubernetes distributions
+### Existing cluster or other Kubernetes distributions
+
+For a first tutorial run, it's strongly recommended to install Cozystack on bare metal.
+However, Cozystack can also be installed in other ways, including on top of a provided managed Kubernetes cluster.
 
 If you bootstrap your Talos cluster in your own way, or use a different Kubernetes distribution, make sure
 to apply all settings from the guides above.
@@ -97,14 +100,18 @@ These settings are mandatory:
 
 ## 2. Install Cozystack
 
-Write a config for Cozystack, referring to the [bundles documentation](/docs/operations/bundles/) for configuration parameters.
+Installing Cozystack starts with choosing a Cozystack bundle.
+In this tutorial, we'll use the complete `paas-full` bundle, made for installing on bare metal and including everything
+Cozystack has to offer.
 
-{{% alert color="warning" %}}
-:warning: make sure that to have the same settings specified in `patch.yaml` and `patch-controlplane.yaml` files.
-{{% /alert %}}
+### 2.1. Prepare Configuration File 
+
+Take the configuration example below and fill in the values according to your network setup.
+Make sure to use the same value in `patch.yaml` and `patch-controlplane.yaml` files.
+
+**cozystack-config.yaml**:
 
 ```yaml
-cat > cozystack-config.yaml <<\EOT
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -112,21 +119,29 @@ metadata:
   namespace: cozy-system
 data:
   bundle-name: "paas-full"
+  root-host: example.org
+  api-server-endpoint: https://192.168.100.10:6443
   ipv4-pod-cidr: "10.244.0.0/16"
   ipv4-pod-gateway: "10.244.0.1"
   ipv4-svc-cidr: "10.96.0.0/16"
   ipv4-join-cidr: "100.64.0.0/16"
-  root-host: example.org
-  api-server-endpoint: https://192.168.100.10:6443
-EOT
 ```
 
 - `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
 - `api-server-endpoint` is primarily used for generating kubeconfig files for your users. It is recommended to use routeable IP addresses instead of local ones.
+- `ipv4-pod-cidr` is the pod subnet used by pods to assign IPs
+- `ipv4-pod-gateway` is the gateway address for the pod subnet
+- `ipv4-svc-cidr` is pod subnet used by managed services to assign IPs
+- `ipv4-join-cidr` is the `join` subnet, a special subnet for network communication between the Node and Pod.
+
+To choose a bundle for your future PoC or production installation, read the [bundles overview and comparison]({{% ref "/docs/guides/bundles" %}}).
+For the explanation of each configuration parameter, see the [bundles reference]({{% ref "/docs/operations/bundles" %}}).
 
 {{% alert color="info" %}}
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
 {{% /alert %}}
+
+### 2.2. Apply Configuration
 
 Create namespace and install Cozystack system components:
 
