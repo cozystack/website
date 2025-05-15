@@ -188,3 +188,14 @@ All like for managment k8s cluster, but talosctl command:
 ```bash
 talosctl rotate-ca -e 12.34.56.77,12.34.56.78,12.34.56.79  --control-plane-nodes 12.34.56.77,12.34.56.78,12.34.56.79 --kubernetes=false  --dry-run=false &
 ```
+
+## Bundles
+
+### How to overwrite parameters for specific components
+
+Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-overwrite-parameters-for-specific-components" %}}).
+
+### How to disable some components from bundle
+
+Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-disable-some-components-from-bundle" %}}).
+
