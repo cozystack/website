@@ -113,17 +113,18 @@ Setting `externalResourceProvider=true` indicates that this resource is provided
 in this case the `sandbox-device-plugin` which is deployed by the Operator.
 
 ```bash
-kubectl edit kubevirt -n kubevirt
+kubectl edit kubevirt -n cozy-kubevirt
 ```
 example config:
 ```yaml
   ...
   spec:
-    permittedHostDevices:
-      pciHostDevices:
-      - externalResourceProvider: true
-        pciVendorSelector: 10DE:2236
-        resourceName: nvidia.com/GA102GL_A10
+    configuration:
+      permittedHostDevices:
+        pciHostDevices:
+        - externalResourceProvider: true
+          pciVendorSelector: 10DE:2236
+          resourceName: nvidia.com/GA102GL_A10
   ...
 ```
 
