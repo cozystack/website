@@ -55,6 +55,9 @@ module:
   mounts:
     - source: content/en
       target: content
+      excludeFiles:
+        - 'content/en/docs/reference/applications/_include/*'
+        - 'docs/reference/applications/_include/*'
 
 # Markup settings
 # Ref: https://gohugo.io/getting-started/configuration-markup#goldmark

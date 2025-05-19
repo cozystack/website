@@ -23,7 +23,7 @@ You’ll also find detailed reference pages for each bundle, outlining their str
 
 ### How to overwrite parameters for specific components
 
-You might want to overwrite specific options for the components.
+You might want to overwrite specific options for the components.r
 To achieve this, you must specify values in JSON or YAML format using the values-<component> option.
 
 For example, if you want to overwrite `k8sServiceHost` and `k8sServicePort` for cilium,

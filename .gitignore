@@ -17,3 +17,9 @@ hugo/
 
 # OSX .DS_Store
 .DS_Store
+
+# Template files
+**/_include/*.md
+
+# IDE files
+.idea
