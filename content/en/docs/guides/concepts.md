@@ -66,6 +66,8 @@ This in turn means:
 
 ![tenant services](/img/tenants2.png)
 
+See the reference for the application implementing tenant management: [`tenant`]({{% ref "/docs/reference/applications/tenant" %}})
+
 ## Bundles
 
 The Cozystack platform supports various deployment scenarios through a system of bundles.

@@ -73,6 +73,8 @@ MetalLB is the default load balancer for Kubernetes; with its help, your service
 
 HAProxy is an advanced and widely known TCP balancer. It continuously checks the availability of services and carefully balance production traffic between them in real time.
 
+See the application reference: [`tcp-balancer`]({{% ref "/docs/reference/applications/tcp-balancer" %}})
+
 ## SeaweedFS
 
 SeaweedFS is a simple and highly scalable distributed file system designed for two main objectives: to store billions of files and to serve the files faster. It allows access O(1), usually just one disk read operation.

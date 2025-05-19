@@ -27,7 +27,7 @@ Deployment involves the following components:
 
 This architecture ensures isolated, scalable, and efficient Kubernetes environments tailored for each tenant.
 
--    Managed application reference: [Kubernetes](https://github.com/cozystack/cozystack/tree/main/packages/apps/kubernetes#readme)
+-    Managed application reference: [Kubernetes]({{% ref "/docs/reference/applications/kubernetes" %}})
 
 
 ## Managed PostgreSQL
@@ -37,7 +37,7 @@ Its platform-side implementation involves a self-healing replicated cluster.
 This is managed with the increasingly popular CloudNativePG operator within the community.
 
 -    Website: [cloudnative-pg.io](https://cloudnative-pg.io/)
--    Managed application reference: [PostgreSQL](https://github.com/cozystack/cozystack/tree/main/packages/apps/postgres#readme)
+-    Managed application reference: [PostgreSQL]({{% ref "/docs/reference/applications/postgres" %}})
 
 
 ## Managed MySQL (MariaDB)
@@ -50,7 +50,7 @@ For each database, there is an interface for configuring users, their permission
 as well as schedules for creating backups using [Restic](https://restic.net/) currently the most efficient tool.
 
 -    Website: [mariadb.com](https://mariadb.com/)
--    Managed application reference: [MySQL](https://github.com/cozystack/cozystack/tree/main/packages/apps/mysql#readme)
+-    Managed application reference: [MySQL]({{% ref "/docs/reference/applications/mysql" %}})
 
 
 ## Managed Redis
@@ -61,7 +61,7 @@ The platform-side implementation involves a replicated failover Redis cluster wi
 This is managed by the spotahome redis-operator.
 
 -    Website: [redis.io](https://redis.io/)
--    Managed application reference: [Redis](https://github.com/cozystack/cozystack/tree/main/packages/apps/redis#readme)
+-    Managed application reference: [Redis]({{% ref "/docs/reference/applications/redis" %}})
 
 
 ## Managed FerretDB
@@ -71,7 +71,7 @@ It translates MongoDB wire protocol queries to SQL and can be used as a direct r
 In Cozystack, it is backed by PostgreSQL.
 
 -    Website: [ferretdb.io](https://www.ferretdb.io/)
--    Managed application reference: [FerretDB](https://github.com/cozystack/cozystack/tree/main/packages/apps/ferretdb#readme)
+-    Managed application reference: [FerretDB]({{% ref "/docs/reference/applications/ferretdb" %}})
 
 
 ## Managed Clickhouse
@@ -81,7 +81,7 @@ It is used for online analytical processing (OLAP).
 In the Cozystack platform, we use the Altinity operator to provide ClickHouse.
 
 -    Website: [clickhouse.com](https://clickhouse.com/)
--    Managed application reference: [Clickhouse](https://github.com/cozystack/cozystack/tree/main/packages/apps/clickhouse#readme)
+-    Managed application reference: [Clickhouse]({{% ref "/docs/reference/applications/clickhouse" %}})
 
 ## Managed RabbitMQ
 
@@ -89,7 +89,7 @@ RabbitMQ is a widely known message broker.
 The platform-side implementation allows you to create failover clusters managed by the official RabbitMQ operator.
 
 -    Website: [rabbitmq.com](https://www.rabbitmq.com/)
--    Managed application reference: [RabbitMQ](https://github.com/cozystack/cozystack/tree/main/packages/apps/rabbitmq#readme)
+-    Managed application reference: [RabbitMQ]({{% ref "/docs/reference/applications/rabbitmq" %}})
 
 
 ## Managed Kafka
@@ -100,7 +100,7 @@ In Cozystack, we use [Strimzi](https://github.com/cozystack/cozystack/blob/main/
 to run an Apache Kafka cluster on Kubernetes in various deployment configurations.
 
 -    Website: [kafka.apache.org](https://kafka.apache.org/)
--    Managed application reference: [Kafka](https://github.com/cozystack/cozystack/tree/main/packages/apps/kafka#readme)
+-    Managed application reference: [Kafka]({{% ref "/docs/reference/applications/kafka" %}})
 
 
 ## Managed HTTP Cache
@@ -112,7 +112,7 @@ The platform-side implementation features efficient caching without using a clus
 It also supports horizontal scaling without duplicating data on multiple servers.
 
 -    Website: [nginx.org](https://nginx.org/)
--    Managed application reference: [http-cache](https://github.com/cozystack/cozystack/tree/main/packages/apps/http-cache#readme)
+-    Managed application reference: [http-cache]({{% ref "/docs/reference/applications/http-cache" %}})
 
 
 ## Managed NATS Messaging
@@ -121,8 +121,7 @@ NATS is an open-source, simple, secure, and high performance messaging system.
 It provides a data layer for cloud native applications, IoT messaging, and microservices architectures.
 
 -    Website: [nats.io](https://nats.io/)
--    Managed application reference: [NATS](https://github.com/cozystack/cozystack/tree/main/packages/apps/nats#readme)
-
+-    Managed application reference: [NATS]({{% ref "/docs/reference/applications/nats" %}})
 
 ## Managed VPN Service
 
@@ -134,4 +133,4 @@ The Shadowsocks protocol uses symmetric encryption algorithms.
 This enables fast internet access while complicating traffic analysis and blocking through DPI (Deep Packet Inspection).
 
 -    Website: [getoutline.org](https://getoutline.org/)
--    Managed application reference: [VPN](https://github.com/cozystack/cozystack/tree/main/packages/apps/vpn#readme)
+-    Managed application reference: [VPN]({{% ref "/docs/reference/applications/vpn" %}})

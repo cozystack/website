@@ -22,6 +22,7 @@ It allows you to specify the bare minimum parameters to run a VM, but it only su
 
 For production workloads, it is recommended to use `vm-disk` and `vm-instance` instead.
 
+See the application reference: [`virtual-machine`]({{% ref "/docs/reference/applications/virtual-machine" %}}).
 
 ### Virtual Machine Disk
 
@@ -77,6 +78,8 @@ optical: true
 
 Created disks can be attached to a Virtual Machine instance.
 
+See the application reference: [`vm-disk`]({{% ref "/docs/reference/applications/vm-disk" %}}).
+
 ### Virtual Machine Instance
 
 This package defines a Virtual Machine instance, which requires specifying the previously created vm-disk.
@@ -88,7 +91,9 @@ disks:
 - name: example-data
 ```
 
-The rest parameters are similar to Virtual Machine (simple)
+The rest parameters are similar to Virtual Machine (simple).
+
+See the application reference: [`vm-instance`]({{% ref "/docs/reference/applications/vm-instance" %}}).
 
 ## Accessing Virtual Machines
 
