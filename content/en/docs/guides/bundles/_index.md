@@ -2,7 +2,7 @@
 title: "Cozystack Bundles: Overview and Comparison"
 linkTitle: "Cozystack Bundles"
 description: "Cozystack bundles reference: composition, configuration, and troubleshooting."
-weight: 15
+weight: 17
 ---
 
 ## Introduction
