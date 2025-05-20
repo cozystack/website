@@ -46,6 +46,12 @@ sudo docker run --name=dnsmasq -d --cap-add=NET_ADMIN --net=host quay.io/poseido
   --log-dhcp
 ```
 
+For an air-gapped installation, add NTP and DNS servers:
+```bash
+  --dhcp-option=option:ntp-server,10.100.1.1 \
+  --dhcp-option=option:dns-server,10.100.25.253,10.100.25.254 \
+```
+
 Where:
 - `192.168.100.3,192.168.100.199` range to allocate IPs from
 - `192.168.100.1` your gateway
