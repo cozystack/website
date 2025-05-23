@@ -11,13 +11,29 @@ A **tenant** is the main unit of security on the platform. The closest analogy w
 
 Tenants can be created recursively and are subject to the following rules:
 
-### Higher-level tenants can access lower-level ones.
+### Tenant naming
 
-Higher-level tenants can view and manage the applications of all their children.
+Tenant names must be alphanumeric.
+Using dashes (`-`) in tenant names is not allowed, unlike with other services.
+This limitation exists to keep consistent naming in tenants, nested tenants, and services deployed in them.
 
-### Each tenant has its own domain
+For example:
 
-By default (unless otherwise specified), it inherits the domain of its parent with a prefix of its name, for example, if the parent had the domain `example.org`, then `tenant-foo` would get the domain `foo.example.org` by default.
+-   The root tenant is named `root`, but internally it's referenced as `tenant-root`.
+-   A nested tenant could be named `foo`, which would result in `tenant-foo` in service names and URLs.
+-   However, a tenant can not be named `foo-bar`, because parsing names such as `tenant-foo-bar` would be ambiguous.
+
+### Nested tenants
+
+Tenants can be nested.
+A tenant administrator can create nested tenants using the "Tenant" application from the catalogue.
+Higher-level tenants can view and manage the applications of all their children tenants.
+
+### Unique domains
+
+Each tenant has its own domain.
+By default, (unless otherwise specified), it inherits the domain of its parent with a prefix of its name.
+For example, if the parent had the domain `example.org`, then `tenant-foo` would get the domain `foo.example.org` by default.
 
 Kubernetes clusters created in this tenant namespace would get domains like: `kubernetes-cluster.foo.example.org`
 
@@ -39,5 +55,5 @@ This in turn means:
 
 ![tenant services](/img/tenants2.png)
 
-See the reference for the application implementing tenant management: [`tenant`]({{% ref "/docs/reference/applications/tenant" %}})
+See the reference for the application implementing tenant management: [`tenant`]({{% ref "/docs/reference/applications/tenant#parameters" %}})
 
