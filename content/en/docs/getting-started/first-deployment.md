@@ -491,13 +491,24 @@ root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:316
 
 **Cozystack Dashboard**
 
-To access dashboard via root-ingress controller, enable this option:
+First, you need to enable the access to the dashboard by exposing it.
+In Cozystack v0.31.0 or later, run the following command to expose the dashboard:
+
+```bash
+kubectl patch -n cozy-system cm cozystack --type=merge -p '{"data":{
+    "expose-services": "dashboard"
+    }}'
+```
+
+{{% alert color="info" %}}
+In Cozystack v0.30.6 and earlier, this was done differently:
 
 ```bash
 kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
   "dashboard": true
 }}'
 ```
+{{% /alert %}}
 
 Use `dashboard.example.org` (under 192.168.100.200) to access system dashboard, where `example.org` is your domain specified for `tenant-root`
 
