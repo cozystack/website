@@ -417,6 +417,9 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 
 ## 6. Final steps
 
+
+### 6.1 Check the cluster state and composition
+
 Check persistent volumes provisioned:
 
 ```bash
@@ -479,7 +482,7 @@ vmstorage-shortterm-1                          1/1     Running   0              
 ```
 
 Now you can get public IP of ingress controller:
-```
+```bash
 kubectl get svc -n tenant-root root-ingress-controller
 ```
 
@@ -489,9 +492,9 @@ NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S
 root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:31632/TCP,443:30113/TCP   3m33s
 ```
 
-**Cozystack Dashboard**
+### 6.2 Enable and access Cozystack dashboard
 
-First, you need to enable the access to the dashboard by exposing it.
+First, enable access to the dashboard by exposing it.
 In Cozystack v0.31.0 or later, run the following command to expose the dashboard:
 
 ```bash
@@ -510,23 +513,25 @@ kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p
 ```
 {{% /alert %}}
 
-Use `dashboard.example.org` (under 192.168.100.200) to access system dashboard, where `example.org` is your domain specified for `tenant-root`
+Use `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
+In this example, `dashboard.example.org` is located at 192.168.100.200. 
 
 Get authentication token from `tenant-root`:
 ```bash
 kubectl get secret -n tenant-root tenant-root -o go-template='{{ printf "%s\n" (index .data "token" | base64decode) }}'
 ```
 
-**Grafana**
+### 6.3 Access metrics in Grafana
 
-Use `grafana.example.org` (under 192.168.100.200) to access system monitoring, where `example.org` is your domain specified for `tenant-root`
+Use `grafana.example.org` to access the system monitoring, where `example.org` is your domain specified for `tenant-root`.
+In this example, `grafana.example.org` is located at 192.168.100.200. 
 
 - login: `admin`
-- to get password:
+- request a password:
   ```bash
   kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
   ```
 
-**OIDC**
+### 6.4 Enable OIDC
 
-Now you can consider [enabling OIDC](/docs/operations/oidc/)
+If you want to use it, you can now proceed by [configuring OIDC](/docs/operations/oidc/).
