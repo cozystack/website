@@ -2,7 +2,7 @@
 title: Bootstrap a Talos Linux cluster for Cozystack using Talm
 linkTitle: Talm
 description: "Bootstrap a Talos Linux cluster for Cozystack using Talm"
-weight: 20
+weight: 5
 aliases:
   - /docs/talos/configuration/talm
 ---
@@ -103,19 +103,15 @@ In future operations, you can also use the following options:
 - `--dry-run` - dry run mode will show a diff with the existing configuration.
 - `-m try` - try mode will roll back the configuration in 1 minute.
 
-## 4. Bootstrap Cluster
+## 4. Bootstrap and Access Cluster
 
-All operations on this step are done with just one node.
-It's enough to bootstrap all of them and run a Kubernetes cluster.
-
-First, bootstrap the cluster:
+Run `talm bootstrap` on a single control-plane node — it is enough to bootstrap the whole cluster:
 
 ```bash
 talm bootstrap -f nodes/node1.yaml
 ```
 
-To access the cluster, generate the administrative `kubeconfig`.
-Note that the command runs only against the first node:
+To access the cluster, generate an administrative `kubeconfig`:
 
 ```bash
 talm kubeconfig kubeconfig -f nodes/node1.yaml
