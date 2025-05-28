@@ -1,7 +1,22 @@
 #!/bin/bash
 
+branch="main"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --branch)
+      branch="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
 GITHUB_REPO="cozystack/cozystack"
-RAW_BASE_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/main/packages/apps"
+RAW_BASE_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/${branch}/packages/apps"
 
 apps=(
   tenant clickhouse virtual-machine redis vpn ferretdb vm-disk
