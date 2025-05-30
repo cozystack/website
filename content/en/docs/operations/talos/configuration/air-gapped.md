@@ -53,6 +53,12 @@ machine:
       quay.io:
         endpoints:
           - http://10.0.0.1:8086
+      cr.fluentbit.io:
+        endpoints:
+          - http://10.0.0.1:8087
+      docker-registry3.mariadb.com:
+        endpoints:
+          - http://10.0.0.1:8088
     config:
       "10.0.0.1:8082":
         insecure: true
