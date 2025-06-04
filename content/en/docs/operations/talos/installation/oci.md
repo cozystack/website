@@ -5,28 +5,75 @@ description: "How to install Cozystack in Oracle Cloud Infrastructure"
 weight: 30
 ---
 
+## Introduction
 
-#### Creating Custom Image
+This guide explains how to install Talos on Oracle Cloud Infrastructure and deploy a Kubernetes cluster that is ready for Cozystack.
+After completing the guide, you will be ready to proceed with
+[installing Cozystack itself]({{% ref "/docs/getting-started/first-deployment#install-cozystack" %}}).
 
-- Download Talos Linux from [Cozystack releases page](https://github.com/cozystack/cozystack/releases/latest/download/metal-amd64.raw.xz):
+{{% alert color="info" %}}
+This guide was created to support deployment of development clusters by the Cozystack team.
+If you face any problems while going through the guide, please raise an issue in [cozystack/website](https://github.com/cozystack/website/issues)
+or come and share your experience in the [Cozystack community](https://t.me/cozystack).
+{{% /alert %}}
 
-- Unpack it using xz:
-  ```bash
-  xz -d metal-amd64.raw.xz
-  ```
+## 1. Upload Talos Image to Oracle Cloud
 
-- [Upload the image to a bucket in Object Storage](https://docs.oracle.com/iaas/Content/Object/Tasks/managingobjects_topic-To_upload_objects_to_a_bucket.htm).
+The first step is to make a Talos Linux installation image available for use in Oracle Cloud as a custom image.
 
-- [Import the image as a custom image](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/importingcustomimagelinux.htm#linux) Use the following settings:
-    - **Image type**: QCOW2
-    - **Launch mode**: Paravirtualized mode
+1.  Download the Talos Linux image archive from the [Cozystack releases page](https://github.com/cozystack/cozystack/releases/latest/) and unpack it:
 
-- Get the image OCID, it will be used in the next steps.
+    ```bash
+    wget https://github.com/cozystack/cozystack/releases/latest/download/metal-amd64.raw.xz
+    xz -d metal-amd64.raw.xz
+    ```
 
+    As a result, you will get the file `metal-amd64.raw`, which you can then upload to OCI.
 
-#### Creating Infrastructure
+1.  Follow the OCI documentation to [upload the image to a bucket in OCI Object Storage](https://docs.oracle.com/iaas/Content/Object/Tasks/managingobjects_topic-To_upload_objects_to_a_bucket.htm).
 
-Here is an example Terraform configuration to create three machines:
+1.  Proceed with the documentation to [import this image as a custom image](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/importingcustomimagelinux.htm#linux). 
+    Use the following settings:
+
+    -   **Image type**: QCOW2
+    -   **Launch mode**: Paravirtualized mode
+
+1.  Finally, get the image's [OCID](https://docs.oracle.com/en-us/iaas/Content/libraries/glossary/ocid.htm) and save it for use in the next steps.
+
+## 2. Create Infrastructure
+
+The goal of this step is to prepare the infrastructure according to the
+[Cozystack cluster requirements]({{% ref "/docs/getting-started/hardware-requirements" %}}).
+
+This can be done manually using the Oracle Cloud dashboard or with Terraform.
+
+### 2.1 Prepare Terraform Configuration
+
+If you choose to use Terraform, the first step is to build the configuration.
+
+{{% alert color="info" %}}
+Check out [the complete example of Terraform configuration](https://github.com/cozystack/examples/tree/main/001-deploy-cozystack-oci)
+for deploying several Talos nodes in Oracle Cloud Infrastructure.
+{{% /alert %}}
+
+Below is a shorter example of Terraform configuration creating three virtual machines with the following private IPs:
+
+- `192.168.1.11`
+- `192.168.1.12`
+- `192.168.1.13`
+
+These VMs will also have a VLAN interface with subnet `192.168.100.0/24` used for the internal cluster communication.
+
+Note the part that references the Talos image OCID from the previous step:
+
+```hcl
+  source_details {
+    source_type = "image"
+    source_id   = var.talos_image_id
+  }
+```
+
+Full configuration example:
 
 ```hcl
 terraform {
@@ -152,7 +199,9 @@ resource "oci_core_vnic_attachment" "cozy_dev1_vlan_vnic" {
 }
 ```
 
-Apply the configuration using Terraform:
+### 2.2 Apply Configuration
+
+When the configuration is ready, authenticate to OCI and apply it with Terraform:
 
 ```bash
 oci session authenticate --region us-ashburn-1 --profile-name=DEFAULT
@@ -160,99 +209,158 @@ terraform init
 terraform apply
 ```
 
-You'll get three machines with the following IPs:
-- `192.168.1.11`
-- `192.168.1.12`
-- `192.168.1.13`
+As a result of these commands, the virtual machines will be deployed and configured.
 
+Save the public IP addresses assigned to the VMs for the next step.  In this example, the addresses are:
 
-They also have a VLAN interface with the following subnet:
-- `192.168.100.0/24`
+- `1.2.3.4`
+- `1.2.3.5`
+- `1.2.3.6`
 
-This subnet will be used for the internal cluster communication.
+## 3. Configure Talos and Initialize Kubernetes Cluster
 
-## Talos Configuration
+The next step is to apply the configurations and install Talos Linux.
+There are several ways to do that.
 
-Use Talm to apply config and install Talos Linux on the drive.
+This guide uses [Talm](https://github.com/cozystack/talm), a command‑line tool for declarative management of Talos Linux.
+Talm has configuration templates specialized for deploying Cozystack, which is why we will use it.
 
-1. [Download](https://github.com/cozystack/talm/releases/latest) latest Talm binary and save it to `/usr/local/bin/talm`
-2. Make it executable:
-   ```
-   chmod +x /usr/local/bin/talm
-   ```
+If you do not have Talm installed, [download the latest binary](https://github.com/cozystack/talm/releases/latest) for your OS and architecture.
+Make it executable and save it to `/usr/local/bin/talm`:
 
-### Installation with Talm
+```bash
+# pick your preferred architecture from the release artifacts
+wget -O talm https://github.com/cozystack/talm/releases/latest/download/talm-darwin-arm64
+chmod +x talm
+mv talm /usr/local/bin/talm
+```
 
-1. Create directory for new cluster:
-   ```bash
-   mkdir -p mycluster
-   cd mycluster
-   ```
+### 3.1 Prepare Talm Configuration
 
-2. Run the following command to initialize Talm for Cozystack:
+1.  Create a directory for the new cluster's configuration files:
+    ```bash
+    mkdir -p mycluster
+    cd mycluster
+    ```
 
-   ```bash
-   talm init -p cozystack
-   ```
+1.  Initialize Talm configuration for Cozystack:
 
-   After initializing, generate a configuration template with the command:
+    ```bash
+    talm init -p cozystack
+    ```
 
-   ```bash
-   talm -n 1.2.3.4 -e 1.2.3.4 template -t templates/controlplane.yaml -i > nodes/nodeN.yaml
-   ```
+1.  Generate a configuration template for each node, providing the node's IP address:
 
-3. Edit the node configuration file as needed.
+    ```bash
+    # Use the node's public IP assigned by OCI
+    talm template \
+      --nodes 1.2.3.4 \
+      --endpoints 1.2.3.4 \
+      --template templates/controlplane.yaml \
+      --insecure \
+      > nodes/node0.yaml
+    ```
 
-   - Update `hostname` to the desired name.
-     ```yaml
-     machine:
-       network:
-         hostname: node1
-     ```
+    Repeat the same for each node using its public IP:
 
-   - Add private interface configuration, and move `vip` to this section. This section isn’t generated automatically:
-     - `interface` - Obtained from the "Discovered interfaces" by matching options for the private interface.
-     - `addresses` - Use the address specified for Layer 2 (L2).
+    ```bash
+    talm template ... > nodes/node1.yaml
+    talm template ... > nodes/node2.yaml
+    ```
+    
+    Using `templates/controlplane.yaml` means the node will act as both control plane and worker.
+    Having three combined nodes is the preferred setup for a small PoC cluster.
+            
+    The `--insecure` (`-i`) parameter is required because Talm must retrieve configuration data from a node that is not yet initialized and therefore cannot accept an authenticated connection.
+    The node will be initialized only a few steps later, with `talm apply`.
 
-     Example:
-     ```yaml
-     machine:
-       network:
-         interfaces:
-           - interface: eth0
-             addresses:
-               - 1.2.3.4/29
-             routes:
-               - network: 0.0.0.0/0
-                 gateway: 1.2.3.1
-           - interface: eth1
-             addresses:
-               - 192.168.100.11/24
-             vip:
-               ip: 192.168.100.10
-     ```
+    The node's public IP must be specified for both the `--nodes` (`-n`) and `--endpoints` (`-e`) parameters.
+    To learn more about Talos node configuration and endpoints, refer to the 
+    [Talos documentation](https://www.talos.dev/v1.10/learn-more/talosctl/#endpoints-and-nodes)
 
-**Execution steps:**
+1.  Edit the node configuration file as needed.
+    
+    -   Update `hostname` to the desired name:
 
-1. Run `talm apply -f nodeN.yml` for all nodes to apply the configurations. The nodes will be rebooted and Talos will be installed on the disk.
-2. Execute bootstrap command for the first node in the cluster, example:
-   ```bash
-   talm bootstrap -f nodes/node1.yml
-   ```
-3. Get `kubeconfig` from the first node, example:
-   ```bash
-   talm kubeconfig kubeconfig -f nodes/node1.yml
-   ```
-4. Edit `kubeconfig` to set the IP address to one of control-plane node, example:
-   ```yaml
-   server: https://1.2.3.4:6443
-   ```
-5. Export variable to use the kubeconfig, and check the connection to the Kubernetes:
-   ```bash
-   export KUBECONFIG=${PWD}/kubeconfig
-   kubectl get nodes
-   ```
+        ```yaml
+        machine:
+          network:
+            hostname: node1
+        ```
+        
+    -   Add the private interface configuration to the `machine.network.interfaces` section, and move `vip` to this configuration.
+        This part of the configuration is not generated automatically, so you need to fill in the values: 
 
-Now follow **Get Started** guide starting from the [**Install Cozystack**](/docs/getting-started/first-deployment/#install-cozystack) section, to continue the installation.
+        -    `interface`: obtained from the "Discovered interfaces" by matching options for the private interface.
+        -    `addresses`: use the address specified for Layer 2 (L2).
+        
+        Example:
 
+        ```yaml
+        machine:
+          network:
+            interfaces:
+              - interface: eth0
+                addresses:
+                  - 1.2.3.4/29
+                routes:
+                  - network: 0.0.0.0/0
+                    gateway: 1.2.3.1
+              - interface: eth1
+                addresses:
+                  - 192.168.100.11/24
+                vip:
+                  ip: 192.168.100.10
+        ```
+        
+After these steps, the node configuration files are ready to be applied.
 
+### 3.2 Initialize Talos and Run Kubernetes Cluster
+
+The next stage is to initialize Talos nodes and bootstrap a Kubernetes cluster.
+
+1.  Run `talm apply` for all nodes to apply the configurations:
+
+    ```bash
+    talm apply -f nodes/node0.yaml --insecure
+    talm apply -f nodes/node1.yaml --insecure
+    talm apply -f nodes/node2.yaml --insecure
+    ```
+
+    The nodes will reboot, and Talos will be installed to disk.    
+    The parameter `--insecure` (`-i`) is required the first time you run `talm apply` on each node.
+
+1.  Execute `talm bootstrap` on the first node in the cluster.  For example:
+    ```bash
+    talm bootstrap -f nodes/node0.yaml
+    ```
+
+1.  Get the `kubeconfig` from any control‑plane node using Talm. In this example, all three nodes are control‑plane nodes:
+
+    ```bash
+    talm kubeconfig kubeconfig -f nodes/node0.yaml
+    ```
+
+1.  Edit the `kubeconfig` to set the server IP address to one of the control‑plane nodes, for example:
+    ```yaml
+    server: https://1.2.3.4:6443
+    ```
+
+1.  Export the `KUBECONFIG` variable to use the kubeconfig, and check the connection to the cluster:
+    ```bash
+    export KUBECONFIG=${PWD}/kubeconfig
+    kubectl get nodes
+    ```       
+
+    You should see that the nodes are accessible and in the `NotReady` state, which is expected at this stage:
+
+    ```console
+    NAME    STATUS     ROLES           AGE     VERSION
+    node0   NotReady   control-plane   2m21s   v1.32.0
+    node1   NotReady   control-plane   1m47s   v1.32.0
+    node2   NotReady   control-plane   1m43s   v1.32.0
+    ``` 
+
+Now you have a Kubernetes cluster prepared for installing Cozystack.
+To complete the installation, follow the deployment guide, starting with the
+[Install Cozystack]({{% ref "/docs/getting-started/first-deployment#install-cozystack" %}}) section.
