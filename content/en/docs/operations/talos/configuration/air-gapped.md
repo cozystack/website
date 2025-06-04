@@ -100,3 +100,60 @@ Make apply for every node
 ```bash
 talm apply -f nodes/srv1
 ```
+
+### Make sure you have cozystack version 0.31.2 or higher
+It necessary for 
+```bash
+kubectl get deploy -n cozy-system cozystack -oyaml | grep image
+```
+
+### Configure Container Registry Mirrors for clients clusters
+Create secret:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: patch-containerd
+  namespace: cozy-system
+type: Opaque
+stringData:
+  docker.io.toml: |
+    server = "https://registry-1.docker.io"
+    [host."http://10.0.0.1:8082"]
+      capabilities = ["pull", "resolve"]
+      skip_verify = true
+  ghcr.io.toml: |
+    server = "https://ghcr.io"
+    [host."http://10.0.0.1:8083"]
+      capabilities = ["pull", "resolve"]
+      skip_verify = true
+  gcr.io.toml: |
+    server = "https://gcr.io"
+    [host."http://10.0.0.1:8084"]
+      capabilities = ["pull", "resolve"]
+      skip_verify = true
+  registry.k8s.io.toml: |
+    server = "https://registry.k8s.io"
+    [host."http://10.0.0.1:8085"]
+      capabilities = ["pull", "resolve"]
+      skip_verify = true
+  quay.io.toml: |
+    server = "https://quay.io"
+    [host."http://10.0.0.1:8086"]
+      capabilities = ["pull", "resolve"]
+      skip_verify = true
+  cr.fluentbit.io.toml: |
+    server = "https://cr.fluentbit.io"
+    [host."http://10.0.0.1:8087"]
+      capabilities = ["pull", "resolve"]
+      skip_verify = true
+  docker-registry3.mariadb.com: |
+    server = "https://docker-registry3.mariadb.com"
+    [host."http://10.0.0.1:8089"]
+      capabilities = ["pull", "resolve"]
+      skip_verify = true
+```
+[See more](https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration)
+
+this secret will be copied for every client k8s cluster.
+If You need set custom config for some cluster, set `useCustomSecretForPatchContainerd: true` in values of kubernetes app since version 0.23.0 and create Secret with name: `kubernetes-clustername` before creating cluster.
