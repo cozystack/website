@@ -151,6 +151,21 @@ variable "node_private_ips" {
   default = ["192.168.1.11", "192.168.1.12", "192.168.1.13"]
 }
 
+variable "compartment_id" {
+  description = "OCID of the OCI compartment"
+  type        = string
+}
+
+variable "availability_domain" {
+  description = "Availability domain for the instances"
+  type        = string
+}
+
+variable "talos_image_id" {
+  description = "OCID of the imported Talos Linux image"
+  type        = string
+}
+
 resource "oci_core_instance" "cozy_dev1_nodes" {
   count               = length(var.node_private_ips)
   display_name        = "cozy-dev1-node-${count.index + 1}"
