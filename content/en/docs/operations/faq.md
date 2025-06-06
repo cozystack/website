@@ -57,25 +57,40 @@ Dashboard will become available under: `https://dashboard.<your_domain>`
 
 ### What if my cloud provider does not support MetalLB
 
-You still have the opportunity to expose the main ingress controller using the external IPs method.
+You still have the opportunity to expose the main Ingress controller using the **external** IPs method.
 
-Take IP addresses of the **external** network interfaces for your nodes.
-Add them to the `externalIPs` list in the Ingress configuration:
+Take IP addresses of the **external** network interfaces of your nodes.
+Add them to the `externalIPs` list in the **configmap** configuration:
 
 ```bash
-kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
-  "externalIPs": [
-    "192.168.100.11",
-    "192.168.100.12",
-    "192.168.100.13"
-  ]
-}}'
-
-kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
-  "data": {
-    "expose-external-ips": "192.168.100.11,192.168.100.12,192.168.100.13"
+kubectl patch -n cozy-system configmap cozystack --type=merge -p '
+{"data": {
+    "expose-external-ips": "37.27.60.28,65.21.65.173,135.181.169.168"
   }
 }'
+```
+
+Enable **Ingress** feature
+
+```bash
+kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
+{"spec":{
+  "ingress": true
+}}'
+```
+
+Take IP addresses of the **internal** network interfaces of your nodes.
+Add them to the `externalIPs` list in the **Ingress** configuration:
+
+```bash
+kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '
+{"spec":{
+  "externalIPs": [
+    "10.3.100.11",
+    "10.3.100.12",
+    "10.3.100.13"
+  ]
+}}'
 ```
 
 After that, your Ingress will be available on the specified IPs:
@@ -89,9 +104,23 @@ root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135
 
 Sometimes you might want to flush the etcd state from a node. You can use the following command:
 
+{{< tabs name="etcd reset tools" >}}
+{{% tab name="Talm" %}}
+Replace nodeN with your failed node name, for instance `node0.yaml`
+
+```bash
+talm reset -f nodes/nodeN.yaml --system-labels-to-wipe=EPHEMERAL --graceful=false --reboot
+```
+
+{{% /tab %}}
+
+{{% tab name="talosctl" %}}
 ```bash
 talosctl reset --system-labels-to-wipe=EPHEMERAL --graceful=false --reboot
 ```
+
+{{% /tab %}}
+{{< /tabs >}}
 
 {{% alert color="warning" %}}
 :warning: This command will remove the state from the specified node. Use it with caution.
