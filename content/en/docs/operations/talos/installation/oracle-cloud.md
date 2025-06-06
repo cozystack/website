@@ -2,7 +2,7 @@
 title: How to install Cozystack in Oracle Cloud Infrastructure
 linkTitle: Oracle Cloud
 description: "How to install Cozystack in Oracle Cloud Infrastructure"
-weight: 30
+weight: 25
 ---
 
 ## Introduction
