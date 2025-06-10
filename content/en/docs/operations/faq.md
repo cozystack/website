@@ -87,11 +87,27 @@ root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135
 
 ### How to cleanup etcd state
 
-Sometimes you might want to flush the etcd state from a node. You can use the following command:
+Sometimes you might want to flush etcd state from a node.
+This can be done with Talm or talosctl using the following commands:
 
+{{< tabs name="etcd reset tools" >}}
+{{% tab name="Talm" %}}
+
+Replace `nodeN` with the name of the failed node, for instance, `node0.yaml`:
+
+```bash
+talm reset -f nodes/nodeN.yaml --system-labels-to-wipe=EPHEMERAL --graceful=false --reboot
+```
+
+{{% /tab %}}
+
+{{% tab name="talosctl" %}}
 ```bash
 talosctl reset --system-labels-to-wipe=EPHEMERAL --graceful=false --reboot
 ```
+
+{{% /tab %}}
+{{< /tabs >}}
 
 {{% alert color="warning" %}}
 :warning: This command will remove the state from the specified node. Use it with caution.
