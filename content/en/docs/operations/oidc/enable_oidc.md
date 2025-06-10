@@ -45,7 +45,7 @@ Edit your Cozystack ConfigMap to enable OIDC, this also will expose keycloak ser
 ```bash
 kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
   "data": {
-    "oidc-enabled": "true",
+    "oidc-enabled": "true"
   }
 }'
 ```
@@ -94,8 +94,10 @@ To get the Keycloak credentials, run the following command:
 kubectl get secret -o yaml -n cozy-keycloak keycloak-credentials -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
 ```
 
-1. **Create a User in the Cozy Realm**
-   Follow the [Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/index.html#proc-creating-user_server_administration_guide) to create a user in the Cozy realm.
+1. Create a user in the realm `cozy`.
+
+   Follow the [Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/index.html#proc-creating-user_server_administration_guide) to create a user in the realm `cozy`.
+
    {{% alert color="info" %}}
    Users must have a verified email address in Keycloak. This is required for proper OIDC authentication.
    To verify an email:
@@ -104,8 +106,8 @@ kubectl get secret -o yaml -n cozy-keycloak keycloak-credentials -o go-template=
    3. Use the "Email Verification" action
    {{% /alert %}}
 
-2. **Add User to the `cozystack-cluster-admin` Group**
-   Assign the user to the `cozystack-cluster-admin` group.
+2. Add the user to the `cozystack-cluster-admin` group.
+
 
 ### Step 4: Retrieve Kubeconfig
 

@@ -38,7 +38,7 @@ It's used as VIP.
     talosctl gen secrets
     ```
 
-1.   Make a configuration patch file `patch.yaml`:
+1.  Make a configuration patch file `patch.yaml`:
     
     ```yaml
     machine:
