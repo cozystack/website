@@ -136,21 +136,24 @@ In general, you almost never need to rotate the root CA certificate and key for 
 See: https://kamaji.clastix.io/guides/certs-lifecycle/
 ```bash
 export NAME=k8s-cluster-name
-kubectl delete secret ${NAME}-ca
-kubectl delete secret ${NAME}-sa-certificate
+export NAMESPACE=k8s-cluster-namespace
 
-kubectl delete secret ${NAME}-api-server-certificate
-kubectl delete secret ${NAME}-api-server-kubelet-client-certificate
-kubectl delete secret ${NAME}-datastore-certificate
-kubectl delete secret ${NAME}-front-proxy-client-certificate
-kubectl delete secret ${NAME}-konnectivity-certificate
+kubectl -n ${NAMESPACE} delete secret ${NAME}-ca
+kubectl -n ${NAMESPACE} delete secret ${NAME}-sa-certificate
 
-kubectl delete secret ${NAME}-admin-kubeconfig
-kubectl delete secret ${NAME}-controller-manager-kubeconfig
-kubectl delete secret ${NAME}-konnectivity-kubeconfig
-kubectl delete secret ${NAME}-scheduler-kubeconfig
+kubectl -n ${NAMESPACE} delete secret ${NAME}-api-server-certificate
+kubectl -n ${NAMESPACE} delete secret ${NAME}-api-server-kubelet-client-certificate
+kubectl -n ${NAMESPACE} delete secret ${NAME}-datastore-certificate
+kubectl -n ${NAMESPACE} delete secret ${NAME}-front-proxy-client-certificate
+kubectl -n ${NAMESPACE} delete secret ${NAME}-konnectivity-certificate
+
+kubectl -n ${NAMESPACE} delete secret ${NAME}-admin-kubeconfig
+kubectl -n ${NAMESPACE} delete secret ${NAME}-controller-manager-kubeconfig
+kubectl -n ${NAMESPACE} delete secret ${NAME}-konnectivity-kubeconfig
+kubectl -n ${NAMESPACE} delete secret ${NAME}-scheduler-kubeconfig
 
 kubectl delete po -l app.kubernetes.io/name=kamaji -n cozy-kamaji
+kubectl delete po -l app=${NAME}-kcsi-driver
 ```
 
 Wait for virt-launcher-kubernetes-* pods restart.
@@ -204,4 +207,3 @@ Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-overwri
 ### How to disable some components from bundle
 
 Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-disable-some-components-from-bundle" %}}).
-
