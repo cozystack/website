@@ -7,7 +7,24 @@ aliases:
   - /docs/components
 ---
 
-## Managed Kubernetes
+
+## Application Management Strategies
+
+Cozystack deploys applications in two complementary ways:
+
+-   **Operator‑managed applications** – Cozystack bundles a specific version of a Kubernetes Operator that installs and continuously reconciles the application.
+    As a rule, the operator chooses one of the most recent stable versions of the application by default.
+
+-   **Chart‑managed applications** – When no mature operator exists, Cozystack packages an upstream (or in‑house) Helm chart.
+    The chart’s `appVersion` pin tracks the latest stable upstream release, keeping deployments secure and up‑to‑date.
+
+## Tenants
+
+Tenants in Cozystack are implemented as managed applications.
+Learn more about tenants in [Tenant System]({{% ref "/docs/guides/tenants" %}}).
+
+
+## Managed (Tenant) Kubernetes Cluster
 
 Cozystack deploys and manages Kubernetes clusters as standalone applications within each tenant’s isolated environment.
 These clusters are fully separate from the root management cluster and are intended for deploying tenant-specific or customer-developed applications.
@@ -27,7 +44,9 @@ Deployment involves the following components:
 
 This architecture ensures isolated, scalable, and efficient Kubernetes environments tailored for each tenant.
 
--    Managed application reference: [Kubernetes]({{% ref "/docs/reference/applications/kubernetes" %}})
+-   Supported version: Kubernetes v1.32.4
+-   Kubernetes operator: [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator) v0.4.2
+-   Managed application reference: [Kubernetes]({{% ref "/docs/reference/applications/kubernetes" %}})
 
 
 ## Managed PostgreSQL
@@ -36,8 +55,11 @@ Nowadays, PostgreSQL is the most popular relational database.
 Its platform-side implementation involves a self-healing replicated cluster.
 This is managed with the increasingly popular CloudNativePG operator within the community.
 
--    Website: [cloudnative-pg.io](https://cloudnative-pg.io/)
--    Managed application reference: [PostgreSQL]({{% ref "/docs/reference/applications/postgres" %}})
+
+-   Supported version: PostgreSQL 17
+-   Kubernetes operator: [cloudnative-pg/cloudnative-pg](https://github.com/cloudnative-pg/cloudnative-pg) v1.24.0
+-   Website: [cloudnative-pg.io](https://cloudnative-pg.io/)
+-   Managed application reference: [PostgreSQL]({{% ref "/docs/reference/applications/postgres" %}})
 
 
 ## Managed MySQL (MariaDB)
@@ -49,8 +71,10 @@ This cluster is managed using the increasingly popular mariadb-operator.
 For each database, there is an interface for configuring users, their permissions,
 as well as schedules for creating backups using [Restic](https://restic.net/) currently the most efficient tool.
 
--    Website: [mariadb.com](https://mariadb.com/)
--    Managed application reference: [MySQL]({{% ref "/docs/reference/applications/mysql" %}})
+-   Supported version: MariaDB 11.4.3
+-   Kubernetes operator: [mariadb-operator/mariadb-operator](https://github.com/mariadb-operator/mariadb-operator) v0.18.0
+-   Website: [mariadb.com](https://mariadb.com/)
+-   Managed application reference: [MySQL]({{% ref "/docs/reference/applications/mysql" %}})
 
 
 ## Managed Redis
@@ -58,10 +82,12 @@ as well as schedules for creating backups using [Restic](https://restic.net/) cu
 Redis is the most commonly used key-value in-memory data store.
 It is most often used as a cache, as storage for user sessions, or as a message broker.
 The platform-side implementation involves a replicated failover Redis cluster with Sentinel.
-This is managed by the spotahome redis-operator.
+This is managed by the spotahome/redis-operator.
 
--    Website: [redis.io](https://redis.io/)
--    Managed application reference: [Redis]({{% ref "/docs/reference/applications/redis" %}})
+-   Supported version: Redis 6.2.6+ (based on `alpine`)
+-   Kubernetes operator: [spotahome/redis-operator](https://github.com/spotahome/redis-operator) v1.3.0-rc1
+-   Website: [redis.io](https://redis.io/)
+-   Managed application reference: [Redis]({{% ref "/docs/reference/applications/redis" %}})
 
 
 ## Managed FerretDB
@@ -70,26 +96,32 @@ FerretDB is an open source MongoDB alternative.
 It translates MongoDB wire protocol queries to SQL and can be used as a direct replacement for MongoDB 5.0+.
 In Cozystack, it is backed by PostgreSQL.
 
--    Website: [ferretdb.io](https://www.ferretdb.io/)
--    Managed application reference: [FerretDB]({{% ref "/docs/reference/applications/ferretdb" %}})
+-   Supported version: FerretDB 1.24.0.
+-   Website: [ferretdb.io](https://www.ferretdb.io/)
+-   Managed application reference: [FerretDB]({{% ref "/docs/reference/applications/ferretdb" %}})
 
 
-## Managed Clickhouse
+## Managed ClickHouse
 
 ClickHouse is an open source high-performance and column-oriented SQL database management system (DBMS).
 It is used for online analytical processing (OLAP).
 In the Cozystack platform, we use the Altinity operator to provide ClickHouse.
 
--    Website: [clickhouse.com](https://clickhouse.com/)
--    Managed application reference: [Clickhouse]({{% ref "/docs/reference/applications/clickhouse" %}})
+-   Supported version: 24.9.2.42
+-   Kubernetes operator: [Altinity/clickhouse-operator](https://github.com/Altinity/clickhouse-operator) v0.25.0
+-   Website: [clickhouse.com](https://clickhouse.com/)
+-   Managed application reference: [Clickhouse]({{% ref "/docs/reference/applications/clickhouse" %}})
+
 
 ## Managed RabbitMQ
 
 RabbitMQ is a widely known message broker.
 The platform-side implementation allows you to create failover clusters managed by the official RabbitMQ operator.
 
--    Website: [rabbitmq.com](https://www.rabbitmq.com/)
--    Managed application reference: [RabbitMQ]({{% ref "/docs/reference/applications/rabbitmq" %}})
+-   Supported version: RabbitMQ 4.1.0+ (latest stable version)
+-   Kubernetes operator: [rabbitmq/cluster-operator](https://github.com/rabbitmq/cluster-operator) v1.10.0
+-   Website: [rabbitmq.com](https://www.rabbitmq.com/)
+-   Managed application reference: [RabbitMQ]({{% ref "/docs/reference/applications/rabbitmq" %}})
 
 
 ## Managed Kafka
@@ -99,8 +131,10 @@ It aims to provide a unified, high-throughput, low-latency platform for handling
 In Cozystack, we use [Strimzi](https://github.com/cozystack/cozystack/blob/main/packages/system/kafka-operator/charts/strimzi-kafka-operator/README.md)
 to run an Apache Kafka cluster on Kubernetes in various deployment configurations.
 
--    Website: [kafka.apache.org](https://kafka.apache.org/)
--    Managed application reference: [Kafka]({{% ref "/docs/reference/applications/kafka" %}})
+-   Supported version: Apache Kafka, 3.9.0
+-   Kubernetes operator: [strimzi/strimzi-kafka-operator](https://github.com/strimzi/strimzi-kafka-operator) v0.45.0
+-   Website: [kafka.apache.org](https://kafka.apache.org/)
+-   Managed application reference: [Kafka]({{% ref "/docs/reference/applications/kafka" %}})
 
 
 ## Managed HTTP Cache
@@ -111,8 +145,9 @@ Nginx is traditionally used to build CDNs and caching servers.
 The platform-side implementation features efficient caching without using a clustered file system.
 It also supports horizontal scaling without duplicating data on multiple servers.
 
--    Website: [nginx.org](https://nginx.org/)
--    Managed application reference: [http-cache]({{% ref "/docs/reference/applications/http-cache" %}})
+-   Included versions: Nginx 1.25.3, HAProxy latest stable.
+-   Website: [nginx.org](https://nginx.org/)
+-   Managed application reference: [http-cache]({{% ref "/docs/reference/applications/http-cache" %}})
 
 
 ## Managed NATS Messaging
@@ -120,8 +155,10 @@ It also supports horizontal scaling without duplicating data on multiple servers
 NATS is an open-source, simple, secure, and high performance messaging system.
 It provides a data layer for cloud native applications, IoT messaging, and microservices architectures.
 
--    Website: [nats.io](https://nats.io/)
--    Managed application reference: [NATS]({{% ref "/docs/reference/applications/nats" %}})
+-   Supported version: NATS 2.10.17
+-   Website: [nats.io](https://nats.io/)
+-   Managed application reference: [NATS]({{% ref "/docs/reference/applications/nats" %}})
+
 
 ## Managed VPN Service
 
@@ -132,5 +169,18 @@ It operates by launching Shadowsocks instances on demand.
 The Shadowsocks protocol uses symmetric encryption algorithms.
 This enables fast internet access while complicating traffic analysis and blocking through DPI (Deep Packet Inspection).
 
--    Website: [getoutline.org](https://getoutline.org/)
--    Managed application reference: [VPN]({{% ref "/docs/reference/applications/vpn" %}})
+-   Supported version: Outline Server, v1.12.3+ (stable)
+-   Website: [getoutline.org](https://getoutline.org/)
+-   Managed application reference: [VPN]({{% ref "/docs/reference/applications/vpn" %}})
+
+
+## Managed TCP Balancer
+
+The Managed TCP Load Balancer Service simplifies the deployment and management of load balancers.
+It efficiently distributes incoming TCP traffic across multiple backend servers, ensuring high availability and optimal resource utilization.
+
+Managed TCP Load Balancer Service efficiently utilizes HAProxy for load balancing purposes.
+HAProxy is a well-established and reliable solution for distributing incoming TCP traffic across multiple backend servers, ensuring high availability and efficient resource utilization. This deployment choice guarantees the seamless and dependable operation of your load balancing infrastructure.
+
+
+- Docs: https://www.haproxy.com/documentation/
