@@ -12,10 +12,12 @@ This guide outlines the steps to bootstrap a Cozystack cluster in an **air-gappe
 **Air-gapped** installation means that the cluster has no direct access to the Internet.
 All necessary resources, such as images and metadata, must be available on the private network.
 
-## Configure Talos nodes
+## Configuring Talos Nodes
 
 {{% alert color="info" %}}
-For Talm installation, make all changes in `./templates/_helpers.tpl` and then build the actual configuration files with `talm template`.
+For installing with Talm, it's enough to make all mentioned changes once in `./templates/_helpers.tpl` and then build the actual node configuration files with `talm template`.
+
+For installing with `talosctl`, the changes should be made in `patch.yaml` and `patch-controlplane.yaml`.
 {{% /alert %}}
 
 ## 1. Configure NTP Servers
@@ -124,8 +126,7 @@ Finally, bootstrap the cluster as usual:
 talm bootstrap -f nodes/node1.yaml
 ```
 
-Read the Talm cluster configuration guide to learn more.
-
+Read the [Talm configuration guide]({{% ref "/docs/operations/talos/configuration/talm" %}}) to learn more.
 
 ### Using talosctl
 
@@ -141,25 +142,22 @@ Finally, bootstrap the cluster using one of the nodes:
 talosctl bootstrap -n <ip> -e <ip>
 ```
 
-Read the Talm cluster configuration guide to learn more.
-
+Read the [`talosctl` configuration guide]({{% ref "/docs/operations/talos/configuration/talosctl" %}}) to learn more.
 
 ## 5. Configure Container Registry Mirrors for Tenant Kubernetes
 
-To perform this configuration, you first need to complete Cozystack installation.
+To use registry mirrors, tenant Kubernetes clusters need to be configured separately,
+although in the same way as the Talos nodes.
 
-{{% alert color="info" %}}
-Requires Cozystack v0.32.0 or later. To check your cluster version, run:
+To perform this configuration, you first need to deploy a Cozystack cluster of
+(or upgrade your cluster to) version v0.32.0 or later.
+Check your current cluster version with:
 
 ```bash
 kubectl get deploy -n cozy-system cozystack -oyaml | grep installer
 ```
-{{% /alert %}}
 
-To use registry mirrors, tenant Kubernetes clusters need a separate config,
-similar to the one made for the Talos nodes.
-
-Generate a secret using the following example:
+Generate a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/) named `patch-containerd` using the following example:
 
 ```yaml
 apiVersion: v1
@@ -206,9 +204,13 @@ stringData:
       skip_verify = true
 ```
 
-This secret will be copied for every tenant Kubernetes cluster deployed in your Cozystack.
-If you need to set a custom config for a particular tenant K8s cluster, set `useCustomSecretForPatchContainerd: true` 
-in the values of  Kubernetes app (since version 0.23.0) and create a Secret with name `kubernetes-clustername` before creating a cluster.
+This secret will be copied for every tenant Kubernetes cluster deployed in Cozystack.
 
-To learn more about registry configuration, read the [CRI Plugin configuration guide](
+It's possible to configure registry mirrors for a particular tenant Kubernetes cluster:
+
+-   The tenant cluster must be deployed with a Kubernetes package version 0.23.0 or later, which is available since Cozystack 0.32.0.
+-   Before deploying the tenant cluster, create a Kubernetes Secret named `kubernetes-<cluster name>` with the same contents as shown above.
+-   When deploying the tenant cluster, set `useCustomSecretForPatchContainerd: true` in the values.
+
+To learn more about registry configuration values, read the [CRI Plugin configuration guide](
 https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration)
