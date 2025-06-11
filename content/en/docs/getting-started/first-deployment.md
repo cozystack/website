@@ -54,15 +54,15 @@ Boot your machines with Talos Linux image in one of these ways:
 
 Bootstrap your Talos Linux cluster using one of the following tools:
 
-- [**Talm**](/docs/operations/talos/configuration/talm/), for a declarative way of cluster management.
-- [**talosctl**](/docs/operations/talos/configuration/talosctl/), for using native `talosctl` tool.
-- [**talos-bootstrap**](/docs/operations/talos/configuration/talos-bootstrap/), for an interactive walkthrough.
+- [**Talm**]({{% ref "/docs/operations/talos/configuration/talm" %}}), for a declarative way of cluster management.
+- [**talosctl**]({{% ref "/docs/operations/talos/configuration/talosctl" %}}), for using native `talosctl` tool.
+- [**talos-bootstrap**]({{% ref "/docs/operations/talos/configuration/talos-bootstrap" %}}), for an interactive walkthrough.
 
 {{< tabs name="Bootstrapping tools" >}}
 {{% tab name="Talm" %}}
 Talm is a utility tool for bootstrapping and managing Talos clusters in a declarative way.
 
-Visit [Talm releases](https://github.com/cozystack/talm/releases ) for the latest version and prebuilt binaries.
+Visit the [releases page](https://github.com/cozystack/talm/releases) for the latest Talm binaries.
 
 ```bash
 sudo curl -fLo /usr/local/bin/talm \

@@ -7,12 +7,44 @@ aliases:
   - /docs/talos/configuration/talm
 ---
 
-[Talm](https://github.com/cozystack/talm) is a Helm-like utility for declarative configuration management of Talos Linux.
-It was created by Ænix to allow more declarative and custom configurations for cluster management.
+This guide explains how to prepare a Talos Linux cluster for deploying Cozystack using 
+[Talm](https://github.com/cozystack/talm) — a Helm-like utility for declarative configuration management of Talos Linux.
 
-Talm comes with pre-built presets for Cozystack.
+Talm was created by Ænix to allow more declarative and custom configurations for cluster management.
+It comes with pre-built presets for Cozystack.
+
+## Prerequisites
+
+By the start of this guide you should have Talos OS installed, but not initialized (bootstrapped), on several nodes.
+These nodes should belong to one subnet or have public IPs.
+
+This guide uses an example where the nodes of a cluster are located in the subnet `192.168.123.0/24`, having the following IP addresses:
+
+- `192.168.123.11`
+- `192.168.123.12`
+- `192.168.123.13`
+
+{{% alert color="info" %}}
+If you are using DHCP, you might not be aware of the IP addresses assigned to your nodes.
+You can use `nmap` to find them, providing your network mask (`192.168.123.0/24` in the example):
+
+```bash
+nmap -Pn -n -p 50000 192.168.123.0/24 -vv | grep 'Discovered'
+```
+
+Example output:
+
+```console
+Discovered open port 50000/tcp on 192.168.123.11
+Discovered open port 50000/tcp on 192.168.123.12
+Discovered open port 50000/tcp on 192.168.123.13
+```
+{{% /alert %}}
+
 
 ## 1. Initialize Cluster Configuration
+
+The first step is to initialize configuration templates and adjust them
 
 Start working with Talm by initializing configuration for a new cluster:
 
@@ -31,16 +63,17 @@ The structure of the project mostly mirrors an ordinary Helm chart:
 - `values.yaml` - a common values file used to provide parameters for the templating.
 - `nodes` - an optional directory used to describe and store generated configuration for nodes.
 
+### 1.1. Edit Configuration Templates
+
 You're free to edit `Chart.yaml`, `values.yaml`, and `templates/*` to meet your environment requirements.
 
-Be aware that your nodes are booted Talos Linux image and awaiting in maintenance mode.
+### 1.2 Apply Keycloak Configuration
 
-{{% alert color="info" %}}
-To configure your cluster for using Keycloak, apply the following change:
+To configure Keycloak as an OIDC provider, apply the following changes:
 
--   For Talm v0.6.6 or later: in `cluster1/templates/_helpers.tpl` replace  `keycloak.example.com` with your domain.
+-   For Talm v0.6.6 or later: in `cluster1/templates/_helpers.tpl` replace `keycloak.example.com` with `keycloak.<your-domain.tld>`.
     
--   For Talm earlier than v0.6.6, update template args manually:
+-   For Talm earlier than v0.6.6, update `cluster1/templates/_helpers.tpl` in the following way:
 
     ```yaml
      cluster:
@@ -51,38 +84,22 @@ To configure your cluster for using Keycloak, apply the following change:
            oidc-username-claim: "preferred_username"
            oidc-groups-claim: "groups"
     ```
-{{% /alert %}}
 
-## 2. Make Node Configuration Files
+## 2. Generate Node Configuration Files
 
 Next step is to make node configuration files from templates.
-You will need to know the nodes' IP addresses.
-
-{{% alert color="info" %}}
-If you are using DHCP, you might not be aware of the IP addresses assigned to your nodes.
-You can use `nmap` to find them, providing your network mask (`192.168.100.0/24` in the example):
-
-```bash
-nmap -Pn -n -p 50000 192.168.100.0/24 -vv | grep 'Discovered'
-```
-
-Example output:
-
-```
-Discovered open port 50000/tcp on 192.168.100.63
-Discovered open port 50000/tcp on 192.168.100.159
-Discovered open port 50000/tcp on 192.168.100.192
-```
-{{% /alert %}}
-
-Now, create a `nodes` directory and collect the information from your nodes into a node-specific file for each node:
+Create a `nodes` directory and collect the information from each node into a node-specific file:
 
 ```bash
 mkdir nodes
-talm template -e 192.168.100.63 -n 192.168.100.63 -t templates/controlplane.yaml -i > nodes/node1.yaml
-talm template -e 192.168.100.159 -n 192.168.100.159 -t templates/controlplane.yaml -i > nodes/node2.yaml
-talm template -e 192.168.100.192 -n 192.168.100.192 -t templates/controlplane.yaml -i > nodes/node3.yaml
+talm template -e 192.168.123.11 -n 192.168.123.11 -t templates/controlplane.yaml -i > nodes/node1.yaml
+talm template -e 192.168.123.12 -n 192.168.123.12 -t templates/controlplane.yaml -i > nodes/node2.yaml
+talm template -e 192.168.123.13 -n 192.168.123.13 -t templates/controlplane.yaml -i > nodes/node3.yaml
 ```
+
+The `--insecure` (`-i`) parameter is required because Talm must retrieve configuration data
+from Talos nodes that are not initialized yet, awaiting in maintenance mode, and therefore unable to accept an authenticated connection.
+The nodes will be initialized only on the next step, with `talm apply`.
 
 ## 3. Apply Node Configuration
 
@@ -98,12 +115,12 @@ talm apply -f nodes/node3.yaml -i
 Wait until all nodes have rebooted.
 If an installation media was used, such as a USB stick, remove it to ensure that the nodes boot from the internal disk.
 
-In future operations, you can also use the following options:
+Later on, you can also use the following options:
 
 - `--dry-run` - dry run mode will show a diff with the existing configuration.
 - `-m try` - try mode will roll back the configuration in 1 minute.
 
-## 4. Bootstrap and Access Cluster
+## 4. Bootstrap and Access the Cluster
 
 Run `talm bootstrap` on a single control-plane node — it is enough to bootstrap the whole cluster:
 
@@ -122,12 +139,14 @@ Export the `KUBECONFIG` variable:
 export KUBECONFIG=$PWD/kubeconfig
 ```
 
-Check connection:
+Check that the cluster is available with this new `kubeconfig`:
+
 ```bash
 kubectl get ns
 ```
 
-example output:
+Example output:
+
 ```console
 NAME              STATUS   AGE
 default           Active   7m56s
@@ -136,12 +155,10 @@ kube-public       Active   7m56s
 kube-system       Active   7m56s
 ```
 
-{{% alert color="warning" %}}
-:warning: All nodes should currently show as `READY: False`, which is normal.
-This happens because in the previous step you have disabled the default CNI plugin .
-Cozystack will install its own CNI-plugin on the next step.
+{{% alert color="info" %}}
+:warning: All nodes will show as `READY: False`, which is normal at this step.
+This happens because the default CNI plugin was disabled in the previous step to enable Cozystack installing its own CNI plugin.
 {{% /alert %}}
-
 
 Now you have a Kubernetes cluster prepared for installing Cozystack.
 To complete the installation, follow the deployment guide, starting with the

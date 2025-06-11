@@ -11,139 +11,159 @@ aliases:
 
 It was created by Ænix to simplify the installation of Talos Linux on bare metal nodes in a user-friendly manner.
 
-## Install dependencies:
+## 1. Install Dependencies
+
+Install the following dependencies
 
 - `talosctl`
 - `dialog`
 - `nmap`
 
-## Preparation
-
-Create a new directory for holding your cluster configuration
-
-```
-mkdir cluster1
-cd cluster1
-```
-
-Write configuration for Cozystack:
-
-```yaml
-cat > patch.yaml <<\EOT
-machine:
-  kubelet:
-    nodeIP:
-      validSubnets:
-      - 192.168.100.0/24
-    extraConfig:
-      maxPods: 512
-  kernel:
-    modules:
-    - name: openvswitch
-    - name: drbd
-      parameters:
-        - usermode_helper=disabled
-    - name: zfs
-    - name: spl
-    - name: vfio_pci
-    - name: vfio_iommu_type1
-  install:
-    image: ghcr.io/cozystack/cozystack/talos:v1.9.5
-  registries:
-    mirrors:
-      docker.io:
-        endpoints:
-        - https://mirror.gcr.io
-  files:
-  - content: |
-      [plugins]
-        [plugins."io.containerd.grpc.v1.cri"]
-          device_ownership_from_security_context = true
-        [plugins."io.containerd.cri.v1.runtime"]
-          device_ownership_from_security_context = true
-    path: /etc/cri/conf.d/20-customization.part
-    op: create
-
-cluster:
-  network:
-    cni:
-      name: none
-    dnsDomain: cozy.local
-    podSubnets:
-    - 10.244.0.0/16
-    serviceSubnets:
-    - 10.96.0.0/16
-EOT
-
-cat > patch-controlplane.yaml <<\EOT
-machine:
-  nodeLabels:
-    node.kubernetes.io/exclude-from-external-load-balancers:
-      $patch: delete
-cluster:
-  allowSchedulingOnControlPlanes: true
-  controllerManager:
-    extraArgs:
-      bind-address: 0.0.0.0
-  scheduler:
-    extraArgs:
-      bind-address: 0.0.0.0
-  apiServer:
-    certSANs:
-    - 127.0.0.1
-  proxy:
-    disabled: true
-  discovery:
-    enabled: false
-  etcd:
-    advertisedSubnets:
-    - 192.168.100.0/24
-EOT
-```
-
-{{% alert color="warning" %}}
-If you use keycloak.
-
-- Add in `patch-controlplane.yaml`:
-  ```
-  cluster:
-    apiServer:
-    apiServer:
-      extraArgs:
-      oidc-issuer-url: "https://keycloak.example.com/realms/cozy"
-      oidc-client-id: "kubernetes"
-      oidc-username-claim: "preferred_username"
-      oidc-groups-claim: "groups"
-
-Where example.com is your `root-host`.
-{{% /alert %}}
-
-Run [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) to deploy the first node in a cluster:
+Download the latest version of `talos-bootstrap` from the [releases page](https://github.com/cozystack/talos-bootstrap/releases) or directly from the trunk:
 
 ```bash
+curl -fsSL -o /usr/local/bin/talos-bootstrap \
+    https://github.com/cozystack/talos-bootstrap/raw/master/talos-bootstrap
+chmod +x /usr/local/bin/talos-bootstrap
+talos-bootstrap --help
+```
+
+## 2. Prepare Configuration Files
+
+1.  Start by making a configuration directory for the new cluster:
+
+    ```bash
+    mkdir -p cluster1
+    cd cluster1
+    ```
+
+1.  Make a configuration patch file `patch.yaml` with common node settings, using the following example:
+    
+    ```yaml
+    machine:
+      kubelet:
+        nodeIP:
+          validSubnets:
+          - 192.168.100.0/24
+        extraConfig:
+          maxPods: 512
+      kernel:
+        modules:
+        - name: openvswitch
+        - name: drbd
+          parameters:
+            - usermode_helper=disabled
+        - name: zfs
+        - name: spl
+        - name: vfio_pci
+        - name: vfio_iommu_type1
+      install:
+        image: ghcr.io/cozystack/cozystack/talos:v1.9.5
+      registries:
+        mirrors:
+          docker.io:
+            endpoints:
+            - https://mirror.gcr.io
+      files:
+      - content: |
+          [plugins]
+            [plugins."io.containerd.grpc.v1.cri"]
+              device_ownership_from_security_context = true
+            [plugins."io.containerd.cri.v1.runtime"]
+              device_ownership_from_security_context = true
+        path: /etc/cri/conf.d/20-customization.part
+        op: create
+    
+    cluster:
+      network:
+        cni:
+          name: none
+        dnsDomain: cozy.local
+        podSubnets:
+        - 10.244.0.0/16
+        serviceSubnets:
+        - 10.96.0.0/16
+    ```
+   
+1.  Make another configuration patch file `patch-controlplane.yaml` with settings exclusive to control plane nodes:
+    
+    ```yaml
+    machine:
+      nodeLabels:
+        node.kubernetes.io/exclude-from-external-load-balancers:
+          $patch: delete
+    cluster:
+      allowSchedulingOnControlPlanes: true
+      controllerManager:
+        extraArgs:
+          bind-address: 0.0.0.0
+      scheduler:
+        extraArgs:
+          bind-address: 0.0.0.0
+      apiServer:
+        certSANs:
+        - 127.0.0.1
+      proxy:
+        disabled: true
+      discovery:
+        enabled: false
+      etcd:
+        advertisedSubnets:
+        - 192.168.100.0/24
+    ```
+
+1.  To configure Keycloak as an OIDC provider, add the following section to `patch-controlplane.yaml`, replacing `example.com` with your domain:
+
+    ```yaml
+    cluster:
+      apiServer:
+        extraArgs:
+        oidc-issuer-url: "https://keycloak.example.com/realms/cozy"
+        oidc-client-id: "kubernetes"
+        oidc-username-claim: "preferred_username"
+        oidc-groups-claim: "groups"
+    ```
+
+## 3. Bootstrap and Access the Cluster
+
+Once you have the configuration files ready, run `talos-bootstrap` on each node of a cluster:
+
+```bash
+# in the cluster config directory
 talos-bootstrap install
 ```
 
 {{% alert color="warning" %}}
 :warning: If your nodes are running on an external network, you must specify each node explicitly in the argument:
-```
+```bash
 talos-bootstrap install -n 1.2.3.4
 ```
 
 Where `1.2.3.4` is the IP-address of your remote node.
 {{% /alert %}}
 
-Export your `KUBECONFIG` variable:
+{{% alert color="info" %}}
+`talos-bootstrap` will enable bootstrap on the first configured node in a cluster. 
+If you want to re-bootstrap the etcd cluster, remove the line `BOOTSTRAP_ETCD=false` from your `cluster.conf` file.
+{{% /alert %}}
+
+Repeat this step for the other nodes in a cluster.
+
+After completing the `install` command, `talos-bootstrap` saves the cluster's config as `./kubeconfig`.
+Export the `KUBECONFIG` variable to use it:
+
 ```bash
 export KUBECONFIG=$PWD/kubeconfig
 ```
 
-Check connection:
+Check that the cluster is available with this new `kubeconfig`:
+
 ```bash
 kubectl get ns
 ```
 
-example output:
+Example output:
+
 ```console
 NAME              STATUS   AGE
 default           Active   7m56s
@@ -153,14 +173,10 @@ kube-system       Active   7m56s
 ```
 
 {{% alert color="info" %}}
-Talos-bootstrap will enable bootstrap on the first configured node in a cluster. If you want to rebootstrap the etcd cluster, simply remove the line `BOOTSTRAP_ETCD=false` from your `cluster.conf` file.
+:warning: All nodes will show as `READY: False`, which is normal at this step.
+This happens because the default CNI plugin was disabled in the previous step to enable Cozystack installing its own CNI plugin.
 {{% /alert %}}
 
-Repeat the step for the other nodes in a cluster.
-
-{{% alert color="warning" %}}
-:warning: All nodes should currently show as `READY: False`, don't worry about that, this is because you disabled the default CNI plugin in the previous step. Cozystack will install it's own CNI-plugin on the next step.
-{{% /alert %}}
-
-Now follow **Get Started** guide starting from the [**Install Cozystack**](/docs/getting-started/first-deployment/#install-cozystack) section, to continue the installation.
-
+Now you have a Kubernetes cluster prepared for installing Cozystack.
+To complete the installation, follow the deployment guide, starting with the
+[Install Cozystack]({{% ref "/docs/getting-started/first-deployment#install-cozystack" %}}) section.

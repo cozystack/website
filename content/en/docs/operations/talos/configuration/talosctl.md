@@ -10,10 +10,10 @@ a specialized command line tool for managing Talos.
 
 ## Prerequisites
 
-This guide assumes that you already have Talos OS installed, but not initialized, on several nodes.
+By the start of this guide you should have Talos OS installed, but not initialized (bootstrapped), on several nodes.
 These nodes should belong to one subnet or have public IPs.
 
-In this example the nodes of a cluster are located in the subnet `192.168.123.0/24`, having the following IP addresses:
+This guide uses an example where the nodes of a cluster are located in the subnet `192.168.123.0/24`, having the following IP addresses:
 
 - `192.168.123.11`
 - `192.168.123.12`
@@ -22,9 +22,26 @@ In this example the nodes of a cluster are located in the subnet `192.168.123.0/
 IP `192.168.123.10` is an internal address which does not belong to any of these nodes, but is created by Talos.
 It's used as VIP.
 
-## 1. Prepare Configuration Variables
+{{% alert color="info" %}}
+If you are using DHCP, you might not be aware of the IP addresses assigned to your nodes.
+You can use `nmap` to find them, providing your network mask (`192.168.123.0/24` in the example):
 
-1.  Start working by making a configuration directory for the new cluster:
+```bash
+nmap -Pn -n -p 50000 192.168.123.0/24 -vv | grep 'Discovered'
+```
+
+Example output:
+
+```console
+Discovered open port 50000/tcp on 192.168.123.11
+Discovered open port 50000/tcp on 192.168.123.12
+Discovered open port 50000/tcp on 192.168.123.13
+```
+{{% /alert %}}
+
+## 1. Prepare Configuration Files
+
+1.  Start by making a configuration directory for the new cluster:
 
     ```bash
     mkdir -p cluster1
@@ -86,7 +103,7 @@ It's used as VIP.
         - 10.96.0.0/16
     ```
    
-1.  Make one more configuration patch file, `patch-controlplane.yaml`.
+1.  Make another configuration patch file `patch-controlplane.yaml` with settings exclusive to control plane nodes:
 
     Note that VIP address is used for `machine.network.interfaces[0].vip.ip`:   
 
@@ -121,7 +138,7 @@ It's used as VIP.
     ```
 
 
-## 2. Generate Node Configuration
+## 2. Generate Node Configuration Files
 
 Once you have patch files ready, generate the configuration files for each node.
 Note that it's using the three files generated in the previous step: `secrets.yaml`, `patch.yaml`, and `patch-controlplane.yaml`.
@@ -155,19 +172,23 @@ Further on, you can also use the following options:
 - `--dry-run` - dry run mode will show a diff with the existing configuration.
 - `-m try` - try mode will roll back the configuration in 1 minute.
 
-## 4. Wait for Nodes Rebooting
+### 3.1. Wait for Nodes Rebooting
 
 Wait until all nodes have rebooted.
 Remove the installation media (e.g., USB stick) to ensure that the nodes boot from the internal disk.
 
-Ready nodes will expose port 50000 which is a sign of Talos configuration completed and Talos finished rebooting
+Ready nodes will expose port 50000 which is a sign that the node had completed Talos configuration and rebooted.
 
-If you need to wait for nodes readiness in a script, consider this example:
+If you need to wait for node readiness in a script, consider this example:
+
 ```bash
-timeout 60 sh -c 'until nc -nzv 192.168.123.11 50000 && nc -nzv 192.168.123.12 50000 && nc -nzv 192.168.123.13 50000; do sleep 1; done'
+timeout 60 sh -c 'until nc -nzv 192.168.123.11 50000 && \
+  nc -nzv 192.168.123.12 50000 && \
+  nc -nzv 192.168.123.13 50000; \
+  do sleep 1; done'
 ```
 
-## 5. Bootstrap and Access Cluster
+## 4. Bootstrap and Access the Cluster
 
 Run `talosctl bootstrap` on a single control-plane node — it is enough to bootstrap the whole cluster:
 
@@ -186,12 +207,14 @@ Export the `KUBECONFIG` variable:
 export KUBECONFIG=$PWD/kubeconfig
 ```
 
-Check connection:
+Check that the cluster is available with this new `kubeconfig`:
+
 ```bash
 kubectl get ns
 ```
 
-example output:
+Example output:
+
 ```console
 NAME              STATUS   AGE
 default           Active   7m56s
@@ -200,12 +223,10 @@ kube-public       Active   7m56s
 kube-system       Active   7m56s
 ```
 
-{{% alert color="warning" %}}
-:warning: All nodes should currently show as `READY: False`, which is normal.
-This happens because in the previous step you have disabled the default CNI plugin .
-Cozystack will install its own CNI-plugin on the next step.
+{{% alert color="info" %}}
+:warning: All nodes will show as `READY: False`, which is normal at this step.
+This happens because the default CNI plugin was disabled in the previous step to enable Cozystack installing its own CNI plugin.
 {{% /alert %}}
-
 
 Now you have a Kubernetes cluster prepared for installing Cozystack.
 To complete the installation, follow the deployment guide, starting with the
