@@ -5,7 +5,7 @@ RAW_BASE_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/main/packages/app
 
 apps=(
   tenant clickhouse virtual-machine redis vpn ferretdb vm-disk
-  rabbitmq postgres nats bucket kafka mysql vm-instance
+  rabbitmq postgres nats kafka mysql vm-instance
   kubernetes http-cache tcp-balancer
 )
 
