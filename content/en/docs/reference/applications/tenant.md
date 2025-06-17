@@ -69,7 +69,6 @@ tenant-u1
     └── postgres-db1
 ```
 
-
 ## Parameters
 
 ### Common parameters

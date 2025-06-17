@@ -43,7 +43,7 @@ virtctl ssh <user>@<vm>
 | Name                      | Description                                                                                                | Value        |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------ |
 | `external`                | Enable external access from outside the cluster                                                            | `false`      |
-| `externalMethod`          | specify method to passthrough the traffic to the virtual machine. Allowed values: `WholeIP` and `PortList` | `WholeIP`    |
+| `externalMethod`          | specify method to passthrough the traffic to the virtual machine. Allowed values: `WholeIP` and `PortList` | `PortList`   |
 | `externalPorts`           | Specify ports to forward from outside the cluster                                                          | `[]`         |
 | `running`                 | Determines if the virtual machine should be running                                                        | `true`       |
 | `instanceType`            | Virtual Machine instance type                                                                              | `u1.medium`  |
