@@ -90,7 +90,7 @@ outputs:
   page: [HTML, SearchIndex]
 
 params:
-  description: Free and Open Source PaaS-platform for seamless management of virtual machines, managed Kubernetes, and Databases-as-a-Service
+  description: Free Cloud Platform based on Kubernetes
   copyright: Cozystack a Series of LF Projects, LLC
   github_repo: https://github.com/cozystack/website
   github_branch: main
