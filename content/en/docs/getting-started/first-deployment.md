@@ -62,12 +62,11 @@ Bootstrap your Talos Linux cluster using one of the following tools:
 {{% tab name="Talm" %}}
 Talm is a utility tool for bootstrapping and managing Talos clusters in a declarative way.
 
-Visit the [releases page](https://github.com/cozystack/talm/releases) for the latest Talm binaries.
+Visit the [releases page](https://github.com/cozystack/talm/releases) for the latest Talm binaries
+or use the universal installation script:
 
 ```bash
-sudo curl -fLo /usr/local/bin/talm \
-    https://github.com/cozystack/talm/releases/latest/download/talm-linux-amd64
-sudo chmod +x /usr/local/bin/talm
+curl -sSL https://github.com/cozystack/talm/raw/refs/heads/main/hack/install.sh | sh -s
 talm --help
 ```
 {{% /tab %}}
