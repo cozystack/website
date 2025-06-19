@@ -40,5 +40,5 @@ data:
 [disable-components]: {{% ref "docs/operations/bundles#how-to-disable-some-components-from-bundle" %}}
 [overwrite-parameters]: {{% ref "docs/operations/bundles#how-to-overwrite-parameters-for-specific-components" %}}
 
-Refer to the [Bundles reference]{{% ref "docs/operations/bundles" %}} page to learn how to use generic bundle options.
+Refer to the [Bundles reference]({{% ref "docs/operations/bundles" %}}) page to learn how to use generic bundle options.
 
