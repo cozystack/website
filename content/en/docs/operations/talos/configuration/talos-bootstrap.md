@@ -47,6 +47,10 @@ talos-bootstrap --help
           - 192.168.100.0/24
         extraConfig:
           maxPods: 512
+      sysctls:
+        net.ipv4.neigh.default.gc_thresh1: "4096"
+        net.ipv4.neigh.default.gc_thresh2: "8192"
+        net.ipv4.neigh.default.gc_thresh3: "16384"
       kernel:
         modules:
         - name: openvswitch
@@ -58,7 +62,7 @@ talos-bootstrap --help
         - name: vfio_pci
         - name: vfio_iommu_type1
       install:
-        image: ghcr.io/cozystack/cozystack/talos:v1.9.5
+        image: ghcr.io/cozystack/cozystack/talos:v1.10.3
       registries:
         mirrors:
           docker.io:

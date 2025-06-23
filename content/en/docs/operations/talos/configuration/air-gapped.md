@@ -71,7 +71,8 @@ machine:
           - http://10.0.0.1:8088
     config:
       "10.0.0.1:8082":
-        insecure: true
+        tls:
+          insecureSkipVerify: true
         auth:
           username: myuser
           password: mypass
