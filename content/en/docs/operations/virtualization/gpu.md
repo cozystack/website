@@ -62,7 +62,7 @@ Follow these steps:
 To verify the GPU binding, access the node using `kubectl debug node` or `kubectl node-shell -x` and run:
 
 ```bash
-lspci --nnk -d 10de:
+lspci -nnk -d 10de:
 ```
 
 The vfio-manager pod will bind all GPUs on the node to the vfio-pci driver. Example output:

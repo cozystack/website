@@ -35,7 +35,7 @@ It applies settings to all existing DRBD resources immediately, without the need
 
 ```bash
 # Applies to existing DRBD resources as well
-linstor controller drbd-options --connect-int 15 --ping-int 15 --ping-timeout 20 --timeout 120
+linstor controller drbd-options --connect-int 15 --ping-int 15 --ping-timeout 20 --drbd-timeout 120
 ```
 
 These values are tuned for inter-datacenter environments with higher latency than a typical local network.
