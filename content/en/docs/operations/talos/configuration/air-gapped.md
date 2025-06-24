@@ -209,9 +209,8 @@ This secret will be copied for every tenant Kubernetes cluster deployed in Cozys
 
 It's possible to configure registry mirrors for a particular tenant Kubernetes cluster:
 
--   The tenant cluster must be deployed with a Kubernetes package version 0.23.0 or later, which is available since Cozystack 0.32.0.
+-   The tenant cluster must be deployed with a Kubernetes package version 0.23.1 or later, which is available since Cozystack 0.32.1.
 -   Before deploying the tenant cluster, create a Kubernetes Secret named `kubernetes-<cluster name>` with the same contents as shown above.
--   When deploying the tenant cluster, set `useCustomSecretForPatchContainerd: true` in the values.
 
 To learn more about registry configuration values, read the [CRI Plugin configuration guide](
 https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration)
