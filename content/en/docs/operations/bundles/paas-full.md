@@ -48,6 +48,8 @@ data:
 | `expose-services` | Comma-separated list of services to expose to the internet. Possible values: `api,dashboard,cdi-uploadproxy,vm-exportproxy` |
 | `expose-ingress` | Ingress controller to use for exposing services. (default: `tenant-root`) |
 | `expose-external-ips` | Comma-separated list of external IPs used for specified ingress controller. If not specified it will use LoadBalancer service by default |
+| `cpu-allocation-ratio` | CPU allocation ratio: `1/cpu-allocation-ratio` CPU requested per 1 vCPU. Defaults to 10 if unset. |
+
 
 [disable-components]: {{% ref "docs/operations/bundles#how-to-disable-some-components-from-bundle" %}}
 [overwrite-parameters]: {{% ref "docs/operations/bundles#how-to-overwrite-parameters-for-specific-components" %}}
