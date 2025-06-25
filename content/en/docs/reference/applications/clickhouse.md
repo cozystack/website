@@ -54,7 +54,7 @@ For more details, read [Restic: Effective Backup from Stdin](https://blog.aenix.
 | `backup.s3SecretKey`     | Secret key for S3, used for authentication                                  | `ju3eum4dekeich9ahM1te8waeGai0oog`                     |
 | `backup.resticPassword`  | Password for Restic backup encryption                                       | `ChaXoveekoh6eigh4siesheeda2quai0`                     |
 | `resources`              | Explicit CPU/memory resource requests and limits for the Clickhouse service | `{}`                                                   |
-| `resourcesPreset`        | Use a common resources preset when `resources` is not set explicitly.       | `nano`                                                 |
+| `resourcesPreset`        | Use a common resources preset when `resources` is not set explicitly.       | `small`                                                |
 
 
 In production environments, it's recommended to set `resources` explicitly.

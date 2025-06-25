@@ -17,14 +17,14 @@ Service utilizes the Spotahome Redis Operator for efficient management and orche
 
 ### Common parameters
 
-| Name              | Description                                                                                                                                                                                                       | Value   |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `external`        | Enable external access from outside the cluster                                                                                                                                                                   | `false` |
-| `size`            | Persistent Volume size                                                                                                                                                                                            | `1Gi`   |
-| `replicas`        | Number of Redis replicas                                                                                                                                                                                          | `2`     |
-| `storageClass`    | StorageClass used to store the data                                                                                                                                                                               | `""`    |
-| `authEnabled`     | Enable password generation                                                                                                                                                                                        | `true`  |
-| `resources`       | Resources                                                                                                                                                                                                         | `{}`    |
-| `resourcesPreset` | Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if resources is set (resources is recommended for production). | `nano`  |
+| Name              | Description                                                                                                                                      | Value   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `external`        | Enable external access from outside the cluster                                                                                                  | `false` |
+| `size`            | Persistent Volume size                                                                                                                           | `1Gi`   |
+| `replicas`        | Number of Redis replicas                                                                                                                         | `2`     |
+| `storageClass`    | StorageClass used to store the data                                                                                                              | `""`    |
+| `authEnabled`     | Enable password generation                                                                                                                       | `true`  |
+| `resources`       | Resources                                                                                                                                        | `{}`    |
+| `resourcesPreset` | Use a common resources preset when `resources` is not set explicitly. (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge) | `nano`  |
 
 

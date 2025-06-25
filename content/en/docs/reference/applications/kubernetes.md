@@ -85,13 +85,12 @@ See the reference for components utilized in this service:
 
 ### Common Parameters
 
-| Name                                | Description                                                                                                       | Value        |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------ |
-| `host`                              | Hostname used to access the Kubernetes cluster externally. Defaults to `<cluster-name>.<tenant-host>` when empty. | `""`         |
-| `controlPlane.replicas`             | Number of replicas for Kubernetes control-plane components.                                                       | `2`          |
-| `storageClass`                      | StorageClass used to store user data.                                                                             | `replicated` |
-| `useCustomSecretForPatchContainerd` | if true, for patch containerd will be used secret: {{ .Release.Name }}-patch-containerd                           | `false`      |
-| `nodeGroups`                        | nodeGroups configuration                                                                                          | `{}`         |
+| Name                    | Description                                                                                                       | Value        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------ |
+| `host`                  | Hostname used to access the Kubernetes cluster externally. Defaults to `<cluster-name>.<tenant-host>` when empty. | `""`         |
+| `controlPlane.replicas` | Number of replicas for Kubernetes control-plane components.                                                       | `2`          |
+| `storageClass`          | StorageClass used to store user data.                                                                             | `replicated` |
+| `nodeGroups`            | nodeGroups configuration                                                                                          | `{}`         |
 
 ### Cluster Addons
 
@@ -114,16 +113,16 @@ See the reference for components utilized in this service:
 
 ### Kubernetes Control Plane Configuration
 
-| Name                                               | Description                                                                  | Value    |
-| -------------------------------------------------- | ---------------------------------------------------------------------------- | -------- |
-| `controlPlane.apiServer.resources`                 | Explicit CPU/memory resource requests and limits for the API server.         | `{}`     |
-| `controlPlane.apiServer.resourcesPreset`           | Use a common resources preset when `resources` is not set explicitly.        | `medium` |
-| `controlPlane.controllerManager.resources`         | Explicit CPU/memory resource requests and limits for the controller manager. | `{}`     |
-| `controlPlane.controllerManager.resourcesPreset`   | Use a common resources preset when `resources` is not set explicitly.        | `micro`  |
-| `controlPlane.scheduler.resources`                 | Explicit CPU/memory resource requests and limits for the scheduler.          | `{}`     |
-| `controlPlane.scheduler.resourcesPreset`           | Use a common resources preset when `resources` is not set explicitly.        | `micro`  |
-| `controlPlane.konnectivity.server.resources`       | Explicit CPU/memory resource requests and limits for the Konnectivity.       | `{}`     |
-| `controlPlane.konnectivity.server.resourcesPreset` | Use a common resources preset when `resources` is not set explicitly.        | `micro`  |
+| Name                                               | Description                                                                                                                                      | Value    |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| `controlPlane.apiServer.resources`                 | Explicit CPU/memory resource requests and limits for the API server.                                                                             | `{}`     |
+| `controlPlane.apiServer.resourcesPreset`           | Use a common resources preset when `resources` is not set explicitly. (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge) | `medium` |
+| `controlPlane.controllerManager.resources`         | Explicit CPU/memory resource requests and limits for the controller manager.                                                                     | `{}`     |
+| `controlPlane.controllerManager.resourcesPreset`   | Use a common resources preset when `resources` is not set explicitly. (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge) | `micro`  |
+| `controlPlane.scheduler.resources`                 | Explicit CPU/memory resource requests and limits for the scheduler.                                                                              | `{}`     |
+| `controlPlane.scheduler.resourcesPreset`           | Use a common resources preset when `resources` is not set explicitly. (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge) | `micro`  |
+| `controlPlane.konnectivity.server.resources`       | Explicit CPU/memory resource requests and limits for the Konnectivity.                                                                           | `{}`     |
+| `controlPlane.konnectivity.server.resourcesPreset` | Use a common resources preset when `resources` is not set explicitly. (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge) | `micro`  |
 
 In production environments, it's recommended to set `resources` explicitly.
 Example of `controlPlane.*.resources`:
