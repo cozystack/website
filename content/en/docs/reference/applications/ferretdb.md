@@ -57,7 +57,7 @@ resources:
   memory: 4Gi
 ```
 
-`resourcePreset` sets named CPU and memory configurations for each replica.
+`resourcesPreset` sets named CPU and memory configurations for each replica.
 This setting is ignored if the corresponding `resources` value is set.
 
 | Preset name | CPU    | memory  |
