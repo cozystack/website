@@ -62,7 +62,58 @@ more details:
 | `users`     | Users configuration     | `{}`  |
 | `databases` | Databases configuration | `{}`  |
 
-Example of `users`:
+### Backup parameters
+
+| Name                     | Description                                                          | Value                               |
+| ------------------------ | -------------------------------------------------------------------- | ----------------------------------- |
+| `backup.enabled`         | Enable pereiodic backups                                             | `false`                             |
+| `backup.schedule`        | Cron schedule for automated backups                                  | `0 2 * * * *`                       |
+| `backup.retentionPolicy` | The retention policy                                                 | `30d`                               |
+| `backup.destinationPath` | The path where to store the backup (i.e. s3://bucket/path/to/folder) | `s3://BUCKET_NAME/`                 |
+| `backup.endpointURL`     | Endpoint to be used to upload data to the cloud                      | `http://minio-gateway-service:9000` |
+| `backup.s3AccessKey`     | The access key for S3, used for authentication                       | `oobaiRus9pah8PhohL1ThaeTa4UVa7gu`  |
+| `backup.s3SecretKey`     | The secret key for S3, used for authentication                       | `ju3eum4dekeich9ahM1te8waeGai0oog`  |
+
+### Bootstrap parameters
+
+| Name                     | Description                                                                                                                             | Value   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `bootstrap.enabled`      | Restore cluster from backup                                                                                                             | `false` |
+| `bootstrap.recoveryTime` | Time stamp up to which recovery will proceed, expressed in RFC 3339 format, if empty, will restore latest                               | `""`    |
+| `bootstrap.oldName`      | Name of cluster before deleting                                                                                                         | `""`    |
+| `resources`              | Explicit CPU and memory configuration for each PostgreSQL replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
+| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.       | `micro` |
+
+
+## Parameter examples and reference
+
+### resources and resourcesPreset
+
+`resources` sets explicit CPU and memory configurations for each replica.
+When left empty, the preset defined in `resourcesPreset` is applied.
+
+```yaml
+resources:
+  cpu: 4000m
+  memory: 4Gi
+```
+
+`resourcePreset` sets named CPU and memory configurations for each replica.
+This setting is ignored if the corresponding `resources` value is set.
+
+| Preset name | CPU    | memory  |
+|-------------|--------|---------|
+| `nano`      | `100m` | `128Mi` |
+| `micro`     | `250m` | `256Mi` |
+| `small`     | `500m` | `512Mi` |
+| `medium`    | `500m` | `1Gi`   |
+| `large`     | `1`    | `2Gi`   |
+| `xlarge`    | `2`    | `4Gi`   |
+| `2xlarge`   | `4`    | `8Gi`   |
+
+
+
+### users
 
 ```yaml
 users:
@@ -76,7 +127,7 @@ users:
     replication: true
 ```
 
-Example of `databases`:
+### databases
 
 ```yaml
 databases:          
@@ -94,35 +145,3 @@ databases:
     extensions:     
     - hstore        
 ```
-
-### Backup parameters
-
-| Name                     | Description                                                          | Value                               |
-| ------------------------ | -------------------------------------------------------------------- | ----------------------------------- |
-| `backup.enabled`         | Enable pereiodic backups                                             | `false`                             |
-| `backup.schedule`        | Cron schedule for automated backups                                  | `0 2 * * * *`                       |
-| `backup.retentionPolicy` | The retention policy                                                 | `30d`                               |
-| `backup.destinationPath` | The path where to store the backup (i.e. s3://bucket/path/to/folder) | `s3://BUCKET_NAME/`                 |
-| `backup.endpointURL`     | Endpoint to be used to upload data to the cloud                      | `http://minio-gateway-service:9000` |
-| `backup.s3AccessKey`     | The access key for S3, used for authentication                       | `oobaiRus9pah8PhohL1ThaeTa4UVa7gu`  |
-| `backup.s3SecretKey`     | The secret key for S3, used for authentication                       | `ju3eum4dekeich9ahM1te8waeGai0oog`  |
-
-### Bootstrap parameters
-
-| Name                     | Description                                                                                                                           | Value   |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `bootstrap.enabled`      | Restore cluster from backup                                                                                                           | `false` |
-| `bootstrap.recoveryTime` | Time stamp up to which recovery will proceed, expressed in RFC 3339 format, if empty, will restore latest                             | `""`    |
-| `bootstrap.oldName`      | Name of cluster before deleting                                                                                                       | `""`    |
-| `resources`              | Explicit CPU and memory configuration for each Postgres replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.     | `micro` |
-
-Example of `resources`:
-```yaml
-resources:
-  cpu: 4000m
-  memory: 4Gi
-```
-
-Allowed values for `resourcesPreset` are `none`, `nano`, `micro`, `small`, `medium`, `large`, `xlarge`, `2xlarge`.
-This value is ignored if the corresponding `resources` value is set.

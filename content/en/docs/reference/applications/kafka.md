@@ -22,7 +22,18 @@ linkTitle: "Kafka"
 | `zookeeper.resources`       | Explicit CPU and memory configuration for each Zookeeper replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
 | `zookeeper.resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.      | `small` |
 
-Example of `karka.resources` and `zookeeper.resources`:
+### Configuration parameters
+
+| Name     | Description          | Value |
+| -------- | -------------------- | ----- |
+| `topics` | Topics configuration | `[]`  |
+
+## Parameter examples and reference
+
+### resources and resourcesPreset
+
+`resources` sets explicit CPU and memory configurations for each replica.
+When left empty, the preset defined in `resourcesPreset` is applied.
 
 ```yaml
 resources:
@@ -30,17 +41,21 @@ resources:
   memory: 4Gi
 ```
 
-Allowed values for `resourcesPreset` are `none`, `nano`, `micro`, `small`, `medium`, `large`, `xlarge`, `2xlarge`.
-This value is ignored if the corresponding `resources` value is set.
+`resourcePreset` sets named CPU and memory configurations for each replica.
+This setting is ignored if the corresponding `resources` value is set.
+
+| Preset name | CPU    | memory  |
+|-------------|--------|---------|
+| `nano`      | `100m` | `128Mi` |
+| `micro`     | `250m` | `256Mi` |
+| `small`     | `500m` | `512Mi` |
+| `medium`    | `500m` | `1Gi`   |
+| `large`     | `1`    | `2Gi`   |
+| `xlarge`    | `2`    | `4Gi`   |
+| `2xlarge`   | `4`    | `8Gi`   |
 
 
-### Configuration parameters
-
-| Name     | Description          | Value |
-| -------- | -------------------- | ----- |
-| `topics` | Topics configuration | `[]`  |
-
-Example of `topics`:
+### topics
 
 ```yaml
 topics:
