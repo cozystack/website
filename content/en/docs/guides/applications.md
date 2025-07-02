@@ -35,10 +35,10 @@ Deployment involves the following components:
     of Kubernetes control planes as pods within a root cluster.
     Each control plane pod includes essential components like `kube-apiserver`, `controller-manager`, and `scheduler`,
     allowing for efficient multi-tenancy and resource utilization.
-  
+
 -   **Etcd Cluster**: A dedicated etcd cluster is deployed using Ænix's [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator).
     It provides reliable and scalable key-value storage for the Kubernetes control plane.
-  
+
 -   **Worker Nodes**: Virtual Machines are provisioned to serve as worker nodes.
     These nodes are configured to join the tenant Kubernetes cluster, enabling the deployment and management of workloads.
 

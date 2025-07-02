@@ -124,9 +124,9 @@ ethernets:
       addresses: [8.8.8.8]
 vlans:
   vlan4000:
-    id: 4000 
+    id: 4000
     link: $INTERFACE_NAME
-    mtu: 1400 
+    mtu: 1400
     dhcp4: false
     addresses:
       - "10.3.3.101/24"

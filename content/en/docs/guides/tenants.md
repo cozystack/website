@@ -46,7 +46,7 @@ You can create create another tenant namespace `tenant-foo` inside of `tenant-ro
 
 Let's see what will happen when you run Kubernetes and Postgres under `tenant-bar` namespace.
 
-Since `tenant-bar` does not have its own cluster services like `ingress`, and `monitoring`, the applications will use the cluster services of the parent tenant.  
+Since `tenant-bar` does not have its own cluster services like `ingress`, and `monitoring`, the applications will use the cluster services of the parent tenant.
 This in turn means:
 
 - The Kubernetes cluster data will be stored in etcd for `tenant-bar`.

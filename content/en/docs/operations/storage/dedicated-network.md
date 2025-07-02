@@ -133,8 +133,8 @@ LINSTOR ==> node interface list node01
 ╰─────────────────────────────────────────────────────────────────╯
 ```
 
-This IP is taken from the Kubernetes node at Satellite startup. 
-If additional interfaces exist on the node, they are not added automatically. 
+This IP is taken from the Kubernetes node at Satellite startup.
+If additional interfaces exist on the node, they are not added automatically.
 
 To enable storage traffic over another network, you can manually add a second interface:
 
@@ -155,18 +155,18 @@ LINSTOR ==> node interface list node01
 ╰─────────────────────────────────────────────────────────────────╯
 ```
 
-You don’t need to know the name of the underlying Linux network interface. 
-You can use any name you like—LINSTOR does not validate whether the IP is actually assigned to the node. 
+You don’t need to know the name of the underlying Linux network interface.
+You can use any name you like—LINSTOR does not validate whether the IP is actually assigned to the node.
 
-Only the `default-ipv4` interface is marked with the `StltCon` flag. 
-This indicates it is used by the LINSTOR Controller to communicate with the Satellite. 
+Only the `default-ipv4` interface is marked with the `StltCon` flag.
+This indicates it is used by the LINSTOR Controller to communicate with the Satellite.
 
 While you can manually change the active Satellite connection using the LINSTOR CLI,
-the Piraeus Operator will reset it on the next restart. 
-This behavior applies to non-Kubernetes installations only. 
+the Piraeus Operator will reset it on the next restart.
+This behavior applies to non-Kubernetes installations only.
 
-To use the new interface for storage replication, you’ll need to define node connections. 
-But first, repeat the interface creation for the other nodes: 
+To use the new interface for storage replication, you’ll need to define node connections.
+But first, repeat the interface creation for the other nodes:
 
 ```
 LINSTOR ==> node interface create node02 optic-san 10.78.24.202
@@ -177,21 +177,21 @@ LINSTOR ==> node interface create node05 optic-san 10.78.24.205
 
 ## Node connections
 
-LINSTOR node connections define how satellites communicate with each other to replicate data synchronously. 
-Each pair of satellites should have a connection path defined between them. 
+LINSTOR node connections define how satellites communicate with each other to replicate data synchronously.
+Each pair of satellites should have a connection path defined between them.
 
 Unlike satellite interfaces, node connections can be defined either manually using the CLI
-or declaratively via Kubernetes Custom Resources. 
-For small clusters, creating connections manually is usually manageable. 
+or declaratively via Kubernetes Custom Resources.
+For small clusters, creating connections manually is usually manageable.
 However, as your cluster grows, it's more efficient to use a naming convention and describe
-all connection paths in a single resource definition. 
+all connection paths in a single resource definition.
 
 The following sections explain both approaches.
 
 
 ### Manual method
 
-You can create node connections manually using the LINSTOR CLI. 
+You can create node connections manually using the LINSTOR CLI.
 Here’s how to check the command syntax:
 
 ```console
@@ -227,9 +227,9 @@ SUCCESS:
 ....
 ```
 
-When the connection is created, LINSTOR immediately updates all affected DRBD resources to use the new path. 
+When the connection is created, LINSTOR immediately updates all affected DRBD resources to use the new path.
 
-A path is created once per each pair of nodes. 
+A path is created once per each pair of nodes.
 There is no need to define a separate reverse path.
 
 You can verify the configuration:
@@ -271,24 +271,24 @@ LINSTOR ==> node-connection list node02 node01
 Let's observe the method using Kubernetes CRD (Custom Resource Definition).
 
 {{% alert color="warning" %}}
-At the time of writing, the Piraeus Operator has a known issue with handling missing interfaces. 
-There is no backoff between reconciliation attempts. 
-If even one interface is missing, the controller may consume 100% of its CPU limit. 
+At the time of writing, the Piraeus Operator has a known issue with handling missing interfaces.
+There is no backoff between reconciliation attempts.
+If even one interface is missing, the controller may consume 100% of its CPU limit.
 
-Always verify that all required interfaces exist before applying the CRD. 
+Always verify that all required interfaces exist before applying the CRD.
 Monitor the controller pod to make sure it is not overloaded after the change.
 {{% /alert %}}
 
-As the number of nodes increases, the number of required node connections grows rapidly. 
-With 3 nodes, you need 3 connections. 
-With 5 nodes, you need 10. 
-With 10 nodes, you need 45, and so on. 
+As the number of nodes increases, the number of required node connections grows rapidly.
+With 3 nodes, you need 3 connections.
+With 5 nodes, you need 10.
+With 10 nodes, you need 45, and so on.
 
-Instead of creating each connection manually, you can define all paths once using a single `LinstorNodeConnection` custom resource. 
+Instead of creating each connection manually, you can define all paths once using a single `LinstorNodeConnection` custom resource.
 
 To use this method, the following conditions must be met:
 
--   All involved nodes must have the same interface name. 
+-   All involved nodes must have the same interface name.
 -   The interface must already be created on all nodes before applying the CRD.
 
 Here is an example of LinstorNodeConnection CR:

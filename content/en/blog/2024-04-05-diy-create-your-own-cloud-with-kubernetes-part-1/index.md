@@ -89,7 +89,7 @@ update and maintain.
 Judge for yourself: in the cloud, to update a node, you typically delete the virtual machine
 (or even use `kubectl delete node`) and you let your node management tooling create a new
 one, based on an immutable image. The new node will join the cluster and ”just work” as a  node;
-following a very simple and commonly used pattern in the Kubernetes world. 
+following a very simple and commonly used pattern in the Kubernetes world.
 Many clusters order new virtual machines every few minutes, simply because they can use
 cheaper spot instances. However, when you have a physical server, you can't just delete and
 recreate it, firstly because it often runs some cluster services, stores data, and its update process
@@ -155,7 +155,7 @@ output:
 Then we use the `docker` command line tool to build an OS image:
 
 ```
-cat config.yaml | docker run --rm -i -v /dev:/dev --privileged "ghcr.io/siderolabs/imager:v1.6.4" - 
+cat config.yaml | docker run --rm -i -v /dev:/dev --privileged "ghcr.io/siderolabs/imager:v1.6.4" -
 ```
 
 And as a result, we get a Docker container image with everything we need, which we can use to

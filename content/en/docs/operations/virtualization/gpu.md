@@ -50,7 +50,7 @@ Follow these steps:
     ```
 
     Example output (your pod names may vary):
-    
+
     ```console
     NAME                                            READY   STATUS    RESTARTS   AGE
     ...
@@ -104,7 +104,7 @@ For example, the database entry for A10 reads `2236  GA102GL [A10]`, which resul
 
 ## 2. Update the KubeVirt Custom Resource
 
-Next, we will update the KubeVirt Custom Resource, as documented in the 
+Next, we will update the KubeVirt Custom Resource, as documented in the
 [KubeVirt user guide](https://kubevirt.io/user-guide/virtual_machines/host-devices/#listing-permitted-devices),
 so that the passthrough GPUs are permitted and can be requested by a KubeVirt VM.
 
@@ -135,7 +135,7 @@ We are now ready to create a VM.
 1.  Create a sample virtual machine using the following VMI specification that requests the `nvidia.com/GA102GL_A10` resource.
 
     **vmi-gpu.yaml**:
-    
+
     ```yaml
     ---
     apiVersion: apps.cozystack.io/v1alpha1
@@ -159,11 +159,11 @@ We are now ready to create a VM.
         password: ubuntu
         chpasswd: { expire: False }
     ```
-    
+
     ```bash
     kubectl apply -f vmi-gpu.yaml
     ```
-    
+
     Example output:
     ```console
     virtualmachines.apps.cozystack.io/gpu created
@@ -174,7 +174,7 @@ We are now ready to create a VM.
     ```bash
     kubectl get vmi
     ```
-    
+
     ```console
     NAME                       AGE   PHASE     IP             NODENAME        READY
     virtual-machine-gpu        73m   Running   10.244.3.191   luc-csxhk-002   True
@@ -185,14 +185,14 @@ We are now ready to create a VM.
     ```bash
     virtctl console virtual-machine-gpu
     ```
-    
+
     Example output:
     ```console
     Successfully connected to vmi-gpu console. The escape sequence is ^]
-    
+
     vmi-gpu login: ubuntu
     Password:
-    
+
     ubuntu@virtual-machine-gpu:~$ lspci -nnk -d 10de:
     08:00.0 3D controller [0302]: NVIDIA Corporation GA102GL [A10] [10de:26b9] (rev a1)
             Subsystem: NVIDIA Corporation GA102GL [A10] [10de:1851]

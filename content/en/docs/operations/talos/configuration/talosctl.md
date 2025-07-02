@@ -56,7 +56,7 @@ Discovered open port 50000/tcp on 192.168.123.13
     ```
 
 1.  Make a configuration patch file `patch.yaml`:
-    
+
     ```yaml
     machine:
       kubelet:
@@ -90,10 +90,10 @@ Discovered open port 50000/tcp on 192.168.123.13
       - content: |
           [plugins]
             [plugins."io.containerd.cri.v1.runtime"]
-              device_ownership_from_security_context = true      
+              device_ownership_from_security_context = true
         path: /etc/cri/conf.d/20-customization.part
         op: create
-    
+
     cluster:
       apiServer:
         extraArgs:
@@ -110,10 +110,10 @@ Discovered open port 50000/tcp on 192.168.123.13
         serviceSubnets:
         - 10.96.0.0/16
     ```
-   
+
 1.  Make another configuration patch file `patch-controlplane.yaml` with settings exclusive to control plane nodes:
 
-    Note that VIP address is used for `machine.network.interfaces[0].vip.ip`:   
+    Note that VIP address is used for `machine.network.interfaces[0].vip.ip`:
 
     ```yaml
     machine:

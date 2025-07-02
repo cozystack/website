@@ -32,7 +32,7 @@ Each user-side service, including managed applications, tenant Kubernetes cluste
 When deploying a service, a preset is defined in `resourcesPreset` configuration variable, for example:
 
 ```yaml
-## @param resourcesPreset Default sizing preset used when `resources` is omitted. 
+## @param resourcesPreset Default sizing preset used when `resources` is omitted.
 ## Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.
 resourcesPreset: "small"
 ```
@@ -59,7 +59,7 @@ A service configuration can define available CPU and memory explicitly, using th
 Cozystack has a simple resource configuration format for `cpu` and `memory`:
 
 ```yaml
-## @param resources Explicit CPU and memory configuration for each ClickHouse replica. 
+## @param resources Explicit CPU and memory configuration for each ClickHouse replica.
 ## When left empty, the preset defined in `resourcesPreset` is applied.
 resources:
   cpu: 1
@@ -87,7 +87,7 @@ https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
 
 CPU time is easily shared between multiple services with uneven CPU load.
 For this reason, it's a common practice to set low CPU requests with much higher limits.
-For services that are CPU-intensive, the optimal ratio can be 1:2 or 1:4. 
+For services that are CPU-intensive, the optimal ratio can be 1:2 or 1:4.
 For less CPU-intensive services, as much as 1:10 can provide great resource efficiency and still be enough.
 
 On the other hand, memory is a resource that, once given to a service, usually can't be taken back without OOM-killing the service.
@@ -119,7 +119,7 @@ Cozystack borrows this default value from [KubeVirt](https://kubevirt.io/user-gu
 ### How Cozystack Derives CPU Requests and Limits
 
 ```yaml
-## @param resources Explicit CPU and memory configuration for each ClickHouse replica. 
+## @param resources Explicit CPU and memory configuration for each ClickHouse replica.
 ## When left empty, the preset defined in `resourcesPreset` is applied.
 resources:
   cpu: 1
@@ -128,7 +128,7 @@ resources:
   memory: 2Gi
 ```
 
-### Example 1, default setting: `cpu-allocation-ratio: 10` 
+### Example 1, default setting: `cpu-allocation-ratio: 10`
 
 | Preset name | `resources.cpu` | actual CPU request | actual CPU limit |
 |-------------|-----------------|--------------------|------------------|
@@ -160,21 +160,21 @@ After updating Cozystack from earlier versions to v0.31.0 or later, such service
 When users update such applications, they need to change the configuration to the new form.
 
 ```yaml
-resources:               
-  requests:              
-    cpu: 250m           
-    memory: 512Mi     
-  limits:                
-    cpu: 1       
-    memory: 2Gi          
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 2Gi
 ```
 
 There were several reasons for this change.
 
-Managed applications assume that the user doesn't need in-depth knowledge of Kubernetes.  
+Managed applications assume that the user doesn't need in-depth knowledge of Kubernetes.
 However, explicit request/limit configuration was a “leaky abstraction”, confusing users and leading to misconfigurations.
 
-For hosting companies that run public clouds on Cozystack, a unified ratio across the cloud is crucial.  
+For hosting companies that run public clouds on Cozystack, a unified ratio across the cloud is crucial.
 This approach helps ensure a stable level of service and simplifies billing.
 
 Users who deploy their own applications to tenant Kubernetes clusters still have the freedom to define precise resource requests and limits.

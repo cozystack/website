@@ -31,22 +31,22 @@ Before creating a Virtual Machine instance, you need to create a disk from which
 This package defines a virtual machine disk used to store data. You can download an image to the disk via HTTP or upload it from a local image. You can also create an empty image.
 
 1. **HTTP:**
-   
+
    ```yaml
    source:
      http:
        url: "https://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img"
    ```
-   
-   
+
+
 2. **Upload:**
-   
+
    ```yaml
    source:
      upload: {}
    ```
    After the disk is created, it will generate a command for uploading using the virtctl tool.
-   
+
    {{< note >}}
    If you want to let virtctl know about right endpoint for uploading images, you need to configure a cluster to specify an endpoint for it:
    1. Modify your cozystack config map, to enable cdi-uploadproxy along with the dashboard:
@@ -55,7 +55,7 @@ This package defines a virtual machine disk used to store data. You can download
         "expose-services": "dashboard,cdi-uploadproxy"
       }}'
       ```
-     
+
    <!-- TODO: automate this -->
    2. Modify your cozystack config to provide a valid CDI uploadproxy endpoint:
    ```yaml
@@ -63,9 +63,9 @@ This package defines a virtual machine disk used to store data. You can download
      uploadProxyURL: https://cdi-uploadproxy.example.org
    ```
    {{< /note >}}
-   
+
 3. **Empty:**
-   
+
    ```yaml
    source: {}
    ```

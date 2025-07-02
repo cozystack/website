@@ -32,7 +32,7 @@ The first step is to make a Talos Linux installation image available for use in 
 
 1.  Follow the OCI documentation to [upload the image to a bucket in OCI Object Storage](https://docs.oracle.com/iaas/Content/Object/Tasks/managingobjects_topic-To_upload_objects_to_a_bucket.htm).
 
-1.  Proceed with the documentation to [import this image as a custom image](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/importingcustomimagelinux.htm#linux). 
+1.  Proceed with the documentation to [import this image as a custom image](https://docs.oracle.com/en-us/iaas/Content/Compute/Tasks/importingcustomimagelinux.htm#linux).
     Use the following settings:
 
     -   **Image type**: QCOW2
@@ -282,19 +282,19 @@ mv talm /usr/local/bin/talm
     talm template ... > nodes/node1.yaml
     talm template ... > nodes/node2.yaml
     ```
-    
+
     Using `templates/controlplane.yaml` means the node will act as both control plane and worker.
     Having three combined nodes is the preferred setup for a small PoC cluster.
-            
+
     The `--insecure` (`-i`) parameter is required because Talm must retrieve configuration data from a node that is not yet initialized and therefore cannot accept an authenticated connection.
     The node will be initialized only a few steps later, with `talm apply`.
 
     The node's public IP must be specified for both the `--nodes` (`-n`) and `--endpoints` (`-e`) parameters.
-    To learn more about Talos node configuration and endpoints, refer to the 
+    To learn more about Talos node configuration and endpoints, refer to the
     [Talos documentation](https://www.talos.dev/v1.10/learn-more/talosctl/#endpoints-and-nodes)
 
 1.  Edit the node configuration file as needed.
-    
+
     -   Update `hostname` to the desired name:
 
         ```yaml
@@ -302,13 +302,13 @@ mv talm /usr/local/bin/talm
           network:
             hostname: node1
         ```
-        
+
     -   Add the private interface configuration to the `machine.network.interfaces` section, and move `vip` to this configuration.
-        This part of the configuration is not generated automatically, so you need to fill in the values: 
+        This part of the configuration is not generated automatically, so you need to fill in the values:
 
         -    `interface`: obtained from the "Discovered interfaces" by matching options for the private interface.
         -    `addresses`: use the address specified for Layer 2 (L2).
-        
+
         Example:
 
         ```yaml
@@ -327,7 +327,7 @@ mv talm /usr/local/bin/talm
                 vip:
                   ip: 192.168.100.10
         ```
-        
+
 After these steps, the node configuration files are ready to be applied.
 
 ### 3.2 Initialize Talos and Run Kubernetes Cluster
@@ -342,7 +342,7 @@ The next stage is to initialize Talos nodes and bootstrap a Kubernetes cluster.
     talm apply -f nodes/node2.yaml --insecure
     ```
 
-    The nodes will reboot, and Talos will be installed to disk.    
+    The nodes will reboot, and Talos will be installed to disk.
     The parameter `--insecure` (`-i`) is required the first time you run `talm apply` on each node.
 
 1.  Execute `talm bootstrap` on the first node in the cluster.  For example:
@@ -365,7 +365,7 @@ The next stage is to initialize Talos nodes and bootstrap a Kubernetes cluster.
     ```bash
     export KUBECONFIG=${PWD}/kubeconfig
     kubectl get nodes
-    ```       
+    ```
 
     You should see that the nodes are accessible and in the `NotReady` state, which is expected at this stage:
 
@@ -374,7 +374,7 @@ The next stage is to initialize Talos nodes and bootstrap a Kubernetes cluster.
     node0   NotReady   control-plane   2m21s   v1.32.0
     node1   NotReady   control-plane   1m47s   v1.32.0
     node2   NotReady   control-plane   1m43s   v1.32.0
-    ``` 
+    ```
 
 Now you have a Kubernetes cluster prepared for installing Cozystack.
 To complete the installation, follow the deployment guide, starting with the

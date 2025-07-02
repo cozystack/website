@@ -38,7 +38,7 @@ talos-bootstrap --help
     ```
 
 1.  Make a configuration patch file `patch.yaml` with common node settings, using the following example:
-    
+
     ```yaml
     machine:
       kubelet:
@@ -77,7 +77,7 @@ talos-bootstrap --help
               device_ownership_from_security_context = true
         path: /etc/cri/conf.d/20-customization.part
         op: create
-    
+
     cluster:
       network:
         cni:
@@ -88,9 +88,9 @@ talos-bootstrap --help
         serviceSubnets:
         - 10.96.0.0/16
     ```
-   
+
 1.  Make another configuration patch file `patch-controlplane.yaml` with settings exclusive to control plane nodes:
-    
+
     ```yaml
     machine:
       nodeLabels:
@@ -147,7 +147,7 @@ Where `1.2.3.4` is the IP-address of your remote node.
 {{% /alert %}}
 
 {{% alert color="info" %}}
-`talos-bootstrap` will enable bootstrap on the first configured node in a cluster. 
+`talos-bootstrap` will enable bootstrap on the first configured node in a cluster.
 If you want to re-bootstrap the etcd cluster, remove the line `BOOTSTRAP_ETCD=false` from your `cluster.conf` file.
 {{% /alert %}}
 

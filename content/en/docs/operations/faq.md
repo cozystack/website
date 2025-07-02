@@ -52,7 +52,7 @@ data:
 
 ### How to enable access to dashboard via ingress-controller
 
-Update your `ingress` application and enable `dashboard: true` option in it.  
+Update your `ingress` application and enable `dashboard: true` option in it.
 Dashboard will become available under: `https://dashboard.<your_domain>`
 
 ### What if my cloud provider does not support MetalLB
@@ -145,7 +145,7 @@ Here you can find reference repository to learn how to configure Cozystack servi
 ### How to Rotate Certificate Authority
 
 In general, you almost never need to rotate the root CA certificate and key for the Talos API and Kubernetes API.
-Talos sets up root certificate authorities with a lifetime of 10 years, 
+Talos sets up root certificate authorities with a lifetime of 10 years,
 and all Talos and Kubernetes API certificates are issued by these root CAs.
 
 So the rotation of the root CA is only needed if:

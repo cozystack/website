@@ -34,7 +34,7 @@ It will guide you through the following steps:
 1.  Configure storage
 1.  Configure networking
 1.  Deploy etcd, ingress and monitoring stack
-1.  Finalize deployment and access Cozystack dashboard 
+1.  Finalize deployment and access Cozystack dashboard
 
 
 ## 1. Create Kubernetes cluster
@@ -104,7 +104,7 @@ Installing Cozystack starts with choosing a Cozystack bundle.
 In this tutorial, we'll use the complete `paas-full` bundle, made for installing on bare metal and including everything
 Cozystack has to offer.
 
-### 2.1. Prepare Configuration File 
+### 2.1. Prepare Configuration File
 
 Take the configuration example below and fill in the values according to your network setup.
 Make sure to use the same value in `patch.yaml` and `patch-controlplane.yaml` files.
@@ -514,7 +514,7 @@ kubectl patch cm -n cozy-system cozystack --type merge -p='{"data":{
 {{% /alert %}}
 
 Use `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
-In this example, `dashboard.example.org` is located at 192.168.100.200. 
+In this example, `dashboard.example.org` is located at 192.168.100.200.
 
 Get authentication token from `tenant-root`:
 ```bash
@@ -524,7 +524,7 @@ kubectl get secret -n tenant-root tenant-root -o go-template='{{ printf "%s\n" (
 ### 6.3 Access metrics in Grafana
 
 Use `grafana.example.org` to access the system monitoring, where `example.org` is your domain specified for `tenant-root`.
-In this example, `grafana.example.org` is located at 192.168.100.200. 
+In this example, `grafana.example.org` is located at 192.168.100.200.
 
 - login: `admin`
 - request a password:

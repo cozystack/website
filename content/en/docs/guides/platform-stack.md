@@ -19,7 +19,7 @@ We use FluxCD as the core element of our platform, believing it sets a new indus
 
 ## Talos Linux
 
-Using Talos Linux as the base layer for the platform allows to strictly limit the technology stack and make the system stable as a rock. 
+Using Talos Linux as the base layer for the platform allows to strictly limit the technology stack and make the system stable as a rock.
 
 Talos Linux has no moving parts, no traditional package manager, no file structure, and no ability to run anything except Kubernetes containers. 
 The base layer of the platform includes the latest version of the kernel, all the necessary kernel modules, container runtime and a Kubernetes-like API for interacting with the system.

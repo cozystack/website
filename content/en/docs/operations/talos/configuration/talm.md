@@ -7,7 +7,7 @@ aliases:
   - /docs/talos/configuration/talm
 ---
 
-This guide explains how to prepare a Talos Linux cluster for deploying Cozystack using 
+This guide explains how to prepare a Talos Linux cluster for deploying Cozystack using
 [Talm](https://github.com/cozystack/talm) — a Helm-like utility for declarative configuration management of Talos Linux.
 
 Talm was created by Ænix to allow more declarative and custom configurations for cluster management.
@@ -72,7 +72,7 @@ You're free to edit `Chart.yaml`, `values.yaml`, and `templates/*` to meet your 
 To configure Keycloak as an OIDC provider, apply the following changes:
 
 -   For Talm v0.6.6 or later: in `cluster1/templates/_helpers.tpl` replace `keycloak.example.com` with `keycloak.<your-domain.tld>`.
-    
+
 -   For Talm earlier than v0.6.6, update `cluster1/templates/_helpers.tpl` in the following way:
 
     ```yaml

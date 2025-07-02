@@ -164,7 +164,7 @@ make update                       # Download new version from upstream
 make image                        # Build cilium image
 git diff .                        # Show diff with changed manifests
 make diff                         # Show diff with applied cluster manifests
-make apply                        # Apply changed manifests to the cluster 
+make apply                        # Apply changed manifests to the cluster
 kubectl get pod -n cozy-cilium    # Check if everything works as expected
 git commit -m "Update cilium"     # Commit changes to the branch
 ```

@@ -23,9 +23,9 @@ while falling back to shared links between datacenters when needed.
 
 ## Prerequisites
 
-This guide builds on the [Dedicated Network for LINSTOR]({{% ref "/docs/operations/storage/dedicated-network" %}}) guide,  
+This guide builds on the [Dedicated Network for LINSTOR]({{% ref "/docs/operations/storage/dedicated-network" %}}) guide,
 adding additional methods and configuration patterns specific to multi-datacenter environments.
-To apply the patterns in this guide, it's important to understand how node interfaces and connection paths work.  
+To apply the patterns in this guide, it's important to understand how node interfaces and connection paths work.
 Be sure to review the previous guide first, as it explains these concepts in detail.
 
 To apply different node connection settings depending on node location, you’ll need to label your nodes accordingly.
@@ -44,7 +44,7 @@ interface with an IP from the `region10g` subnet.
 Consider a scenario with three datacenters: `dc1`, `dc2`, and `dc3`:
 
 -   The datacenters are linked via direct optical lines, exposed to the nodes as an interface named `region10g`.
--   Nodes in `dc1` and `dc2` are connected to a dedicated network switch for storage,  
+-   Nodes in `dc1` and `dc2` are connected to a dedicated network switch for storage,
     and use a separate interface named `san` exclusively for storage traffic.
 -   Datacenter `dc3` lacks a dedicated storage network.
     All intra-datacenter traffic in `dc3` uses the default network.

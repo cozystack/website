@@ -41,7 +41,7 @@ Understanding each role ensures the stability and scalability of your environmen
 
 - **Primary Disk**: This disk contains the Talos Linux operating system, essential system kernel modules and
   Cozystack system base pods, logs, and base container images.
-  
+
   Minimum: 32 GB; approximately 26 GB is used in a standard Cozystack setup.
   The Talos installation expects `/dev/sda` as the system disk (virtio drives usually appear as `/dev/vda`).
 
@@ -110,4 +110,4 @@ Achieving high availability adds to the basic production environment requirement
 - Expect a significant amount of horizontal, inter-node traffic inside clusters.
   It is usually caused by multiple replicas of services and databases deployed across different nodes exchanging data.
   Also, virtual machines with live migration require replicated volumes, which further increases the amount of traffic.
-  
+

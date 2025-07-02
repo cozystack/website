@@ -16,7 +16,7 @@ Creating a virtual router requires a Cozystack administrator account.
 
 1.  **Create a VM Instance**<br/>
     Use the standard `vm-instance` and `virtual-machine` packages to create a virtual machine instance.
-    
+
 1.  **Disable Anti-Spoofing Protection**<br/>
     To act as a virtual router, the VM instance should have anti-spoofing protection disabled:
 
@@ -54,7 +54,7 @@ Creating a virtual router requires a Cozystack administrator account.
 
     Add the following annotation using the router IP you found earlier as `gw`
     and the subnet mask for the router to handle as `dst`:
-    
+
     ```yaml
     ovn.kubernetes.io/routes: |
       [{

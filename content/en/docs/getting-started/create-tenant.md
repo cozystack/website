@@ -33,7 +33,7 @@ See the [OIDC guide]({{% ref "/docs/operations/oidc" %}}) for details on how to 
 
 ## Create a Tenant
 
-Tenants are created using the Cozystack application named `Tenant`. 
+Tenants are created using the Cozystack application named `Tenant`.
 After installation, Cozystack includes a built-in tenant called `tenant-root`.
 This root tenant is reserved for platform administrators and should only be used to create child tenants.
 Although it’s technically possible to install applications in `tenant-root`,
@@ -153,5 +153,5 @@ In general, administrators do **not** need to retrieve kubeconfig files for nest
 These clusters are installed by the tenant user, within their own tenant namespace.
 Tenant users have full control over their nested Kubernetes environments.
 
-To access a nested Kubernetes cluster, the tenant user can download the kubeconfig file 
+To access a nested Kubernetes cluster, the tenant user can download the kubeconfig file
 directly from the corresponding application's page in the dashboard.

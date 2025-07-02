@@ -31,7 +31,7 @@ aliases:
 
         First, select **Private**, choose the region, add the servers, assign a name, and save it.
 
-    1.  Set the type to **Native**. 
+    1.  Set the type to **Native**.
         Do the same for **Public**.
 
         ![Type](img/type_native.png)
@@ -214,7 +214,7 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
      ```yaml
      NODE      NAMESPACE   TYPE         ID            VERSION   DISK
      1.2.3.4   runtime     SystemDisk   system-disk   1         sda
-     ```                                                           
+     ```
 
      If the output is empty, it means that Talos still runs in RAM and hasn't been installed on the disk yet.
 1.   Click **Exit rescue mode** for each node in the Servers.com panel. The nodes will reboot again.
@@ -222,17 +222,17 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
 1.   Execute bootstrap command for the first node in the cluster, example:
      ```bash
      talm bootstrap -f nodes/node1.yml
-     ```            
+     ```
 
 1.   Get `kubeconfig` from the first node, example:
      ```bash
      talm kubeconfig kubeconfig -f nodes/node1.yml
-     ```                          
+     ```
 
 1.   Edit `kubeconfig` to set the IP address to one of control-plane node, example:
      ```yaml
      server: https://1.2.3.4:6443
-     ```                    
+     ```
 
 1.   Export variable to use the kubeconfig, and check the connection to the Kubernetes:
      ```bash

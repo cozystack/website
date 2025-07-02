@@ -137,7 +137,7 @@ It includes three optional components:
 
 ## Learn More
 
-To see the full list of components and configuration options for each bundle, refer to the 
+To see the full list of components and configuration options for each bundle, refer to the
 [bundle reference documentation]({{% ref "/docs/operations/bundles" %}}).
 
 To deploy a selected bundle, follow the [Cozystack quickstart guide]({{% ref "/docs/getting-started/first-deployment" %}}) or platform installation documentation.

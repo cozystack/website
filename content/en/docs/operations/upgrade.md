@@ -13,7 +13,7 @@ aliases:
 ```bash
 kubectl get hr -A | grep -v "True"
 ```
-Repair helmreleases if nessesary.  
+Repair helmreleases if nessesary.
 Make sure that the cozystack config map contains all the necessary variables.
 
 ```bash
