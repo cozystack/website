@@ -29,7 +29,7 @@ machine:
       enabled: true
 cluster:
   discovery:
-    enabled: false
+    enabled: true
 ```
 
 Since KubeSpan encapsulates traffic into a WireGuard tunnel, Kube-OVN should also be configured with a lower MTU value.
