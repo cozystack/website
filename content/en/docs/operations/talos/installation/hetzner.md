@@ -88,7 +88,8 @@ echo "GATEWAY=$GATEWAY"
 ```
 
 Write cloud-init configuration:
-
+Example for default hetzner dedicated servers without [Hetzner vSwitch](https://docs.hetzner.com/robot/dedicated-server/network/vswitch/)
+See also: [Public Network Kubernetes Deployment](https://cozystack.io/docs/operations/faq/#public-network-kubernetes-deployment)
 ```bash
 echo 'hostname: talos' > /mnt/meta-data
 echo '#cloud-config' > /mnt/user-data
@@ -155,4 +156,3 @@ Just follow **Get Started** guide starting from the [**Bootstrap cluster**](/doc
 {{% alert color="warning" %}}
 :warning: If you encounter issues booting Talos Linux on your node, it might be related to the serial console options in your GRUB configuration, console=tty1 console=ttyS0. Try rebooting into rescue mode and remove these options from the GRUB configuration on the third partition of your system `$DISK`.
 {{% /alert %}}
-

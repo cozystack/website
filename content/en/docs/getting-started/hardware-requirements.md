@@ -54,6 +54,11 @@ Understanding each role ensures the stability and scalability of your environmen
   Learn more about configuring Linstor StorageClass from the
   [Deploy Cozystack tutorial](https://cozystack.io/docs/getting-started/first-deployment/#configure-storage)
 
+OR
+
+- **Use single disk**
+    See [How to allocate space on system disk for user storage](https://cozystack.io/docs/operations/faq/#how-to-allocate-space-on-system-disk-for-user-storage)
+
 **Networking:**
 
 - Machines must be allowed to use additional IPs, or an external load balancer must be available.
@@ -110,4 +115,3 @@ Achieving high availability adds to the basic production environment requirement
 - Expect a significant amount of horizontal, inter-node traffic inside clusters.
   It is usually caused by multiple replicas of services and databases deployed across different nodes exchanging data.
   Also, virtual machines with live migration require replicated volumes, which further increases the amount of traffic.
-
