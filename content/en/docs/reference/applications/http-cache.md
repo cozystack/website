@@ -1,6 +1,6 @@
 ---
-title: "Managed Nginx Caching Service"
-linkTitle: "Nginx Caching"
+title: "Managed Nginx-based HTTP Cache Service"
+linkTitle: "Nginx-based HTTP Cache"
 ---
 
 
@@ -100,13 +100,13 @@ This setting is ignored if the corresponding `resources` value is set.
 
 | Preset name | CPU    | memory  |
 |-------------|--------|---------|
-| `nano`      | `100m` | `128Mi` |
-| `micro`     | `250m` | `256Mi` |
-| `small`     | `500m` | `512Mi` |
-| `medium`    | `500m` | `1Gi`   |
-| `large`     | `1`    | `2Gi`   |
-| `xlarge`    | `2`    | `4Gi`   |
-| `2xlarge`   | `4`    | `8Gi`   |
+| `nano`      | `250m` | `128Mi` |
+| `micro`     | `500m` | `256Mi` |
+| `small`     | `1`    | `512Mi` |
+| `medium`    | `1`    | `1Gi`   |
+| `large`     | `3`    | `2Gi`   |
+| `xlarge`    | `4`    | `4Gi`   |
+| `2xlarge`   | `8`    | `8Gi`   |
 
 
 ### endpoints
