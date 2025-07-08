@@ -1,27 +1,36 @@
 ---
 title: "Running Windows VMs in Cozystack"
-linkTitle: "Windows"
+linkTitle: "Windows VMs"
 description: "Running Windows VMs in Cozystack"
-weight: 50
-----------
+weight: 15
+---
+
+Cozystack can run Windows virtual machines.
+This guide explains the prerequisites and steps required to boot up a virtual machine running Windows OS.
+
 
 ## Prerequisites
 
-* `virtctl` installed in your local environment.
-* Two ISO images:
-  * **Windows installation media**
-  * **Virtio drivers**
+-   Windows installation ISO image.
+-   Virtio drivers ISO image.
+-   KubeVirt client `virtctl` [installed in your local environment](https://kubevirt.io/user-guide/user_workloads/virtctl_client_tool/)
+    and configured for your tenant's namespace.
+-   Cozystack version v0.34.2 or later.
 
----
+## Installation 
 
-## Installation
+Creating a virtual machine running Windows OS starts with creating `VMDisk` objects
+and continues with creating a `VMInstance`.
 
-### Create the VMDisk objects
+### 1. Create VMDisk objects
 
 You need **three disks**:
-1. **Installation ISO** – optical.
-2. **Virtio drivers ISO** – optical.
-3. **System disk** – non‑optical.
+
+1.  **Installation ISO** – optical.
+2.  **Virtio drivers ISO** – optical.
+3.  **System disk** – non‑optical.
+
+The following example uses minimally recommended storage volumes.
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
@@ -58,13 +67,12 @@ spec:
   storageClass: replicated
 ```
 
-### Create the VMInstance
+### 2. Create a VMInstance
 
-Pick a **Virtio‑ready** instance profile and attach an empty system disk:
+Pick a **Virtio‑ready** instance profile and attach an empty system disk.
+Choose from the available Virtio profiles:
 
-Available Virtio profiles:
-
-```
+```text
 windows.10.virtio
 windows.11.virtio
 windows.2k16.virtio
@@ -72,6 +80,8 @@ windows.2k19.virtio
 windows.2k22.virtio
 windows.2k25.virtio
 ```
+
+Create a `VMInstance` object as shown in this example:
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
@@ -81,40 +91,41 @@ metadata:
 spec:
   running: true
   instanceType: "u1.xlarge"
-  instanceProfile: windows.2k25.virtio
+  instanceProfile: windows.2k25.virtio # picked from the list above
   disks:
     - name: win2k25-system
     - name: win2k25-iso
     - name: virtio-drivers
 ```
 
+### 3. Install Windows
 
-### Install Windows
+1.  Open the console using the `virtctl` client:
 
-1. Open a console:
+    ```bash
+    virtctl vnc vm-instance-win2k25-demo
+    ```
 
-   ```bash
-   virtctl vnc vm-instance-win2k25-demo
-   ```
+2.  Proceed with the standard Windows setup.
 
-2. Proceed with the standard Windows setup.
+3.  When prompted **"Where do you want to install Windows?"** select **Load driver**,
+    then browse to the Virtio CD‑ROM, for example `E:\viostor\amd64\`.
 
-3. When prompted **“Where do you want to install Windows?”** select **Load driver** → browse to the Virtio CD‑ROM (e.g. `E:\viostor\amd64\`).
+4.  After the virtual disk appears, continue installation and let Windows reboot.
 
-4. After the virtual disk appears, continue installation and let Windows reboot.
-
-5. After the first reboot, detach the Windows installation disk (`win2k25-iso`) and virtio drivers (`virtio-drivers`) from the VMInstance.
+5.  After the first reboot, detach the Windows installation disk (`win2k25-iso`) and Virtio drivers (`virtio-drivers`) from the VMInstance.
 
 
 ## Converting an Existing Windows Image
 
-Already have a Windows disk produced on VMware®, Hyper‑V™, or another cloud? Follow this path to make it Virtio‑ready in Cozystack.
+If you already have a Windows disk produced on VMware, Hyper‑V, or another cloud,
+you can follow this path to make it Virtio‑ready in Cozystack.
 
-### Launch with a non‑Virtio profile
+### 1. Launch with a non‑Virtio profile
 
-Choose the matching *legacy* profile and attach your imported system disk.
+When creating a VMInstance, choose the matching *legacy* profile and attach your imported system disk:
 
-```
+```text
 windows.10
 windows.11
 windows.2k16
@@ -123,23 +134,23 @@ windows.2k22
 windows.2k25
 ```
 
-> You may also mount the Virtio ISO at the same time to simplify driver installation.
+You may also mount the Virtio ISO at the same time to simplify driver installation.
 
-### Install Virtio storage drivers
+### 2. Install Virtio storage drivers
 
-Below is the proven procedure from Alibaba Cloud’s conversion guide (works unchanged on Cozystack).
+Follow these steps to install Virtio drivers:
 
-**Step‑by‑step driver injection**
-
-1. Mount `virtio-win.iso` inside the guest.
-2. Copy **vioscsi.inf** and **viostor.inf** to an accessible folder.
-3. For each driver file:
-
-   1. Press <kbd>Win + R</kbd>, run `hdwwiz.exe`.
-   2. Choose **Install the hardware that I manually select from a list** → **Show All Devices** → **Next**.
-   3. Click **Have Disk…**, browse to the `.inf`, and finish the wizard.
-   4. Alternatively, right‑click the `.inf` in Explorer and select **Install**.
-4. Add the drivers to the CriticalDeviceDatabase so Windows can boot from a Virtio disk:
+1.  Mount `virtio-win.iso` inside the guest.
+2.  Copy **vioscsi.inf** and **viostor.inf** to an accessible folder.
+3.  For each driver file:
+    
+    1.  Press `Win+R` and run `hdwwiz.exe`.
+    2.  Choose **Install the hardware that I manually select from a list**, then **Show All Devices**, then **Next**.
+    3.  Click **Have Disk…**, browse to the `.inf`, and finish the wizard.
+    
+    Alternatively, right‑click the `.inf` in the Explorer and select **Install**.
+ 
+5. Add the drivers to the CriticalDeviceDatabase so Windows can boot from a Virtio disk:
 
 ```reg
 [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1AF4&DEV_1004&SUBSYS_00081AF4&REV_00]
@@ -153,24 +164,26 @@ Below is the proven procedure from Alibaba Cloud’s conversion guide (works unc
 
 *Tip:* Open the `.inf` file in Notepad and search for **ClassGUID** to confirm the value for your OS version.
 
-### Switch to the Virtio profile
+### 3. Switch to the Virtio profile
 
-1. Power off the VM.
-2. Edit the `VMInstance` and change
+1.  Power off the VM.
+2.  Edit the `VMInstance` and change the config:
 
-```yaml
-spec:
-  instanceProfile: windows.2k25.virtio
-```
+    ```yaml
+    spec:
+      instanceProfile: windows.2k25.virtio
+    ```
 
 3. Apply the manifest and power the VM back on. Windows should boot normally using Virtio.
 
 
-### Network MTU considerations
+## Network MTU considerations
 
-Cozystack sets **MTU 1400** on every vNIC. Windows correctly detects this only when using **VirtioNet**. With legacy network drivers you may experience packet loss.
+Cozystack sets MTU size to 1400 on every vNIC.
+Windows correctly detects this only when using VirtioNet.
+With legacy network drivers you may experience packet loss.
 
-To force Windows to respect MTU 1400:
+To force Windows to respect MTU 1400, run the following commands in PowerShell:
 
 ```powershell
 # List interfaces
