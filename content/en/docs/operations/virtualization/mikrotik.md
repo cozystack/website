@@ -1,26 +1,26 @@
 ---
 title: "Running MikroTik RouterOS in Cozystack"
-linkTitle: "MikroTik"
+linkTitle: "MikroTik RouterOS"
 description: "Deploying MikroTik RouterOS (CHR) as a virtual appliance on Cozystack"
-weight: 60
-----------
+weight: 35
+---
 
 ## Prerequisites
 
-* MikroTik RouterOS ISO (CHR or NPK install image), e.g. `mikrotik-7.19.3.iso`.
-* A free static IP or DHCP on the connected tenant network.
-* `virtctl` installed and configured for your tenant‘s namespace.
-
----
+-   MikroTik RouterOS ISO (CHR or NPK install image), for example, `mikrotik-7.19.3.iso`.
+-   A free static IP or DHCP on the connected tenant network.
+-   KubeVirt client `virtctl` [installed in your local environment](https://kubevirt.io/user-guide/user_workloads/virtctl_client_tool/)
+    and configured for your tenant's namespace.
+-   Cozystack version v0.34.2 or later.
 
 ## Installation
 
-### Prepare disks
+### 1. Prepare disks
 
 You need **two disks**:
 
-1. **Installation ISO** – optical.
-2. **System disk** – non‑optical.
+1.  **Installation ISO** – optical.
+2.  **System disk** – non‑optical.
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
@@ -45,9 +45,10 @@ spec:
   storageClass: replicated
 ```
 
-### Create the VMInstance
+### 2. Create the VMInstance
 
-RouterOS does not require a special instance profile. Use a lightweight Linux profile (e.g. `ubuntu`) plus a small instance type such as `u1.medium`:
+RouterOS does not require a special instance profile.
+Use a lightweight Linux profile such as `ubuntu` with a small instance type such as `u1.medium`:
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
@@ -67,23 +68,25 @@ spec:
 
 ### 3. Install RouterOS
 
-1. Launch a console:
+1.  Launch a console:
+    
+    ```bash
+    virtctl vnc mikrotik-demo -n tenant-test
+    ```
+    
+2.  When prompted for package selection, choose the desired bundle (usually *system*, *routing*, *security*).
+    Confirm formatting the system disk.
+    
+3.  After installation completes, remove the installation ISO.
 
-   ```bash
-   virtctl vnc mikrotik-demo -n tenant-test
-   ```
+### 4. Adjust MTU (optional)
 
-2. When prompted for package selection, choose the desired bundle (usually *system*, *routing*, *security*). Confirm formatting the system disk.
-
-3. After installation completes, remove the installation ISO
-
-### 5. Adjust MTU (optional)
-
-Cozystack’s virtual network interfaces default to **MTU 1400**. RouterOS respects this automatically on Virtio‑Net adapters, but you can verify or change it:
+Cozystack’s virtual network interfaces default to **MTU 1400**.
+RouterOS respects this automatically on Virtio‑Net adapters, but you can verify or change it:
 
 ```bash
 /interface ethernet print detail
 /interface ethernet set [find default-name~"ether1"] mtu=1400
 ```
 
-Avoid legacy e1000/vmxnet drivers; they ignore non‑1500 MTUs and may drop large packets.
+Avoid the legacy `e1000/vmxnet` drivers because they ignore non‑1500 MTUs and may drop large packets.
