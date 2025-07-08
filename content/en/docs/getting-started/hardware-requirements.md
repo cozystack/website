@@ -36,14 +36,18 @@ The minimum recommended configuration for each node is as follows:
 
 **Storage:**
 
-Storage in a Cozystack cluster serves two primary roles: one for the system and one for your workloads.
-Understanding each role ensures the stability and scalability of your environment.
+Storage in a Cozystack cluster is used both by the system and by the user workloads.
+There are two options: having a dedicated disk for each role or allocating space on system disk for user storage.
+
+**Using two disks**
+
+Separating disks by role is the primary and more reliable option.
 
 - **Primary Disk**: This disk contains the Talos Linux operating system, essential system kernel modules and
   Cozystack system base pods, logs, and base container images.
 
   Minimum: 32 GB; approximately 26 GB is used in a standard Cozystack setup.
-  The Talos installation expects `/dev/sda` as the system disk (virtio drives usually appear as `/dev/vda`).
+  Talos installation expects `/dev/sda` as the system disk (virtio drives usually appear as `/dev/vda`).
 
 - **Secondary Disk**: Dedicated to workload data and can be increased based on workload requirements.
   Used for provisioning volumes via PersistentVolumeClaims (PVCs).
@@ -54,10 +58,10 @@ Understanding each role ensures the stability and scalability of your environmen
   Learn more about configuring Linstor StorageClass from the
   [Deploy Cozystack tutorial](https://cozystack.io/docs/getting-started/first-deployment/#configure-storage)
 
-OR
+**Using a single disk**
 
-- **Use single disk**
-    See [How to allocate space on system disk for user storage](https://cozystack.io/docs/operations/faq/#how-to-allocate-space-on-system-disk-for-user-storage)
+It's possible to use a single disk with space allocated for user storage.
+See [How to allocate space on system disk for user storage]({{% ref "/docs/operations/faq#how-to-allocate-space-on-system-disk-for-user-storage" %}})
 
 **Networking:**
 

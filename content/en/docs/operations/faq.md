@@ -234,6 +234,97 @@ talosctl rotate-ca -e 12.34.56.77,12.34.56.78,12.34.56.79 \
     --dry-run=false &
 ```
 
+
+### Public-network Kubernetes deployment
+
+A Kubernetes/Cozystack cluster can be deployed using only public networks:
+
+-   Both management and worker nodes have public IP addresses.
+-   Worker nodes connect to the management nodes over the public Internet, without a private internal network or VPN.
+
+Such a setup is not recommended for production, but can be used for research and testing,
+when hosting limitations prevent provisioning a private network.
+
+To enable this setup when deploying with `talosctl`, add the following data in the node configuration files:
+
+```yaml
+cluster:
+  controlPlane:
+    endpoint: https://<MANAGEMENT_NODE_IP>:6443
+```
+
+For `talm`, append the same lines at end of the first node's configuration file, such as `nodes/node1.yaml`.
+
+
+### How to allocate space on system disk for user storage
+
+Default Talos setup assumes that each node has a primary and secondary disks, used for system and user storage, respectively.
+However, it's possible to use a single disk, allocating space for user storage.
+
+This configuration must be applied with the first [`talosctl apply`]({{% ref "docs/operations/talos/configuration/talosctl#3-apply-node-configuration" %}})
+or [`talm apply`]({{% ref "docs/operations/talos/configuration/talm#3-apply-node-configuration" %}})
+— the one with the `-i` (`--insecure`) flag.
+Applying changes after initialization will not have any effect.
+
+For `talosctl`, append the following lines to `patch.yaml`:
+
+```yaml
+---
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  minSize: 70GiB
+
+---
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: data-storage
+provisioning:
+  diskSelector:
+    match: disk.transport == 'nvme'
+  minSize: 400GiB
+```
+
+For `talm`, append the same lines at end of the first node's configuration file, such as `nodes/node1.yaml`.
+
+Read more in the Talos documentation: https://www.talos.dev/v1.10/talos-guides/configuration/disk-management/.
+
+After applying the configuration, wipe the `data-storage` partition:
+
+```bash
+kubectl -n kube-system debug -it --profile sysadmin --image=alpine node/node1
+
+apk add util-linux
+
+umount /dev/nvme0n1p6 ### The partition allocated for user storage
+rm -rf /host/var/mnt/data-storage
+wipefs -a /dev/nvme0n1p6
+exit
+```
+
+When the storage is configured, add the new partition to LINSTOR:
+```bash
+linstor ps cdp zfs node1 nvme0n1p6 --pool-name data --storage-pool data1
+```
+
+Check the result:
+```bash
+linstor sp l
+```
+
+Output will be similar to this example:
+
+```text
++---------------------------------------------------------------------------------------------------------------------------------------+
+| StoragePool          | Node  | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State | SharedName                 |
+|=======================================================================================================================================|
+| DfltDisklessStorPool | node1 | DISKLESS |          |              |               | False        | Ok    | node1;DfltDisklessStorPool |
+| data                 | node1 | ZFS      | data     |   351.46 GiB |       476 GiB | True         | Ok    | node1;data                 |
+| data1                | node1 | ZFS      | data     |   378.93 GiB |       412 GiB | True         | Ok    | node1;data1                |
+```
+
+
 ## Bundles
 
 ### How to overwrite parameters for specific components
@@ -244,76 +335,3 @@ Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-overwri
 
 Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-disable-some-components-from-bundle" %}}).
 
-### Public Network Kubernetes Deployment
-
-In certain scenarios, a Kubernetes cluster is deployed where:
-  - All nodes (master and workers) use public IP addresses.
-  - Worker nodes connect to the master node over the public internet, without a private internal network or VPN.
-
-It used whan limited hosting capabilities.
-
-Edit in node config
-
-```yaml
-cluster:
-  controlPlane:
-    endpoint: https://<MASTER IP>:6443
-```
-For `Talm` add it at end of file `nodes/node1.yaml`
-
-{{% alert color="warning" %}}
-This setup is not recommended for production, but is sometimes used under specific constraints.
-{{% /alert %}}
-
-### How to allocate space on system disk for user storage
-
-{{% alert color="warning" %}}
-Note: The volume configuration in the machine configuration is only applied when the volume has not been provisioned yet. So applying changes after the initial provisioning will not have any effect.
-{{% /alert %}}
-
-
-`VolumeConfig` must be appled in first talosctl/talm apply (when we add the `-i` flag).
-
-Add patches:
-
-```yaml
-apiVersion: v1alpha1
-kind: VolumeConfig
-name: EPHEMERAL
-provisioning:
-  minSize: 70GiB
-
----
-
-apiVersion: v1alpha1
-kind: UserVolumeConfig
-name: data-storage
-provisioning:
-  diskSelector:
-    match: disk.transport == 'nvme'
-  minSize: 400GiB
-```
-
-For `Talm` add it at end of file `nodes/node1.yaml`
-
-See more info: https://www.talos.dev/v1.10/talos-guides/configuration/disk-management/
-
-After, wipe data-storage partition:
-```bash
-kubectl -n kube-system debug -it --profile sysadmin --image=alpine node/node1
-
-apk add util-linux
-
-umount /dev/nvme0n1p6 ### Your partition for user storage
-rm -rf /host/var/mnt/data-storage
-wipefs -a /dev/dev/nvme0n1p6
-exit
-```
-When configure storage, add new partition to linstor:
-```bash
-linstor ps cdp zfs node1 nvme0n1p6 --pool-name data --storage-pool data1
-```
-Check result:
-```bash
-linstor sp l
-```

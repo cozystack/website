@@ -87,9 +87,11 @@ echo "IP_CIDR=$IP_CIDR"
 echo "GATEWAY=$GATEWAY"
 ```
 
-Write cloud-init configuration:
-Example for default hetzner dedicated servers without [Hetzner vSwitch](https://docs.hetzner.com/robot/dedicated-server/network/vswitch/)
-See also: [Public Network Kubernetes Deployment](https://cozystack.io/docs/operations/faq/#public-network-kubernetes-deployment)
+{{% alert color="info" %}}
+Example for default **Hetzner** dedicated servers without [Hetzner vSwitch](https://docs.hetzner.com/robot/dedicated-server/network/vswitch/).  
+See also: [Public Network Kubernetes Deployment]({{% ref "/docs/operations/faq#public-network-kubernetes-deployment" %}}).
+{{% /alert %}}
+
 ```bash
 echo 'hostname: talos' > /mnt/meta-data
 echo '#cloud-config' > /mnt/user-data
