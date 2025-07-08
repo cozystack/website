@@ -1,0 +1,25 @@
+name: Sync documentation sources
+
+on:
+  workflow_dispatch:
+  # 03:00 UTC, 05:00 Prague, usually all PRs in cozystack/cozystack get merged before this time.
+  schedule:
+    - cron: '0 3 * * *'
+
+
+  # Triggered remotely via:
+  # curl -XPOST -H "Authorization: token <PAT>" \
+  #   -H "Accept: application/vnd.github.v3+json" \
+  #   https://api.github.com/repos/cozystack/website/dispatches \
+  #   -d '{"event_type":"update_managed_apps"}'
+  repository_dispatch:
+    types: [update_managed_apps]
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the target repository (this one)
+      - name: Checkout target repo
+        uses: actions/checkout@v4
