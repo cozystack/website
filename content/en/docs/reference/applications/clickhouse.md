@@ -79,6 +79,6 @@ This setting is ignored if the corresponding `resources` value is set.
 | `micro`     | `500m` | `256Mi` |
 | `small`     | `1`    | `512Mi` |
 | `medium`    | `1`    | `1Gi`   |
-| `large`     | `3`    | `2Gi`   |
+| `large`     | `2`    | `2Gi`   |
 | `xlarge`    | `4`    | `4Gi`   |
 | `2xlarge`   | `8`    | `8Gi`   |

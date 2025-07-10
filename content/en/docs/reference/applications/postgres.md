@@ -15,31 +15,56 @@ This managed service is controlled by the CloudNativePG operator, ensuring effic
 - Docs: <https://cloudnative-pg.io/docs/>
 - Github: <https://github.com/cloudnative-pg/cloudnative-pg>
 
-## HowTos
+## Operations
+
+### How to enable backups
+
+To back up a PostgreSQL application, an external S3-compatible storage is required.
+
+To start regular backups, update the application, setting `backup.enabled` to `true`, and fill in the path and credentials to an  `backup.*`:
+
+```yaml
+## @param backup.enabled Enable regular backups
+## @param backup.schedule Cron schedule for automated backups
+## @param backup.retentionPolicy Retention policy
+## @param backup.destinationPath Path to store the backup (i.e. s3://bucket/path/to/folder)
+## @param backup.endpointURL S3 Endpoint used to upload data to the cloud
+## @param backup.s3AccessKey Access key for S3, used for authentication
+## @param backup.s3SecretKey Secret key for S3, used for authentication
+backup:
+  enabled: false
+  retentionPolicy: 30d
+  destinationPath: s3://bucket/path/to/folder/
+  endpointURL: http://minio-gateway-service:9000
+  schedule: "0 2 * * * *"
+  s3AccessKey: oobaiRus9pah8PhohL1ThaeTa4UVa7gu
+  s3SecretKey: ju3eum4dekeich9ahM1te8waeGai0oog
+```
+
+### How to recover a backup
+
+CloudNativePG supports point-in-time-recovery.
+Recovering a backup is done by creating a new database instance and restoring the data in it.
+
+Create a new PostgreSQL application with a different name, but identical configuration.
+Set `bootstrap.enabled` to `true` and fill in the name of the database instance to recover from and the recovery time:
+
+```yaml
+## @param bootstrap.enabled Restore database cluster from a backup
+## @param bootstrap.recoveryTime Timestamp (PITR) up to which recovery will proceed, expressed in RFC 3339 format. If left empty, will restore latest
+## @param bootstrap.oldName Name of database cluster before deleting
+##
+bootstrap:
+  enabled: false
+  recoveryTime: ""  # leave empty for latest or exact timestamp; example: 2020-11-26 15:22:00.00000+00
+  oldName: "<previous-postgres-instance>"
+```
 
 ### How to switch primary/secondary replica
 
 See:
 
 - <https://cloudnative-pg.io/documentation/1.15/rolling_update/#manual-updates-supervised>
-
-### How to restore backup
-
-find snapshot:
-
-```bash
-restic -r s3:s3.example.org/postgres-backups/database_name snapshots
-```
-
-restore:
-
-```bash
-restic -r s3:s3.example.org/postgres-backups/database_name restore latest --target /tmp/
-```
-
-more details:
-
-- <https://blog.aenix.io/restic-effective-backup-from-stdin-4bc1e8f083c1>
 
 ## Parameters
 
@@ -64,23 +89,23 @@ more details:
 
 ### Backup parameters
 
-| Name                     | Description                                                          | Value                               |
-| ------------------------ | -------------------------------------------------------------------- | ----------------------------------- |
-| `backup.enabled`         | Enable pereiodic backups                                             | `false`                             |
-| `backup.schedule`        | Cron schedule for automated backups                                  | `0 2 * * * *`                       |
-| `backup.retentionPolicy` | The retention policy                                                 | `30d`                               |
-| `backup.destinationPath` | The path where to store the backup (i.e. s3://bucket/path/to/folder) | `s3://BUCKET_NAME/`                 |
-| `backup.endpointURL`     | Endpoint to be used to upload data to the cloud                      | `http://minio-gateway-service:9000` |
-| `backup.s3AccessKey`     | The access key for S3, used for authentication                       | `oobaiRus9pah8PhohL1ThaeTa4UVa7gu`  |
-| `backup.s3SecretKey`     | The secret key for S3, used for authentication                       | `ju3eum4dekeich9ahM1te8waeGai0oog`  |
+| Name                     | Description                                                | Value                               |
+| ------------------------ | ---------------------------------------------------------- | ----------------------------------- |
+| `backup.enabled`         | Enable regular backups                                     | `false`                             |
+| `backup.schedule`        | Cron schedule for automated backups                        | `0 2 * * * *`                       |
+| `backup.retentionPolicy` | Retention policy                                           | `30d`                               |
+| `backup.destinationPath` | Path to store the backup (i.e. s3://bucket/path/to/folder) | `s3://bucket/path/to/folder/`       |
+| `backup.endpointURL`     | S3 Endpoint used to upload data to the cloud               | `http://minio-gateway-service:9000` |
+| `backup.s3AccessKey`     | Access key for S3, used for authentication                 | `oobaiRus9pah8PhohL1ThaeTa4UVa7gu`  |
+| `backup.s3SecretKey`     | Secret key for S3, used for authentication                 | `ju3eum4dekeich9ahM1te8waeGai0oog`  |
 
 ### Bootstrap parameters
 
 | Name                     | Description                                                                                                                             | Value   |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `bootstrap.enabled`      | Restore cluster from backup                                                                                                             | `false` |
-| `bootstrap.recoveryTime` | Time stamp up to which recovery will proceed, expressed in RFC 3339 format, if empty, will restore latest                               | `""`    |
-| `bootstrap.oldName`      | Name of cluster before deleting                                                                                                         | `""`    |
+| `bootstrap.enabled`      | Restore database cluster from a backup                                                                                                  | `false` |
+| `bootstrap.recoveryTime` | Timestamp (PITR) up to which recovery will proceed, expressed in RFC 3339 format. If left empty, will restore latest                    | `""`    |
+| `bootstrap.oldName`      | Name of database cluster before deleting                                                                                                | `""`    |
 | `resources`              | Explicit CPU and memory configuration for each PostgreSQL replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
 | `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.       | `micro` |
 
@@ -107,7 +132,7 @@ This setting is ignored if the corresponding `resources` value is set.
 | `micro`     | `500m` | `256Mi` |
 | `small`     | `1`    | `512Mi` |
 | `medium`    | `1`    | `1Gi`   |
-| `large`     | `3`    | `2Gi`   |
+| `large`     | `2`    | `2Gi`   |
 | `xlarge`    | `4`    | `4Gi`   |
 | `2xlarge`   | `8`    | `8Gi`   |
 
