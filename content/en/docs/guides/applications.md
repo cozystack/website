@@ -24,7 +24,7 @@ Tenants in Cozystack are implemented as managed applications.
 Learn more about tenants in [Tenant System]({{% ref "/docs/guides/tenants" %}}).
 
 
-## Managed (Tenant) Kubernetes Cluster
+## Tenant Kubernetes Cluster
 
 Cozystack deploys and manages Kubernetes clusters as standalone applications within each tenant’s isolated environment.
 These clusters are fully separate from the root management cluster and are intended for deploying tenant-specific or customer-developed applications.

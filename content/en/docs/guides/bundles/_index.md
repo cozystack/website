@@ -61,17 +61,6 @@ or just need a minimal Kubernetes cluster.
 [distro-hosted]: {{% ref "/docs/operations/bundles/distro-hosted" %}}
 
 
-## Cozystack Composition
-
-To understand Cozystack bundles, it's helpful to view all Cozystack components organized by layers.
-
-- **Layer 4: User-Facing Services**: Managed Kubernetes, Databases-as-a-Service, and other managed applications.
-- **Layer 3: Platform Services**: Operators, Cluster API and Dashboard, and Monitoring.
-- **Layer 2: Infrastructure Services**: Storage (using LINSTOR, by default), Networking (using OVN), and Virtualization (using KubeVirt).
-- **Layer 1: OS and Hardware**: The foundation, typically Talos Linux and a root Kubernetes cluster installed on Talos.
-
-![Cozystack Architecture Layers](cozystack-layers.png)
-
 ## Choosing the Right Bundle
 
 Bundles combine components from different layers to match particular needs.
