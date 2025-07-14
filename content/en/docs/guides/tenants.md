@@ -25,9 +25,11 @@ For example:
 
 ### Nested tenants
 
-Tenants can be nested.
-A tenant administrator can create nested tenants using the "Tenant" application from the catalogue.
-Higher-level tenants can view and manage the applications of all their children tenants.
+Tenants can be nested: an administrator of a tenant can create sub-tenants as applications in the Cozystack catalog.
+Parent tenants can share their resources with their children and oversee their applications.
+In turn, children can use their parent's services.
+
+![tenant hierarchy diagram](/img/tenants1.png)
 
 ### Unique domains
 
@@ -36,8 +38,6 @@ By default, (unless otherwise specified), it inherits the domain of its parent w
 For example, if the parent had the domain `example.org`, then `tenant-foo` would get the domain `foo.example.org` by default.
 
 Kubernetes clusters created in this tenant namespace would get domains like: `kubernetes-cluster.foo.example.org`
-
-![tenant hierarchy](/img/tenants1.png)
 
 ### Lower-level tenants can access the cluster services of their parent (in case they do not run their own)
 
