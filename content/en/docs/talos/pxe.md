@@ -1,10 +1,11 @@
 ---
 title: How to install Cozystack using PXE
-linkTitle: PXE
+linkTitle: Install using PXE
 description: "How to install Cozystack using PXE"
 weight: 10
 aliases:
   - /docs/talos/installation/pxe
+  - /docs/operations/talos/installation/pxe
 ---
 
 ![Cozystack deployment](/img/cozystack-deployment.png)

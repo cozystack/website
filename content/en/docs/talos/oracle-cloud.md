@@ -3,6 +3,8 @@ title: How to install Cozystack in Oracle Cloud Infrastructure
 linkTitle: Oracle Cloud
 description: "How to install Cozystack in Oracle Cloud Infrastructure"
 weight: 25
+aliases:
+  - /docs/operations/talos/installation/oracle-cloud
 ---
 
 ## Introduction

@@ -1,10 +1,11 @@
 ---
-title: Bootstrap a Talos Linux cluster for Cozystack using Talm
+title: Use Talm to bootstrap a Cozystack cluster
 linkTitle: Talm
-description: "Bootstrap a Talos Linux cluster for Cozystack using Talm"
+description: "`talm` is a declarative CLI tool made by Cozystack devs and optimized for deploying Cozystack.<br> Recommended for infrastructure-as-code and GitOps."
 weight: 5
 aliases:
   - /docs/talos/configuration/talm
+  - /docs/operations/talos/configuration/talm
 ---
 
 This guide explains how to prepare a Talos Linux cluster for deploying Cozystack using
