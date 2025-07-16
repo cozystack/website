@@ -1,10 +1,13 @@
 ---
-title: Development
+linkTitle: Developer Guide
+title: Cozystack Internals and Developer Guides
 description: Cozystack Internals and Development
-weight: 10
+weight: 100
+aliases:
+- /docs/development/development
 ---
 
-Cozystack Internals and Development information
+
 
 ## How it works
 
