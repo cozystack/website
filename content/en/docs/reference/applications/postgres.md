@@ -107,7 +107,7 @@ See:
 | `bootstrap.recoveryTime` | Timestamp (PITR) up to which recovery will proceed, expressed in RFC 3339 format. If left empty, will restore latest                    | `""`    |
 | `bootstrap.oldName`      | Name of database cluster before deleting                                                                                                | `""`    |
 | `resources`              | Explicit CPU and memory configuration for each PostgreSQL replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.       | `micro` |
+| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.             | `micro` |
 
 
 ## Parameter examples and reference

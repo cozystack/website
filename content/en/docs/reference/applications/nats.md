@@ -22,7 +22,7 @@ It provides a data layer for cloud native applications, IoT messaging, and micro
 | `config.merge`      | Additional configuration to merge into NATS config                                                                                | `{}`    |
 | `config.resolver`   | Additional configuration to merge into NATS config                                                                                | `{}`    |
 | `resources`         | Explicit CPU and memory configuration for each NATS replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `resourcesPreset`   | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge. | `nano`  |
+| `resourcesPreset`   | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.       | `nano`  |
 
 ## Parameter examples and reference
 

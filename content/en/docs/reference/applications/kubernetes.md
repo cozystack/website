@@ -119,13 +119,13 @@ See the reference for components utilized in this service:
 | Name                                               | Description                                                                                                                            | Value    |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `controlPlane.apiServer.resources`                 | Explicit CPU and memory configuration for the API Server. When left empty, the preset defined in `resourcesPreset` is applied.         | `{}`     |
-| `controlPlane.apiServer.resourcesPreset`           | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.      | `medium` |
+| `controlPlane.apiServer.resourcesPreset`           | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.            | `medium` |
 | `controlPlane.controllerManager.resources`         | Explicit CPU and memory configuration for the Controller Manager. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`     |
-| `controlPlane.controllerManager.resourcesPreset`   | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.      | `micro`  |
+| `controlPlane.controllerManager.resourcesPreset`   | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.            | `micro`  |
 | `controlPlane.scheduler.resources`                 | Explicit CPU and memory configuration for the Scheduler. When left empty, the preset defined in `resourcesPreset` is applied.          | `{}`     |
-| `controlPlane.scheduler.resourcesPreset`           | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.      | `micro`  |
+| `controlPlane.scheduler.resourcesPreset`           | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.            | `micro`  |
 | `controlPlane.konnectivity.server.resources`       | Explicit CPU and memory configuration for Konnectivity. When left empty, the preset defined in `resourcesPreset` is applied.           | `{}`     |
-| `controlPlane.konnectivity.server.resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.      | `micro`  |
+| `controlPlane.konnectivity.server.resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.            | `micro`  |
 
 
 ## Parameter examples and reference

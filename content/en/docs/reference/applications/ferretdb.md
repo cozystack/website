@@ -40,7 +40,7 @@ Internally, FerretDB service is backed by Postgres.
 | `backup.s3SecretKey`     | The secret key for S3, used for authentication                                                                                        | `ju3eum4dekeich9ahM1te8waeGai0oog`                     |
 | `backup.resticPassword`  | The password for Restic backup encryption                                                                                             | `ChaXoveekoh6eigh4siesheeda2quai0`                     |
 | `resources`              | Explicit CPU and memory configuration for each FerretDB replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`                                                   |
-| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.     | `nano`                                                 |
+| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.           | `nano`                                                 |
 
 
 

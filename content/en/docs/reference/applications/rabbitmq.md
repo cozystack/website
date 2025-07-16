@@ -31,7 +31,7 @@ The service utilizes official RabbitMQ operator. This ensures the reliability an
 | `users`           | Users configuration                                                                                                                   | `{}`   |
 | `vhosts`          | Virtual Hosts configuration                                                                                                           | `{}`   |
 | `resources`       | Explicit CPU and memory configuration for each RabbitMQ replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`   |
-| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.     | `nano` |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.           | `nano` |
 
 ## Parameter examples and reference
 

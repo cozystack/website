@@ -55,7 +55,7 @@ For more details, read [Restic: Effective Backup from Stdin](https://blog.aenix.
 | `backup.s3SecretKey`     | Secret key for S3, used for authentication                                                                                              | `ju3eum4dekeich9ahM1te8waeGai0oog`                     |
 | `backup.resticPassword`  | Password for Restic backup encryption                                                                                                   | `ChaXoveekoh6eigh4siesheeda2quai0`                     |
 | `resources`              | Explicit CPU and memory configuration for each ClickHouse replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`                                                   |
-| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.       | `small`                                                |
+| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.             | `small`                                                |
 
 ## Parameter examples and reference
 

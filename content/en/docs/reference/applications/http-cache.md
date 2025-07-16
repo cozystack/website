@@ -72,9 +72,9 @@ The deployment architecture is illustrated in the diagram below:
 | `haproxy.replicas`        | Number of HAProxy replicas                                                                                                           | `2`     |
 | `nginx.replicas`          | Number of Nginx replicas                                                                                                             | `2`     |
 | `haproxy.resources`       | Explicit CPU and memory configuration for each HAProxy replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `haproxy.resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.    | `nano`  |
+| `haproxy.resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.          | `nano`  |
 | `nginx.resources`         | Explicit CPU and memory configuration for each nginx replica. When left empty, the preset defined in `resourcesPreset` is applied.   | `{}`    |
-| `nginx.resourcesPreset`   | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.    | `nano`  |
+| `nginx.resourcesPreset`   | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.          | `nano`  |
 
 ### Configuration parameters
 

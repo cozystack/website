@@ -36,7 +36,7 @@ Furthermore, Shadowbox is compatible with standard Shadowsocks clients, providin
 | `users`           | Users configuration                                                                                                                     | `{}`   |
 | `externalIPs`     | List of externalIPs for service. Optional. If not specified will use LoadBalancer service by default.                                   | `[]`   |
 | `resources`       | Explicit CPU and memory configuration for each VPN server replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`   |
-| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.       | `nano` |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.             | `nano` |
 
 ## Parameter examples and reference
 

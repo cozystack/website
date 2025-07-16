@@ -18,9 +18,9 @@ linkTitle: "Kafka"
 | `zookeeper.replicas`        | Number of ZooKeeper replicas                                                                                                           | `3`     |
 | `zookeeper.storageClass`    | StorageClass used to store the ZooKeeper data                                                                                          | `""`    |
 | `kafka.resources`           | Explicit CPU and memory configuration for each Kafka replica. When left empty, the preset defined in `resourcesPreset` is applied.     | `{}`    |
-| `kafka.resourcesPreset`     | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.      | `small` |
+| `kafka.resourcesPreset`     | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.            | `small` |
 | `zookeeper.resources`       | Explicit CPU and memory configuration for each Zookeeper replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `zookeeper.resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.      | `small` |
+| `zookeeper.resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.            | `small` |
 
 ### Configuration parameters
 
