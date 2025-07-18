@@ -1,15 +1,16 @@
 ---
-title: Bootstrap a Talos Linux cluster for Cozystack using talos-bootstrap
+title: Use talos-bootstrap script to bootstrap a Cozystack cluster
 linkTitle: talos-bootstrap
-description: "Bootstrap a Talos Linux cluster for Cozystack using talos-bootstrap"
+description: "`talos-bootstrap` is a CLI for step-by-step cluster bootstrapping, made by Cozystack devs.<br> Recommended for first deployments."
 weight: 10
 aliases:
   - /docs/talos/configuration/talos-bootstrap
+  - /docs/operations/talos/configuration/talos-bootstrap
 ---
 
 [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) is an interactive script for bootstrapping Kubernetes clusters on Talos OS.
 
-It was created by Ænix to simplify the installation of Talos Linux on bare metal nodes in a user-friendly manner.
+It was created by Cozystack developers to simplify the installation of Talos Linux on bare metal nodes in a user-friendly manner.
 
 ## 1. Install Dependencies
 

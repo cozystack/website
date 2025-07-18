@@ -70,7 +70,7 @@ This approach combines well with role-based access control.
 Non-administrative users can use `kubectl` to access the management cluster, 
 but their kubeconfig will authorize them only to create custom resources in their tenants.
 
-Read more: [Cozystack API]({{% ref "docs/development/cozystack-api" %}}).
+Read more: [Cozystack API]({{% ref "/docs/cozystack-api" %}}).
 
 ## Bundles
 
@@ -78,4 +78,4 @@ Bundles are pre-defined combinations of Cozystack components.
 Each bundle is tested, versioned, and guaranteed to work as a unit.
 They simplify installation, reduce the risk of misconfiguration, and make it easier to choose the right set of features for your deployment.
 
-Read more: [Bundles]({{% ref "docs/guides/bundles" %}}).
+Read more: [Bundles]({{% ref "/docs/guides/bundles" %}}).

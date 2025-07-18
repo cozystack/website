@@ -1,10 +1,11 @@
 ---
-title: How to install Cozystack in Servers.com
+title: Install Cozystack in Servers.com
 linkTitle: Servers.com
-description: "How to install Cozystack in Servers.com"
+description: "Install Cozystack in the Servers.com infrastructure."
 weight: 40
 aliases:
   - /docs/talos/installation/servers_com
+  - /docs/operations/talos/installation/servers_com
 ---
 
 ## Before Installation

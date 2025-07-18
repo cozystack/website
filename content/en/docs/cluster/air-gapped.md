@@ -1,8 +1,10 @@
 ---
-title: Air-Gapped Installation of Talos Linux Cluster
+title: Bootstrap an Air-Gapped Cluster
 linkTitle: Air-Gapped
-description: "Bootstrap a Talos Linux cluster for Cozystack with an air-gapped environment"
+description: "Bootstrap a Cozystack cluster in an isolated (air-gapped) environment with container registry mirrors."
 weight: 20
+aliases:
+  - /docs/operations/talos/configuration/air-gapped
 ---
 
 ## Introduction
@@ -127,7 +129,7 @@ Finally, bootstrap the cluster as usual:
 talm bootstrap -f nodes/node1.yaml
 ```
 
-Read the [Talm configuration guide]({{% ref "/docs/operations/talos/configuration/talm" %}}) to learn more.
+Read the [Talm configuration guide]({{% ref "/docs/cluster/talm" %}}) to learn more.
 
 ### Using talosctl
 
@@ -143,7 +145,7 @@ Finally, bootstrap the cluster using one of the nodes:
 talosctl bootstrap -n <ip> -e <ip>
 ```
 
-Read the [`talosctl` configuration guide]({{% ref "/docs/operations/talos/configuration/talosctl" %}}) to learn more.
+Read the [`talosctl` configuration guide]({{% ref "/docs/cluster/talosctl" %}}) to learn more.
 
 ## 5. Configure Container Registry Mirrors for Tenant Kubernetes
 

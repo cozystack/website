@@ -1,8 +1,11 @@
 ---
-title: Bootstrap a Talos Linux cluster for Cozystack using talosctl
+title: Use talosctl to bootstrap a Cozystack cluster 
 linkTitle: talosctl
-description: "Bootstrap a Talos Linux cluster for Cozystack using talosctl"
+description: "`talosctl` is the default CLI of Talos Linux, requiring more boilerplate code, but giving full flexibility in configuration."
 weight: 15
+aliases:
+  - /docs/talos/configuration/talosctl
+  - /docs/operations/talos/configuration/talosctl
 ---
 
 This guide explains how to prepare a Talos Linux cluster for deploying Cozystack using `talosctl`,

@@ -1,10 +1,11 @@
 ---
 title: How to install Cozystack using ISO
-linkTitle: ISO
+linkTitle: Install using ISO
 description: "How to install Cozystack using ISO"
 weight: 20
 aliases:
   - /docs/talos/installation/iso
+  - /docs/operations/talos/installation/iso
 ---
 
 Download Talos Linux asset from the Cozystack's [releases page](https://github.com/cozystack/cozystack/releases).

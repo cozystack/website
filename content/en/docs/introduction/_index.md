@@ -13,7 +13,7 @@ It can be used by a single company to run its own [private cloud]({{% ref "/docs
 
 Cozystack covers the most critical needs of a development team:
 
--   [Kubernetes clusters]({{% ref "/docs/development/cozystack-api" %}}) for running applications in development and production
+-   [Kubernetes clusters]({{% ref "/docs/cozystack-api" %}}) for running applications in development and production
 -   Standard [managed applications]({{% ref "/docs/guides/applications" %}}): databases, queue managers, caches, and more
 -   [Virtual machines]({{% ref "/docs/operations/virtualization/virtual-machines" %}})
 -   Reliable distributed storage
