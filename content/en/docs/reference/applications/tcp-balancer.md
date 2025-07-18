@@ -16,23 +16,23 @@ Managed TCP Load Balancer Service efficiently utilizes HAProxy for load balancin
 
 ### Common parameters
 
-| Name       | Description                                     | Value   |
-| ---------- | ----------------------------------------------- | ------- |
-| `external` | Enable external access from outside the cluster | `false` |
-| `replicas` | Number of HAProxy replicas                      | `2`     |
+| Name              | Description                                                                                                                               | Value   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `replicas`        | Number of HAProxy replicas                                                                                                                | `2`     |
+| `resources`       | Explicit CPU and memory configuration for each TCP Balancer replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.               | `nano`  |
+| `external`        | Enable external access from outside the cluster                                                                                           | `false` |
 
-### Configuration parameters
+### Application-specific parameters
 
-| Name                             | Description                                                                                                                               | Value   |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `httpAndHttps.mode`              | Mode for balancer. Allowed values: `tcp` and `tcp-with-proxy`                                                                             | `tcp`   |
-| `httpAndHttps.targetPorts.http`  | HTTP port number.                                                                                                                         | `80`    |
-| `httpAndHttps.targetPorts.https` | HTTPS port number.                                                                                                                        | `443`   |
-| `httpAndHttps.endpoints`         | Endpoint addresses list                                                                                                                   | `[]`    |
-| `whitelistHTTP`                  | Secure HTTP by enabling  client networks whitelisting                                                                                     | `false` |
-| `whitelist`                      | List of client networks                                                                                                                   | `[]`    |
-| `resources`                      | Explicit CPU and memory configuration for each TCP Balancer replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `resourcesPreset`                | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.               | `nano`  |
+| Name                             | Description                                                   | Value   |
+| -------------------------------- | ------------------------------------------------------------- | ------- |
+| `httpAndHttps.mode`              | Mode for balancer. Allowed values: `tcp` and `tcp-with-proxy` | `tcp`   |
+| `httpAndHttps.targetPorts.http`  | HTTP port number.                                             | `80`    |
+| `httpAndHttps.targetPorts.https` | HTTPS port number.                                            | `443`   |
+| `httpAndHttps.endpoints`         | Endpoint addresses list                                       | `[]`    |
+| `whitelistHTTP`                  | Secure HTTP by whitelisting client networks                   | `false` |
+| `whitelist`                      | List of client networks                                       | `[]`    |
 
 ## Parameter examples and reference
 

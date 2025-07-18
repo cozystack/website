@@ -12,20 +12,22 @@ Internally, FerretDB service is backed by Postgres.
 
 ### Common parameters
 
-| Name                     | Description                                                                                                                 | Value   |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `external`               | Enable external access from outside the cluster                                                                             | `false` |
-| `size`                   | Persistent Volume size                                                                                                      | `10Gi`  |
-| `replicas`               | Number of replicas                                                                                                          | `2`     |
-| `storageClass`           | StorageClass used to store the data                                                                                         | `""`    |
-| `quorum.minSyncReplicas` | Minimum number of synchronous replicas that must acknowledge a transaction before it is considered committed                | `0`     |
-| `quorum.maxSyncReplicas` | Maximum number of synchronous replicas that can acknowledge a transaction (must be lower than the total number of replicas) | `0`     |
+| Name              | Description                                                                                                                           | Value   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `replicas`        | Number of replicas                                                                                                                    | `2`     |
+| `resources`       | Explicit CPU and memory configuration for each FerretDB replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.     | `micro` |
+| `size`            | Persistent Volume size                                                                                                                | `10Gi`  |
+| `storageClass`    | StorageClass used to store the data                                                                                                   | `""`    |
+| `external`        | Enable external access from outside the cluster                                                                                       | `false` |
 
-### Configuration parameters
+### Application-specific parameters
 
-| Name    | Description         | Value |
-| ------- | ------------------- | ----- |
-| `users` | Users configuration | `{}`  |
+| Name                     | Description                                                                                                                 | Value |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `quorum.minSyncReplicas` | Minimum number of synchronous replicas that must acknowledge a transaction before it is considered committed                | `0`   |
+| `quorum.maxSyncReplicas` | Maximum number of synchronous replicas that can acknowledge a transaction (must be lower than the total number of replicas) | `0`   |
+| `users`                  | Users configuration                                                                                                         | `{}`  |
 
 ### Backup parameters
 
@@ -39,17 +41,13 @@ Internally, FerretDB service is backed by Postgres.
 | `backup.s3AccessKey`     | Access key for S3, used for authentication                 | `oobaiRus9pah8PhohL1ThaeTa4UVa7gu`  |
 | `backup.s3SecretKey`     | Secret key for S3, used for authentication                 | `ju3eum4dekeich9ahM1te8waeGai0oog`  |
 
-### Bootstrap parameters
+### Bootstrap (recovery) parameters
 
-| Name                     | Description                                                                                                                           | Value   |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `bootstrap.enabled`      | Restore database cluster from a backup                                                                                                | `false` |
-| `bootstrap.recoveryTime` | Timestamp (PITR) up to which recovery will proceed, expressed in RFC 3339 format. If left empty, will restore latest                  | `""`    |
-| `bootstrap.oldName`      | Name of database cluster before deleting                                                                                              | `""`    |
-| `resources`              | Explicit CPU and memory configuration for each FerretDB replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge.     | `micro` |
-
-
+| Name                     | Description                                                                                                          | Value   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------- |
+| `bootstrap.enabled`      | Restore database cluster from a backup                                                                               | `false` |
+| `bootstrap.recoveryTime` | Timestamp (PITR) up to which recovery will proceed, expressed in RFC 3339 format. If left empty, will restore latest | `""`    |
+| `bootstrap.oldName`      | Name of database cluster before deleting                                                                             | `""`    |
 
 ## Parameter examples and reference
 

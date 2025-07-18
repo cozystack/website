@@ -23,20 +23,20 @@ Furthermore, Shadowbox is compatible with standard Shadowsocks clients, providin
 
 ### Common parameters
 
-| Name       | Description                                     | Value   |
-| ---------- | ----------------------------------------------- | ------- |
-| `external` | Enable external access from outside the cluster | `false` |
-| `replicas` | Number of VPN server replicas                   | `2`     |
+| Name              | Description                                                                                                                             | Value   |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `replicas`        | Number of VPN server replicas                                                                                                           | `2`     |
+| `resources`       | Explicit CPU and memory configuration for each VPN server replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.             | `nano`  |
+| `external`        | Enable external access from outside the cluster                                                                                         | `false` |
 
-### Configuration parameters
+### Application-specific parameters
 
-| Name              | Description                                                                                                                             | Value  |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `host`            | Host used to substitute into generated URLs                                                                                             | `""`   |
-| `users`           | Users configuration                                                                                                                     | `{}`   |
-| `externalIPs`     | List of externalIPs for service. Optional. If not specified will use LoadBalancer service by default.                                   | `[]`   |
-| `resources`       | Explicit CPU and memory configuration for each VPN server replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`   |
-| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.             | `nano` |
+| Name          | Description                                                                                           | Value |
+| ------------- | ----------------------------------------------------------------------------------------------------- | ----- |
+| `host`        | Host used to substitute into generated URLs                                                           | `""`  |
+| `users`       | Users configuration (see example)                                                                     | `{}`  |
+| `externalIPs` | List of externalIPs for service. Optional. If not specified will use LoadBalancer service by default. | `[]`  |
 
 ## Parameter examples and reference
 

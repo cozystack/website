@@ -70,22 +70,24 @@ See:
 
 ### Common parameters
 
-| Name                                    | Description                                                                                                              | Value   |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------- |
-| `external`                              | Enable external access from outside the cluster                                                                          | `false` |
-| `size`                                  | Persistent Volume size                                                                                                   | `10Gi`  |
-| `replicas`                              | Number of Postgres replicas                                                                                              | `2`     |
-| `storageClass`                          | StorageClass used to store the data                                                                                      | `""`    |
-| `postgresql.parameters.max_connections` | Determines the maximum number of concurrent connections to the database server. The default is typically 100 connections | `100`   |
-| `quorum.minSyncReplicas`                | Minimum number of synchronous replicas that must acknowledge a transaction before it is considered committed.            | `0`     |
-| `quorum.maxSyncReplicas`                | Maximum number of synchronous replicas that can acknowledge a transaction (must be lower than the number of instances).  | `0`     |
+| Name              | Description                                                                                                                             | Value   |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `replicas`        | Number of Postgres replicas                                                                                                             | `2`     |
+| `resources`       | Explicit CPU and memory configuration for each PostgreSQL replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.             | `micro` |
+| `size`            | Persistent Volume size                                                                                                                  | `10Gi`  |
+| `storageClass`    | StorageClass used to store the data                                                                                                     | `""`    |
+| `external`        | Enable external access from outside the cluster                                                                                         | `false` |
 
-### Configuration parameters
+### Application-specific parameters
 
-| Name        | Description             | Value |
-| ----------- | ----------------------- | ----- |
-| `users`     | Users configuration     | `{}`  |
-| `databases` | Databases configuration | `{}`  |
+| Name                                    | Description                                                                                                              | Value |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----- |
+| `postgresql.parameters.max_connections` | Determines the maximum number of concurrent connections to the database server. The default is typically 100 connections | `100` |
+| `quorum.minSyncReplicas`                | Minimum number of synchronous replicas that must acknowledge a transaction before it is considered committed.            | `0`   |
+| `quorum.maxSyncReplicas`                | Maximum number of synchronous replicas that can acknowledge a transaction (must be lower than the number of instances).  | `0`   |
+| `users`                                 | Users configuration                                                                                                      | `{}`  |
+| `databases`                             | Databases configuration                                                                                                  | `{}`  |
 
 ### Backup parameters
 
@@ -99,16 +101,13 @@ See:
 | `backup.s3AccessKey`     | Access key for S3, used for authentication                 | `oobaiRus9pah8PhohL1ThaeTa4UVa7gu`  |
 | `backup.s3SecretKey`     | Secret key for S3, used for authentication                 | `ju3eum4dekeich9ahM1te8waeGai0oog`  |
 
-### Bootstrap parameters
+### Bootstrap (recovery) parameters
 
-| Name                     | Description                                                                                                                             | Value   |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `bootstrap.enabled`      | Restore database cluster from a backup                                                                                                  | `false` |
-| `bootstrap.recoveryTime` | Timestamp (PITR) up to which recovery will proceed, expressed in RFC 3339 format. If left empty, will restore latest                    | `""`    |
-| `bootstrap.oldName`      | Name of database cluster before deleting                                                                                                | `""`    |
-| `resources`              | Explicit CPU and memory configuration for each PostgreSQL replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.             | `micro` |
-
+| Name                     | Description                                                                                                          | Value   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------- |
+| `bootstrap.enabled`      | Restore database cluster from a backup                                                                               | `false` |
+| `bootstrap.recoveryTime` | Timestamp (PITR) up to which recovery will proceed, expressed in RFC 3339 format. If left empty, will restore latest | `""`    |
+| `bootstrap.oldName`      | Name of database cluster before deleting                                                                             | `""`    |
 
 ## Parameter examples and reference
 

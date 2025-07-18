@@ -19,13 +19,18 @@ Service utilizes the Spotahome Redis Operator for efficient management and orche
 
 | Name              | Description                                                                                                                        | Value   |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `external`        | Enable external access from outside the cluster                                                                                    | `false` |
-| `size`            | Persistent Volume size                                                                                                             | `1Gi`   |
 | `replicas`        | Number of Redis replicas                                                                                                           | `2`     |
-| `storageClass`    | StorageClass used to store the data                                                                                                | `""`    |
-| `authEnabled`     | Enable password generation                                                                                                         | `true`  |
 | `resources`       | Explicit CPU and memory configuration for each Redis replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
 | `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.        | `nano`  |
+| `size`            | Persistent Volume size                                                                                                             | `1Gi`   |
+| `storageClass`    | StorageClass used to store the data                                                                                                | `""`    |
+| `external`        | Enable external access from outside the cluster                                                                                    | `false` |
+
+### Application-specific parameters
+
+| Name          | Description                | Value  |
+| ------------- | -------------------------- | ------ |
+| `authEnabled` | Enable password generation | `true` |
 
 ## Parameter examples and reference
 

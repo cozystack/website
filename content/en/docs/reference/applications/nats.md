@@ -11,18 +11,23 @@ It provides a data layer for cloud native applications, IoT messaging, and micro
 
 ### Common parameters
 
-| Name                | Description                                                                                                                       | Value   |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `external`          | Enable external access from outside the cluster                                                                                   | `false` |
-| `replicas`          | Persistent Volume size for NATS                                                                                                   | `2`     |
-| `storageClass`      | StorageClass used to store the data                                                                                               | `""`    |
-| `users`             | Users configuration                                                                                                               | `{}`    |
-| `jetstream.size`    | Jetstream persistent storage size                                                                                                 | `10Gi`  |
-| `jetstream.enabled` | Enable or disable Jetstream                                                                                                       | `true`  |
-| `config.merge`      | Additional configuration to merge into NATS config                                                                                | `{}`    |
-| `config.resolver`   | Additional configuration to merge into NATS config                                                                                | `{}`    |
-| `resources`         | Explicit CPU and memory configuration for each NATS replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
-| `resourcesPreset`   | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.       | `nano`  |
+| Name              | Description                                                                                                                       | Value   |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `replicas`        | Number of replicas                                                                                                                | `2`     |
+| `resources`       | Explicit CPU and memory configuration for each NATS replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.       | `nano`  |
+| `storageClass`    | StorageClass used to store the data                                                                                               | `""`    |
+| `external`        | Enable external access from outside the cluster                                                                                   | `false` |
+
+### Application-specific parameters
+
+| Name                | Description                                                               | Value  |
+| ------------------- | ------------------------------------------------------------------------- | ------ |
+| `users`             | Users configuration (see example)                                         | `{}`   |
+| `jetstream.enabled` | Enable or disable Jetstream                                               | `true` |
+| `jetstream.size`    | Jetstream persistent storage size                                         | `10Gi` |
+| `config.merge`      | Additional configuration to merge into NATS config (see example)          | `{}`   |
+| `config.resolver`   | Additional resolver configuration to merge into NATS config (see example) | `{}`   |
 
 ## Parameter examples and reference
 

@@ -72,14 +72,16 @@ more details:
 
 ### Common parameters
 
-| Name           | Description                                     | Value   |
-| -------------- | ----------------------------------------------- | ------- |
-| `external`     | Enable external access from outside the cluster | `false` |
-| `size`         | Persistent Volume size                          | `10Gi`  |
-| `replicas`     | Number of MariaDB replicas                      | `2`     |
-| `storageClass` | StorageClass used to store the data             | `""`    |
+| Name              | Description                                                                                                                          | Value   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `replicas`        | Number of MariaDB replicas                                                                                                           | `2`     |
+| `resources`       | Explicit CPU and memory configuration for each MariaDB replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.          | `nano`  |
+| `size`            | Persistent Volume size                                                                                                               | `10Gi`  |
+| `storageClass`    | StorageClass used to store the data                                                                                                  | `""`    |
+| `external`        | Enable external access from outside the cluster                                                                                      | `false` |
 
-### Configuration parameters
+### Application-specific parameters
 
 | Name        | Description             | Value |
 | ----------- | ----------------------- | ----- |
@@ -88,18 +90,16 @@ more details:
 
 ### Backup parameters
 
-| Name                     | Description                                                                                                                          | Value                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| `backup.enabled`         | Enable periodic backups                                                                                                              | `false`                                                |
-| `backup.s3Region`        | The AWS S3 region where backups are stored                                                                                           | `us-east-1`                                            |
-| `backup.s3Bucket`        | The S3 bucket used for storing backups                                                                                               | `s3.example.org/postgres-backups`                      |
-| `backup.schedule`        | Cron schedule for automated backups                                                                                                  | `0 2 * * *`                                            |
-| `backup.cleanupStrategy` | The strategy for cleaning up old backups                                                                                             | `--keep-last=3 --keep-daily=3 --keep-within-weekly=1m` |
-| `backup.s3AccessKey`     | The access key for S3, used for authentication                                                                                       | `oobaiRus9pah8PhohL1ThaeTa4UVa7gu`                     |
-| `backup.s3SecretKey`     | The secret key for S3, used for authentication                                                                                       | `ju3eum4dekeich9ahM1te8waeGai0oog`                     |
-| `backup.resticPassword`  | The password for Restic backup encryption                                                                                            | `ChaXoveekoh6eigh4siesheeda2quai0`                     |
-| `resources`              | Explicit CPU and memory configuration for each MariaDB replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`                                                   |
-| `resourcesPreset`        | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.          | `nano`                                                 |
+| Name                     | Description                                    | Value                                                  |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------------ |
+| `backup.enabled`         | Enable periodic backups                        | `false`                                                |
+| `backup.s3Region`        | The AWS S3 region where backups are stored     | `us-east-1`                                            |
+| `backup.s3Bucket`        | The S3 bucket used for storing backups         | `s3.example.org/postgres-backups`                      |
+| `backup.schedule`        | Cron schedule for automated backups            | `0 2 * * *`                                            |
+| `backup.cleanupStrategy` | The strategy for cleaning up old backups       | `--keep-last=3 --keep-daily=3 --keep-within-weekly=1m` |
+| `backup.s3AccessKey`     | The access key for S3, used for authentication | `oobaiRus9pah8PhohL1ThaeTa4UVa7gu`                     |
+| `backup.s3SecretKey`     | The secret key for S3, used for authentication | `ju3eum4dekeich9ahM1te8waeGai0oog`                     |
+| `backup.resticPassword`  | The password for Restic backup encryption      | `ChaXoveekoh6eigh4siesheeda2quai0`                     |
 
 ## Parameter examples and reference
 

@@ -17,21 +17,21 @@ The service utilizes official RabbitMQ operator. This ensures the reliability an
 
 ### Common parameters
 
-| Name           | Description                                     | Value   |
-| -------------- | ----------------------------------------------- | ------- |
-| `external`     | Enable external access from outside the cluster | `false` |
-| `size`         | Persistent Volume size                          | `10Gi`  |
-| `replicas`     | Number of RabbitMQ replicas                     | `3`     |
-| `storageClass` | StorageClass used to store the data             | `""`    |
+| Name              | Description                                                                                                                           | Value   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `replicas`        | Number of RabbitMQ replicas                                                                                                           | `3`     |
+| `resources`       | Explicit CPU and memory configuration for each RabbitMQ replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`    |
+| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.           | `nano`  |
+| `size`            | Persistent Volume size                                                                                                                | `10Gi`  |
+| `storageClass`    | StorageClass used to store the data                                                                                                   | `""`    |
+| `external`        | Enable external access from outside the cluster                                                                                       | `false` |
 
-### Configuration parameters
+### Application-specific parameters
 
-| Name              | Description                                                                                                                           | Value  |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `users`           | Users configuration                                                                                                                   | `{}`   |
-| `vhosts`          | Virtual Hosts configuration                                                                                                           | `{}`   |
-| `resources`       | Explicit CPU and memory configuration for each RabbitMQ replica. When left empty, the preset defined in `resourcesPreset` is applied. | `{}`   |
-| `resourcesPreset` | Default sizing preset used when `resources` is omitted. Allowed values: nano, micro, small, medium, large, xlarge, 2xlarge.           | `nano` |
+| Name     | Description                 | Value |
+| -------- | --------------------------- | ----- |
+| `users`  | Users configuration         | `{}`  |
+| `vhosts` | Virtual Hosts configuration | `{}`  |
 
 ## Parameter examples and reference
 
