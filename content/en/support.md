@@ -9,4 +9,4 @@ weight: 50
 
 | Organization | Contact | Description of Use |
 | ------------ | ------- | ---- | ------------------ |
-| <img src="/img/logo.png" alt="[drawing](https://aenix.io/contact/)" width="200"/> | [Site](https://aenix.io/contact/) [Linkidin](https://www.linkedin.com/company/aenix-io)| We provide all types of assistance, including consultations, development of missing features, design, assistance with installation, and integration. |
+| <img src="/img/logo.png" alt="[drawing](https://aenix.io/contact/)" width="200"/> | [Site](https://aenix.io/contact/) [LinkedIn](https://www.linkedin.com/company/aenix-io)| We provide all types of assistance, including consultations, development of missing features, design, assistance with installation, and integration. |

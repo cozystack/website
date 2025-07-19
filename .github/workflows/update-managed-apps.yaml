@@ -1,0 +1,68 @@
+name: Sync documentation sources
+
+on:
+  workflow_dispatch:
+  # 03:00 UTC, 05:00 Prague, usually all PRs in cozystack/cozystack get merged before this time.
+  schedule:
+    - cron: '0 3 * * *'
+
+  # Triggered remotely via:
+  # curl -XPOST -H "Authorization: token <PAT>" \
+  #   -H "Accept: application/vnd.github.v3+json" \
+  #   https://api.github.com/repos/cozystack/website/dispatches \
+  #   -d '{"event_type":"update_managed_apps"}'
+  repository_dispatch:
+    types: [update_managed_apps]
+
+jobs:
+  sync-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the target repository (this one)
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          ref: 'main'
+
+      - name: Update docs via script
+        run: |
+          cd content/en/docs/reference/applications/_include/
+          bash fill_templates.sh
+          bash update_apps.sh
+          git status -s
+
+      # Commit and push any changes
+      - name: Commit & push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add content
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git branch -D update-managed-apps-reference || true
+          git checkout -b update-managed-apps-reference
+          git commit --signoff -m "[docs] Update managed apps reference $(date -u +'%Y-%m-%d %H:%M:%S')"
+          git push --force --set-upstream origin update-managed-apps-reference
+
+      - name: Open pull request if not exists
+        env:
+          # gh CLI will pick this up for authentication
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Determine PR state; value will be OPEN if there's a fresh PR or MERGED otherwise.
+          # This workflow is reusing the same branch name, so it's not possible that the PR won't exist at all.
+          pr_state=$(gh pr view update-managed-apps-reference --json state --jq .state 2>/dev/null || echo "")
+          echo "Current PR state: ${pr_state:-NONE}"
+
+          if [[ "$pr_state" == "OPEN" ]]; then
+            echo "An open pull request already exists – skipping creation."
+          else
+            gh pr create \
+              --title "[docs] Update managed apps reference" \
+              --body "Automated update via workflow." \
+              --head update-managed-apps-reference \
+              --base main
+          fi
