@@ -275,7 +275,7 @@ linstor ps cdp lvm srv3 /dev/sdb --pool-name data --storage-pool data
 
 {{% tab name="Restore ZFS/LVM storage-pool on nodes after reset" %}}
 ```bash
-for node in $(kubectl get nodes --no-headers -o custom-columns=":metadata.name"); do                                                                      INT | 
+for node in $(kubectl get nodes --no-headers -o custom-columns=":metadata.name"); do
   echo "linstor storage-pool create zfs $node data data"
 done
 # linstor storage-pool create zfs <node> data data
