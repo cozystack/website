@@ -45,18 +45,18 @@ Cozystack runs on top of a Kubernetes cluster, either bring one up with Talos, o
 
 Boot your machines with Talos Linux image in one of these ways:
 
-- [Install using temporary DHCP and PXE servers](/docs/operations/talos/installation/pxe/) running in Docker containers.
-- [Install using ISO](/docs/operations/talos/installation/iso/).
-- [Install on Hetzner servers](/docs/operations/talos/installation/hetzner/).
+- [Install using temporary DHCP and PXE servers](/docs/talos/install/pxe/) running in Docker containers.
+- [Install using ISO](/docs/talos/install/iso/).
+- [Install on Hetzner servers](/docs/talos/install/hetzner/).
 
 
 ### 1.2 Bootstrap Talos Cluster
 
 Bootstrap your Talos Linux cluster using one of the following tools:
 
-- [**Talm**]({{% ref "/docs/cluster/talm" %}}), for a declarative way of cluster management.
-- [**talosctl**]({{% ref "/docs/cluster/talosctl" %}}), for using native `talosctl` tool.
-- [**talos-bootstrap**]({{% ref "/docs/cluster/talos-bootstrap" %}}), for an interactive walkthrough.
+- [**Talm**]({{% ref "/docs/talos/bootstrap/talm" %}}), for a declarative way of cluster management.
+- [**talosctl**]({{% ref "/docs/talos/bootstrap/talosctl" %}}), for using native `talosctl` tool.
+- [**talos-bootstrap**]({{% ref "/docs/talos/bootstrap/talos-bootstrap" %}}), for an interactive walkthrough.
 
 {{< tabs name="Bootstrapping tools" >}}
 {{% tab name="Talm" %}}

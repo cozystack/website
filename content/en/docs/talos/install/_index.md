@@ -1,8 +1,8 @@
 ---
-title: ""
-linkTitle: "Talos Linux"
+title: "Installing Talos Linux for a Cozystack Cluster"
+linkTitle: "Installing Talos"
 description: "Installing Talos Linux on virtual machines or bare metal, ready to bootstrap Cozystack cluster."
-weight: 30
+weight: 10
 aliases:
   - /docs/talos/installation
   - /docs/operations/talos/installation
