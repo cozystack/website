@@ -78,4 +78,4 @@ Start your servers, now they should automatically boot from your PXE server.
 Now, when they are booted to Talos Linux maintenance mode, you can use [talos-bootstrap](https://github.com/cozystack/talos-bootstrap) or [Talm](https://github.com/cozystack/talm) to bootstrap the cluster
 
 
-Just follow **Getting Started** guide starting from the [**Bootstrap cluster**](/docs/getting-started/first-deployment/#bootstrap-cluster) section, to continue the installation.
+Just follow **Getting Started** guide starting from the [**Bootstrap cluster**](/docs/getting-started/deploy-cluster/#bootstrap-cluster) section, to continue the installation.

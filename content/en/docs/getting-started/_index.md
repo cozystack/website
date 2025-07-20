@@ -38,6 +38,6 @@ We recommend following them in the specified order, completing each step before 
 
 | Step                                               | Description                                                                                                                                |
 |----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| 1. [Installing Talos Linux and a Kubernetes cluster]({{% ref "first-deployment" %}}) | Install our distribution of Talos Linux on a set of virtual machines. Use Talm CLI to bootstrap a Kubernetes cluster, ready for Cozystack. |
-| 2. [Installing and configuring Cozystack]({{% ref "first-deployment#2-install-cozystack" %}})            | Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard.                                    |
+| 1. [Installing Talos Linux and a Kubernetes cluster]({{% ref "deploy-cluster" %}}) | Install our distribution of Talos Linux on a set of virtual machines. Use Talm CLI to bootstrap a Kubernetes cluster, ready for Cozystack. |
+| 2. [Installing and configuring Cozystack]({{% ref "install-cozystack" %}})            | Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard.                                    |
 | 3. [Creating a tenant and managed applications]({{% ref "deploy-app" %}})      | Start using Cozystack and deploy a virtual machine, managed application, and a tenant Kubernetes cluster                                   |

@@ -11,7 +11,7 @@ aliases:
 
 This guide explains how to install Talos on Oracle Cloud Infrastructure and deploy a Kubernetes cluster that is ready for Cozystack.
 After completing the guide, you will be ready to proceed with
-[installing Cozystack itself]({{% ref "/docs/getting-started/first-deployment#install-cozystack" %}}).
+[installing Cozystack itself]({{% ref "/docs/getting-started/install-cozystack#install-cozystack" %}}).
 
 {{% alert color="info" %}}
 This guide was created to support deployment of development clusters by the Cozystack team.
@@ -380,4 +380,4 @@ The next stage is to initialize Talos nodes and bootstrap a Kubernetes cluster.
 
 Now you have a Kubernetes cluster prepared for installing Cozystack.
 To complete the installation, follow the deployment guide, starting with the
-[Install Cozystack]({{% ref "/docs/getting-started/first-deployment#install-cozystack" %}}) section.
+[Install Cozystack]({{% ref "/docs/getting-started/install-cozystack#install-cozystack" %}}) section.
