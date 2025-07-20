@@ -1,7 +1,7 @@
 ---
 title: "3. Create a User Tenant and Configure Access"
 linkTitle: "3. Create Tenant"
-description: "Learn how to create a tenant and get credentials for users to access it"
+description: "Create a user tenant, the foundation of RBAC in Cozystack, and get access to it via dashboard and Cozystack API."
 weight: 40
 ---
 

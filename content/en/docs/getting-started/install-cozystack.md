@@ -1,7 +1,7 @@
 ---
 title: "2. Install and Configure Cozystack"
 linkTitle: "2. Install Cozystack"
-description: "."
+description: "Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard."
 weight: 20
 ---
 

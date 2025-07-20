@@ -1,7 +1,7 @@
 ---
 title: "4. Deploy Managed Applications, VMs, and tenant Kubernetes cluster"
 linkTitle: "4. Deploy Applications"
-description: "Learn how to quickly deploy a sample application with a managed PostgreSQL database and Redis cache on a Cozystack Kubernetes cluster — fully isolated within your tenant and accessible through a nested Kubernetes environment."
+description: "Start using Cozystack: deploy a virtual machine, managed application, and a tenant Kubernetes cluster."
 weight: 50
 ---
 

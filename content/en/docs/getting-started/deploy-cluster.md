@@ -1,7 +1,7 @@
 ---
 title: "1. Deploy Talos Linux and bootstrap a Kubernetes cluster"
 linkTitle: "1. Deploy Talos and Kubernetes"
-description: "Learn how to get a running Cozystack cluster on bare metal or VMs in a series of guided steps."
+description: "Install our distribution of Talos Linux on a set of virtual machines. Use Talm CLI to bootstrap a Kubernetes cluster, ready for Cozystack."
 weight: 10
 aliases:
   - first-deployment

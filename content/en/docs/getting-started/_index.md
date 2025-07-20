@@ -21,6 +21,6 @@ We recommend following them in the specified order, completing each step before 
 | 0. [Preparing infrastructure and tools]({{% ref "requirements" %}})                | Prepare VMs and install required CLI tools on your machine before running this tutorial.                                                   |
 | 1. [Installing Talos Linux and a Kubernetes cluster]({{% ref "deploy-cluster" %}}) | Install our distribution of Talos Linux on a set of virtual machines. Use Talm CLI to bootstrap a Kubernetes cluster, ready for Cozystack. |
 | 2. [Installing and configuring Cozystack]({{% ref "install-cozystack" %}})         | Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard.                                    |
-| 3. [Creating a user tenant]({{% ref "create-tenant" %}})                           | Create a user tenant and grant access to it                                                                                                |
-| 4. [Creating managed applications]({{% ref "deploy-app" %}})                       | Start using Cozystack and deploy a virtual machine, managed application, and a tenant Kubernetes cluster                                   |
+| 3. [Creating a user tenant]({{% ref "create-tenant" %}})                           | Create a user tenant, the foundation of RBAC in Cozystack, and get access to it via dashboard and Cozystack API.                           |
+| 4. [Creating managed applications]({{% ref "deploy-app" %}})                       | Start using Cozystack: deploy a virtual machine, managed application, and a tenant Kubernetes cluster.                                     |
 
