@@ -11,7 +11,7 @@ aliases:
 ## Before you begin
 
 
-Make sure you have defined your [hardware requirements]({{% ref "/docs/getting-started/hardware-requirements" %}}).
+Make sure you have defined your [hardware requirements]({{% ref "/docs/talos/hardware-requirements" %}}).
 As a bare minimum, you should have a management host plus three nodes of the following configuration to install Cozystack:
 
 ```yaml

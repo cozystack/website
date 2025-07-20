@@ -45,7 +45,7 @@ The first step is to make a Talos Linux installation image available for use in 
 ## 2. Create Infrastructure
 
 The goal of this step is to prepare the infrastructure according to the
-[Cozystack cluster requirements]({{% ref "/docs/getting-started/hardware-requirements" %}}).
+[Cozystack cluster requirements]({{% ref "/docs/talos/hardware-requirements" %}}).
 
 This can be done manually using the Oracle Cloud dashboard or with Terraform.
 
