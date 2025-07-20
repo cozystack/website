@@ -1,6 +1,6 @@
 ---
-title: "Create a User Tenant and Configure Access"
-linkTitle: "Create Tenant"
+title: "2. Create a User Tenant and Configure Access"
+linkTitle: "2. Create Tenant"
 description: "Learn how to create a tenant and get credentials for users to access it"
 weight: 40
 ---

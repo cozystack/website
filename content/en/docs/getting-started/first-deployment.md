@@ -1,26 +1,16 @@
 ---
-title: "Deploy and Configure Cozystack"
-linkTitle: "Deploy Cozystack"
+title: "1. Deploy and Configure Cozystack"
+linkTitle: "1. Deploy Cozystack"
 description: "Learn how to get a running Cozystack cluster on bare metal or VMs in a series of guided steps."
 weight: 10
-aliases:
-- /docs/get-started
 ---
 
 
 ## Before you begin
 
-
-Make sure you have defined your [hardware requirements]({{% ref "/docs/talos/hardware-requirements" %}}).
-As a bare minimum, you should have a management host plus three nodes of the following configuration to install Cozystack:
-
-```yaml
-CPU: 4 cores
-CPU model: host
-RAM: 16 GB
-HDD1: 32 GB
-HDD2: 100GB (raw)
-```
+This tutorial assumes that you deploy a Cozystack cluster on virtual machines,
+which is the most universal and simple way.
+Make sure you have VMs and a management host that match the [requirements]({{% ref "/docs/getting-started#prerequisites" %}}).
 
 ![Cozystack deployment](/img/cozystack-deployment.png)
 

@@ -1,6 +1,6 @@
 ---
-title: "Deploy a sample application in Cozystack"
-linkTitle: "Deploy Sample Application"
+title: "3. Deploy a sample application in Cozystack"
+linkTitle: "3. Deploy Sample Application"
 description: "Learn how to quickly deploy a sample application with a managed PostgreSQL database and Redis cache on a Cozystack Kubernetes cluster — fully isolated within your tenant and accessible through a nested Kubernetes environment."
 weight: 50
 ---
