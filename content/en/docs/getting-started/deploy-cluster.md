@@ -12,9 +12,7 @@ aliases:
 
 This tutorial assumes that you deploy a Cozystack cluster on virtual machines,
 which is the most universal and simple way.
-Make sure you have VMs and a management host that match the [requirements]({{% ref "/docs/getting-started#prerequisites" %}}).
-
-![Cozystack deployment](/img/cozystack-deployment.png)
+Make sure you have VMs and a management host that match the [requirements]({{% ref "/docs/getting-started/requirements" %}}).
 
 ## Objectives
 
