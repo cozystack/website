@@ -5,25 +5,20 @@ description: "Install Cozystack, get administrative access, perform basic config
 weight: 20
 ---
 
-
 ## Objectives
 
-This tutorial shows how to bootstrap Cozystack.
-It will guide you through the following steps:
+In this step of the tutorial, we'll install Cozystack on top of a [Kubernetes cluster, prepared in the previous step]({{% ref "./deploy-cluster" %}}).
 
-1.  Install Cozystack
+The tutorial will guide you through the following stages:
+
+1.  Prepare a Cozystack configuration file
+1.  Install Cozystack by applying configuration
 1.  Configure storage
 1.  Configure networking
 1.  Deploy etcd, ingress and monitoring stack in the root tenant
 1.  Finalize deployment and access Cozystack dashboard
 
-## 2. Install Cozystack
-
-Installing Cozystack starts with choosing a Cozystack bundle.
-In this tutorial, we'll use the complete `paas-full` bundle, made for installing on bare metal and including everything
-Cozystack has to offer.
-
-### 2.1. Prepare Configuration File
+### 1. Prepare Configuration File
 
 Take the configuration example below and fill in the values according to your network setup.
 Make sure to use the same value in `patch.yaml` and `patch-controlplane.yaml` files.
@@ -60,9 +55,9 @@ For the explanation of each configuration parameter, see the [bundles reference]
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
 {{% /alert %}}
 
-### 2.2. Apply Configuration
+### 2. Install Cozystack by Applying Configuration
 
-Create namespace and install Cozystack system components:
+Create a namespace `cozy-system` and install Cozystack system components:
 
 ```bash
 kubectl create ns cozy-system
