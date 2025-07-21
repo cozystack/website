@@ -16,8 +16,8 @@ To learn more about tenants, read the [Core Concepts]({{% ref "/docs/guides/conc
 
 ## Prerequisites
 
-Complete the previous steps of the tutorial to get a [Cozystack cluster]({{% ref "/docs/getting-started/" %}}) running,
-with storage, networking, and management dashbord configured.
+Complete the previous steps of the tutorial to get a [Cozystack cluster]({{% ref "/docs/getting-started/install-cozystack" %}}) running,
+with storage, networking, and management dashboard configured.
 
 During Talos installation for Cozystack, you should have obtained the kubeconfig file for your new cluster.
 This config was required during the bootstrap process.
@@ -25,7 +25,7 @@ Keep it safe — it may be useful later for troubleshooting.
 However, for day-to-day operations, you'll want to create user-specific credentials.
 
 Make sure you can access the dashboard, as described in the
-[installation guide]({{% ref "/docs/getting-started/install-cozystack#cozystack-dashboard" %}}).
+[previous step of the tutorial]({{% ref "/docs/getting-started/install-cozystack" %}}).
 
 If you're using OIDC, users and roles must be configured.
 See the [OIDC guide]({{% ref "/docs/operations/oidc" %}}) for details on how to work with the built-in OIDC server.
