@@ -155,11 +155,18 @@ If you want to re-bootstrap the etcd cluster, remove the line `BOOTSTRAP_ETCD=fa
 Repeat this step for the other nodes in a cluster.
 
 After completing the `install` command, `talos-bootstrap` saves the cluster's config as `./kubeconfig`.
-Export the `KUBECONFIG` variable to use it:
+
+Set up `kubectl` to use this new config by exporting the `KUBECONFIG` variable:
 
 ```bash
 export KUBECONFIG=$PWD/kubeconfig
 ```
+
+{{% alert color="info" %}}
+To make this `kubeconfig` permanently available, you can make it the default one (`~/.kube/config`),
+use `kubectl config use-context`, or employ a variety of other methods.
+Check out the [Kubernetes documentation on cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/).
+{{% /alert %}}
 
 Check that the cluster is available with this new `kubeconfig`:
 
