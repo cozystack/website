@@ -119,19 +119,28 @@ talosctl reset --system-labels-to-wipe=EPHEMERAL --graceful=false --reboot
 Use the following script:
 
 ```bash
-user=tenant-root
-
-cluster=$(kubectl config get-contexts | awk '$1 == "*" {print $3}')
-token=$(kubectl get secret -n "$user" "$user" -o go-template='{{ printf "%s\n" (index .data "token" | base64decode) }}')
-
-kubectl config view --minify --raw > tenant-kubeconfig
-kubectl config --kubeconfig tenant-kubeconfig unset users
-kubectl config --kubeconfig tenant-kubeconfig unset contexts
-kubectl config --kubeconfig tenant-kubeconfig set "users.$user.token" "$token"  --set-raw-bytes=true
-kubectl config --kubeconfig tenant-kubeconfig set "contexts.$user@$cluster.user" "$user"
-kubectl config --kubeconfig tenant-kubeconfig set "contexts.$user@$cluster.namespace" "$user"
-kubectl config --kubeconfig tenant-kubeconfig set "contexts.$user@$cluster.cluster" "$cluster"
-kubectl config --kubeconfig tenant-kubeconfig set current-context "$user@$cluster"
+SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+kubectl get secret tenant-root -n tenant-root -o go-template='
+apiVersion: v1
+kind: Config
+clusters:
+- name: tenant-root
+  cluster:
+    server: '"$SERVER"'
+    certificate-authority-data: {{ index .data "ca.crt" }}
+contexts:
+- name: tenant-root
+  context:
+    cluster: tenant-root
+    namespace: {{ index .data "namespace" | base64decode }}
+    user: tenant-root
+current-context: tenant-root
+users:
+- name: tenant-root
+  user:
+    token: {{ index .data "token" | base64decode }}
+' \
+> tenant-root.kubeconfig
 ```
 
 in the result, you’ll receive the tenant-kubeconfig file, which you can provide to the user.
