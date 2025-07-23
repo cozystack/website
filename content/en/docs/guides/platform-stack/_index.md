@@ -135,4 +135,4 @@ coming with monitoring and observability included:
 
 -   [Managed applications]({{% ref "../applications" %}}), such as databases and queues.
 -   [Tenant Kubernetes clusters]({{% ref "../applications#tenant-kubernetes-cluster" %}}), fully-functional managed Kubernetes clusters for development and production workloads.
--   [Virtual machines]({{% ref "/docs/operations/virtualization/virtual-machines" %}}), supporting Linux and Windows OS.
+-   [Virtual machines]({{% ref "/docs/virtualization" %}}), supporting Linux and Windows OS.

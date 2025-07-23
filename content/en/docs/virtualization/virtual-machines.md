@@ -3,6 +3,8 @@ title: "Virtual Machines Overview and Usage"
 linkTitle: "Virtual Machines"
 description: "Virtual Machines Overview and Usage"
 weight: 10
+aliases:
+  - /docs/operations/virtualization/virtual-machines
 ---
 
 This guide explains how virtualization works within Cozystack.

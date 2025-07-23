@@ -15,7 +15,7 @@ Cozystack covers the most critical needs of a development team:
 
 -   [Kubernetes clusters]({{% ref "/docs/cozystack-api" %}}) for running applications in development and production
 -   Standard [managed applications]({{% ref "/docs/guides/applications" %}}): databases, queue managers, caches, and more
--   [Virtual machines]({{% ref "/docs/operations/virtualization/virtual-machines" %}})
+-   [Virtual machines]({{% ref "/docs/virtualization/virtual-machines" %}})
 -   Reliable distributed storage
 
 [Cozystack platform stack]({{% ref "/docs/guides/platform-stack" %}}) includes reliable components that are typically installed
@@ -56,7 +56,7 @@ It's even possible to replicate volumes across multiple data centers.
 Typically, you must choose between virtualization and containerization.
 Cozystack combines both in a single platform.
 There's no need to maintain a separate virtualization infrastructure.
-In Cozystack, [virtual machines]({{% ref "/docs/operations/virtualization/virtual-machines" %}})
+In Cozystack, [virtual machines]({{% ref "/docs/virtualization/virtual-machines" %}})
 run directly in Kubernetes and consume CPU, memory, GPU, and storage from the same Kubernetes resource pool.
 
 ### Managed Databases Without Overhead

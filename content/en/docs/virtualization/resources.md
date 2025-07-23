@@ -1,8 +1,10 @@
 ---
 title: "Virtual Machine Resources"
-linkTitle: "Resources"
-description: "Virtual Machine resources configuration"
+linkTitle: "Resources Reference"
+description: "Reference for VM Instance Types and Instance Profiles,"
 weight: 20
+aliases:
+  - /docs/operations/virtualization/resources
 ---
 
 Each virtual machine has these two configuration settings:
