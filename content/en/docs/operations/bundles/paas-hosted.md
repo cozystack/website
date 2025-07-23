@@ -12,6 +12,14 @@ This is a Cozystack platform configuration intended for use as a PaaS platform, 
 This configuration can be used with [kind](https://kind.sigs.k8s.io/) and any cloud-based Kubernetes clusters.
 It does not include CNI plugins, virtualization, or storage.
 
+The Kubernetes cluster used to deploy Cozystack must conform to the following requirements:
+
+* All CNI plugins must be disabled, as Cozystack will install its own plugin.
+* Kubernetes cluster DNS domain must be set to `cozy.local`.
+* Listening address of some Kubernetes components must be changed from `localhost` to a routeable address.
+* Kubernetes API server must be reachable on `localhost`.
+
+
 ### Example configuration
 
 ```yaml

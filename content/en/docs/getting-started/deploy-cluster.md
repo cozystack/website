@@ -66,16 +66,3 @@ talos-bootstrap --help
 {{% /tab %}}
 {{< /tabs >}}
 
-### Existing cluster or other Kubernetes distributions
-
-For a first tutorial run, it's strongly recommended to install Cozystack on bare metal.
-However, Cozystack can also be installed in other ways, including on top of a provided managed Kubernetes cluster.
-
-If you bootstrap your Talos cluster in your own way, or use a different Kubernetes distribution, make sure
-to apply all settings from the guides above.
-These settings are mandatory:
-
-* All CNI plugins must be disabled, as Cozystack will install its own plugin.
-* Kubernetes cluster DNS domain must be set to `cozy.local`.
-* Listening address of some Kubernetes components must be changed from `localhost` to a routeable address.
-* Kubernetes API server must be reachable on `localhost`.
