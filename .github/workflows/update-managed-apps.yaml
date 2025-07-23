@@ -27,9 +27,7 @@ jobs:
 
       - name: Update docs via script
         run: |
-          cd content/en/docs/reference/applications/_include/
-          bash fill_templates.sh
-          bash update_apps.sh
+          make update-all
           git status -s
 
       # Commit and push any changes
