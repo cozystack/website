@@ -46,7 +46,7 @@ This architecture ensures isolated, scalable, and efficient Kubernetes environme
 
 -   Supported version: Kubernetes v1.32.4
 -   Kubernetes operator: [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator) v0.4.2
--   Managed application reference: [Kubernetes]({{% ref "/docs/applications/kubernetes" %}})
+-   Managed application reference: [Kubernetes]({{% ref "/docs/kubernetes" %}})
 
 
 ## Managed PostgreSQL

@@ -1,7 +1,7 @@
 ---
 title: "Managed Kubernetes Service"
-linkTitle: "Kubernetes"
-weight: 
+linkTitle: "Managed Kubernetes"
+weight: 40
 aliases:
   - /docs/reference/applications/kubernetes
 ---

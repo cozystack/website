@@ -37,7 +37,7 @@ or just need a minimal Kubernetes cluster.
 
 [apps]: {{% ref "/docs/guides/applications" %}}
 [vm]: {{% ref "/docs/virtualization" %}}
-[k8s]: {{% ref "/docs/guides/applications#managed-kubernetes" %}}
+[k8s]: {{% ref "/docs/kubernetes" %}}
 [api]: {{% ref "/docs/cozystack-api" %}}
 [monitoring subsystem]: {{% ref "/docs/guides/platform-stack#victoria-metrics" %}}
 [linstor]: {{% ref "/docs/guides/platform-stack#drbd" %}}

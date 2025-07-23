@@ -35,7 +35,7 @@ Lower-level tenants can access the cluster services of their parent in case they
 The `root` tenant has a set of services like `etcd`, `ingress`, and `monitoring` by default.
 
 User can can create a tenant `foo` inside of tenant `root` and a nested tenant `bar` inside of `foo`.
-Let's see what happens when [tenant Kubernetes]({{% ref "/docs/applications/kubernetes" %}}) and
+Let's see what happens when [tenant Kubernetes]({{% ref "/docs/kubernetes" %}}) and
 [Postgres]({{% ref "/docs/applications/postgres" %}}) applications run under the `bar` namespace.
 
 Since tenant `bar` does not have its own cluster services like `ingress` and `monitoring`,
