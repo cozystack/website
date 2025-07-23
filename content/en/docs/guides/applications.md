@@ -147,7 +147,7 @@ It also supports horizontal scaling without duplicating data on multiple servers
 
 -   Included versions: Nginx 1.25.3, HAProxy latest stable.
 -   Website: [nginx.org](https://nginx.org/)
--   Managed application reference: [http-cache]({{% ref "/docs/reference/applications/http-cache" %}})
+-   Managed application reference: [HTTP Cache]({{% ref "/docs/networking/http-cache" %}})
 
 
 ## Managed NATS Messaging
@@ -171,7 +171,7 @@ This enables fast internet access while complicating traffic analysis and blocki
 
 -   Supported version: Outline Server, v1.12.3+ (stable)
 -   Website: [getoutline.org](https://getoutline.org/)
--   Managed application reference: [VPN]({{% ref "/docs/reference/applications/vpn" %}})
+-   Managed application reference: [VPN]({{% ref "/docs/networking/vpn" %}})
 
 
 ## Managed TCP Balancer
@@ -182,5 +182,5 @@ It efficiently distributes incoming TCP traffic across multiple backend servers,
 Managed TCP Load Balancer Service efficiently utilizes HAProxy for load balancing purposes.
 HAProxy is a well-established and reliable solution for distributing incoming TCP traffic across multiple backend servers, ensuring high availability and efficient resource utilization. This deployment choice guarantees the seamless and dependable operation of your load balancing infrastructure.
 
-
-- Docs: https://www.haproxy.com/documentation/
+-   Managed application reference: [TCP balancer]({{% ref "/docs/networking/tcp-balancer" %}})
+-   Docs: https://www.haproxy.com/documentation/

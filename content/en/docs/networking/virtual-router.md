@@ -2,7 +2,7 @@
 title: "Virtual Routers"
 linkTitle: "Virtual Routers"
 description: "Deploy a virtual router in a VM"
-weight: 30
+weight: 40
 aliases:
   - /docs/operations/virtualization/virtual-router
 ---

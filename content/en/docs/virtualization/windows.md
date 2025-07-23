@@ -2,7 +2,7 @@
 title: "Running Windows VMs in Cozystack"
 linkTitle: "Windows VMs"
 description: "Running Windows VMs in Cozystack"
-weight: 15
+weight: 50
 aliases:
   - /docs/operations/virtualization/windows
 ---

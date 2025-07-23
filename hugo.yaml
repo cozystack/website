@@ -58,6 +58,8 @@ module:
       excludeFiles:
         - 'content/en/docs/reference/applications/_include/*'
         - 'docs/reference/applications/_include/*'
+        - 'docs/virtualization/_include/*'
+        - 'docs/networking/_include/*'
 
 # Markup settings
 # Ref: https://gohugo.io/getting-started/configuration-markup#goldmark

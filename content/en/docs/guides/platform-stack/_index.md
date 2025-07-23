@@ -117,7 +117,7 @@ but also from outside your cluster network.
 HAProxy is an advanced and widely known TCP balancer.
 It continuously checks service availability and carefully balances production traffic between them in real time.
 
-See the application reference: [`tcp-balancer`]({{% ref "/docs/reference/applications/tcp-balancer" %}})
+See the application reference: [TCP Balancer]({{% ref "/docs/networking/tcp-balancer" %}})
 
 ### SeaweedFS
 
