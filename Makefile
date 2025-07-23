@@ -2,7 +2,7 @@
 APPS       ?= tenant clickhouse redis ferretdb rabbitmq postgres nats kafka mysql kubernetes
 VMS       ?= virtual-machine vm-disk vm-instance
 NETWORKING       ?= vpn http-cache tcp-balancer
-APPS_DEST_DIR   ?= content/en/docs/reference/applications
+APPS_DEST_DIR   ?= content/en/docs/applications
 VMS_DEST_DIR   ?= content/en/docs/virtualization
 NETWORKING_DEST_DIR   ?= content/en/docs/networking
 BRANCH     ?= main

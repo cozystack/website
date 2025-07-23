@@ -48,7 +48,7 @@ These are not namespaces of the management cluster, but complete Kubernetes-in-K
 Tenant clusters are what many cloud providers call "managed Kubernetes".
 They are used as development, testing, and production environments.
 
-Read more: [tenant Kubernetes clusters]({{% ref "docs/reference/applications/kubernetes" %}}).
+Read more: [tenant Kubernetes clusters]({{% ref "docs/applications/kubernetes" %}}).
 
 ## Managed Applications
 

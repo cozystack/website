@@ -56,8 +56,7 @@ module:
     - source: content/en
       target: content
       excludeFiles:
-        - 'content/en/docs/reference/applications/_include/*'
-        - 'docs/reference/applications/_include/*'
+        - 'docs/applications/_include/*'
         - 'docs/virtualization/_include/*'
         - 'docs/networking/_include/*'
 

@@ -1,5 +1,0 @@
----
-title: "Tenant"
-linkTitle: "Tenant"
----
-

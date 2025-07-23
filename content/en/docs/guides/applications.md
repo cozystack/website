@@ -46,7 +46,7 @@ This architecture ensures isolated, scalable, and efficient Kubernetes environme
 
 -   Supported version: Kubernetes v1.32.4
 -   Kubernetes operator: [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator) v0.4.2
--   Managed application reference: [Kubernetes]({{% ref "/docs/reference/applications/kubernetes" %}})
+-   Managed application reference: [Kubernetes]({{% ref "/docs/applications/kubernetes" %}})
 
 
 ## Managed PostgreSQL
@@ -59,7 +59,7 @@ This is managed with the increasingly popular CloudNativePG operator within the 
 -   Supported version: PostgreSQL 17
 -   Kubernetes operator: [cloudnative-pg/cloudnative-pg](https://github.com/cloudnative-pg/cloudnative-pg) v1.24.0
 -   Website: [cloudnative-pg.io](https://cloudnative-pg.io/)
--   Managed application reference: [PostgreSQL]({{% ref "/docs/reference/applications/postgres" %}})
+-   Managed application reference: [PostgreSQL]({{% ref "/docs/applications/postgres" %}})
 
 
 ## Managed MySQL (MariaDB)
@@ -74,7 +74,7 @@ as well as schedules for creating backups using [Restic](https://restic.net/) cu
 -   Supported version: MariaDB 11.4.3
 -   Kubernetes operator: [mariadb-operator/mariadb-operator](https://github.com/mariadb-operator/mariadb-operator) v0.18.0
 -   Website: [mariadb.com](https://mariadb.com/)
--   Managed application reference: [MySQL]({{% ref "/docs/reference/applications/mysql" %}})
+-   Managed application reference: [MySQL]({{% ref "/docs/applications/mysql" %}})
 
 
 ## Managed Redis
@@ -87,7 +87,7 @@ This is managed by the spotahome/redis-operator.
 -   Supported version: Redis 6.2.6+ (based on `alpine`)
 -   Kubernetes operator: [spotahome/redis-operator](https://github.com/spotahome/redis-operator) v1.3.0-rc1
 -   Website: [redis.io](https://redis.io/)
--   Managed application reference: [Redis]({{% ref "/docs/reference/applications/redis" %}})
+-   Managed application reference: [Redis]({{% ref "/docs/applications/redis" %}})
 
 
 ## Managed FerretDB
@@ -98,7 +98,7 @@ In Cozystack, it is backed by PostgreSQL.
 
 -   Supported version: FerretDB 1.24.0.
 -   Website: [ferretdb.io](https://www.ferretdb.io/)
--   Managed application reference: [FerretDB]({{% ref "/docs/reference/applications/ferretdb" %}})
+-   Managed application reference: [FerretDB]({{% ref "/docs/applications/ferretdb" %}})
 
 
 ## Managed ClickHouse
@@ -110,7 +110,7 @@ In the Cozystack platform, we use the Altinity operator to provide ClickHouse.
 -   Supported version: 24.9.2.42
 -   Kubernetes operator: [Altinity/clickhouse-operator](https://github.com/Altinity/clickhouse-operator) v0.25.0
 -   Website: [clickhouse.com](https://clickhouse.com/)
--   Managed application reference: [Clickhouse]({{% ref "/docs/reference/applications/clickhouse" %}})
+-   Managed application reference: [Clickhouse]({{% ref "/docs/applications/clickhouse" %}})
 
 
 ## Managed RabbitMQ
@@ -121,7 +121,7 @@ The platform-side implementation allows you to create failover clusters managed 
 -   Supported version: RabbitMQ 4.1.0+ (latest stable version)
 -   Kubernetes operator: [rabbitmq/cluster-operator](https://github.com/rabbitmq/cluster-operator) v1.10.0
 -   Website: [rabbitmq.com](https://www.rabbitmq.com/)
--   Managed application reference: [RabbitMQ]({{% ref "/docs/reference/applications/rabbitmq" %}})
+-   Managed application reference: [RabbitMQ]({{% ref "/docs/applications/rabbitmq" %}})
 
 
 ## Managed Kafka
@@ -134,7 +134,7 @@ to run an Apache Kafka cluster on Kubernetes in various deployment configuration
 -   Supported version: Apache Kafka, 3.9.0
 -   Kubernetes operator: [strimzi/strimzi-kafka-operator](https://github.com/strimzi/strimzi-kafka-operator) v0.45.0
 -   Website: [kafka.apache.org](https://kafka.apache.org/)
--   Managed application reference: [Kafka]({{% ref "/docs/reference/applications/kafka" %}})
+-   Managed application reference: [Kafka]({{% ref "/docs/applications/kafka" %}})
 
 
 ## Managed HTTP Cache
@@ -157,7 +157,7 @@ It provides a data layer for cloud native applications, IoT messaging, and micro
 
 -   Supported version: NATS 2.10.17
 -   Website: [nats.io](https://nats.io/)
--   Managed application reference: [NATS]({{% ref "/docs/reference/applications/nats" %}})
+-   Managed application reference: [NATS]({{% ref "/docs/applications/nats" %}})
 
 
 ## Managed VPN Service

@@ -10,7 +10,7 @@ A **tenant** in Cozystack is the primary unit of isolation and security, analogo
 Each tenant represents an isolated environment with its own resources, networking, and RBAC (role-based access control).
 Some cloud providers use the term "projects" for a similar entity.
 
-Cozystack administrators and users create tenants using the [Tenant application]({{% ref "/docs/reference/applications/tenant" %}})
+Cozystack administrators and users create tenants using the [Tenant application]({{% ref "/docs/applications/tenant" %}})
 from the application catalog.
 Tenants can be created via the Cozystack dashboard (UI), `kubectl`, or directly via Cozystack API.
 
@@ -35,8 +35,8 @@ Lower-level tenants can access the cluster services of their parent in case they
 The `root` tenant has a set of services like `etcd`, `ingress`, and `monitoring` by default.
 
 User can can create a tenant `foo` inside of tenant `root` and a nested tenant `bar` inside of `foo`.
-Let's see what happens when [tenant Kubernetes]({{% ref "/docs/reference/applications/kubernetes" %}}) and
-[Postgres]({{% ref "/docs/reference/applications/postgres" %}}) applications run under the `bar` namespace.
+Let's see what happens when [tenant Kubernetes]({{% ref "/docs/applications/kubernetes" %}}) and
+[Postgres]({{% ref "/docs/applications/postgres" %}}) applications run under the `bar` namespace.
 
 Since tenant `bar` does not have its own cluster services like `ingress` and `monitoring`,
 the applications will use the cluster services of the parent tenant `foo`.
@@ -74,5 +74,5 @@ For example:
 
 ### Reference
 
-See the reference for the application implementing tenant management: [`tenant`]({{% ref "/docs/reference/applications/tenant#parameters" %}})
+See the reference for the application implementing tenant management: [`tenant`]({{% ref "/docs/applications/tenant#parameters" %}})
 
