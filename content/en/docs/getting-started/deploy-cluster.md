@@ -7,39 +7,38 @@ aliases:
   - first-deployment
 ---
 
-
 ## Before you begin
 
-This tutorial assumes that you deploy a Cozystack cluster on virtual machines,
-which is the most universal and simple way.
-Make sure you have VMs and a management host that match the [requirements]({{% ref "/docs/getting-started/requirements" %}}).
+Make sure that you have nodes (bare metal servers or VMs) that fit the
+[hardware requirements]({{% ref "/docs/getting-started/requirements" %}}).
 
 ## Objectives
 
-This tutorial shows how to bootstrap Cozystack.
-It will guide you through the following steps:
+On this step of the tutorial you will bootstrap a Kubernetes cluster on Talos Linux,
+and make sure that it is ready to install Cozystack.
 
-1.  Install Talos Linux on virtual machines
-1.  Bootstrap Talos to run a Kubernetes cluster
-1.  Get a kubeconfig, check cluster status, and prepare to install Cozystack
+The tutorial will guide you through the following steps:
+
+1.  Install Talos Linux on your nodes or start it from another OS using `kexec`.
+1.  Bootstrap Talos to run a Kubernetes cluster.
+1.  Get a kubeconfig, check cluster status, and prepare to install Cozystack.
 
 
 ### 1 Install Talos Linux
 
 Boot your machines with Talos Linux image in one of these ways:
 
-- [Install using temporary DHCP and PXE servers](/docs/talos/install/pxe/) running in Docker containers.
-- [Install using ISO](/docs/talos/install/iso/).
-- [Install on Hetzner servers](/docs/talos/install/hetzner/).
-
+- [Quick-start Talos from another running Linux OS]({{% ref "/docs/talos/install/kexec" %}}).
+- [Install using temporary DHCP and PXE servers]({{% ref "/docs/talos/install/pxe" %}}) running in Docker containers.
+- [Install using ISO]({{% ref "/docs/talos/install/iso" %}}).
 
 ### 2 Bootstrap Talos Cluster
 
 Bootstrap your Talos Linux cluster using one of the following tools:
 
-- [**Talm**]({{% ref "/docs/talos/bootstrap/talm" %}}), for a declarative way of cluster management.
-- [**talosctl**]({{% ref "/docs/talos/bootstrap/talosctl" %}}), for using native `talosctl` tool.
-- [**talos-bootstrap**]({{% ref "/docs/talos/bootstrap/talos-bootstrap" %}}), for an interactive walkthrough.
+- [Talm]({{% ref "/docs/talos/bootstrap/talm" %}}), for a declarative way of cluster management.
+- [talosctl]({{% ref "/docs/talos/bootstrap/talosctl" %}}), for using native `talosctl` tool.
+- [talos-bootstrap]({{% ref "/docs/talos/bootstrap/talos-bootstrap" %}}), for an interactive walkthrough.
 
 {{< tabs name="Bootstrapping tools" >}}
 {{% tab name="Talm" %}}

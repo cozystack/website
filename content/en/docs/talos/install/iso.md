@@ -1,6 +1,6 @@
 ---
 title: How to install Cozystack using ISO
-linkTitle: Install using ISO
+linkTitle: ISO Installation
 description: "How to install Cozystack using ISO"
 weight: 20
 aliases:

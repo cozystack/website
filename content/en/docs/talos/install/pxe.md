@@ -1,6 +1,6 @@
 ---
 title: How to install Cozystack using PXE
-linkTitle: Install using PXE
+linkTitle: PXE installation
 description: "How to install Cozystack using PXE"
 weight: 10
 aliases:
