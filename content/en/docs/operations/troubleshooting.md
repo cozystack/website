@@ -83,7 +83,9 @@ and check the events again:
 kubectl describe hr -n cozy-dashboard dashboard
 ```
 
-## talos-bootstrap
+## Cluster bootstrapping
+
+Errors that can occur when bootstrapping a cluster with `talos-bootstrap`, `talm`, or `talosctl`:
 
 ### No Talos nodes in maintenance mode found!
 
@@ -100,28 +102,31 @@ Check if `nmap` can discover your node by running the following command:
 ```bash
 nmap -Pn -n -p 50000 192.168.0.0/24
 ```
-This command scans for nodes in the network that are listening on port 50000. The output should list all the nodes in the network segment that are listening on this port, indicating that they are reachable.
+
+This command scans for nodes in the network that are listening on port `50000`.
+The output should list all the nodes in the network segment that are listening on this port, indicating that they are reachable.
 
 #### Verify talosctl Connectivity
 
-Next, verify if talosctl can connect to a specific node, especially if it is in maintenance mode, using the command below:
+Next, verify that `talosctl` can connect to a specific node, especially if the node is in maintenance mode:
 
 ```bash
 talosctl -e "${node}" -n "${node}" get machinestatus -i
 ```
 
-If you encounter errors similar to:
+Receiving an error like the following usually means your local `talosctl` binary is outdated:
 
-```
+```console
 rpc error: code = Unimplemented desc = unknown service resource.ResourceService
 ```
 
+Updating `talosctl` to the latest version should resolve this issue.
 
-This indicates that your version of `talosctl` is outdated. Updating `talosctl` to the latest version should resolve this issue.
+#### Run talos-bootstrap in debug mode
 
-### Enable Debug Mode for talos-bootstrap
+If the previous steps don’t help, run `talos-bootstrap` in debug mode to gain more insight.
 
-If the above steps do not help, you can debug the `talos-bootstrap` script by running it in debug mode. This can provide more insights into what might be going wrong. Execute the script with the `-x` option to enable debug mode:
+Execute the script with the `-x` option to enable debug mode:
 
 ```bash
 bash -x talos-bootstrap
