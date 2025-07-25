@@ -128,3 +128,183 @@ bash -x talos-bootstrap
 ```
 
 Pay attention to the last command displayed before the error; it often indicates the command that failed and can provide clues for further troubleshooting.
+
+
+## Kube-OVN crash
+
+In difficult cases, you may encounter issues where the Kube-OVN DaemonSet pods crash or fail to start properly.
+This usually indicates a corrupted OVN database. You can confirm this by checking the logs of the Kube-OVN CNI pods:
+
+```
+# kubectl get pod -n cozy-kubeovn
+NAME                                   READY   STATUS              RESTARTS       AGE
+kube-ovn-cni-5rsvz                     0/1     Running             5 (35s ago)    4m37s
+kube-ovn-cni-jq2zz                     0/1     Running             5 (33s ago)    4m39s
+kube-ovn-cni-p4gz2                     0/1     Running             3 (23s ago)    4m38s
+```
+
+```
+# kubectl logs -n cozy-kubeovn kube-ovn-cni-jq2zz
+W0725 08:21:12.479452   87678 ovs.go:35] 100.64.0.4 network not ready after 3 ping to gateway 100.64.0.1
+W0725 08:21:15.479600   87678 ovs.go:35] 100.64.0.4 network not ready after 6 ping to gateway 100.64.0.1
+W0725 08:21:18.479628   87678 ovs.go:35] 100.64.0.4 network not ready after 9 ping to gateway 100.64.0.1
+W0725 08:21:21.479355   87678 ovs.go:35] 100.64.0.4 network not ready after 12 ping to gateway 100.64.0.1
+W0725 08:21:24.479322   87678 ovs.go:35] 100.64.0.4 network not ready after 15 ping to gateway 100.64.0.1
+W0725 08:21:27.479664   87678 ovs.go:35] 100.64.0.4 network not ready after 18 ping to gateway 100.64.0.1
+W0725 08:21:30.478907   87678 ovs.go:35] 100.64.0.4 network not ready after 21 ping to gateway 100.64.0.1
+W0725 08:21:33.479738   87678 ovs.go:35] 100.64.0.4 network not ready after 24 ping to gateway 100.64.0.1
+W0725 08:21:36.479607   87678 ovs.go:35] 100.64.0.4 network not ready after 27 ping to gateway 100.64.0.1
+W0725 08:21:39.479753   87678 ovs.go:35] 100.64.0.4 network not ready after 30 ping to gateway 100.64.0.1
+W0725 08:21:42.479480   87678 ovs.go:35] 100.64.0.4 network not ready after 33 ping to gateway 100.64.0.1
+W0725 08:21:45.478754   87678 ovs.go:35] 100.64.0.4 network not ready after 36 ping to gateway 100.64.0.1
+W0725 08:21:48.479396   87678 ovs.go:35] 100.64.0.4 network not ready after 39 ping to gateway 100.64.0.1
+```
+
+To resolve this issue, you can clean up the OVN database. This involves running a DaemonSet that removes the OVN configuration files from each node.
+It is safe to perform this cleanup — the Kube-OVN DaemonSet will automatically recreate the necessary files from the Kubernetes A
+
+Apply the following YAML to deploy the cleanup DaemonSet:
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ovn-cleanup
+  namespace: cozy-kubeovn
+spec:
+  selector:
+    matchLabels:
+      app: ovn-cleanup
+  template:
+    metadata:
+      labels:
+        app: ovn-cleanup
+        component: network
+        type: infra
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: ovn-central
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: cleanup
+        image: busybox
+        command: ["/bin/sh", "-xc", "rm -rf /host-config-ovn/*; rm -rf /host-config-ovn/.*; exec sleep infinity"]
+        volumeMounts:
+        - name: host-config-ovn
+          mountPath: /host-config-ovn
+      nodeSelector:
+        kubernetes.io/os: linux
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+      - operator: "Exists"
+      volumes:
+      - name: host-config-ovn
+        hostPath:
+          path: /var/lib/ovn
+          type: ""
+      hostNetwork: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 1
+```
+
+Verify that the DaemonSet is running:
+
+```bash
+# kubectl get pod -n cozy-kubeovn
+ovn-cleanup-hjzxb                      1/1     Running             0              6s
+ovn-cleanup-wmzdv                      1/1     Running             0              6s
+ovn-cleanup-ztm86                      1/1     Running             0              6s
+```
+
+Once the cleanup is complete, delete the DaemonSet and restart the Kube-OVN DaemonSet pods to apply the new configuration:
+
+```bash
+kubectl delete ds
+kubectl get pod -n cozy-kubeovn
+```
+
+
+
+
+## Remove failed node from a cluster
+
+Cozystack automatically handles high availability by recreating replicated PVCs and workloads on other nodes when a node fails.
+However, local storage PVs may remain bound to the failed node, which can cause issues with new pods. These need to be cleaned up manually.
+
+Additionally, the failed node will still exist in the cluster, which can lead to inconsistencies in the cluster state and affect pod scheduling.
+
+
+#### Step 1: Remove the Node from the Cluster
+
+Run the following command to remove the failed node (replace mynode with the actual node name):
+
+```
+kubectl delete node mynode
+```
+
+If the failed node is a control-plane node, you must also remove its etcd member from the etcd cluster:
+
+```bash
+talm -f nodes/node1.yaml etcd member list
+```
+
+Example output:
+
+```
+NODE         ID                  HOSTNAME   PEER URLS                    CLIENT URLS                  LEARNER
+37.27.60.28  2ba6e48b8cf1a0c1    node1      https://192.168.100.11:2380  https://192.168.100.11:2379  false
+37.27.60.28  b82e2194fb76ee42    node2      https://192.168.100.12:2380  https://192.168.100.12:2379  false
+37.27.60.28  f24f4de3d01e5e88    node3      https://192.168.100.13:2380  https://192.168.100.13:2379  false
+```
+
+Then remove the corresponding member (replace the ID with the one for your failed node):
+
+```bash
+talm -f nodes/node1.yaml etcd remove-member f24f4de3d01e5e88
+```
+
+#### Step 2: Remove PVCs and Pods Bound to the Failed Node
+
+Here are few commands to help you clean up the failed node:
+
+To delete PVCs bound to the failed node use the following command. Replace `mynode` with the name of your failed node:
+
+```bash
+kubectl get pv -o json | jq -r '.items[] | select(.spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0] == "mynode").spec.claimRef | "kubectl delete pvc -n \(.namespace) \(.name)"' | sh -x
+```
+
+To delete pods stuck in the Pending state across all namespaces:
+
+```bash
+kubectl get pod -A | awk '/Pending/ {print "kubectl delete pod -n " $1 " " $2}' | sh -x
+```
+
+#### Step 3: Check Resource Status
+
+After cleanup, check for any resource issues using linstor advise:
+
+```bash
+# linstor advise resource
+╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+┊ Resource                                 ┊ Issue                                             ┊ Possible fix                                                           ┊
+╞═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╡
+┊ pvc-02b0c0a1-e0b6-4e98-9384-60ff24f3b3b6 ┊ Resource expected to have 3 replicas, got only 2. ┊ linstor rd ap --place-count 3 pvc-02b0c0a1-e0b6-4e98-9384-60ff24f3b3b6 ┊
+┊ pvc-06e3b406-23f0-4f10-8b03-84063c1b2a12 ┊ Resource expected to have 3 replicas, got only 2. ┊ linstor rd ap --place-count 3 pvc-06e3b406-23f0-4f10-8b03-84063c1b2a12 ┊
+┊ pvc-a0b8aeaf-076e-4bd9-93ed-c4db09c04d0b ┊ Resource expected to have 3 replicas, got only 2. ┊ linstor rd ap --place-count 3 pvc-a0b8aeaf-076e-4bd9-93ed-c4db09c04d0b ┊
+┊ pvc-a523ebeb-c3b6-468d-abe5-f6afbbf31081 ┊ Resource expected to have 3 replicas, got only 2. ┊ linstor rd ap --place-count 3 pvc-a523ebeb-c3b6-468d-abe5-f6afbbf31081 ┊
+┊ pvc-cf7e87b5-3e6d-4034-903d-4625830fb5b4 ┊ Resource expected to have 1 replicas, got only 0. ┊ linstor rd ap --place-count 1 pvc-cf7e87b5-3e6d-4034-903d-4625830fb5b4 ┊
+┊ pvc-d344bc83-97fd-4489-bbe7-5399eea57165 ┊ Resource expected to have 3 replicas, got only 2. ┊ linstor rd ap --place-count 3 pvc-d344bc83-97fd-4489-bbe7-5399eea57165 ┊
+┊ pvc-d39345a9-5446-4c64-a5ba-957ff7c7a31f ┊ Resource expected to have 3 replicas, got only 2. ┊ linstor rd ap --place-count 3 pvc-d39345a9-5446-4c64-a5ba-957ff7c7a31f ┊
+┊ pvc-db6d4236-93bd-4268-9dcc-0ed275b17067 ┊ Resource expected to have 1 replicas, got only 0. ┊ linstor rd ap --place-count 1 pvc-db6d4236-93bd-4268-9dcc-0ed275b17067 ┊
+┊ pvc-ebb412c3-083c-4eee-93dc-70917ea6d87e ┊ Resource expected to have 1 replicas, got only 0. ┊ linstor rd ap --place-count 1 pvc-ebb412c3-083c-4eee-93dc-70917ea6d87e ┊
+┊ pvc-f107aacb-78d7-4ac6-97f8-8ed529a9c292 ┊ Resource expected to have 3 replicas, got only 2. ┊ linstor rd ap --place-count 3 pvc-f107aacb-78d7-4ac6-97f8-8ed529a9c292 ┊
+┊ pvc-f347d71a-b646-45e5-a717-f0a745061beb ┊ Resource expected to have 1 replicas, got only 0. ┊ linstor rd ap --place-count 1 pvc-f347d71a-b646-45e5-a717-f0a745061beb ┊
+┊ pvc-f6e96c83-6144-4510-b0ab-61936db52391 ┊ Resource expected to have 3 replicas, got only 2. ┊ linstor rd ap --place-count 3 pvc-f6e96c83-6144-4510-b0ab-61936db52391 ┊
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+Run the suggested linstor rd ap commands to restore the desired replica count.
