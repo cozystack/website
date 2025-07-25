@@ -132,10 +132,13 @@ Pay attention to the last command displayed before the error; it often indicates
 
 ## Kube-OVN crash
 
-In difficult cases, you may encounter issues where the Kube-OVN DaemonSet pods crash or fail to start properly.
-This usually indicates a corrupted OVN database. You can confirm this by checking the logs of the Kube-OVN CNI pods:
+In complex cases, you may encounter issues where the Kube-OVN DaemonSet pods crash or fail to start properly.
+This usually indicates a corrupted OVN database.
+You can confirm this by checking the logs of the Kube-OVN CNI pods.
 
-```
+Get the list of pods in `cozy-kubeovn` namespace:
+
+```console
 # kubectl get pod -n cozy-kubeovn
 NAME                                   READY   STATUS              RESTARTS       AGE
 kube-ovn-cni-5rsvz                     0/1     Running             5 (35s ago)    4m37s
@@ -143,7 +146,9 @@ kube-ovn-cni-jq2zz                     0/1     Running             5 (33s ago)  
 kube-ovn-cni-p4gz2                     0/1     Running             3 (23s ago)    4m38s
 ```
 
-```
+Read the logs of a pod by its name (`kube-ovn-cni-jq2zz` in this example):
+
+```console
 # kubectl logs -n cozy-kubeovn kube-ovn-cni-jq2zz
 W0725 08:21:12.479452   87678 ovs.go:35] 100.64.0.4 network not ready after 3 ping to gateway 100.64.0.1
 W0725 08:21:15.479600   87678 ovs.go:35] 100.64.0.4 network not ready after 6 ping to gateway 100.64.0.1
@@ -160,8 +165,9 @@ W0725 08:21:45.478754   87678 ovs.go:35] 100.64.0.4 network not ready after 36 p
 W0725 08:21:48.479396   87678 ovs.go:35] 100.64.0.4 network not ready after 39 ping to gateway 100.64.0.1
 ```
 
-To resolve this issue, you can clean up the OVN database. This involves running a DaemonSet that removes the OVN configuration files from each node.
-It is safe to perform this cleanup — the Kube-OVN DaemonSet will automatically recreate the necessary files from the Kubernetes A
+To resolve this issue, you can clean up the OVN database.
+This involves running a DaemonSet that removes the OVN configuration files from each node.
+It is safe to perform this cleanup — the Kube-OVN DaemonSet will automatically recreate the necessary files from the Kubernetes API.
 
 Apply the following YAML to deploy the cleanup DaemonSet:
 
@@ -213,8 +219,8 @@ spec:
 
 Verify that the DaemonSet is running:
 
-```bash
-# kubectl get pod -n cozy-kubeovn
+```console
+kubectl get pod -n cozy-kubeovn
 ovn-cleanup-hjzxb                      1/1     Running             0              6s
 ovn-cleanup-wmzdv                      1/1     Running             0              6s
 ovn-cleanup-ztm86                      1/1     Running             0              6s
@@ -228,21 +234,22 @@ kubectl get pod -n cozy-kubeovn
 ```
 
 
+## Remove a failed node from the cluster
+
+When a cluster node fails, Cozystack automatically handles high availability by recreating replicated PVCs and workloads on other nodes.
+However, there can be issues that require removing the node to resolve:
+
+-   Local storage PVs may remain bound to the failed node, which can cause issues with new pods.
+    These need to be cleaned up manually.
+
+-   The failed node will still exist in the cluster, which can lead to inconsistencies in the cluster state and affect pod scheduling.
 
 
-## Remove failed node from a cluster
-
-Cozystack automatically handles high availability by recreating replicated PVCs and workloads on other nodes when a node fails.
-However, local storage PVs may remain bound to the failed node, which can cause issues with new pods. These need to be cleaned up manually.
-
-Additionally, the failed node will still exist in the cluster, which can lead to inconsistencies in the cluster state and affect pod scheduling.
-
-
-#### Step 1: Remove the Node from the Cluster
+### Step 1: Remove the Node from the Cluster
 
 Run the following command to remove the failed node (replace mynode with the actual node name):
 
-```
+```bash
 kubectl delete node mynode
 ```
 
@@ -254,7 +261,7 @@ talm -f nodes/node1.yaml etcd member list
 
 Example output:
 
-```
+```console
 NODE         ID                  HOSTNAME   PEER URLS                    CLIENT URLS                  LEARNER
 37.27.60.28  2ba6e48b8cf1a0c1    node1      https://192.168.100.11:2380  https://192.168.100.11:2379  false
 37.27.60.28  b82e2194fb76ee42    node2      https://192.168.100.12:2380  https://192.168.100.12:2379  false
@@ -267,27 +274,28 @@ Then remove the corresponding member (replace the ID with the one for your faile
 talm -f nodes/node1.yaml etcd remove-member f24f4de3d01e5e88
 ```
 
-#### Step 2: Remove PVCs and Pods Bound to the Failed Node
+### Step 2: Remove PVCs and Pods Bound to the Failed Node
 
 Here are few commands to help you clean up the failed node:
 
-To delete PVCs bound to the failed node use the following command. Replace `mynode` with the name of your failed node:
+-   **Delete PVCs** bound to the failed node:<br>
+    (Replace `mynode` with the name of your failed node)
+    
+    ```bash
+    kubectl get pv -o json | jq -r '.items[] | select(.spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0] == "mynode").spec.claimRef | "kubectl delete pvc -n \(.namespace) \(.name)"' | sh -x
+    ```
+    
+-   **Delete pods** stuck in `Pending` state across all namespaces:
+    
+    ```bash
+    kubectl get pod -A | awk '/Pending/ {print "kubectl delete pod -n " $1 " " $2}' | sh -x
+    ```
 
-```bash
-kubectl get pv -o json | jq -r '.items[] | select(.spec.nodeAffinity.required.nodeSelectorTerms[0].matchExpressions[0].values[0] == "mynode").spec.claimRef | "kubectl delete pvc -n \(.namespace) \(.name)"' | sh -x
-```
+### Step 3: Check Resource Status
 
-To delete pods stuck in the Pending state across all namespaces:
+After cleanup, check for any resource issues using `linstor advise`:
 
-```bash
-kubectl get pod -A | awk '/Pending/ {print "kubectl delete pod -n " $1 " " $2}' | sh -x
-```
-
-#### Step 3: Check Resource Status
-
-After cleanup, check for any resource issues using linstor advise:
-
-```bash
+```console
 # linstor advise resource
 ╭───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 ┊ Resource                                 ┊ Issue                                             ┊ Possible fix                                                           ┊
@@ -307,4 +315,4 @@ After cleanup, check for any resource issues using linstor advise:
 ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-Run the suggested linstor rd ap commands to restore the desired replica count.
+Run the `linstor rd ap` commands suggested in the "Possible fix" column to restore the desired replica count.
