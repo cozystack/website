@@ -20,11 +20,11 @@ or just need a minimal Kubernetes cluster.
 
 | Component                     | [paas-full]            | [iaas-full]<sup>*</sup> | [paas-hosted]  | [distro-full]         | [distro-hosted]       |
 |:------------------------------|:-----------------------|:------------------------|:---------------|:----------------------|:----------------------|
-| Cozystack Dashboard           | ✔                      | ✔                       | ✔              | ❌                    | ❌                    |
-| [Cozystack API][api]          | ✔                      | ✔                       | ✔              | ❌                    | ❌                    |
+| [Managed Kubernetes][k8s]     | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
 | [Managed Applications][apps]  | ✔                      | ❌                      | ✔              | ❌                    | ❌                    |
 | [Virtual Machines][vm]        | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
-| [Managed Kubernetes][k8s]     | ✔                      | ✔                       | ❌             | ❌                    | ❌                    |
+| Cozystack Dashboard (UI)      | ✔                      | ✔                       | ✔              | ❌                    | ❌                    |
+| [Cozystack API][api]          | ✔                      | ✔                       | ✔              | ❌                    | ❌                    |
 | [Kubernetes Operators]        | ✔                      | ❌                      | ✔              | ✔ (optional)          | ✔ (optional)          |
 | [Monitoring subsystem]        | ✔                      | ✔                       | ✔              | ✔ (optional)          | ✔ (optional)          |
 | Storage subsystem             | [LINSTOR]              | [LINSTOR]               | ❌             | [LINSTOR]             | ❌                    |
