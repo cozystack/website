@@ -56,3 +56,16 @@ data:
 [overwrite-parameters]: {{% ref "docs/operations/bundles#how-to-overwrite-parameters-for-specific-components" %}}
 
 Refer to the [Bundles reference]({{% ref "docs/operations/bundles" %}}) page to learn how to use generic bundle options.
+
+### Installing Cozystack on Provided Kuberentes Clusters
+
+Cozystack can also be installed on top of a provided managed Kubernetes cluster.
+Bundles `paas-hosted` and `distro-hosted` are made specifically for this scenario.
+
+If you bootstrap your Talos cluster in your own way, or use a different Kubernetes distribution, make sure
+to apply the following mandatory settings:
+
+* All CNI plugins must be disabled, as Cozystack will install its own plugin.
+* Kubernetes cluster DNS domain must be set to `cozy.local`.
+* Listening address of some Kubernetes components must be changed from `localhost` to a routeable address.
+* Kubernetes API server must be reachable on `localhost`.
