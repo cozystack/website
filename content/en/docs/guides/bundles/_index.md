@@ -35,7 +35,7 @@ or just need a minimal Kubernetes cluster.
 
 <sup>*</sup> Bundle `iaas-full` is currently on the roadmap, see [cozystack/cozystack#730][iaas-full-gh].
 
-[apps]: {{% ref "/docs/guides/applications" %}}
+[apps]: {{% ref "/docs/applications" %}}
 [vm]: {{% ref "/docs/virtualization" %}}
 [k8s]: {{% ref "/docs/kubernetes" %}}
 [api]: {{% ref "/docs/cozystack-api" %}}

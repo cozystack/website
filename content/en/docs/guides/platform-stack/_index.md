@@ -133,6 +133,6 @@ Cozystack includes a set of Kubernetes operators, used for managing system servi
 Cozystack is shipped with a number of user-side applications, pre-configured for reliability and resource efficiency,
 coming with monitoring and observability included:
 
--   [Managed applications]({{% ref "../applications" %}}), such as databases and queues.
+-   [Managed applications]({{% ref "/docs/applications" %}}), such as databases and queues.
 -   [Tenant Kubernetes clusters]({{% ref "/docs/kubernetes" %}}), fully-functional managed Kubernetes clusters for development and production workloads.
 -   [Virtual machines]({{% ref "/docs/virtualization" %}}), supporting Linux and Windows OS.

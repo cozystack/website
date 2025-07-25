@@ -58,7 +58,7 @@ These include relational databases (PostgreSQL, MySQL/MariaDB), NoSQL/queues (Re
 Tenants, tenant Kubernetes clusters, and VMs are also managed applications in terms of Cozystack.
 They are created with the same user workflow and are managed with Helm and Flux, just as other applications.
 
-Read more: [managed applications]({{% ref "docs/guides/applications" %}}).
+Read more: [managed applications]({{% ref "/docs/applications" %}}).
 
 ## Cozystack API
 

@@ -14,7 +14,7 @@ It can be used by a single company to run its own [private cloud]({{% ref "/docs
 Cozystack covers the most critical needs of a development team:
 
 -   [Kubernetes clusters]({{% ref "/docs/cozystack-api" %}}) for running applications in development and production
--   Standard [managed applications]({{% ref "/docs/guides/applications" %}}): databases, queue managers, caches, and more
+-   Standard [managed applications]({{% ref "/docs/applications" %}}): databases, queue managers, caches, and more
 -   [Virtual machines]({{% ref "/docs/virtualization" %}})
 -   Reliable distributed storage
 
@@ -62,7 +62,7 @@ run directly in Kubernetes and consume CPU, memory, GPU, and storage from the sa
 ### Managed Databases Without Overhead
 
 Even though Linux-on-Linux virtualization is highly efficient, it still introduces some overhead.
-Cozystack avoids this by running [managed databases]({{% ref "/docs/guides/applications" %}})
+Cozystack avoids this by running [managed databases]({{% ref "/docs/applications" %}})
 directly in containers on the host hardware.
 You can spin up multiple high-availability databases with dedicated IP addresses,
 all on limited hardware—yet each runs with direct access to CPU and storage.
