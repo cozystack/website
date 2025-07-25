@@ -1,8 +1,10 @@
 ---
-title: Backups and Recovery
-linkTitle: Backups
+title: Backup and Recovery for Tenant Kubernetes
+linkTitle: Backup and Recovery
 description: "How to back up and restore resources in cozystack cluster."
 weight: 40
+aliases:
+  - /docs/guides/backups
 ---
 
 Cozystack uses [Velero](https://velero.io/docs/v1.16/) to manage Kubernetes resource backups and recovery, including volume snapshots.

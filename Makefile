@@ -4,7 +4,7 @@ K8S       ?= kubernetes
 VMS       ?= virtual-machine vm-disk vm-instance
 NETWORKING       ?= vpn http-cache tcp-balancer
 APPS_DEST_DIR   ?= content/en/docs/applications
-K8S_DEST_DIR   ?= content/en/docs/
+K8S_DEST_DIR   ?= content/en/docs
 VMS_DEST_DIR   ?= content/en/docs/virtualization
 NETWORKING_DEST_DIR   ?= content/en/docs/networking
 BRANCH     ?= main
@@ -18,8 +18,9 @@ update-vms:
 
 update-networking:
 	./hack/update_apps.sh --apps "$(NETWORKING)" --dest "$(NETWORKING_DEST_DIR)" --branch "$(BRANCH)"
+
 update-k8s:
-	./hack/update_apps.sh --apps "$(K8S)" --dest "$(K8S_DEST_DIR)" --branch "$(BRANCH)"
+	./hack/update_apps.sh --index --apps "$(K8S)" --dest "$(K8S_DEST_DIR)" --branch "$(BRANCH)"
 
 update-all:
 	$(MAKE) update-apps

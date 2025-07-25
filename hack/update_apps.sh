@@ -9,6 +9,7 @@ Options:
   --branch BRANCH   Git branch in cozystack/cozystack (default: main)
   --apps  LIST      Space- or comma-separated list of apps to update
   --dest  PATH      Destination directory to write the *.md files to
+  --index           Write each app into path/<app>/_index.md instead of path/<app>.md (creates subdirectory)
   -h, --help        Show this help and exit
 
 Notes:
@@ -24,6 +25,7 @@ EOF
 BRANCH="main"
 DEST_DIR=""
 APPS=()
+INDEX_MODE="false"
 
 # -------------------- Parse arguments --------------------
 while [[ $# -gt 0 ]]; do
@@ -34,6 +36,8 @@ while [[ $# -gt 0 ]]; do
       IFS=', ' read -r -a APPS <<< "$2"; shift 2 ;;
     --dest)
       DEST_DIR="$2"; shift 2 ;;
+    --index)
+      INDEX_MODE="true"; shift ;;
     -h|--help)
       usage; exit 0 ;;
     *)
@@ -64,11 +68,15 @@ SRC_DIR="${DEST_DIR%/}/_include"
 GITHUB_REPO="cozystack/cozystack"
 RAW_BASE_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/${BRANCH}/packages/apps"
 
-mkdir -p "$DEST_DIR"
 
 for app in "${APPS[@]}"; do
-  src_file="${SRC_DIR%/}/${app}.md"
-  dest_file="${DEST_DIR%/}/${app}.md"
+  if [[ "$INDEX_MODE" == "true" ]]; then
+    src_file="${DEST_DIR%/}/${app}/_include/_index.md"
+    dest_file="${DEST_DIR%/}/${app}/_index.md"
+  else
+    src_file="${DEST_DIR%/}/_include/${app}.md"
+    dest_file="${DEST_DIR%/}/${app}.md"
+  fi
 
   # Ensure template exists (touch if missing)
   [[ -f "$src_file" ]] || touch "$src_file"
