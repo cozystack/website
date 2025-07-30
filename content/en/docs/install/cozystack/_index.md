@@ -6,7 +6,7 @@ weight: 30
 ---
 
 **The third step** in deploying a Cozystack cluster is to install Cozystack on a Kubernetes cluster that has been previously installed and configured on Talos Linux nodes.
-A prerequisite to this step is having [installed a Kubernetes cluster]({{% ref "/docs/talos/bootstrap" %}}).
+A prerequisite to this step is having [installed a Kubernetes cluster]({{% ref "/docs/install/kubernetes" %}}).
 
 If this is your first time installing Cozystack, consider starting with the [Cozystack tutorial]({{% ref "/docs/getting-started" %}}).
 

@@ -5,6 +5,7 @@ description: "How to install Cozystack using ISO"
 weight: 20
 aliases:
   - /docs/talos/installation/iso
+  - /docs/talos/install/iso
   - /docs/operations/talos/installation/iso
 ---
 

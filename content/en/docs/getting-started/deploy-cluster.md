@@ -28,17 +28,17 @@ The tutorial will guide you through the following steps:
 
 Boot your machines with Talos Linux image in one of these ways:
 
-- [Quick-start Talos from another running Linux OS]({{% ref "/docs/talos/install/kexec" %}}).
-- [Install using temporary DHCP and PXE servers]({{% ref "/docs/talos/install/pxe" %}}) running in Docker containers.
-- [Install using ISO]({{% ref "/docs/talos/install/iso" %}}).
+- [Quick-start Talos from another running Linux OS]({{% ref "/docs/install/talos/kexec" %}}).
+- [Install using temporary DHCP and PXE servers]({{% ref "/docs/install/talos/pxe" %}}) running in Docker containers.
+- [Install using ISO]({{% ref "/docs/install/talos/iso" %}}).
 
 ### 2 Bootstrap Talos Cluster
 
 Bootstrap your Talos Linux cluster using one of the following tools:
 
-- [Talm]({{% ref "/docs/talos/bootstrap/talm" %}}), for a declarative way of cluster management.
-- [talosctl]({{% ref "/docs/talos/bootstrap/talosctl" %}}), for using native `talosctl` tool.
-- [talos-bootstrap]({{% ref "/docs/talos/bootstrap/talos-bootstrap" %}}), for an interactive walkthrough.
+- [Talm]({{% ref "/docs/install/kubernetes/talm" %}}), for a declarative way of cluster management.
+- [talosctl]({{% ref "/docs/install/kubernetes/talosctl" %}}), for using native `talosctl` tool.
+- [talos-bootstrap]({{% ref "/docs/install/kubernetes/talos-bootstrap" %}}), for an interactive walkthrough.
 
 {{< tabs name="Bootstrapping tools" >}}
 {{% tab name="Talm" %}}

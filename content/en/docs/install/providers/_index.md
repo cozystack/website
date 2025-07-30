@@ -3,6 +3,8 @@ title: "Deploying Cozystack Cluster on Clouds and Hosting Providers"
 linkTitle: "Provider-Specific Guides"
 description: "Guides for deploying Cozystack clusters on specific cloud and hosting providers."
 weight: 40
+aliases:
+  - /docs/talos/install
 ---
 
 This section has guides for deploying Cozystack clusters on specific cloud and hosting providers.

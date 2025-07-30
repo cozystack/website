@@ -31,7 +31,7 @@ To run this tutorial, you will need the following setup:
 -   OS:
     -   For `kexec` installation: any Linux distribution able to run `kexec`, for example, Ubuntu.<br>
         Using `kexec` is a simple way to boot Talos Linux, optimal for this tutorial, but restricted on VMs by some cloud providers.
-    -   None, for [other installation methods]({{% ref "/docs/talos/install" %}}). 
+    -   None, for [other installation methods]({{% ref "/docs/install/talos" %}}). 
 -   Networking:
     -   Routable FQDN domain.<br>If you don't have one, you can use [nip.io](https://nip.io/) with dash notation
     -   Located in the same L2 network segment.<br>
@@ -43,5 +43,5 @@ To run this tutorial, you will need the following setup:
     -   Nested virtualization enabled.<br>
         Required for virtual machines and tenant kubernetes clusters.
 
-For a more detailed explanation of hardware requirements for different setups, refer to the [Hardware Requirements]({{% ref "/docs/talos/hardware-requirements" %}})
+For a more detailed explanation of hardware requirements for different setups, refer to the [Hardware Requirements]({{% ref "/docs/install/hardware-requirements" %}})
     

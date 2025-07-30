@@ -5,6 +5,7 @@ description: "How to install Cozystack using PXE"
 weight: 10
 aliases:
   - /docs/talos/installation/pxe
+  - /docs/talos/install/pxe
   - /docs/operations/talos/installation/pxe
 ---
 

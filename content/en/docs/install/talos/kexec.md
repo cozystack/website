@@ -3,6 +3,8 @@ title: How to install Cozystack using kexec
 linkTitle: Kexec installation
 description: "How to install Cozystack using kexec"
 weight: 15
+aliases:
+  - /docs/talos/install/kexec
 ---
 
 This guide explains how to boot Talos Linux from a running Linux OS using the `kexec`

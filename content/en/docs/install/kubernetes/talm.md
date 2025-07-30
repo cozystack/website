@@ -4,8 +4,9 @@ linkTitle: Talm
 description: "`talm` is a declarative CLI tool made by Cozystack devs and optimized for deploying Cozystack.<br> Recommended for infrastructure-as-code and GitOps."
 weight: 5
 aliases:
-  - /docs/talos/configuration/talm
   - /docs/operations/talos/configuration/talm
+  - /docs/talos/bootstrap/talm
+  - /docs/talos/configuration/talm
 ---
 
 This guide explains how to prepare a Talos Linux cluster for deploying Cozystack using

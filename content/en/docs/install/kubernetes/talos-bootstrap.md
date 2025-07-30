@@ -4,6 +4,7 @@ linkTitle: talos-bootstrap
 description: "`talos-bootstrap` is a CLI for step-by-step cluster bootstrapping, made by Cozystack devs.<br> Recommended for first deployments."
 weight: 10
 aliases:
+  - /docs/talos/bootstrap/talos-bootstrap
   - /docs/talos/configuration/talos-bootstrap
   - /docs/operations/talos/configuration/talos-bootstrap
 ---

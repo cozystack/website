@@ -4,6 +4,7 @@ linkTitle: talosctl
 description: "`talosctl` is the default CLI of Talos Linux, requiring more boilerplate code, but giving full flexibility in configuration."
 weight: 15
 aliases:
+  - /docs/talos/bootstrap/talosctl
   - /docs/talos/configuration/talosctl
   - /docs/operations/talos/configuration/talosctl
 ---

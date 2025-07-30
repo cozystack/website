@@ -5,6 +5,7 @@ description: "Bootstrap a Cozystack cluster in an isolated (air-gapped) environm
 weight: 20
 aliases:
   - /docs/operations/talos/configuration/air-gapped
+  - /docs/talos/bootstrap/air-gapped
 ---
 
 ## Introduction
@@ -129,7 +130,7 @@ Finally, bootstrap the cluster as usual:
 talm bootstrap -f nodes/node1.yaml
 ```
 
-Read the [Talm configuration guide]({{% ref "/docs/talos/bootstrap/talm" %}}) to learn more.
+Read the [Talm configuration guide]({{% ref "/docs/install/kubernetes/talm" %}}) to learn more.
 
 ### Using talosctl
 
@@ -145,7 +146,7 @@ Finally, bootstrap the cluster using one of the nodes:
 talosctl bootstrap -n <ip> -e <ip>
 ```
 
-Read the [`talosctl` configuration guide]({{% ref "/docs/talos/bootstrap/talosctl" %}}) to learn more.
+Read the [`talosctl` configuration guide]({{% ref "/docs/install/kubernetes/talosctl" %}}) to learn more.
 
 ## 5. Configure Container Registry Mirrors for Tenant Kubernetes
 

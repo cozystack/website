@@ -5,9 +5,10 @@ description: "Define the hardware requirements for your Cozystack use case."
 weight: 5
 aliases:
   - /docs/getting-started/hardware-requirements
+  - /docs/talos/hardware-requirements
 ---
 
-Cozystack utilizes [Talos Linux]({{% ref "/docs/talos" %}}), a minimalistic Linux distribution designed solely to run Kubernetes.
+Cozystack utilizes [Talos Linux]({{% ref "/docs/guides/talos" %}}), a minimalistic Linux distribution designed solely to run Kubernetes.
 Usually, this means you cannot share a server with any services other than those run by Cozystack.
 The good news is that whichever service you need, Cozystack will run it perfectly: securely, efficiently, and
 in a fully containerized or virtualized environment.
