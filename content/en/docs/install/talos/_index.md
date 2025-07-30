@@ -30,6 +30,6 @@ If that's your case, we recommend using the guides below:
 
 - [Hetzner]({{% ref "/docs/install/providers/hetzner" %}})
 - [Oracle Cloud Infrastructure (OCI)]({{% ref "/docs/install/providers/oracle-cloud" %}})
-- [Servers.com]({{% ref "/docs/install/providers/servers_com" %}})
+- [Servers.com]({{% ref "/docs/install/providers/servers-com" %}})
 
 Finally, if you want to learn why we use Talos Linux, check out the [Talos Linux overview]({{% ref "/docs/guides/talos" %}}).
