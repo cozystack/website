@@ -1,7 +1,7 @@
 ---
 title: "Deploying Cozystack Cluster on Clouds and Hosting Providers"
 linkTitle: "Provider-Specific Guides"
-description: "This section has guides for deploying Cozystack clusters on specific cloud and hosting providers."
+description: "Guides for deploying Cozystack clusters on specific cloud and hosting providers."
 weight: 40
 ---
 

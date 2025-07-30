@@ -1,7 +1,7 @@
 ---
-title: "Installing Talos Linux for a Cozystack Cluster"
+title: "Installing Talos Linux on Bare Metal or Virtual Machines"
 linkTitle: "1. Installing Talos"
-description: "Installing Talos Linux on virtual machines or bare metal, ready to bootstrap Cozystack cluster."
+description: "Step 1: Installing Talos Linux on virtual machines or bare metal, ready to bootstrap Cozystack cluster."
 weight: 10
 aliases:
   - /docs/talos/installation
@@ -9,12 +9,26 @@ aliases:
   - /docs/operations/talos
 ---
 
-
 **The first step** in deploying a Cozystack cluster is to install Talos Linux on your VMs or bare metal servers.
 To start this step, you should have VMs or bare metal servers ready.
 To plan an installation, check out the [hardware requirements]({{% ref "/docs/talos/hardware-requirements" %}}).
 
-If this is your first time installing Cozystack, [start with the Cozystack tutorial]({{% ref "/docs/getting-started" %}}).
-
 After installing Talos Linux, you will have a number of nodes ready to be 
 [bootstrapped with Cozystack configuration]({{% ref "/docs/talos/bootstrap" %}}).
+
+If this is your first time installing Cozystack, [start with the Cozystack tutorial]({{% ref "/docs/getting-started" %}}).
+
+There are several methods to install Talos:
+
+- [Quick-start Talos from another running Linux OS]({{% ref "/docs/talos/install/kexec" %}}).
+- [Install using temporary DHCP and PXE servers]({{% ref "/docs/talos/install/pxe" %}}) running in Docker containers.
+- [Install using ISO]({{% ref "/docs/talos/install/iso" %}}).
+
+There are also specific guides for cloud providers, covering all the steps from preparing infrastructure to installing and configuring Cozystack.
+If that's your case, we recommend using the guides below:
+
+- [Hetzner]({{% ref "/docs/talos/providers/hetzner" %}})
+- [Oracle Cloud Infrastructure (OCI)]({{% ref "/docs/talos/providers/oracle-cloud" %}})
+- [Servers.com]({{% ref "/docs/talos/providers/servers_com" %}})
+
+Finally, if you want to learn why we use Talos Linux, check out the [Talos Linux overview]({{% ref "/docs/guides/talos" %}}).
