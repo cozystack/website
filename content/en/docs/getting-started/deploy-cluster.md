@@ -9,7 +9,7 @@ aliases:
 
 ## Before you begin
 
-Make sure that you have nodes (bare metal servers or VMs) that fit the
+Make sure that you have nodes (bare-metal servers or VMs) that fit the
 [hardware requirements]({{% ref "/docs/getting-started/requirements" %}}).
 
 ## Objectives

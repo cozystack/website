@@ -11,7 +11,7 @@ aliases:
 
 [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) is an interactive script for bootstrapping Kubernetes clusters on Talos OS.
 
-It was created by Cozystack developers to simplify the installation of Talos Linux on bare metal nodes in a user-friendly manner.
+It was created by Cozystack developers to simplify the installation of Talos Linux on bare-metal nodes in a user-friendly manner.
 
 ## 1. Install Dependencies
 

@@ -9,7 +9,7 @@ aliases:
 
 This is a Cozystack platform configuration intended for use as a Kubernetes distribution, designed for installation on Talos Linux.
 
-This allows you to use Cozystack as a reliable Kubernetes distribution, primarily sharpened for bare metal, although it can also be installed on virtual machines.
+This allows you to use Cozystack as a reliable Kubernetes distribution suitable for both bare-metal servers and virtual machines.
 It includes storage but excludes virtualization and multitenancy features.
 
 ### Example configuration

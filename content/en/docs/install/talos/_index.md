@@ -10,7 +10,7 @@ aliases:
   - /docs/operations/talos
 ---
 
-**The first step** in deploying a Cozystack cluster is to install Talos Linux on your bare metal servers or virtual machines.
+**The first step** in deploying a Cozystack cluster is to install Talos Linux on your bare-metal servers or virtual machines.
 Ensure the VMs or bare-metal servers are provisioned before you begin.
 To plan the installation, see the [hardware requirements]({{% ref "/docs/install/hardware-requirements" %}}).
 

@@ -21,7 +21,7 @@ You will need the following tools installed on your workstation (or on the basti
 
 To run this tutorial, you will need the following setup:
 
-**Cluster nodes:** three bare metal servers or virtual machines in the following minimal configuration:
+**Cluster nodes:** three bare-metal servers or virtual machines in the following minimal configuration:
 
 -   CPU: 4 cores, `x86` architecture.
 -   RAM: 16 GiB.

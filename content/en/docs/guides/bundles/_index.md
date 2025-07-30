@@ -72,7 +72,7 @@ Some are designed for full platform scenarios, others for cloud-hosted workloads
 It includes all four layers and provides the full set of Cozystack components.
 Some higher-layer components are optional and can be excluded during installation.
 
-`paas-full` is intended for installation on bare metal servers.
+`paas-full` is intended for installation on bare-metal servers.
 
 Read more:
 
