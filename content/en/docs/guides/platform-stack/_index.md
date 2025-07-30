@@ -24,7 +24,7 @@ Talos Linux is a Linux distribution made and optimized for one job: to run Kuber
 It is the foundation of reliability and security in Cozystack cluster.
 Selecting it enables Cozystack to strictly limit the technology stack and make the system stable as a rock.
 
-Read more about it in the [Talos Linux]({{%ref "/docs/talos" %}}) section.
+Read more about it in the [Talos Linux]({{%ref "/docs/guides/talos" %}}) section.
 
 ### Kubernetes
 
