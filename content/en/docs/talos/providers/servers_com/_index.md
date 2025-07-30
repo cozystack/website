@@ -4,8 +4,9 @@ linkTitle: Servers.com
 description: "Install Cozystack in the Servers.com infrastructure."
 weight: 40
 aliases:
-  - /docs/talos/installation/servers_com
   - /docs/operations/talos/installation/servers_com
+  - /docs/talos/installation/servers_com
+  - /docs/talos/install/servers_com
 ---
 
 ## Before Installation
