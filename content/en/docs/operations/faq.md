@@ -342,7 +342,7 @@ Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-overwri
 
 ### How to disable some components from bundle
 
-Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-disable-some-components-from-bundle" %}}).
+Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-enable-and-disable-bundle-components" %}}).
 
 ### How to enable Hugepages
 

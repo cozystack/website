@@ -47,10 +47,14 @@ data:
       k8sServicePort: 6443
 ```
 
-### How to disable some components from bundle
+### How to enable and disable bundle components
 
-Sometimes you may need to disable specific components within a bundle.
-To do this, use the `bundle-disable` option and provide a comma-separated list of the components you want to disable. For example:
+Bundles have optional components that need to be explicitly enabled (included) in the installation.
+Regular bundle components can, on the other hand, be disabled (excluded) from the installation, when you don't need them.
+
+Use options `bundle-enable` and `bundle-disable`, providing comma-separated lists of the components.
+For example, [installing Cozystack in Hetzner]({{% ref "/docs/install/providers/hetzner" %}})
+requires swapping default load balancer, MetalLB, with one made specifically for Hetzner, called RobotLB:
 
 ```yaml
 apiVersion: v1
@@ -60,11 +64,15 @@ metadata:
   namespace: cozy-system
 data:
   bundle-name: "paas-full"
-  bundle-disable: "linstor,dashboard"
-  ipv4-pod-cidr: "10.244.0.0/16"
-  ipv4-svc-cidr: "10.96.0.0/16"
+  bundle-disable: "metallb"
+  bundle-enable: "hetzner-robotlb"
+  # rest of the config
 ```
 
-{{% alert color="warning" %}}
-:warning: Disabling components using this option will not remove them if they are already installed. To remove them, you must delete the Helm release manually using the `kubectl delete hr -n <namespace> <component>` command.
-{{% /alert %}}
+Disabling components must be done before installing Cozystack.
+Applying updated configuration with `bundle-disable` will not remove components that are already installed.
+To remove already installed components, delete the Helm release manually using this command:
+
+```bash
+kubectl delete hr -n <namespace> <component>
+```

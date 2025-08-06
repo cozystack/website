@@ -46,7 +46,7 @@ or just need a minimal Kubernetes cluster.
 [kubevirt]: {{% ref "/docs/guides/platform-stack#kubevirt" %}}
 [talos linux]: {{% ref "/docs/guides/platform-stack#talos-linux" %}}
 [kubernetes]: {{% ref "/docs/guides/platform-stack#kubernetes" %}}
-[kubernetes operators]: https://github.com/cozystack/cozystack/blob/29b49496f25958d57628072d0edd102922e883f0/packages/core/platform/bundles/distro-full.yaml#L104-L158
+[kubernetes operators]: https://github.com/cozystack/cozystack/blob/c0f742595f1e942a9bf4921e9655142cc9040551/packages/core/platform/bundles/paas-full.yaml#L185-L243
 
 [paas-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/paas-full.yaml
 [iaas-full-gh]: https://github.com/cozystack/cozystack/issues/730

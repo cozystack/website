@@ -40,8 +40,9 @@ data:
 | option | description |
 |--------|-------------|
 | `bundle-name` | Name of bundle to use for installation |
-| `bundle-disable` | Comma-separated list of disabled components from the bundle. Read more about this option in ["how to disable some components from bundle"][disable-components].                     |
-| `values-<component>` | JSON or YAML formated values passed to specific component installation. Read more about this option in ["how to overwrite parameters for specific components"][overwrite-parameters]. |
+| `bundle-enable`       | Optional bundle components included in the installation. Read more about this option in ["How to enable and disable bundle components"][enable-disable].                              |
+| `bundle-disable`      | Bundle components excluded (disabled) from the installation. Read more about this option in ["How to enable and disable bundle components"][enable-disable].                          |
+| `values-<component>` | JSON or YAML formatted values passed to specific component installation. Read more about this option in ["how to overwrite parameters for specific components"][overwrite-parameters]. |
 | `ipv4-pod-cidr` | The pod subnet used by Pods to assign IPs |
 | `ipv4-svc-cidr` | The pod subnet used by Services to assign IPs |
 | `root-host` | the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc. |
@@ -52,7 +53,7 @@ data:
 | `expose-ingress` | Ingress controller to use for exposing services. (default: `tenant-root`) |
 | `expose-external-ips` | Comma-separated list of external IPs used for specified ingress controller. If not specified it will use LoadBalancer service by default |
 
-[disable-components]: {{% ref "docs/operations/bundles#how-to-disable-some-components-from-bundle" %}}
+[enable-disable]: {{% ref "docs/operations/bundles#how-to-enable-and-disable-bundle-components" %}}
 [overwrite-parameters]: {{% ref "docs/operations/bundles#how-to-overwrite-parameters-for-specific-components" %}}
 
 Refer to the [Bundles reference]({{% ref "docs/operations/bundles" %}}) page to learn how to use generic bundle options.
