@@ -31,7 +31,19 @@ See the application reference: [`virtual-machine`]({{% ref "/docs/virtualization
 
 Before creating a Virtual Machine instance, you need to create a disk from which the VM will boot.
 
-This package defines a virtual machine disk used to store data. You can download an image to the disk via HTTP or upload it from a local image. You can also create an empty image.
+This package defines a virtual machine disk used to store data.
+You can use a prepared image (also known as golden image), download an image to the disk via HTTP or upload it from a local image.
+You can also create an empty image.
+
+1. **Golden Image**:
+
+   ```yaml
+   ## @param source The source image location used to create a disk
+   source:
+     image:
+       name: ubuntu
+   ```
+    
 
 1. **HTTP:**
 
@@ -41,8 +53,7 @@ This package defines a virtual machine disk used to store data. You can download
        url: "https://download.cirros-cloud.net/0.6.2/cirros-0.6.2-x86_64-disk.img"
    ```
 
-
-2. **Upload:**
+3. **Upload:**
 
    ```yaml
    source:
@@ -67,7 +78,7 @@ This package defines a virtual machine disk used to store data. You can download
    ```
    {{< /note >}}
 
-3. **Empty:**
+4. **Empty:**
 
    ```yaml
    source: {}
