@@ -190,6 +190,9 @@ kube-system       Active   7m56s
 This happens because the default CNI plugin was disabled in the previous step to enable Cozystack installing its own CNI plugin.
 {{% /alert %}}
 
-Now you have a Kubernetes cluster prepared for installing Cozystack.
+
+## Further Steps
+
+Now you have a Kubernetes cluster bootstrapped and ready for installing Cozystack.
 To complete the installation, follow the deployment guide, starting with the
 [Install Cozystack]({{% ref "/docs/getting-started/install-cozystack" %}}) section.

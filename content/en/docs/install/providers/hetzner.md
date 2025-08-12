@@ -345,8 +345,14 @@ but has instructions and examples specific to Hetzner.
     ```
 
     This command initializes nodes, setting up authenticated connection, so that `-i` (`--insecure`) won't be required further on.
+    If the command succeeded, it will return the node's IP:
+    
+    ```console
+    $ talm apply -f nodes/node1.yaml -i
+    - talm: file=nodes/node1.yaml, nodes=[12.34.56.101], endpoints=[12.34.56.101]
+    ```
 
-    Wait until all nodes have rebooted and proceed to the next step.
+1.  Wait until all nodes have rebooted and proceed to the next step.
     When nodes are ready, they will expose port `50000`, which is a sign that the node has completed Talos and rebooted.
 
     If you need to automate the node readiness check, consider this example:
