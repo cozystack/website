@@ -301,7 +301,7 @@ This step has two inevitable options, depending on your available infrastructure
 -   For VMs and bare metal from cloud providers, choose the public IP setup.
     [Most cloud providers don't support MetalLB](https://metallb.universe.tf/installation/clouds/).
 
-    Check out the [provider-specific installation]{{% ref "/docs/install/providers" %}}) section.
+    Check out the [provider-specific installation]({{% ref "/docs/install/providers" %}}) section.
     It may have instructions for your provider, which you can use to deploy a production-ready cluster.
 
 ### 4.a MetalLB Setup
@@ -389,9 +389,9 @@ For more details, refer to the FAQ, [What if my cloud provider does not support 
 {{% ref "/docs/operations/faq#what-if-my-cloud-provider-does-not-support-metallb" %}}).
 
 
-## 5. Final steps
+## 5. Finalize Installation
 
-### 5.1. Setup Basic Applications
+### 5.1. Setup Root Tenant Services
 
 Enable `etcd`, `monitoring`, and `ingress` in your `tenant-root`:
 
@@ -480,7 +480,7 @@ NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S
 root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:31632/TCP,443:30113/TCP   3m33s
 ```
 
-### 5.2 Enable and Access Cozystack Dashboard
+### 5.3 Enable and Access Cozystack Dashboard
 
 First, enable access to the dashboard by exposing it.
 In Cozystack v0.31.0 or later, run the following command to expose the dashboard:
@@ -499,7 +499,7 @@ Get authentication token from `tenant-root`:
 kubectl get secret -n tenant-root tenant-root -o go-template='{{ printf "%s\n" (index .data "token" | base64decode) }}'
 ```
 
-### 5.3 Access metrics in Grafana
+### 5.4 Access metrics in Grafana
 
 Use `grafana.example.org` to access the system monitoring, where `example.org` is your domain specified for `tenant-root`.
 In this example, `grafana.example.org` is located at 192.168.100.200.
