@@ -7,11 +7,11 @@ weight: 1
 
 ## Toolchain
 
-You will need the following tools installed on your workstation (or on the bastion host, if you use it to access the cluster nodes):
+You will need the following tools installed on your workstation:
 
 -   [talosctl](https://www.talos.dev/v1.10/talos-guides/install/talosctl/), the command line client for Talos Linux.
 -   [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), the command line client for Kubernetes.
--   [Talm](https://github.com/cozystack/talm?tab=readme-ov-file#installation), Cozystack's own configuration manager for Talos Linux.<br>
+-   [Talm](https://github.com/cozystack/talm?tab=readme-ov-file#installation), Cozystack's own configuration manager for Talos Linux:<br>
     
     ```bash
     curl -sSL https://github.com/cozystack/talm/raw/refs/heads/main/hack/install.sh | sh -s
@@ -34,8 +34,7 @@ To run this tutorial, you will need the following setup:
     -   None, for [other installation methods]({{% ref "/docs/install/talos" %}}). 
 -   Networking:
     -   Routable FQDN domain.<br>If you don't have one, you can use [nip.io](https://nip.io/) with dash notation
-    -   Located in the same L2 network segment.<br>
-        Cozystack can be deployed with a variety of networking options, but for this tutorial it's best to use a simple configuration.
+    -   Located in the same L2 network segment.
 -   Anti-spoofing disabled.<br>
     It is required for MetalLB, the load balancer used in Cozystack
 -   If using virtual machines, there are extra requirements:

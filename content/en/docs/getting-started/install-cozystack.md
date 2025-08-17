@@ -18,12 +18,10 @@ The tutorial will guide you through the following stages:
 1.  Deploy etcd, ingress and monitoring stack in the root tenant
 1.  Finalize deployment and access Cozystack dashboard
 
-### 1. Prepare Configuration File
+## 1. Prepare a Configuration File
 
-Take the configuration example below and fill in the values according to your network setup.
-Make sure to use the same value in `patch.yaml` and `patch-controlplane.yaml` files.
-
-**cozystack-config.yaml**:
+We will start installing Cozystack by making a configuration file.
+Take the example below and write it in a file **cozystack.yaml**:
 
 ```yaml
 apiVersion: v1
@@ -33,68 +31,84 @@ metadata:
   namespace: cozy-system
 data:
   bundle-name: "paas-full"
-  root-host: example.org
-  api-server-endpoint: https://api.example.org:443
+  root-host: "example.org"
+  api-server-endpoint: "https://api.example.org:443"
+  expose-services: "dashboard,api"
   ipv4-pod-cidr: "10.244.0.0/16"
   ipv4-pod-gateway: "10.244.0.1"
   ipv4-svc-cidr: "10.96.0.0/16"
   ipv4-join-cidr: "100.64.0.0/16"
 ```
 
-- `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
-- `api-server-endpoint` is primarily used for generating kubeconfig files for your users. It is recommended to use routeable IP addresses instead of local ones.
-- `ipv4-pod-cidr` is the pod subnet used by pods to assign IPs
-- `ipv4-pod-gateway` is the gateway address for the pod subnet
-- `ipv4-svc-cidr` is pod subnet used by managed services to assign IPs
-- `ipv4-join-cidr` is the `join` subnet, a special subnet for network communication between the Node and Pod.
+Action points:
 
-To choose a bundle for your future PoC or production installation, read the [bundles overview and comparison]({{% ref "/docs/guides/bundles" %}}).
-For the explanation of each configuration parameter, see the [bundles reference]({{% ref "/docs/operations/bundles" %}}).
+1.  Replace `example.org` in `data.root-host` and `data.api-server-endpoint` with a routable fully-qualified domain name (FQDN) that you control.
+    If you only have a public IP, but no FQDN, use [nip.io](https://nip.io/) with dash notation.
+2.  Use the same values for `data.ipv4*` as on the previous step, where you bootstrapped a Kubernetes cluster with Talm or `talosctl`.
+    Settings provided in the example are sane defaults that can be used in most cases.
+
+There are other values in this config that you don't need to change in the course of the tutorial.
+However, lets overview and explain each value:
+
+-   `metadata.name` and `metadata.namespace` define that this is the main
+    [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) of Cozystack.
+-   `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
+-   `api-server-endpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
+-   `data.bundle-name: "paas-full"` means that we're using the Cozystack bundle `paas-full`, the most complete set of components.
+    Learn more about bundles in [bundles overview and comparison]({{% ref "/docs/guides/bundles" %}}).
+-   `data.expose-services: "dashboard,api"` means that we want to make Cozystack dashboard (UI) and API accessible by users.
+-   `ipv4-pod-cidr` is the pod subnet used by pods to assign IPs.
+-   `ipv4-pod-gateway` is the gateway address for the pod subnet.
+-   `ipv4-svc-cidr` is pod subnet used by managed services to assign IPs.
+-   `ipv4-join-cidr` is the `join` subnet, a special subnet for network communication between the Node and Pod.
 
 {{% alert color="info" %}}
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
 {{% /alert %}}
 
-### 2. Install Cozystack by Applying Configuration
 
-Create a namespace `cozy-system` and install Cozystack system components:
+## 2. Install Cozystack
+
+Next, we will install Cozystack and check that the installation is complete and successful.
+
+
+### 2.1. Create Namespace and Apply Configuration
+
+Create a namespace `cozy-system`, then apply the ConfigMap created in the previous step and the installer configuration:
+
+  ```bash
+  kubectl create ns cozy-system
+  kubectl apply -f cozystack.yaml
+  ```
+
+
+### 2.2. Apply Installer
+
+Apply the installer configuration.
+This file defines the Cozystack version.
+For tutorial, just take the latest stable version available on GitHub:
 
 ```bash
-kubectl create ns cozy-system
-kubectl apply -f cozystack-config.yaml
 kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
 ```
 
-{{% alert color="warning" %}}
-By default, Cozystack is configured to use the [KubePrism](https://www.talos.dev/latest/kubernetes-guides/configuration/kubeprism/) feature of Talos Linux, which allows access to the Kubernetes API via a local address on the node.
-If you're installing Cozystack on a system other than Talos Linux, you must update the `KUBERNETES_SERVICE_HOST` and `KUBERNETES_SERVICE_PORT` environment variables in the `cozystack-installer.yaml` manifest.
-{{% /alert %}}
+As the installation goes on, you can track the logs of installer:
 
-{{% alert color="info" %}}
-Normally Cozystack requires at least three worker nodes to run workloads in HA mode. There are no tolerations in
-Cozystack components that will allow them to run on control-plane nodes.
-
-However, it's common to have only three nodes for testing purposes. Or you might only have big hardware nodes, and you
-want to use them for both control-plane and worker workloads. In this case, you have to remove the control-plane taint
-from the nodes. Example of how to do this:
-
-```bash
-kubectl taint nodes --all node-role.kubernetes.io/control-plane-
-```
-
-{{% /alert %}}
-
-(optional) You can track the logs of installer:
 ```bash
 kubectl logs -n cozy-system deploy/cozystack -f
 ```
 
+
+### 2.3. Check Installation Status
+
 Wait for a while, then check the status of installation:
+
 ```bash
 kubectl get hr -A
 ```
 
-Wait until all releases become to `Ready` state:
+Wait and check again until you see `True` on each line, as in this example:
+
 ```console
 NAMESPACE                        NAME                        AGE    READY   STATUS
 cozy-cert-manager                cert-manager                4m1s   True    Release reconciliation succeeded
@@ -123,164 +137,174 @@ cozy-victoria-metrics-operator   victoria-metrics-operator   4m1s   True    Rele
 tenant-root                      tenant-root                 4m1s   True    Release reconciliation succeeded
 ```
 
+The list of components in your installation may be different from the example above,
+as it depends on your configuration and Cozystack version.
+
+Once every component shows `READY: True`, we're ready to proceed by configuring subsystems.
+
+
 ## 3. Configure Storage
 
-Setup alias to access LINSTOR:
-```bash
-alias linstor='kubectl exec -n cozy-linstor deploy/linstor-controller -- linstor'
-```
+Kubernetes needs a storage subsystem to provide persistent volumes to applications, but it doesn't include one of its own.
+Cozystack provides [LINSTOR](https://github.com/LINBIT/linstor-server) as a storage subsystem.
 
-list your nodes
-```bash
-linstor node list
-```
-
-example output:
-
-```console
-+-------------------------------------------------------+
-| Node | NodeType  | Addresses                 | State  |
-|=======================================================|
-| srv1 | SATELLITE | 192.168.100.11:3367 (SSL) | Online |
-| srv2 | SATELLITE | 192.168.100.12:3367 (SSL) | Online |
-| srv3 | SATELLITE | 192.168.100.13:3367 (SSL) | Online |
-+-------------------------------------------------------+
-```
-
-list empty devices:
-
-```bash
-linstor physical-storage list
-```
-
-example output:
-```console
-+--------------------------------------------+
-| Size         | Rotational | Nodes          |
-|============================================|
-| 107374182400 | True       | srv3[/dev/sdb] |
-|              |            | srv1[/dev/sdb] |
-|              |            | srv2[/dev/sdb] |
-+--------------------------------------------+
-```
+In the following steps, we'll access LINSTOR interface, create storage pools, and define storage classes.
 
 
-create storage pools:
+### 3.1. Check Storage Devices
+
+1.  Set up an alias to access LINSTOR:
+
+    ```bash
+    alias linstor='kubectl exec -n cozy-linstor deploy/linstor-controller -- linstor'
+    ```
+
+1.  List your nodes and check their readiness:
+    
+    ```bash
+    linstor node list
+    ```
+
+    Example output shows node names and state:
+    
+    ```console
+    +-------------------------------------------------------+
+    | Node | NodeType  | Addresses                 | State  |
+    |=======================================================|
+    | srv1 | SATELLITE | 192.168.100.11:3367 (SSL) | Online |
+    | srv2 | SATELLITE | 192.168.100.12:3367 (SSL) | Online |
+    | srv3 | SATELLITE | 192.168.100.13:3367 (SSL) | Online |
+    +-------------------------------------------------------+
+    ```
+
+1.  List available empty devices:
+
+    ```bash
+    linstor physical-storage list
+    ```
+
+    Example output shows the same node names:
+
+    ```console
+    +--------------------------------------------+
+    | Size         | Rotational | Nodes          |
+    |============================================|
+    | 107374182400 | True       | srv3[/dev/sdb] |
+    |              |            | srv1[/dev/sdb] |
+    |              |            | srv2[/dev/sdb] |
+    +--------------------------------------------+
+    ```
+
+### 3.2. Create Storage Pools
+
+1.  Create storage pools using ZFS:
+
+    ```bash
+    linstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
+    linstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
+    linstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
+    ```
+
+1.  Check the results by listing the storage pools:
+
+    ```bash
+    linstor sp l
+    ```
+
+    Example output:
+    
+    ```console
+    +-------------------------------------------------------------------------------------------------------------------------------------+
+    | StoragePool          | Node | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State | SharedName                |
+    |=====================================================================================================================================|
+    | DfltDisklessStorPool | srv1 | DISKLESS |          |              |               | False        | Ok    | srv1;DfltDisklessStorPool |
+    | DfltDisklessStorPool | srv2 | DISKLESS |          |              |               | False        | Ok    | srv2;DfltDisklessStorPool |
+    | DfltDisklessStorPool | srv3 | DISKLESS |          |              |               | False        | Ok    | srv3;DfltDisklessStorPool |
+    | data                 | srv1 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv1;data                 |
+    | data                 | srv2 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv2;data                 |
+    | data                 | srv3 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv3;data                 |
+    +-------------------------------------------------------------------------------------------------------------------------------------+
+    ```
+
+### 3.3. Create Storage Classes
+
+Finally, we can create a couple of storage classes, one of which will be the default class.
 
 
+1.  Create a file with storage class definitions.
+    Below is a sane default example providing two classes: `local` (default) and `replicated`.
+    
+    **storageclasses.yaml:**
+    
+    ```yaml
+    ---
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: local
+      annotations:
+        storageclass.kubernetes.io/is-default-class: "true"
+    provisioner: linstor.csi.linbit.com
+    parameters:
+      linstor.csi.linbit.com/storagePool: "data"
+      linstor.csi.linbit.com/layerList: "storage"
+      linstor.csi.linbit.com/allowRemoteVolumeAccess: "false"
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    ---
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: replicated
+    provisioner: linstor.csi.linbit.com
+    parameters:
+      linstor.csi.linbit.com/storagePool: "data"
+      linstor.csi.linbit.com/autoPlace: "3"
+      linstor.csi.linbit.com/layerList: "drbd storage"
+      linstor.csi.linbit.com/allowRemoteVolumeAccess: "true"
+      property.linstor.csi.linbit.com/DrbdOptions/auto-quorum: suspend-io
+      property.linstor.csi.linbit.com/DrbdOptions/Resource/on-no-data-accessible: suspend-io
+      property.linstor.csi.linbit.com/DrbdOptions/Resource/on-suspended-primary-outdated: force-secondary
+      property.linstor.csi.linbit.com/DrbdOptions/Net/rr-conflict: retry-connect
+    volumeBindingMode: Immediate
+    allowVolumeExpansion: true
+    ```
 
+1.  Apply the storage class configuration
 
-{{< tabs name="create_storage_pools" >}}
-{{% tab name="ZFS" %}}
-```bash
-linstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
-linstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
-linstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
-```
-{{% /tab %}}
+    ```bash
+    kubectl create -f storageclasses.yaml
+    ```
 
-{{% tab name="LVM" %}}
-```bash
-linstor ps cdp lvm srv1 /dev/sdb --pool-name data --storage-pool data
-linstor ps cdp lvm srv2 /dev/sdb --pool-name data --storage-pool data
-linstor ps cdp lvm srv3 /dev/sdb --pool-name data --storage-pool data
-```
-{{% /tab %}}
+1.  Check that the storage classes were successfully created:
 
-{{% tab name="Restore ZFS/LVM storage-pool on nodes after reset" %}}
-```bash
-for node in $(kubectl get nodes --no-headers -o custom-columns=":metadata.name"); do
-  echo "linstor storage-pool create zfs $node data data"
-done
-# linstor storage-pool create zfs <node> data data
-```
-{{% /tab %}}
+    ```bash
+    kubectl get storageclasses
+    ```
 
-{{< /tabs >}}
+    Example output:
+    
+    ```console
+    NAME              PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+    local (default)   linstor.csi.linbit.com   Delete          WaitForFirstConsumer   true                   11m
+    replicated        linstor.csi.linbit.com   Delete          Immediate              true                   11m
+    ```
 
-list storage pools:
-
-```bash
-linstor sp l
-```
-
-example output:
-
-```console
-+-------------------------------------------------------------------------------------------------------------------------------------+
-| StoragePool          | Node | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State | SharedName                |
-|=====================================================================================================================================|
-| DfltDisklessStorPool | srv1 | DISKLESS |          |              |               | False        | Ok    | srv1;DfltDisklessStorPool |
-| DfltDisklessStorPool | srv2 | DISKLESS |          |              |               | False        | Ok    | srv2;DfltDisklessStorPool |
-| DfltDisklessStorPool | srv3 | DISKLESS |          |              |               | False        | Ok    | srv3;DfltDisklessStorPool |
-| data                 | srv1 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv1;data                 |
-| data                 | srv2 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv2;data                 |
-| data                 | srv3 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv3;data                 |
-+-------------------------------------------------------------------------------------------------------------------------------------+
-```
-
-
-Create default storage classes:
-```yaml
-kubectl create -f- <<EOT
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: local
-  annotations:
-    storageclass.kubernetes.io/is-default-class: "true"
-provisioner: linstor.csi.linbit.com
-parameters:
-  linstor.csi.linbit.com/storagePool: "data"
-  linstor.csi.linbit.com/layerList: "storage"
-  linstor.csi.linbit.com/allowRemoteVolumeAccess: "false"
-volumeBindingMode: WaitForFirstConsumer
-allowVolumeExpansion: true
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: replicated
-provisioner: linstor.csi.linbit.com
-parameters:
-  linstor.csi.linbit.com/storagePool: "data"
-  linstor.csi.linbit.com/autoPlace: "3"
-  linstor.csi.linbit.com/layerList: "drbd storage"
-  linstor.csi.linbit.com/allowRemoteVolumeAccess: "true"
-  property.linstor.csi.linbit.com/DrbdOptions/auto-quorum: suspend-io
-  property.linstor.csi.linbit.com/DrbdOptions/Resource/on-no-data-accessible: suspend-io
-  property.linstor.csi.linbit.com/DrbdOptions/Resource/on-suspended-primary-outdated: force-secondary
-  property.linstor.csi.linbit.com/DrbdOptions/Net/rr-conflict: retry-connect
-volumeBindingMode: Immediate
-allowVolumeExpansion: true
-EOT
-```
-
-list storageclasses:
-
-```bash
-kubectl get storageclasses
-```
-
-example output:
-
-```console
-NAME              PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
-local (default)   linstor.csi.linbit.com   Delete          WaitForFirstConsumer   true                   11m
-replicated        linstor.csi.linbit.com   Delete          Immediate              true                   11m
-```
 
 ## 4. Configure Networking
 
-Cozystack uses MetalLB as the default load balancer.
-This documentation section explains how to configure networking with this default option.
+Next, we will configure how Cozystack cluster can be accessed.
+This step has two inevitable options, depending on your available infrastructure:
 
-{{% alert color="info" %}}
-If your cloud provider does not support MetalLB, you can expose the ingress controller using the external IPs of your nodes.
-Read the FAQ section [What if my cloud provider does not support MetalLB](
-{{% ref "/docs/operations/faq#what-if-my-cloud-provider-does-not-support-metallb" %}}) for more details.
-{{% /alert %}}
+-   For your own bare metal or self-hosted VMs, choose the MetalLB option.
+    MetalLB is Cozystack's default load balancer.
+-   For VMs and bare metal from cloud providers, choose the public IP setup.
+    [Most cloud providers don't support MetalLB](https://metallb.universe.tf/installation/clouds/).
+
+    Check out the [provider-specific installation]{{% ref "/docs/install/providers" %}}) section.
+    It may have instructions for your provider, which you can use to deploy a production-ready cluster.
+
+### 4.a MetalLB Setup
 
 Cozystack has three types of IP addresses used:
 
@@ -288,7 +312,7 @@ Cozystack has three types of IP addresses used:
 -   Virtual floating IP: used to access one of the nodes in the cluster and valid only within the cluster.
 -   External access IPs: used by the load balancer to expose services outside the cluster.
 
-To access your services select the range of unused IPs, for example, `192.168.100.200-192.168.100.250`.
+To access your services, select a range of unused IPs, for example, `192.168.100.200-192.168.100.250`.
 These IPs should be from the same network as the nodes, or they should have all necessary routes to them.
 
 Configure MetalLB to use and announce this range:
@@ -325,7 +349,49 @@ spec:
   avoidBuggyIPs: false
 ```
 
-## 5. Setup Basic Applications
+### 4.a. Public IP Setup
+
+If your cloud provider does not support MetalLB, you can expose the ingress controller using the external IPs of your nodes.
+
+Take IP addresses of the **external** network interfaces for your nodes.
+Add them to the `externalIPs` list in the Ingress configuration:
+
+```bash
+kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
+  "externalIPs": [
+    "192.168.100.11",
+    "192.168.100.12",
+    "192.168.100.13"
+  ]
+}}'
+
+kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
+  "data": {
+    "expose-external-ips": "192.168.100.11,192.168.100.12,192.168.100.13"
+  }
+}'
+```
+
+After that, your Ingress will be available on the specified IPs.
+Check it in the following way:
+
+```bash
+kubectl get svc -n tenant-root root-ingress-controller
+```
+
+Example output:
+
+```console
+root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135.181.169.168   80/TCP,443/TCP   133d
+```
+
+For more details, refer to the FAQ, [What if my cloud provider does not support MetalLB](
+{{% ref "/docs/operations/faq#what-if-my-cloud-provider-does-not-support-metallb" %}}).
+
+
+## 5. Final steps
+
+### 5.1. Setup Basic Applications
 
 Enable `etcd`, `monitoring`, and `ingress` in your `tenant-root`:
 
@@ -339,10 +405,8 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 }}'
 ```
 
-## 6. Final steps
 
-
-### 6.1 Check the cluster state and composition
+### 5.2. Check the cluster state and composition
 
 Check persistent volumes provisioned:
 
@@ -416,7 +480,7 @@ NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S
 root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:31632/TCP,443:30113/TCP   3m33s
 ```
 
-### 6.2 Enable and access Cozystack dashboard
+### 5.2 Enable and Access Cozystack Dashboard
 
 First, enable access to the dashboard by exposing it.
 In Cozystack v0.31.0 or later, run the following command to expose the dashboard:
@@ -427,16 +491,6 @@ kubectl patch -n cozy-system cm cozystack --type=merge -p '{"data":{
     }}'
 ```
 
-{{% alert color="info" %}}
-In Cozystack v0.30.6 and earlier, this was done differently:
-
-```bash
-kubectl patch cm -n cozy-system cozystack --type merge -p='{"data":{
-  "external-services": "dashboard"
-}}'
-```
-{{% /alert %}}
-
 Use `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
 In this example, `dashboard.example.org` is located at 192.168.100.200.
 
@@ -445,7 +499,7 @@ Get authentication token from `tenant-root`:
 kubectl get secret -n tenant-root tenant-root -o go-template='{{ printf "%s\n" (index .data "token" | base64decode) }}'
 ```
 
-### 6.3 Access metrics in Grafana
+### 5.3 Access metrics in Grafana
 
 Use `grafana.example.org` to access the system monitoring, where `example.org` is your domain specified for `tenant-root`.
 In this example, `grafana.example.org` is located at 192.168.100.200.
@@ -456,6 +510,3 @@ In this example, `grafana.example.org` is located at 192.168.100.200.
   kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
   ```
 
-### 6.4 Enable OIDC
-
-If you want to use it, you can now proceed by [configuring OIDC](/docs/operations/oidc/).
