@@ -48,19 +48,18 @@ Action points:
     Settings provided in the example are sane defaults that can be used in most cases.
 
 There are other values in this config that you don't need to change in the course of the tutorial.
-However, lets overview and explain each value:
+However, let's overview and explain each value:
 
 -   `metadata.name` and `metadata.namespace` define that this is the main
     [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) of Cozystack.
 -   `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
 -   `api-server-endpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
 -   `data.bundle-name: "paas-full"` means that we're using the Cozystack bundle `paas-full`, the most complete set of components.
-    Learn more about bundles in [bundles overview and comparison]({{% ref "/docs/guides/bundles" %}}).
+    Learn more about bundles in the [Cozystack Bundles reference]({{% ref "/docs/install/cozystack/bundles" %}}).
 -   `data.expose-services: "dashboard,api"` means that we want to make Cozystack dashboard (UI) and API accessible by users.
--   `ipv4-pod-cidr` is the pod subnet used by pods to assign IPs.
--   `ipv4-pod-gateway` is the gateway address for the pod subnet.
--   `ipv4-svc-cidr` is pod subnet used by managed services to assign IPs.
--   `ipv4-join-cidr` is the `join` subnet, a special subnet for network communication between the Node and Pod.
+-   `ipv4-*` are internal networking configurations for the underlying Kubernetes cluster.
+
+You can learn more about this configuration file in the [Cozystack ConfigMap reference]({{% ref "/docs/install/cozystack/configmap" %}}).
 
 {{% alert color="info" %}}
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
@@ -294,7 +293,7 @@ Finally, we can create a couple of storage classes, one of which will be the def
 ## 4. Configure Networking
 
 Next, we will configure how Cozystack cluster can be accessed.
-This step has two inevitable options, depending on your available infrastructure:
+This step has two options, depending on your available infrastructure:
 
 -   For your own bare metal or self-hosted VMs, choose the MetalLB option.
     MetalLB is Cozystack's default load balancer.
@@ -304,7 +303,7 @@ This step has two inevitable options, depending on your available infrastructure
     Check out the [provider-specific installation]({{% ref "/docs/install/providers" %}}) section.
     It may have instructions for your provider, which you can use to deploy a production-ready cluster.
 
-### 4.a MetalLB Setup
+### 4.a. MetalLB Setup
 
 Cozystack has three types of IP addresses used:
 
@@ -349,7 +348,7 @@ spec:
   avoidBuggyIPs: false
 ```
 
-### 4.a. Public IP Setup
+### 4.b. Public IP Setup
 
 If your cloud provider does not support MetalLB, you can expose the ingress controller using the external IPs of your nodes.
 
@@ -405,16 +404,16 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 }}'
 ```
 
-
 ### 5.2. Check the cluster state and composition
 
-Check persistent volumes provisioned:
+Check the providioned persistent volumes:
 
 ```bash
 kubectl get pvc -n tenant-root
 ```
 
-example output:
+Example output:
+
 ```console
 NAME                                     STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 data-etcd-0                              Bound    pvc-4cbd29cc-a29f-453d-b412-451647cd04bf   10Gi       RWO            local          <unset>                 2m10s
@@ -469,7 +468,8 @@ vmstorage-shortterm-0                          1/1     Running   0              
 vmstorage-shortterm-1                          1/1     Running   0              2m31s
 ```
 
-Now you can get public IP of ingress controller:
+Get the public IP of ingress controller:
+
 ```bash
 kubectl get svc -n tenant-root root-ingress-controller
 ```
@@ -480,10 +480,16 @@ NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S
 root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:31632/TCP,443:30113/TCP   3m33s
 ```
 
-### 5.3 Enable and Access Cozystack Dashboard
+### 5.3 Access the Cozystack Dashboard
 
-First, enable access to the dashboard by exposing it.
-In Cozystack v0.31.0 or later, run the following command to expose the dashboard:
+If you left this line in the ConfigMap, Cozystack Dashboard must be already available at this moment:
+
+```yaml
+data:
+  expose-services: "dashboard,api"
+```
+
+If the initial configmap did not have this line, patch it with the following command:
 
 ```bash
 kubectl patch -n cozy-system cm cozystack --type=merge -p '{"data":{
@@ -491,22 +497,35 @@ kubectl patch -n cozy-system cm cozystack --type=merge -p '{"data":{
     }}'
 ```
 
-Use `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
-In this example, `dashboard.example.org` is located at 192.168.100.200.
+Open `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
+There you will see a login window which expects an authentication token.
 
-Get authentication token from `tenant-root`:
+Get the authentication token for `tenant-root`:
+
 ```bash
 kubectl get secret -n tenant-root tenant-root -o go-template='{{ printf "%s\n" (index .data "token" | base64decode) }}'
 ```
+
+Log in using the token.
+Now you can use the dashboard as an administrator.
+
+Further on, you will be able to:
+
+-   Set up OIDC to authenticate with it instead of tokens.
+-   Create user tenants and grant users access to them via tokens or OIDC.
 
 ### 5.4 Access metrics in Grafana
 
 Use `grafana.example.org` to access the system monitoring, where `example.org` is your domain specified for `tenant-root`.
 In this example, `grafana.example.org` is located at 192.168.100.200.
 
-- login: `admin`
-- request a password:
-  ```bash
-  kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
-  ```
+-   login: `admin`
+-   request a password:
+    
+    ```bash
+    kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
+    ```
 
+## Next Steps
+
+Continue by [creating a user tenant]({{% ref "/docs/getting-started/create-tenant" %}}).

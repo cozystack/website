@@ -333,17 +333,6 @@ Output will be similar to this example:
 | data1                | node1 | ZFS      | data     |   378.93 GiB |       412 GiB | True         | Ok    | node1;data1                |
 ```
 
-
-## Bundles
-
-### How to overwrite parameters for specific components
-
-Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-overwrite-parameters-for-specific-components" %}}).
-
-### How to disable some components from bundle
-
-Moved to the [Bundles reference]({{% ref "docs/operations/bundles#how-to-enable-and-disable-bundle-components" %}}).
-
 ### How to enable Hugepages
 
 See more: [hugetlbpage](https://docs.kernel.org/admin-guide/mm/hugetlbpage.html)
@@ -387,3 +376,13 @@ or
 ```bash
 talosctl reboot -n 192.168.123.11 -e 192.168.123.11
 ```
+
+## Bundles
+
+### How to overwrite parameters for specific components
+
+Moved to the [Components reference]({{% ref "/docs/install/cozystack/components#overwriting-component-parameters" %}}).
+
+### How to disable some components from bundle
+
+Moved to the [Components reference]({{% ref "/docs/install/cozystack/components#enabling-and-disabling-components" %}}).

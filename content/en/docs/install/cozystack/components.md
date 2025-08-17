@@ -1,30 +1,15 @@
 ---
-title: "Bundles Configuration and Troubleshooting"
-linkTitle: "Bundles"
-description: "Cozystack bundles reference: composition, configuration, and troubleshooting."
-weight: 20
-aliases:
-  - /docs/bundles
+title: "Cozystack Components Reference"
+linkTitle: "Components"
+description: "Full reference for Cozystack components."
+weight: 30
 ---
 
-This section provides practical guidance for working with Cozystack bundles.
-You’ll also find detailed reference pages for each bundle, outlining their structure, included components, and expected environment.
+### Overwriting Component Parameters
 
-* [paas-full]
-* [paas-hosted]
-* [distro-full]
-* [distro-hosted]
-
-[paas-full]: {{% ref "/docs/operations/bundles/paas-full" %}}
-[iaas-full]: https://github.com/cozystack/cozystack/issues/730
-[paas-hosted]: {{% ref "/docs/operations/bundles/paas-hosted" %}}
-[distro-full]: {{% ref "/docs/operations/bundles/distro-full" %}}
-[distro-hosted]: {{% ref "/docs/operations/bundles/distro-hosted" %}}
-
-### How to overwrite parameters for specific components
-
-You might want to overwrite specific options for the components.r
-To achieve this, you must specify values in JSON or YAML format using the values-<component> option.
+You might want to override specific options for the components.
+To achieve this, you must specify values in JSON or YAML format using the `data.values-<component>` option
+in the [Cozystack ConfigMap]({{% ref "/docs/install/cozystack/configmap" %}}).
 
 For example, if you want to overwrite `k8sServiceHost` and `k8sServicePort` for cilium,
 take a look at its [values.yaml](https://github.com/cozystack/cozystack/blob/238061efbc0da61d60068f5de31d6eaa35c4d994/packages/system/cilium/values.yaml#L18-L19) file.
@@ -47,7 +32,7 @@ data:
       k8sServicePort: 6443
 ```
 
-### How to enable and disable bundle components
+### Enabling and Disabling Components
 
 Bundles have optional components that need to be explicitly enabled (included) in the installation.
 Regular bundle components can, on the other hand, be disabled (excluded) from the installation, when you don't need them.
