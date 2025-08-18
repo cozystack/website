@@ -72,6 +72,6 @@ all on limited hardware—yet each runs with direct access to CPU and storage.
 We’re not aware of any other Kubernetes distribution with more built-in infrastructure components.
 (Seriously—send us a link if you find one!)
 Rather than manually installing components and controllers, you simply choose
-a [Cozystack bundle]({{% ref "/docs/operations/bundles/" %}}) that fits your needs.
+a [Cozystack bundle]({{% ref "/docs/install/cozystack/bundles" %}}) that fits your needs.
 All components are pre-configured, tested for compatibility, and updated alongside the Cozystack framework.
 
