@@ -15,16 +15,8 @@ This ensures that data stored on disk is encrypted and can only be accessed when
 
 To start using encryption, set up an encryption passphrase in LINSTOR.
 
-First, set up an alias to access LINSTOR:
-
 ```bash
-alias linstor='kubectl exec -n cozy-linstor deploy/linstor-controller -- linstor'
-```
-
-Create an encryption passphrase:
-
-```bash
-linstor encryption create-passphrase
+kubectl exec -i -t -n cozy-linstor deploy/linstor-controller -- linstor encryption create-passphrase 
 ```
 
 {{% alert color="warning" %}}
@@ -36,7 +28,7 @@ You will need to enter master passphrase each time after restarting the LINSTOR 
 To enter the master passphrase, use the following command:
 
 ```bash
-linstor encryption enter-passphrase
+kubectl exec -i -t -n cozy-linstor deploy/linstor-controller -- linstor encryption enter-passphrase
 ```
 
 ## Create Encrypted Storage Class
