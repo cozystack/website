@@ -21,8 +21,8 @@ If this is your first time installing Cozystack, [start with the Cozystack tutor
 
 There are several methods to install Talos:
 
-- [Quick-start Talos from another running Linux OS]({{% ref "/docs/install/talos/kexec" %}}).
-- [Install using temporary DHCP and PXE servers]({{% ref "/docs/install/talos/pxe" %}}) running in Docker containers.
+- [Quick-start Talos from another running Linux OS using `kexec`]({{% ref "/docs/install/talos/kexec" %}}).
+- [Install using temporary DHCP and PXE servers running in Docker containers]({{% ref "/docs/install/talos/pxe" %}}).
 - [Install using ISO]({{% ref "/docs/install/talos/iso" %}}).
 
 There are also specific guides for cloud providers, covering all the steps from preparing infrastructure to installing and configuring Cozystack.

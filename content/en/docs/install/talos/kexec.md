@@ -1,8 +1,8 @@
 ---
-title: How to install Cozystack using kexec
-linkTitle: Kexec installation
-description: "How to install Cozystack using kexec"
-weight: 15
+title: How to install Talos Linux using kexec
+linkTitle: kexec
+description: "How to install Talos Linux using kexec"
+weight: 10
 aliases:
   - /docs/talos/install/kexec
 ---

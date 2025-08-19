@@ -1,8 +1,8 @@
 ---
-title: How to install Cozystack using PXE
-linkTitle: PXE installation
-description: "How to install Cozystack using PXE"
-weight: 10
+title: How to install Talos Linux using PXE
+linkTitle: PXE
+description: "How to install Talos Linux using PXE"
+weight: 15
 aliases:
   - /docs/talos/installation/pxe
   - /docs/talos/install/pxe

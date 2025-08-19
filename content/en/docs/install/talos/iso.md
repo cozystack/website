@@ -1,7 +1,7 @@
 ---
-title: How to install Cozystack using ISO
-linkTitle: ISO Installation
-description: "How to install Cozystack using ISO"
+title: How to install Talos Linux using ISO
+linkTitle: ISO
+description: "How to install Talos Linux using ISO"
 weight: 20
 aliases:
   - /docs/talos/installation/iso
