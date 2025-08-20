@@ -20,9 +20,9 @@ It consists of Talos Linux and a Kubernetes cluster installed on Talos.
 
 ### Talos Linux
                                        
-Talos Linux is a Linux distribution made and optimized for one job: to run Kubernetes.
-It is the foundation of reliability and security in Cozystack cluster.
-Selecting it enables Cozystack to strictly limit the technology stack and make the system stable as a rock.
+Talos Linux is a Linux distribution made and optimized for a single purpose: to run Kubernetes.
+It provides the foundation for reliability and security in a Cozystack cluster.
+Its use allows Cozystack to limit the technology stack, improving stability and security.
 
 Read more about it in the [Talos Linux]({{%ref "/docs/guides/talos" %}}) section.
 
@@ -159,7 +159,7 @@ Deployment involves the following components:
 This architecture ensures isolated, scalable, and efficient Kubernetes environments tailored for each tenant.
 
 -   Supported version: Kubernetes v1.32.4
--   Kubernetes operator: [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator) v0.4.2
+-   Operator: [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator) v0.4.2
 -   Managed application reference: [Kubernetes]({{% ref "/docs/kubernetes" %}})
 
 
@@ -201,10 +201,10 @@ In Cozystack, it is backed by PostgreSQL.
 
 Apache Kafka is an open-source distributed event streaming platform.
 It aims to provide a unified, high-throughput, low-latency platform for handling real-time data feeds.
-In Cozystack, we use [Strimzi](https://github.com/cozystack/cozystack/blob/main/packages/system/kafka-operator/charts/strimzi-kafka-operator/README.md)
+Cozystack is using [Strimzi](https://github.com/cozystack/cozystack/blob/main/packages/system/kafka-operator/charts/strimzi-kafka-operator/README.md)
 to run an Apache Kafka cluster on Kubernetes in various deployment configurations.
 
--   Supported version: Apache Kafka, 3.9.0
+-   Supported version: Apache Kafka 3.9.0
 -   Kubernetes operator: [strimzi/strimzi-kafka-operator](https://github.com/strimzi/strimzi-kafka-operator) v0.45.0
 -   Website: [kafka.apache.org](https://kafka.apache.org/)
 -   Managed application reference: [Kafka]({{% ref "/docs/applications/kafka" %}})
@@ -217,7 +217,7 @@ The implementation in the platform provides the ability to create a replicated M
 This cluster is managed using the increasingly popular mariadb-operator.
 
 For each database, there is an interface for configuring users, their permissions,
-as well as schedules for creating backups using [Restic](https://restic.net/) currently the most efficient tool.
+as well as schedules for creating backups using [Restic](https://restic.net/), one of the most efficient tools currently available.
 
 -   Supported version: MariaDB 11.4.3
 -   Kubernetes operator: [mariadb-operator/mariadb-operator](https://github.com/mariadb-operator/mariadb-operator) v0.18.0
@@ -300,14 +300,13 @@ It also supports horizontal scaling without duplicating data on multiple servers
 
 ### TCP Balancer
 
-The Managed TCP Load Balancer Service simplifies the deployment and management of load balancers.
+The Managed TCP Load Balancer service provides deployment and management of load balancers.
 It efficiently distributes incoming TCP traffic across multiple backend servers, ensuring high availability and optimal resource utilization.
 
-Managed TCP Load Balancer Service efficiently utilizes HAProxy for load balancing purposes.
-HAProxy is a well-established and reliable solution for distributing incoming TCP traffic across multiple backend servers, ensuring high availability and efficient resource utilization. This deployment choice guarantees the seamless and dependable operation of your load balancing infrastructure.
+TCP Load Balancer service is powered by [HAProxy](https://www.haproxy.org/), a mature and reliable TCP load balancer.
 
 -   Managed application reference: [TCP balancer]({{% ref "/docs/networking/tcp-balancer" %}})
--   Docs: https://www.haproxy.com/documentation/
+-   Docs: [HAProxy Documentation](https://www.haproxy.com/documentation/)
 
 
 ### Tenants
