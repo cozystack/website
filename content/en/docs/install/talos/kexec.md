@@ -1,7 +1,7 @@
 ---
-title: How to install Talos Linux using kexec
+title: Install Talos Linux using the kernel execute mechanism
 linkTitle: kexec
-description: "How to install Talos Linux using kexec"
+description: "How to install Talos Linux using the kernel execute mechanism (`kexec`)"
 weight: 10
 aliases:
   - /docs/talos/install/kexec
@@ -15,7 +15,9 @@ Kexec is both a utility `kexec` and a system call of the same name.
 It allows you to boot into a new kernel from the existing system without performing a physical reboot of the machine.
 It’s as if the kernel was loaded by the standard bootloader at startup, only in this case your existing OS acts as the bootloader.
 
-## 1.1 Install `kexec-tools` package
+Note that Cozystack provides its own Talos builds, which are tested and optimized for running a Cozystack cluster.
+
+## 1. Install `kexec-tools` package
 
 Here and further this guide assumes an Ubuntu / Debian system.
 Commands for other distributions may vary.
@@ -24,7 +26,7 @@ Commands for other distributions may vary.
 apt install kexec-tools -y
 ```
 
-## 1.2. Download Cozystack-specific Talos Distribution
+## 2. Download Cozystack-specific Talos Distribution
 
 Cozystack developers have made a special Talos Linux distribution, tailored for the requirements of Cozystack.
 These distributions are released together with Cozystack, and can be downloaded from the
@@ -39,7 +41,7 @@ wget -O /tmp/vmlinuz https://github.com/cozystack/cozystack/releases/latest/down
 wget -O /tmp/initramfs.xz https://github.com/cozystack/cozystack/releases/latest/download/initramfs-metal-amd64.xz
 ```
 
-To install a specific version, download matching distributives.
+To install a specific version, download matching distributive.
 Note that the URL is slightly different from the one for `latest`:
 
 ```text
@@ -50,7 +52,7 @@ wget -O /tmp/initramfs.xz https://github.com/cozystack/cozystack/releases/downlo
 
 Cozystack supports `kexec` installation since version `v0.29.2`
 
-## 1.3. Gather Network Information
+## 3. Gather Network Information
 
 Talos Linux needs network configuration to use during boot time.
 At this step we will gather the required information and pack it into a command line parameter.
@@ -89,9 +91,9 @@ For details and deep explanation of this step, see the documentation:
 -   [Talos Linux documentation on kernel command line](https://www.talos.dev/latest/talos-guides/install/bare-metal-platforms/network-config/#kernel-command-line).
 -   [Official Linux Kernel documentation](https://www.kernel.org/doc/Documentation/filesystems/nfs/nfsroot.txt)
 
-## 1.4 Boot Talos Linux
+## 4. Boot Talos Linux
 
-Now that we have distributives and the network configuration, it's time to boot Talos.
+Now that we have the Talos distributive and the network configuration, it's time to boot Talos.
 The first command loads the Talos kernel into RAM, and the second switches the current system to this new kernel:
 
 ```text
@@ -121,11 +123,12 @@ From [`kexec` manual pages](https://www.man7.org/linux/man-pages/man8/kexec.8.ht
         into the loaded kernel without calling shutdown(8).
 ```
 
-## Next steps
-
 Once the machine has rebooted, Talos Linux will be loaded in memory.
 To finalize installation, follow with cluster bootstrapping using one of available tools:
 
-
 Once you apply the configuration with `talm apply -i ...` or `talosctl apply -i`,
 Talos image gets written to disk and installation is complete.
+
+## Next steps
+
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/install/kubernetes" %}}).

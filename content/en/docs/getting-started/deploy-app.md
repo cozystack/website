@@ -1,11 +1,11 @@
 ---
-title: "4. Deploy Managed Applications, VMs, and tenant Kubernetes cluster"
-linkTitle: "4. Deploy Applications"
+title: "5. Deploy Managed Applications, VMs, and tenant Kubernetes cluster"
+linkTitle: "5. Deploy Applications"
 description: "Start using Cozystack: deploy a virtual machine, managed application, and a tenant Kubernetes cluster."
 weight: 50
 ---
 
-## Introduction
+## Objectives
 
 This guide will walk you through setting up the environment needed to run a typical web application with common service
 dependencies—PostgreSQL and Redis—on Cozystack, a Kubernetes-based PaaS framework.
@@ -28,7 +28,7 @@ Before you begin:
 -   **Cozystack cluster** should already be [installed and running]({{% ref "/docs/getting-started/install-cozystack" %}}).
     You won’t need to install or configure anything on the infrastructure level—this
     guide assumes that part is already done, possibly by you or someone else on your team.
--   **Credentials:** You must have access to your tenant in Cozystack.
+-   **Tenant and credentials:** You must have access to your tenant in Cozystack.
     This can be either through a `kubeconfig` file or OIDC login for the dashboard.
     If you don’t have access, ask your Ops team or refer to the guide on creating a tenant.
 -   **DNS for dev/testing:** To access the deployed app over HTTPS you need a DNS record set up.

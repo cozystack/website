@@ -1,5 +1,5 @@
 ---
-title: How to install Talos Linux using ISO
+title: Install Talos Linux using ISO
 linkTitle: ISO
 description: "How to install Talos Linux using ISO"
 weight: 20
@@ -9,14 +9,23 @@ aliases:
   - /docs/operations/talos/installation/iso
 ---
 
-Download Talos Linux asset from the Cozystack's [releases page](https://github.com/cozystack/cozystack/releases).
+This guide explains how to install Talos Linux on bare metal servers or virtual machines.
+Note that Cozystack provides its own Talos builds, which are tested and optimized for running a Cozystack cluster.
 
-Boot your machine with ISO attached.
+## Installation
 
-Click **<F3>** and fill your network settings:
+1.  Download Talos Linux asset from the Cozystack's [releases page](https://github.com/cozystack/cozystack/releases).
 
-![Cozystack for private cloud](/img/talos-network-configuration.png)
+    ```bash
+    wget https://github.com/cozystack/cozystack/releases/latest/download/metal-amd64.iso
+    ```
 
-Now you can use [talos-bootstrap](https://github.com/cozystack/talos-bootstrap) or [Talm](https://github.com/cozystack/talm) for connecting to the node and bootstrap the cluster
+1.  Boot your machine with ISO attached.
 
-Just follow **Get Started** guide starting from the [**Bootstrap cluster**](/docs/getting-started/deploy-cluster/#bootstrap-cluster) section, to continue the installation.
+1.  Click **<F3>** and fill your network settings:
+
+    ![Cozystack for private cloud](/img/talos-network-configuration.png)
+
+## Next steps
+
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/install/kubernetes" %}}).

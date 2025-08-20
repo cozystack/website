@@ -1,6 +1,6 @@
 ---
 title: "Installing Talos Linux on Bare Metal or Virtual Machines"
-linkTitle: "1. Installing Talos"
+linkTitle: "1. Install Talos"
 description: "Step 1: Installing Talos Linux on virtual machines or bare metal, ready to bootstrap Cozystack cluster."
 weight: 10
 aliases:
@@ -14,22 +14,27 @@ aliases:
 Ensure the VMs or bare-metal servers are provisioned before you begin.
 To plan the installation, see the [hardware requirements]({{% ref "/docs/install/hardware-requirements" %}}).
 
-After installing Talos Linux, you will have a number of nodes ready to be 
-[bootstrapped with Cozystack configuration]({{% ref "/docs/install/kubernetes" %}}).
+If this is your first time installing Cozystack, consider [starting with the Cozystack tutorial]({{% ref "/docs/getting-started" %}}).
 
-If this is your first time installing Cozystack, [start with the Cozystack tutorial]({{% ref "/docs/getting-started" %}}).
+## Installing Talos
 
-There are several methods to install Talos:
+There are several methods to install Talos on any bare metal server or virtual machine.
+They have various limitations and optimal use cases:
 
-- [Quick-start Talos from another running Linux OS using `kexec`]({{% ref "/docs/install/talos/kexec" %}}).
-- [Install using temporary DHCP and PXE servers running in Docker containers]({{% ref "/docs/install/talos/pxe" %}}).
-- [Install using ISO]({{% ref "/docs/install/talos/iso" %}}).
+-   **Recommended:** [Boot to Talos Linux from another Linux OS using `boot-to-talos`]({{% ref "/docs/install/talos/boot-to-talos" %}}) —
+    a simple installation method, which can be used completely from userspace, and with no external dependencies except the Talos image.
 
-There are also specific guides for cloud providers, covering all the steps from preparing infrastructure to installing and configuring Cozystack.
-If that's your case, we recommend using the guides below:
+    Choose this option if you are new to Talos or if you have VMs with pre-installed OS from a cloud provider.
+-   [Boot to Talos Linux from another Linux OS using `kexec`]({{% ref "/docs/install/talos/kexec" %}}) — another simple installation method,
+    but with some extra requirements. 
+-   [Install using temporary DHCP and PXE servers running in Docker containers]({{% ref "/docs/install/talos/pxe" %}}) — 
+    requires an extra management machine, but allows for installing on multiple hosts at once.
+-   [Install using ISO image]({{% ref "/docs/install/talos/iso" %}}) — optimal for systems which can automate ISO installation.
 
-- [Hetzner]({{% ref "/docs/install/providers/hetzner" %}})
-- [Oracle Cloud Infrastructure (OCI)]({{% ref "/docs/install/providers/oracle-cloud" %}})
-- [Servers.com]({{% ref "/docs/install/providers/servers-com" %}})
+## Further Steps
 
-Finally, if you want to learn why we use Talos Linux, check out the [Talos Linux overview]({{% ref "/docs/guides/talos" %}}).
+-   After installing Talos Linux, you will have a number of nodes ready for the next step, which is to
+    [install and bootstrap a Kubernetes cluster]({{% ref "/docs/install/kubernetes" %}}).
+    
+-   Read the [Talos Linux overview]({{% ref "/docs/guides/talos" %}}) to learn why Talos Linux is the optimal OS choice for Cozystack
+    and what it brings to the platform.

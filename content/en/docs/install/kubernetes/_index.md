@@ -1,6 +1,6 @@
 ---
 title: "Installing and Configuring Kubernetes Cluster on Talos Linux"
-linkTitle: "2. Installing Kubernetes"
+linkTitle: "2. Install Kubernetes"
 description: "Step 2: Installing and configuring a Kubernetes cluster on Talos Linux nodes, ready for Cozystack installation."
 weight: 20
 aliases:

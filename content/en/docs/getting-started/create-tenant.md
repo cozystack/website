@@ -1,9 +1,37 @@
 ---
-title: "3. Create a User Tenant and Configure Access"
-linkTitle: "3. Create Tenant"
+title: "4. Create a User Tenant and Configure Access"
+linkTitle: "4. Create User Tenant"
 description: "Create a user tenant, the foundation of RBAC in Cozystack, and get access to it via dashboard and Cozystack API."
 weight: 40
 ---
+
+## Objectives
+
+At this step of the tutorial, you will create a user tenant — a space for users to deploy applications and VMs.
+You will also get tenant credentials and log in as a user with access to this tenant.
+
+## Prerequisites
+
+Before you begin:
+
+
+-   Complete the previous steps of the tutorial to get 
+    a [Cozystack cluster]({{% ref "/docs/getting-started/install-cozystack" %}}) running,
+    with storage, networking, and management dashboard configured.
+    
+-   Make sure you can access the dashboard, as described in the
+    [previous step of the tutorial]({{% ref "/docs/getting-started/install-cozystack" %}}).
+    
+-   If you're using OIDC, users and roles must be configured.
+    See the [OIDC guide]({{% ref "/docs/operations/oidc" %}}) for details on how to work with the built-in OIDC server.
+
+During [Kubernetes installation]({{% ref "/docs/getting-started/install-kubernetes" %}}) for Cozystack, 
+you should have obtained the administrative `kubeconfig` file for your new cluster.
+Keep it at hand — it may be useful later for troubleshooting.
+However, for day-to-day operations, you'll want to create user-specific credentials.
+
+
+## Introduction
 
 Tenants are the isolation mechanism in Cozystack.
 They are used to separate clients, teams, or environments.
@@ -12,23 +40,6 @@ Tenant users have full access to their clusters.
 Optionally, you can configure quotas for each tenant to limit resource usage and prevent overconsumption.
 
 To learn more about tenants, read the [Core Concepts]({{% ref "/docs/guides/concepts#tenant-system" %}}) guide.
-
-
-## Prerequisites
-
-Complete the previous steps of the tutorial to get a [Cozystack cluster]({{% ref "/docs/getting-started/install-cozystack" %}}) running,
-with storage, networking, and management dashboard configured.
-
-During Talos installation for Cozystack, you should have obtained the kubeconfig file for your new cluster.
-This config was required during the bootstrap process.
-Keep it safe — it may be useful later for troubleshooting.
-However, for day-to-day operations, you'll want to create user-specific credentials.
-
-Make sure you can access the dashboard, as described in the
-[previous step of the tutorial]({{% ref "/docs/getting-started/install-cozystack" %}}).
-
-If you're using OIDC, users and roles must be configured.
-See the [OIDC guide]({{% ref "/docs/operations/oidc" %}}) for details on how to work with the built-in OIDC server.
 
 
 ## Create a Tenant

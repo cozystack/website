@@ -1,7 +1,7 @@
 ---
-title: How to install Talos Linux using PXE
+title: Install Talos Linux using PXE
 linkTitle: PXE
-description: "How to install Talos Linux using PXE"
+description: "How to install Talos Linux using temporary DHCP and PXE servers running in Docker containers."
 weight: 15
 aliases:
   - /docs/talos/installation/pxe
@@ -9,14 +9,24 @@ aliases:
   - /docs/operations/talos/installation/pxe
 ---
 
-![Cozystack deployment](/img/cozystack-deployment.png)
+This guide explains how to install Talos Linux on bare metal servers or virtual machines
+using temporary DHCP and PXE servers running in Docker containers.
+This method requires an extra management machine, but allows for installing on multiple hosts at once.
 
-## Install dependencies:
+Note that Cozystack provides its own Talos builds, which are tested and optimized for running a Cozystack cluster.
+
+## Dependencies
+
+To install Talos using this method, you will need the following dependencies on the management host:
 
 - `docker`
 - `kubectl`
 
-## Netboot server
+## Infrastructure Overview
+
+![Cozystack deployment](/img/cozystack-deployment.png)
+
+## Installation
 
 Start matchbox with prebuilt Talos image for Cozystack:
 
@@ -73,10 +83,9 @@ CONTAINER ID   IMAGE                                               COMMAND      
 6bf638f0808e   ghcr.io/cozystack/cozystack/matchbox:v0.30.0        "/matchbox -address=…"   3 minutes ago    Up 3 minutes              matchbox
 ```
 
-Start your servers, now they should automatically boot from your PXE server.
+Start your servers.
+Now they should automatically boot from your PXE server.
 
+## Next Steps
 
-Now, when they are booted to Talos Linux maintenance mode, you can use [talos-bootstrap](https://github.com/cozystack/talos-bootstrap) or [Talm](https://github.com/cozystack/talm) to bootstrap the cluster
-
-
-Just follow **Getting Started** guide starting from the [**Bootstrap cluster**](/docs/getting-started/deploy-cluster/#bootstrap-cluster) section, to continue the installation.
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/install/kubernetes" %}}).

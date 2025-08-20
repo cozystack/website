@@ -1,13 +1,13 @@
 ---
-title: "2. Install and Configure Cozystack"
-linkTitle: "2. Install Cozystack"
+title: "3. Install and Configure Cozystack"
+linkTitle: "3. Install Cozystack"
 description: "Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard."
 weight: 20
 ---
 
 ## Objectives
 
-In this step of the tutorial, we'll install Cozystack on top of a [Kubernetes cluster, prepared in the previous step]({{% ref "./deploy-cluster" %}}).
+In this step of the tutorial, we'll install Cozystack on top of a [Kubernetes cluster, prepared in the previous step]({{% ref "./install-kubernetes" %}}).
 
 The tutorial will guide you through the following stages:
 
@@ -526,6 +526,6 @@ In this example, `grafana.example.org` is located at 192.168.100.200.
     kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
     ```
 
-## Next Steps
+## Next Step
 
-Continue by [creating a user tenant]({{% ref "/docs/getting-started/create-tenant" %}}).
+Continue the Cozystack tutorial by [creating a user tenant]({{% ref "/docs/getting-started/create-tenant" %}}).
