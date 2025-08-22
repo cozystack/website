@@ -348,25 +348,78 @@ spec:
   avoidBuggyIPs: false
 ```
 
+Now that MetalLB is configured, enable `ingress` in the `tenant-root`:
+
+```bash
+kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
+{"spec":{
+  "ingress": true
+}}'
+```
+
+To confirm successful configuration, check the HelmReleases `ingress` and `ingress-nginx-system`:
+
+```bash
+kubectl -n tenant-root get hr ingress ingress-nginx-system
+```
+
+Example of correct output:
+```console
+NAME                   AGE   READY   STATUS
+ingress                47m   True    Helm upgrade succeeded for release tenant-root/ingress.v3 with chart ingress@1.8.0
+ingress-nginx-system   47m   True    Helm upgrade succeeded for release tenant-root/ingress-nginx-system.v2 with chart cozy-ingress-nginx@0.35.1
+```
+
+Next, check the state of service `root-ingress-controller`:
+
+```bash
+kubectl -n tenant-root get svc root-ingress-controller
+```
+
+The service should be deployed as `TYPE: LoadBalancer` and have correct external IP:
+
+```console
+NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP       PORT(S)          AGE
+root-ingress-controller   LoadBalancer   10.96.91.83     192.168.100.200   80/TCP,443/TCP   48m
+```
+
 ### 4.b. Public IP Setup
 
 If your cloud provider does not support MetalLB, you can expose the ingress controller using the external IPs of your nodes.
 
-Take IP addresses of the **external** network interfaces for your nodes.
-Add them to the `externalIPs` list in the Ingress configuration:
+Use the IP addresses of the **external** network interfaces for your nodes.
+For example, the IPs of external interfaces are `192.168.100.11`, `192.168.100.12`, and `192.168.100.13`.
+
+First, patch the ConfigMap to expose these IPs:
 
 ```bash
-kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
-  "externalIPs": [
-    "192.168.100.11",
-    "192.168.100.12",
-    "192.168.100.13"
-  ]
-}}'
-
 kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
   "data": {
     "expose-external-ips": "192.168.100.11,192.168.100.12,192.168.100.13"
+  }
+}'
+```
+
+Next, enable `ingress` for the root tenant:
+
+```bash
+kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{
+  "spec":{
+    "ingress": true
+  }
+}'
+```
+
+Finally, add the list of external network interface IPs to the `externalIPs` list in the Ingress configuration:
+
+```bash
+kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{
+  "spec":{
+    "externalIPs": [
+      "192.168.100.11",
+      "192.168.100.12",
+      "192.168.100.13"
+    ]
   }
 }'
 ```
@@ -378,10 +431,11 @@ Check it in the following way:
 kubectl get svc -n tenant-root root-ingress-controller
 ```
 
-Example output:
+The service should be deployed as `TYPE: ClusterIP` and have the full range of external IPs:
 
 ```console
-root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135.181.169.168   80/TCP,443/TCP   133d
+NAME                     TYPE       CLUSTER-IP   EXTERNAL-IP                                   PORT(S)         AGE
+root-ingress-controller  ClusterIP  10.96.91.83  192.168.100.11,192.168.100.12,192.168.100.13  80/TCP,443/TCP  48m
 ```
 
 For more details, refer to the FAQ, [What if my cloud provider does not support MetalLB](
@@ -392,12 +446,11 @@ For more details, refer to the FAQ, [What if my cloud provider does not support 
 
 ### 5.1. Setup Root Tenant Services
 
-Enable `etcd`, `monitoring`, and `ingress` in your `tenant-root`:
+Enable `etcd` and `monitoring` for the root tenant:
 
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 {"spec":{
-  "ingress": true,
   "monitoring": true,
   "etcd": true,
   "isolated": true
@@ -406,7 +459,7 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 
 ### 5.2. Check the cluster state and composition
 
-Check the providioned persistent volumes:
+Check the provisioned persistent volumes:
 
 ```bash
 kubectl get pvc -n tenant-root
@@ -431,8 +484,7 @@ vmstorage-db-vmstorage-shortterm-0       Bound    pvc-cee3a2a4-5680-4880-bc2a-85
 vmstorage-db-vmstorage-shortterm-1       Bound    pvc-d55c235d-cada-4c4a-8299-e5fc3f161789   10Gi       RWO            local          <unset>                 2m41s
 ```
 
-Check all pods are running:
-
+Check that all pods are running:
 
 ```bash
 kubectl get pod -n tenant-root
@@ -474,7 +526,8 @@ Get the public IP of ingress controller:
 kubectl get svc -n tenant-root root-ingress-controller
 ```
 
-example output:
+Example output:
+
 ```console
 NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S)                      AGE
 root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:31632/TCP,443:30113/TCP   3m33s
