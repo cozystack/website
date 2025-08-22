@@ -3,6 +3,8 @@ title: "Configuring a Dedicated Network for LINSTOR"
 linkTitle: "Dedicated Network"
 description: "Redirect LINSTOR replication traffic to a dedicated network interface for better reliability and performance."
 weight: 10
+aliases:
+  - /docs/operations/storage/dedicated-network
 ---
 
 This guide explains how to improve storage reliability and performance by redirecting LINSTOR replication traffic

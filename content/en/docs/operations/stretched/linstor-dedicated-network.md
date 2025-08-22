@@ -23,7 +23,7 @@ while falling back to shared links between datacenters when needed.
 
 ## Prerequisites
 
-This guide builds on the [Dedicated Network for LINSTOR]({{% ref "/docs/operations/storage/dedicated-network" %}}) guide,
+This guide builds on the [Dedicated Network for LINSTOR]({{% ref "/docs/storage/dedicated-network" %}}) guide,
 adding additional methods and configuration patterns specific to multi-datacenter environments.
 To apply the patterns in this guide, it's important to understand how node interfaces and connection paths work.
 Be sure to review the previous guide first, as it explains these concepts in detail.
