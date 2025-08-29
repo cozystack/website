@@ -18,13 +18,14 @@ For a reference, see [cozystack/external-apps-example](https://github.com/cozyst
 
 Application repository has the following structure:
 
-|                                  |                                                                                                   |
-|----------------------------------|---------------------------------------------------------------------------------------------------|
-| `./apps`                         | Helm charts for applications that can be installed from the dashboard.                            |
-| `./charts`                       | Helm charts for system applications that will be installed permanently.                           |
-| `./cozystackresourcedefinitions` | Manifests with `CozystackResourceDefinition` for registering new resources in the Kubernetes API. |
-| `./marketplacepanels`            | Manifests with `MarketplacePanel` for creating application entries in the dashboard.              |    
-| `./system`                       | `HelmReleases` for system applications and namespaces.                                            |    
+|                                       |                                                                                                   |
+|---------------------------------------|---------------------------------------------------------------------------------------------------|
+| `./apps`                              | Helm charts for applications that can be installed from the dashboard.                            |
+| `./core`                              | Manifests for platform.                                                                           |
+| `./core/cozystackresourcedefinitions` | Manifests with `CozystackResourceDefinition` for registering new resources in the Kubernetes API. |
+| `./core/marketplacepanels`            | Manifests with `MarketplacePanel` for creating application entries in the dashboard.              |    
+| `./system`                            | `HelmReleases` for system applications and namespaces.                                            |    
+| `./system/charts`                     | Helm charts for system applications that will be installed permanently.                           |
 
 Just like standard Cozystack applications, this external application package is using Helm and FluxCD.
 To learn more about developing application packages, read the FluxCD docs:
@@ -37,6 +38,7 @@ To learn more about developing application packages, read the FluxCD docs:
 
 Create a manifest file with resources `GitRepository` and `Kustomization`, as in the example:
 
+See more: [gitrepositories](https://fluxcd.io/flux/components/source/gitrepositories/)
 ```yaml
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
