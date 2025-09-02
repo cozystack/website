@@ -123,61 +123,71 @@ spec:
 If you already have a Windows disk produced on VMware, Hyper‑V, or another cloud,
 you can follow this path to make it Virtio‑ready in Cozystack.
 
-### 1. Launch with a non‑Virtio profile
 
-When creating a VMInstance, choose the matching *legacy* profile and attach your imported system disk:
+### 1. Create dummy disk which will be used to handle virtio drivers installation:
 
-```text
-windows.10
-windows.11
-windows.2k16
-windows.2k19
-windows.2k22
-windows.2k25
+```yaml
+apiVersion: apps.cozystack.io/v1alpha1
+kind: VMDisk
+metadata:
+  name: dummy-disk-for-virtio
+spec:
+  optical: false
+  storage: "1Gi"
+  storageclass: "replicated"
+```
+
+### 2. Launch with a drive and non‑Virtio bus
+
+When creating a `VMInstance`, attach your system disk with bus `sata` and dummy disk with bus unspecified. It will default to virtio scsi bus.
+
+```yaml
+spec:
+  instanceProfile: windows.2k25.virtio
+  disks:
+    - name: win2k19-system
+      bus: sata
+    - name: dummy-disk-for-virtio
+    - name: virtio-drivers
+      bus: sata
 ```
 
 You may also mount the Virtio ISO at the same time to simplify driver installation.
 
-### 2. Install Virtio storage drivers
+### 3. Install Virtio storage drivers
 
 Follow these steps to install Virtio drivers:
 
-1.  Mount `virtio-win.iso` inside the guest.
-2.  Copy **vioscsi.inf** and **viostor.inf** to an accessible folder.
-3.  For each driver file:
-    
-    1.  Press `Win+R` and run `hdwwiz.exe`.
-    2.  Choose **Install the hardware that I manually select from a list**, then **Show All Devices**, then **Next**.
-    3.  Click **Have Disk…**, browse to the `.inf`, and finish the wizard.
-    
+1. Mount `virtio-win.iso` inside the guest.
+2. Run setup wizard to install the drivers
+3. Make sure that driver installation is successful:
+    1. Open the Device Manager
+    2. You should see the SCSI device listed with the exclamation point icon beside it.
+    3. If driver is not installed, right‑click the device and select **Update Driver**.
+    4. Choose **Install the hardware that I manually select from a list**, then **Show All Devices**, then **Next**.
+    5. Click **Have Disk…**, browse to the `.inf`, and finish the wizard.
+
     Alternatively, right‑click the `.inf` in the Explorer and select **Install**.
- 
-5. Add the drivers to the CriticalDeviceDatabase so Windows can boot from a Virtio disk:
 
-```reg
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1AF4&DEV_1004&SUBSYS_00081AF4&REV_00]
-"ClassGUID"="{4D36E97B-E325-11CE-BFC1-08002BE10318}"
-"Service"="vioscsi"
-
-[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#VEN_1AF4&DEV_1001&SUBSYS_00021AF4&REV_00]
-"ClassGUID"="{4D36E97B-E325-11CE-BFC1-08002BE10318}"
-"Service"="viostor"
-```
-
-*Tip:* Open the `.inf` file in Notepad and search for **ClassGUID** to confirm the value for your OS version.
-
-### 3. Switch to the Virtio profile
+### 3. Switch to the Virtio bus
 
 1.  Power off the VM.
-2.  Edit the `VMInstance` and change the config:
+2.  Edit the `VMInstance` and remove the `bus: sata` line from the system disk, as well the dummy disk:
 
     ```yaml
     spec:
-      instanceProfile: windows.2k25.virtio
+      disks:
+        - name: win2k19-system
+        #  bus: sata
+        #- name: dummy-disk-for-virtio
     ```
 
 3. Apply the manifest and power the VM back on. Windows should boot normally using Virtio.
+4. The dummy disk can now be removed:
 
+   ```bash
+   kubectl delete vmdisk dummy-disk-for-virtio
+   ```
 
 ## Network MTU considerations
 
