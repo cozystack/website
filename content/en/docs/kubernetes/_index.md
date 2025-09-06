@@ -152,6 +152,8 @@ See the reference for components utilized in this service:
 | `addons.velero`                               | Velero                                                                                                                                                                            | `object`   | `{}`      |
 | `addons.velero.enabled`                       | Enable Velero for backup and recovery of a tenant Kubernetes cluster.                                                                                                             | `bool`     | `false`   |
 | `addons.velero.valuesOverride`                | Custom values to override                                                                                                                                                         | `object`   | `{}`      |
+| `addons.coredns`                              | Coredns                                                                                                                                                                           | `object`   | `{}`      |
+| `addons.coredns.valuesOverride`               | Custom values to override                                                                                                                                                         | `object`   | `{}`      |
 
 
 ### Kubernetes Control Plane Configuration
