@@ -17,11 +17,11 @@ You can see the logs of main installer by executing:
 kubectl logs -n cozy-system deploy/cozystack -f
 ```
 
-All the platform components are installed using fluxcd HelmRelases.
+All the platform components are installed using Flux CD HelmReleases.
 
-You can get all installed HelmRelases:
+You can get all installed HelmReleases:
 
-```bash
+```console
 # kubectl get hr -A
 NAMESPACE                        NAME                        AGE    READY   STATUS
 cozy-cert-manager                cert-manager                4m1s   True    Release reconciliation succeeded
@@ -53,6 +53,7 @@ tenant-root                      tenant-root                 4m1s   True    Rele
 
 Normaly all of them should be `Ready` and `Release reconciliation succeeded`
 
+## Troubleshooting Flux CD
 
 ### Diagnosing `install retries exhausted` error
 

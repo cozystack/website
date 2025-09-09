@@ -1,7 +1,7 @@
 ---
 title: "Frequently asked questions"
 linkTitle: "FAQ"
-description: "Flux and the GitOps Toolkit frequently asked questions."
+description: "Knowledge base with FAQ and advanced configurations"
 weight: 144
 aliases:
   - /docs/faq
