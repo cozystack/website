@@ -44,3 +44,7 @@ template-all:
 	$(MAKE) template-vms
 	$(MAKE) template-networking
 	$(MAKE) template-k8s
+
+serve:
+	echo http://localhost:1313/docs
+	rm -rf public && hugo serve
