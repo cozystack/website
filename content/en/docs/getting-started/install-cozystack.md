@@ -62,7 +62,7 @@ However, let's overview and explain each value:
 You can learn more about this configuration file in the [Cozystack ConfigMap reference]({{% ref "/docs/operations/configuration/configmap" %}}).
 
 {{% alert color="info" %}}
-Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
+Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/operations/configuration/telemetry" %}}).
 {{% /alert %}}
 
 

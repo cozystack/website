@@ -5,6 +5,7 @@ description: "Cozystack Telemetry"
 weight: 60
 aliases:
   - /docs/telemetry
+  - /docs/operations/telemetry
 ---
 
 This document outlines the telemetry feature within the Cozystack project, detailing the rationale behind data collection, the nature of the data collected, data handling practices, and instructions for opting out.

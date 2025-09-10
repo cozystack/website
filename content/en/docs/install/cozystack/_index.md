@@ -80,7 +80,7 @@ ipv4-join-cidr: "100.64.0.0/16"
 ```
 
 {{% alert color="info" %}}
-Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
+Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/operations/configuration/telemetry" %}}).
 {{% /alert %}}
 
 

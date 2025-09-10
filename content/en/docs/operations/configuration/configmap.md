@@ -62,5 +62,5 @@ data:
 [overwrite-parameters]: {{% ref "/docs/operations/configuration/components#overwriting-component-parameters" %}}
 [Resource Management]: {{% ref "/docs/guides/resource-management#cpu-allocation-ratio" %}}
 [oidc]: {{% ref "/docs/operations/oidc" %}}
-[telemetry]: {{% ref "/docs/operations/telemetry" %}}
+[telemetry]: {{% ref "/docs/operations/configuration/telemetry" %}}
 [kube-ovn]: https://kubeovn.github.io/docs/en/guide/subnet/#join-subnet
