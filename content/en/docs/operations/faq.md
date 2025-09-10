@@ -151,98 +151,6 @@ Here you can find reference repository to learn how to configure Cozystack servi
 
 - https://github.com/aenix-io/cozystack-gitops-example
 
-### How to Rotate Certificate Authority
-
-In general, you almost never need to rotate the root CA certificate and key for the Talos API and Kubernetes API.
-Talos sets up root certificate authorities with a lifetime of 10 years,
-and all Talos and Kubernetes API certificates are issued by these root CAs.
-
-So the rotation of the root CA is only needed if:
-
-- you suspect that the private key has been compromised;
-- you want to revoke access to the cluster for a leaked talosconfig or kubeconfig;
-- once in 10 years.
-
-#### Rotate CA for a Tenant Kubernetes Cluster
-
-See: https://kamaji.clastix.io/guides/certs-lifecycle/
-
-```bash
-export NAME=k8s-cluster-name
-export NAMESPACE=k8s-cluster-namespace
-
-kubectl -n ${NAMESPACE} delete secret ${NAME}-ca
-kubectl -n ${NAMESPACE} delete secret ${NAME}-sa-certificate
-
-kubectl -n ${NAMESPACE} delete secret ${NAME}-api-server-certificate
-kubectl -n ${NAMESPACE} delete secret ${NAME}-api-server-kubelet-client-certificate
-kubectl -n ${NAMESPACE} delete secret ${NAME}-datastore-certificate
-kubectl -n ${NAMESPACE} delete secret ${NAME}-front-proxy-client-certificate
-kubectl -n ${NAMESPACE} delete secret ${NAME}-konnectivity-certificate
-
-kubectl -n ${NAMESPACE} delete secret ${NAME}-admin-kubeconfig
-kubectl -n ${NAMESPACE} delete secret ${NAME}-controller-manager-kubeconfig
-kubectl -n ${NAMESPACE} delete secret ${NAME}-konnectivity-kubeconfig
-kubectl -n ${NAMESPACE} delete secret ${NAME}-scheduler-kubeconfig
-
-kubectl delete po -l app.kubernetes.io/name=kamaji -n cozy-kamaji
-kubectl delete po -l app=${NAME}-kcsi-driver
-```
-
-Wait for the `virt-launcher-kubernetes-*` pods to restart.
-After that, download the new Kubernetes certificate.
-
-#### Rotate CA for the Management Kubernetes Cluster:
-
-See: https://www.talos.dev/v1.9/advanced/ca-rotation/#kubernetes-api
-
-```bash
-git clone https://github.com/cozystack/cozystack.git
-cd packages/core/testing
-make apply
-make exec
-```
-
-Add this to your talosconfig in a pod:
-
-```yaml
-client-aenix-new:
-    endpoints:
-    - 12.34.56.77
-    - 12.34.56.78
-    - 12.34.56.79
-    nodes:
-    - 12.34.56.77
-    - 12.34.56.78
-    - 12.34.56.79
-```
-
-Execute in a pod:
-```bash
-talosctl rotate-ca -e 12.34.56.77,12.34.56.78,12.34.56.79 \
-    --control-plane-nodes 12.34.56.77,12.34.56.78,12.34.56.79 \
-    --talos=false \
-    --dry-run=false &
-```
-
-Get a new kubeconfig:
-```bash
-talm kubeconfig kubeconfig -f nodes/srv1.yaml
-```
-
-#### For Talos API
-
-See: https://www.talos.dev/v1.9/advanced/ca-rotation/#talos-api
-
-All commands are like for the management k8s cluster, but with `talosctl` command:
-
-```bash
-talosctl rotate-ca -e 12.34.56.77,12.34.56.78,12.34.56.79 \
-    --control-plane-nodes 12.34.56.77,12.34.56.78,12.34.56.79 \
-    --kubernetes=false \
-    --dry-run=false &
-```
-
 
 ### Public-network Kubernetes deployment
 
@@ -263,7 +171,6 @@ cluster:
 ```
 
 For `talm`, append the same lines at end of the first node's configuration file, such as `nodes/node1.yaml`.
-
 
 ### How to allocate space on system disk for user storage
 
@@ -337,12 +244,16 @@ Output will be similar to this example:
 
 Moved to Cluster Configuration, [How to enable Hugepages]({{% ref "/docs/operations/configuration/hugepages" %}}).
 
+### How to Rotate Certificate Authority
+
+Moved to Cluster Maintenance, [How to Rotate Certificate Authority]({{% ref "/docs/operations/cluster/rotate-ca" %}}).
+
 ## Bundles
 
 ### How to overwrite parameters for specific components
 
-Moved to the [Components reference]({{% ref "/docs/operations/configuration/components#overwriting-component-parameters" %}}).
+Moved to Cluster configuration, [Components reference]({{% ref "/docs/operations/configuration/components#overwriting-component-parameters" %}}).
 
 ### How to disable some components from bundle
 
-Moved to the [Components reference]({{% ref "/docs/operations/configuration/components#enabling-and-disabling-components" %}}).
+Moved to Cluster configuration, [Components reference]({{% ref "/docs/operations/configuration/components#enabling-and-disabling-components" %}}).
