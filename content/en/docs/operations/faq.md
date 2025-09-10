@@ -335,47 +335,7 @@ Output will be similar to this example:
 
 ### How to enable Hugepages
 
-See more: [hugetlbpage](https://docs.kernel.org/admin-guide/mm/hugetlbpage.html)
-
-For enabling hubepages add to your node tamplate:
-```yaml
-machine:
-  sysctls:
-    vm.nr_hugepages: "3000"
-```
-Where `vm.nr_hugepages` - is count of pages per 2Mi.
-
-For `talm` installation since talm version `v0.16.0`:
-Edit `values.yaml`:
-
-```yaml
-...
-certSANs: []
-nr_hugepages: 3000
-```
-
-Make `apply` for nodes.
-
-For Talm:
-```bash
-talm apply -f nodes/node0.yaml
-```
-
-For talosctl:
-```bash
-talosctl apply -f nodetemplate.yaml -n 192.168.123.11 -e 192.168.123.11
-```
-
-Reboot nodes:
-
-```bash
-talm -f nodes/node0.yaml reboot
-```
-or
-
-```bash
-talosctl reboot -n 192.168.123.11 -e 192.168.123.11
-```
+Moved to Cluster Configuration, [How to enable Hugepages]({{% ref "/docs/operations/configuration/hugepages" %}}).
 
 ## Bundles
 
