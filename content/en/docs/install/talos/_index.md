@@ -16,7 +16,7 @@ To plan the installation, see the [hardware requirements]({{% ref "/docs/install
 
 If this is your first time installing Cozystack, consider [starting with the Cozystack tutorial]({{% ref "/docs/getting-started" %}}).
 
-## Installing Talos
+## Installation Options
 
 There are several methods to install Talos on any bare metal server or virtual machine.
 They have various limitations and optimal use cases:
