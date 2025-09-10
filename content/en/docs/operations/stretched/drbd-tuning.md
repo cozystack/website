@@ -48,3 +48,5 @@ These values are tuned for inter-datacenter environments with higher latency tha
 | `--drbd-timeout` | Maximum time to wait for a network reply before triggering a timeout (in tenths of a second). | 60            | 120               |
 
 Adjusting these settings helps avoid unnecessary fencing and workload disruption in stretched clusters.
+
+Also note the guide on [generic DRBD tuning]({{% ref "/docs/storage/drbd-tuning" %}}).

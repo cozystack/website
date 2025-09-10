@@ -2,7 +2,7 @@
 title: "Using NFS shares with Cozystack"
 linkTitle: "Using NFS"
 description: "Configure optional module `nfs-driver` to order volumes from NFS shares in Cozystack"
-weight: 10
+weight: 30
 aliases:
   - /docs/operations/storage/nfs
 ---

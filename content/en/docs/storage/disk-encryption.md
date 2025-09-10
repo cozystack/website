@@ -7,7 +7,7 @@ aliases:
   - /docs/operations/storage/disk-encryption
 ---
 
-Cozystack administrators can enable encrypted storage by creating a custom StorageClass
+Cozystack administrators can enable encrypted storage by creating a custom StorageClass.
 This guide explains how to set up encryption passphrase, create an encrypted storage class, and use it in applications.
 
 LINSTOR provides at-rest encryption for persistent volumes using [LUKS](https://linbit.com/drbd-user-guide/linstor-guide-1_0-en/#s-linstor-encrypted-volumes).
@@ -22,12 +22,12 @@ kubectl exec -i -t -n cozy-linstor deploy/linstor-controller -- linstor encrypti
 ```
 
 {{% alert color="warning" %}}
-:warning: Save the passphrase securely.
+:warning: Save the passphrase securely.<br/>
 If you lose the encryption passphrase, all encrypted data will be permanently lost.
 {{% /alert %}}
 
-You will need to enter master passphrase each time after restarting the LINSTOR Controller.
-To enter the master passphrase, use the following command:
+You will need to enter the passphrase each time after restarting the LINSTOR Controller.
+To enter the passphrase, use the following command:
 
 ```bash
 kubectl exec -i -t -n cozy-linstor deploy/linstor-controller -- linstor encryption enter-passphrase

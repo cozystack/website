@@ -93,7 +93,7 @@ Before continuing, it's helpful to clarify the terminology used for network inte
 
 Here’s a typical `node list` output from LINSTOR:
 
-```console
+```
 LINSTOR ==> node list
 ╭───────────────────────────────────────────────────────╮
 ┊ Node   ┊ NodeType  ┊ Addresses               ┊ State  ┊
@@ -126,7 +126,7 @@ By default, LINSTOR configures only one interface per satellite: the `default-ip
 derived from the Kubernetes node’s default IP.
 Here is an example of how a Linstor satellite default interface list looks:
 
-```console
+```
 LINSTOR ==> node interface list node01
 ╭─────────────────────────────────────────────────────────────────╮
 ┊ node01    ┊ NetInterface ┊ IP           ┊ Port ┊ EncryptionType ┊
@@ -140,7 +140,7 @@ If additional interfaces exist on the node, they are not added automatically.
 
 To enable storage traffic over another network, you can manually add a second interface:
 
-```console
+```
 LINSTOR ==> node interface create node01 optic-san 10.78.24.201
 SUCCESS:
 Description:
@@ -196,7 +196,7 @@ The following sections explain both approaches.
 You can create node connections manually using the LINSTOR CLI.
 Here’s how to check the command syntax:
 
-```console
+```
 LINSTOR ==> node-connection path create -h
 usage: linstor node-connection path create [-h]
                                            node_a node_b path_name
@@ -213,7 +213,7 @@ positional arguments:
 
 Example: create a connection between `node01` and `node02`, using the `optic-san` interface on both sides:
 
-```console
+```
 LINSTOR ==> node-connection path create node01 node02 node01-02 optic-san optic-san
 SUCCESS:
     Successfully set property key(s): Paths/node01-02/node01,Paths/node01-02/node02
@@ -236,7 +236,7 @@ There is no need to define a separate reverse path.
 
 You can verify the configuration:
 
-```console
+```
 LINSTOR ==> node-connection path list node01 node02
 ╭────────────────────────────────────╮
 ┊ Key                    ┊ Value     ┊
@@ -359,7 +359,7 @@ LINSTOR ==> node-connection path list node01 node03
 
 To keep the configuration clean, you can remove the old manual path:
 
-```console
+```
 LINSTOR ==> linstor node-connection path delete node01 node02 node01-02
 SUCCESS:
     Successfully deleted property key(s): Paths/node01-02/node02,Paths/node01-02/node01
