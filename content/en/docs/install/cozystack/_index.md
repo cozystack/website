@@ -15,8 +15,8 @@ It mirrors the tutorial in structure, but gives much more details and explains v
 
 ## 1. Define Cluster Configuration
 
-Installing Cozystack starts with a single [ConfigMap]({{% ref "/docs/install/cozystack/configmap" %}}).
-This ConfigMap includes [Cozystack bundle]({{% ref "/docs/install/cozystack/bundles" %}}) and [components setup]({{% ref "/docs/install/cozystack/components" %}}),
+Installing Cozystack starts with a single [ConfigMap]({{% ref "/docs/operations/configuration/configmap" %}}).
+This ConfigMap includes [Cozystack bundle]({{% ref "/docs/operations/configuration/bundles" %}}) and [components setup]({{% ref "/docs/operations/configuration/components" %}}),
 key network settings, exposed services, and other options.
 
 Cozystack configuration can be updated after installing it.
@@ -41,7 +41,7 @@ data:
   ipv4-join-cidr: "100.64.0.0/16"
 ```
 
-For the explanation of each configuration parameter, see the [ConfigMap reference]({{% ref "/docs/install/cozystack/configmap" %}}).
+For the explanation of each configuration parameter, see the [ConfigMap reference]({{% ref "/docs/operations/configuration/configmap" %}}).
 
 
 ### 1.1. Choose a Bundle
@@ -51,12 +51,12 @@ Bundle `paas-full` is the most complete one, as it covers all layers from hardwa
 Choose it if you deploy Cozystack on bare metal or VMs and if you want to use its full power.
 
 If you deploy Cozystack on a provided Kubernetes cluster, or if you only want to deploy a Kubernetes cluster without services, 
-refer to the [bundles overview and comparison]({{% ref "/docs/install/cozystack/bundles" %}}).
+refer to the [bundles overview and comparison]({{% ref "/docs/operations/configuration/bundles" %}}).
 
 ### 1.2. Fine-tune the Components
 
 You can add some optional components or remove ones that are included by default.
-Refer to the [components reference]({{% ref "/docs/install/cozystack/components" %}}).
+Refer to the [components reference]({{% ref "/docs/operations/configuration/components" %}}).
 
 If you deploy on VMs or dedicated servers of a cloud provider, you'll likely need to disable MetalLB and
 enable a provider-specific load balancer, or use a different network setup.

@@ -10,6 +10,7 @@ aliases:
   - /docs/operations/bundles/paas-hosted
   - /docs/operations/bundles/distro-full
   - /docs/operations/bundles/distro-hosted
+  - /docs/install/cozystack/bundles
 ---
 
 ## Introduction
@@ -60,11 +61,11 @@ or just need a minimal Kubernetes cluster.
 [distro-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/distro-full.yaml
 [distro-hosted-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/distro-hosted.yaml
 
-[paas-full]: {{% ref "/docs/install/cozystack/bundles#paas-full" %}}
+[paas-full]: {{% ref "/docs/operations/configuration/bundles#paas-full" %}}
 [iaas-full]: https://github.com/cozystack/cozystack/issues/730
-[paas-hosted]: {{% ref "/docs/install/cozystack/bundles#paas-hosted" %}}
-[distro-full]: {{% ref "/docs/install/cozystack/bundles#distro-full" %}}
-[distro-hosted]: {{% ref "/docs/install/cozystack/bundles#distro-hosted" %}}
+[paas-hosted]: {{% ref "/docs/operations/configuration/bundles#paas-hosted" %}}
+[distro-full]: {{% ref "/docs/operations/configuration/bundles#distro-full" %}}
+[distro-hosted]: {{% ref "/docs/operations/configuration/bundles#distro-hosted" %}}
 
 
 ## Choosing the Right Bundle
@@ -193,10 +194,10 @@ See [cozystack/cozystack#730][iaas-full-gh].
 ## Learn More
 
 For a full list of configuration options for each bundle, refer to the
-[ConfigMap reference]({{% ref "/docs/install/cozystack/configmap" %}}).
+[ConfigMap reference]({{% ref "/docs/operations/configuration/configmap" %}}).
 
 To see the full list of components, how to enable and disable them, refer to the
-[Components reference]({{% ref "/docs/install/cozystack/components" %}}).
+[Components reference]({{% ref "/docs/operations/configuration/components" %}}).
 
 To deploy a selected bundle, follow the [Cozystack installation guide]({{% ref "/docs/install/cozystack" %}}) 
 or [provider-specific guides]({{% ref "/docs/install/providers" %}}).

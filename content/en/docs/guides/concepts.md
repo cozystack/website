@@ -78,4 +78,4 @@ Bundles are pre-defined combinations of Cozystack components.
 Each bundle is tested, versioned, and guaranteed to work as a unit.
 They simplify installation, reduce the risk of misconfiguration, and make it easier to choose the right set of features for your deployment.
 
-Read more: [Bundles]({{% ref "/docs/install/cozystack/bundles" %}}).
+Read more: [Bundles]({{% ref "/docs/operations/configuration/bundles" %}}).

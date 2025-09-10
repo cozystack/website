@@ -59,7 +59,7 @@ Before upgrading, check the current status of your Cozystack cluster.
       ...
     ```
 
-    Learn more about this file and its contents from the [Cozystack ConfigMap reference]({{% ref "/docs/install/cozystack/configmap" %}}).
+    Learn more about this file and its contents from the [Cozystack ConfigMap reference]({{% ref "/docs/operations/configuration/configmap" %}}).
 
 ### 2. Apply the new manifest file
 

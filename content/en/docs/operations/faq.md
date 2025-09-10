@@ -381,8 +381,8 @@ talosctl reboot -n 192.168.123.11 -e 192.168.123.11
 
 ### How to overwrite parameters for specific components
 
-Moved to the [Components reference]({{% ref "/docs/install/cozystack/components#overwriting-component-parameters" %}}).
+Moved to the [Components reference]({{% ref "/docs/operations/configuration/components#overwriting-component-parameters" %}}).
 
 ### How to disable some components from bundle
 
-Moved to the [Components reference]({{% ref "/docs/install/cozystack/components#enabling-and-disabling-components" %}}).
+Moved to the [Components reference]({{% ref "/docs/operations/configuration/components#enabling-and-disabling-components" %}}).

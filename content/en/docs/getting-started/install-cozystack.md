@@ -55,11 +55,11 @@ However, let's overview and explain each value:
 -   `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
 -   `api-server-endpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
 -   `data.bundle-name: "paas-full"` means that we're using the Cozystack bundle `paas-full`, the most complete set of components.
-    Learn more about bundles in the [Cozystack Bundles reference]({{% ref "/docs/install/cozystack/bundles" %}}).
+    Learn more about bundles in the [Cozystack Bundles reference]({{% ref "/docs/operations/configuration/bundles" %}}).
 -   `data.expose-services: "dashboard,api"` means that we want to make Cozystack dashboard (UI) and API accessible by users.
 -   `ipv4-*` are internal networking configurations for the underlying Kubernetes cluster.
 
-You can learn more about this configuration file in the [Cozystack ConfigMap reference]({{% ref "/docs/install/cozystack/configmap" %}}).
+You can learn more about this configuration file in the [Cozystack ConfigMap reference]({{% ref "/docs/operations/configuration/configmap" %}}).
 
 {{% alert color="info" %}}
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation](/docs/operations/telemetry/).
