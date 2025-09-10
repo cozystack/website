@@ -106,7 +106,7 @@ See the reference for components utilized in this service:
 
 | Name                                | Description                                                                                                       | Type                | Value   |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------- | ------- |
-| `version`                           | Kubernetes version given as vMAJOR.MINOR. Available are versions from 1.28 to 1.33.                               | `string`            | `v1.32` |
+| `version`                           | Kubernetes version given as vMAJOR.MINOR. Available are versions from 1.28 to 1.33.                               | `string`            | `v1.33` |
 | `host`                              | Hostname used to access the Kubernetes cluster externally. Defaults to `<cluster-name>.<tenant-host>` when empty. | `string`            | `""`    |
 | `nodeGroups`                        | Worker nodes configuration                                                                                        | `map[string]object` | `{...}` |
 | `nodeGroups[name].minReplicas`      | Minimum amount of replicas                                                                                        | `int`               | `0`     |
