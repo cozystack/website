@@ -1,7 +1,7 @@
 ---
-title: "Cluster Maintenance Guide"
-linkTitle: "Cluster Maintenance"
-description: "Guide for the regular cluster operations: adding and removing nodes, upgrading Talos, etc."
+title: "Cluster Scaling: Adding and Removing Nodes"
+linkTitle: "Cluster Scaling"
+description: "Adding and removing nodes in a Cozystack cluster."
 weight: 10
 ---
 

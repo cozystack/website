@@ -199,4 +199,4 @@ See the [Kubernetes installation troubleshooting]({{% ref "/docs/install/kuberne
 
 #### Remove a failed node from the cluster
 
-See the [Cluster Maintenance Guide]({{% ref "/docs/operations/cluster" %}}).
+See the [Cluster Maintenance > Cluster Scaling]({{% ref "/docs/operations/cluster/scaling" %}}).
