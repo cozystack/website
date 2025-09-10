@@ -1,7 +1,7 @@
 ---
 title: "Cluster Maintenance Guide"
 linkTitle: "Cluster Maintenance"
-description: "Guide for main cluster operations: adding and removing nodes, upgrading Talos, etc."
+description: "Guide for the regular cluster operations: adding and removing nodes, upgrading Talos, etc."
 weight: 10
 ---
 

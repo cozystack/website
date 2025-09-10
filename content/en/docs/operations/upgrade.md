@@ -1,59 +1,94 @@
 ---
-title: "Upgrade Cozystack"
-linkTitle: "Upgrade Cozystack"
+title: "Upgrading Cozystack and Post-upgrade Checks"
+linkTitle: "Upgrading Cozystack"
 description: "Upgrade Cozystack system components."
 weight: 31
 aliases:
   - /docs/upgrade
 ---
 
-## Upgrade Cozystack
+## About Cozystack Versions
 
-### Check current cozystack status
-```bash
-kubectl get hr -A | grep -v "True"
-```
-Repair helmreleases if nessesary.
-Make sure that the cozystack config map contains all the necessary variables.
+Cozystack uses a staged release process to ensure stability and flexibility during development.
 
-```bash
-kubectl get configmap -n cozy-system cozystack -oyaml
-```
-Example output:
-```yaml
-apiVersion: v1
-data:
-  api-server-endpoint: https://33.44.55.66:6443
-  #bundle-enable: telepresence if nessesary
-  bundle-name: paas-full
-  ipv4-join-cidr: 100.64.0.0/16
-  ipv4-pod-cidr: 10.244.0.0/16
-  ipv4-pod-gateway: 10.244.0.1
-  ipv4-svc-cidr: 10.96.0.0/16
-  # oidc-enabled: "true" if nessesary
-  root-host: example.org
-kind: ConfigMap
-...
-```
-And add missing key: value data.
+There are three types of releases:
 
-### Apply new manifest file
+-   **Alpha, Beta, and Release Candidates (RC)** – Preview versions (such as `v0.42.0-alpha.1` or `v0.42.0-rc.1`) used for final testing and validation.
+-   **Stable Releases** – Regular versions (e.g., `v0.42.0`) that are feature-complete and thoroughly tested.
+    Such versions usually introduce new features, update dependencies, and may have API changes.
+-   **Patch Releases** – Bugfix-only updates (e.g., `v0.42.1`) made after a stable release, based on a dedicated release branch.
+
+It's highly recommended to install only stable and patch releases in production environments.
+
+For a full list of releases, see the [Releases page](https://github.com/cozystack/cozystack/releases) on GitHub.
+
+To learn more about Cozystack release process, read the [Cozystack Release Workflow](https://github.com/cozystack/cozystack/blob/main/docs/release.md).
+
+## Upgrading Cozystack
+
+### 1. Check the cluster status
+
+Before upgrading, check the current status of your Cozystack cluster.
+
+
+1.  Find and repair all failed HelmReleases.
+    This command will show HelmReleases in states other than `READY: True`.
+
+    ```bash
+    kubectl get hr -A | grep -v "True"
+    ```
+
+1.  Make sure that the Cozystack ConfigMap contains all the necessary variables:
+    If there are missing keys in `data.*`, add them.
+    
+    ```bash
+    kubectl get configmap -n cozy-system cozystack -oyaml
+    ```
+    Example output:
+    ```yaml
+    apiVersion: v1
+    kind: ConfigMap
+    data:
+      api-server-endpoint: https://33.44.55.66:6443
+      bundle-name: paas-full
+      ipv4-join-cidr: 100.64.0.0/16
+      ipv4-pod-cidr: 10.244.0.0/16
+      ipv4-pod-gateway: 10.244.0.1
+      ipv4-svc-cidr: 10.96.0.0/16
+      root-host: example.org
+      ...
+    ```
+
+    Learn more about this file and its contents from the [Cozystack ConfigMap reference]({{% ref "/docs/install/cozystack/configmap" %}}).
+
+### 2. Apply the new manifest file
 
 Each Cozystack release includes a manifest file `cozystack-installer.yml`.
 Download and apply it, or apply directly from GitHub:
+
 ```bash
 # note the 'v' before version numbers
 version=vX.Y.Z
 kubectl apply -f  https://github.com/cozystack/cozystack/releases/download/$version/cozystack-installer.yaml
 ```
 
-### Check cozystack status
+You can read the logs of the main installer:
+
+```bash
+kubectl logs -n cozy-system deploy/cozystack -f
+```
+
+### 3. Check the cluster status after upgrading
+
 ```bash
 kubectl get pods -n cozy-system
 kubectl get hr -A | grep -v "True"
 ```
 
-If pod status is failure, check logs.
+If pod status shows a failure, check the logs:
+
 ```bash
-kubectl logs deploy/cozystack -n cozy-system --previous
+kubectl logs -n cozy-system deploy/cozystack --previous
 ```
+
+
