@@ -25,6 +25,8 @@ There are several methods to configure Talos nodes and bootstrap a Kubernetes cl
 -   [Using talosctl]({{% ref "./talosctl" %}}), a specialized command line tool for managing Talos.
 -   [Air-gapped installation]({{% ref "./air-gapped" %}}) is possible with Talm or talosctl.
 
+If you encounter problems with installation, refer to the [Troubleshooting section]({{% ref "./troubleshooting" %}}).
+
 ## Further Steps
 
 -   After installing and configuring Kubernetes on top of Talos Linux nodes, you will have a Kubernetes cluster ready to

@@ -1,5 +1,5 @@
 ---
-title: "Troubleshooting cheatsheet"
+title: "Cozystack Troubleshooting Guide"
 linkTitle: "Troubleshooting"
 description: "Showcase various ways to get more information out of Flux controllers to debug potential problems."
 weight: 60
@@ -7,13 +7,14 @@ aliases:
   - /docs/troubleshooting
 ---
 
-## Cozystack
+This guide shows the initial steps to check your cluster's health and discover problems.
+In the bottom of the page you will find links to troubleshooting guides for various Cozystack components and aspects of cluster operations.
 
-### Getting basic information
+## Getting basic information
 
 You can see the logs of main installer by executing:
 
-```yaml
+```bash
 kubectl logs -n cozy-system deploy/cozystack -f
 ```
 
@@ -59,7 +60,7 @@ Normaly all of them should be `Ready` and `Release reconciliation succeeded`
 
 Sometimes you can face with the error:
 
-```bash
+```console
 # kubectl get hr -A -n cozy-dashboard dashboard
 NAMESPACE          NAME          AGE   READY   STATUS
 cozy-dashboard     dashboard     15m   False   install retries exhausted
@@ -83,58 +84,6 @@ and check the events again:
 ```bash
 kubectl describe hr -n cozy-dashboard dashboard
 ```
-
-## Cluster bootstrapping
-
-Errors that can occur when bootstrapping a cluster with `talos-bootstrap`, `talm`, or `talosctl`:
-
-### No Talos nodes in maintenance mode found!
-
-If you encounter issues with the `talos-bootstrap` script not detecting any nodes, follow these steps to diagnose and resolve the issue:
-
-#### Verify Network Segment
-
-Ensure that you are running the script within the same network segment as the nodes. This is crucial for the script to be able to communicate with the nodes.
-
-#### Use Nmap to Discover Nodes
-
-Check if `nmap` can discover your node by running the following command:
-
-```bash
-nmap -Pn -n -p 50000 192.168.0.0/24
-```
-
-This command scans for nodes in the network that are listening on port `50000`.
-The output should list all the nodes in the network segment that are listening on this port, indicating that they are reachable.
-
-#### Verify talosctl Connectivity
-
-Next, verify that `talosctl` can connect to a specific node, especially if the node is in maintenance mode:
-
-```bash
-talosctl -e "${node}" -n "${node}" get machinestatus -i
-```
-
-Receiving an error like the following usually means your local `talosctl` binary is outdated:
-
-```console
-rpc error: code = Unimplemented desc = unknown service resource.ResourceService
-```
-
-Updating `talosctl` to the latest version should resolve this issue.
-
-#### Run talos-bootstrap in debug mode
-
-If the previous steps don’t help, run `talos-bootstrap` in debug mode to gain more insight.
-
-Execute the script with the `-x` option to enable debug mode:
-
-```bash
-bash -x talos-bootstrap
-```
-
-Pay attention to the last command displayed before the error; it often indicates the command that failed and can provide clues for further troubleshooting.
-
 
 ## Kube-OVN crash
 
@@ -226,7 +175,7 @@ spec:
 Verify that the DaemonSet is running:
 
 ```console
-kubectl get pod -n cozy-kubeovn
+# kubectl get pod -n cozy-kubeovn
 ovn-cleanup-hjzxb                      1/1     Running             0              6s
 ovn-cleanup-wmzdv                      1/1     Running             0              6s
 ovn-cleanup-ztm86                      1/1     Running             0              6s
@@ -322,3 +271,10 @@ After cleanup, check for any resource issues using `linstor advise`:
 ```
 
 Run the `linstor rd ap` commands suggested in the "Possible fix" column to restore the desired replica count.
+
+
+## Specific Troubleshooting Guides
+
+### Cluster Bootstrapping
+
+See the [Kubernetes installation troubleshooting]({{% ref "/docs/install/kubernetes/troubleshooting" %}}).
