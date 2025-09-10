@@ -31,5 +31,5 @@ linstor controller set-property DrbdOptions/PeerDevice/c-plan-ahead  10
 ```
 
 -   `c-max-rate` is specified in KiB/s and should match the maximum sustained throughput of your disks or the network throughput (whichever is lower).
-    The exsample value of `737280` corresponds to 720 MiB/s.  
+    The example value of `737280` corresponds to 720 MiB/s.  
 -   `c-min-rate` and `resync-rate` are also in KiB/s and should be set to roughly one third of `c-max-rate`.
