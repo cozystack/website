@@ -79,6 +79,17 @@ talos-bootstrap --help
               device_ownership_from_security_context = true
         path: /etc/cri/conf.d/20-customization.part
         op: create
+      - op: overwrite
+        path: /etc/lvm/lvm.conf
+        permissions: 0o644
+        content: |
+          backup {
+            backup = 0
+            archive = 0
+          }
+          devices {
+            global_filter = [ "r|^/dev/drbd.*|", "r|^/dev/dm-.*|", "r|^/dev/zd.*|" ]
+          }
 
     cluster:
       network:
