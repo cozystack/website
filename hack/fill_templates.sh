@@ -9,6 +9,7 @@ Options:
   --branch BRANCH   Git branch in cozystack/cozystack (default: main)
   --apps  LIST      Space- or comma-separated list of apps to update
   --dest  PATH      Destination directory where final docs live (templates go to DEST/_include)
+  --pkgdir DIR      Subdirectory under packages/ to fetch from (default: apps). Examples: apps, extra
   -h, --help        Show this help and exit
 
 Notes:
@@ -24,6 +25,7 @@ EOF
 BRANCH="main"
 DEST_DIR=""
 APPS=()
+PKG_DIR="apps"
 
 # -------------------- Parse arguments --------------------
 while [[ $# -gt 0 ]]; do
@@ -34,6 +36,8 @@ while [[ $# -gt 0 ]]; do
       IFS=', ' read -r -a APPS <<< "$2"; shift 2 ;;
     --dest)
       DEST_DIR="$2"; shift 2 ;;
+    --pkgdir)
+      PKG_DIR="$2"; shift 2 ;;
     -h|--help)
       usage; exit 0 ;;
     *)
@@ -62,7 +66,7 @@ SRC_DIR="${DEST_DIR%/}/_include"
 mkdir -p "$SRC_DIR"
 
 GITHUB_REPO="cozystack/cozystack"
-RAW_BASE_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/${BRANCH}/packages/apps"
+RAW_BASE_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/${BRANCH}/packages/${PKG_DIR}"
 
 for app in "${APPS[@]}"; do
   readme_url="${RAW_BASE_URL}/${app}/README.md"
