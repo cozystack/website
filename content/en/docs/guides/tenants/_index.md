@@ -30,21 +30,27 @@ In turn, children can use their parent's services.
 
 ### Sharing Cluster Services
 
-Lower-level tenants can access the cluster services of their parent in case they do not run their own.
+Tenants may have [cluster services]({{% ref "/docs/operations/services" %}}) deployed in them.
+Cluster services are middleware services providing core functionality to the tenants and user-facing applications.
 
 The `root` tenant has a set of services like `etcd`, `ingress`, and `monitoring` by default.
+Lower-level tenants can run their own cluster services or access ones of their parent.
 
-User can can create a tenant `foo` inside of tenant `root` and a nested tenant `bar` inside of `foo`.
-Let's see what happens when [tenant Kubernetes]({{% ref "/docs/kubernetes" %}}) and
-[Postgres]({{% ref "/docs/applications/postgres" %}}) applications run under the `bar` namespace.
+For example, a Cozystack user creates the following tenants and services:
 
-Since tenant `bar` does not have its own cluster services like `ingress` and `monitoring`,
-the applications will use the cluster services of the parent tenant `foo`.
-This in turn means:
+- Tenant `foo` inside of tenant `root`, having its own instances of `etcd` and `monitoring` running.
+- Tenant `bar` inside of tenant `foo`, having its own instance of `etcd`.
+- [Tenant Kubernetes cluster]({{% ref "/docs/kubernetes" %}}) and a
+  [Postgres database]({{% ref "/docs/applications/postgres" %}}) in the tenant `bar`.
 
--   The tenant Kubernetes cluster data will be stored in the `bar` tenant's own etcd.
+All applications need services like `ingress` and `monitoring`. 
+Since tenant `bar` does not have these services, the applications will use the parent tenant's services.
+
+Here's how this configuration will be resolved:
+
+-   The tenant Kubernetes cluster will store its data in the `bar` tenant's own `etcd` service.
 -   All metrics will be collected in the monitoring stack of the parent tenant `foo`.
--   Access to the cluster will be through the common ingress deployed in the tenant `root`.
+-   Access to the applications will be through the common `ingress` deployed in the tenant `root`.
 
 ![tenant services](./tenants2.png)
 
