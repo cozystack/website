@@ -99,9 +99,12 @@ ovn-cleanup-wmzdv                      1/1     Running             0            
 ovn-cleanup-ztm86                      1/1     Running             0              6s
 ```
 
-Once the cleanup is complete, delete the DaemonSet and restart the Kube-OVN DaemonSet pods to apply the new configuration:
+Once the cleanup is complete, delete the `ovn-cleanup` DaemonSet and restart the Kube-OVN CNI pods to apply the new configuration:
 
 ```bash
-kubectl delete ds
-kubectl get pod -n cozy-kubeovn
+# Delete the cleanup DaemonSet
+kubectl -n cozy-kubeovn delete ds ovn-cleanup
+
+# Restart Kube-OVN CNI pods by deleting them
+kubectl -n cozy-kubeovn rollout restart ds kube-ovn-cni
 ```
