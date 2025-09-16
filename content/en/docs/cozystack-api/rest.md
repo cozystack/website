@@ -6,5 +6,5 @@ type: swagger
 weight: 10
 ---
 
-{{< swaggerui src="./api.json" >}}
+{{< swaggerui src="https://raw.githubusercontent.com/cozystack/website/refs/heads/main/content/en/docs/cozystack-api/api.json" >}}
 
