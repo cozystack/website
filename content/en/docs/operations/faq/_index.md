@@ -85,37 +85,6 @@ After that, your Ingress will be available on the specified IPs:
 root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135.181.169.168   80/TCP,443/TCP   133d
 ```
 
-### How to generate kubeconfig for tenant users
-
-Use the following script:
-
-```bash
-SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
-kubectl get secret tenant-root -n tenant-root -o go-template='
-apiVersion: v1
-kind: Config
-clusters:
-- name: tenant-root
-  cluster:
-    server: '"$SERVER"'
-    certificate-authority-data: {{ index .data "ca.crt" }}
-contexts:
-- name: tenant-root
-  context:
-    cluster: tenant-root
-    namespace: {{ index .data "namespace" | base64decode }}
-    user: tenant-root
-current-context: tenant-root
-users:
-- name: tenant-root
-  user:
-    token: {{ index .data "token" | base64decode }}
-' \
-> tenant-root.kubeconfig
-```
-
-in the result, you’ll receive the tenant-kubeconfig file, which you can provide to the user.
-
 ### How to configure Cozystack using FluxCD or ArgoCD
 
 Here you can find reference repository to learn how to configure Cozystack services using GitOps approach:
@@ -210,6 +179,10 @@ Output will be similar to this example:
 | data                 | node1 | ZFS      | data     |   351.46 GiB |       476 GiB | True         | Ok    | node1;data                 |
 | data1                | node1 | ZFS      | data     |   378.93 GiB |       412 GiB | True         | Ok    | node1;data1                |
 ```
+
+### How to generate kubeconfig for tenant users
+
+Moved to [How to generate kubeconfig for tenant users]({{% ref "/docs/operations/faq/generate-kubeconfig" %}}).
 
 ### How to enable Hugepages
 
