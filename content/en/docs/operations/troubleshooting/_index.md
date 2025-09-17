@@ -2,7 +2,7 @@
 title: "Cozystack Troubleshooting Guide"
 linkTitle: "Troubleshooting"
 description: "This guide shows the initial steps to check your cluster's health and discover problems."
-weight: 60
+weight: 110
 aliases:
   - /docs/troubleshooting
 ---

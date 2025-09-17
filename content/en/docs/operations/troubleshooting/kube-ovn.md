@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting Kube-OVN"
-linkTitle: "Troubleshooting Kube-OVN"
+linkTitle: "Kube-OVN"
 description: "Explains how to resolve Kube-OVN crashes caused by a corrupted OVN database."
 weight: 20
 ---

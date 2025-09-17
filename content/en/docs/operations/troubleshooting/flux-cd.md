@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting Flux CD"
-linkTitle: "Troubleshooting Flux CD"
+linkTitle: "Flux CD"
 description: "Explains how to resolve Flux CD errors."
 weight: 10
 ---

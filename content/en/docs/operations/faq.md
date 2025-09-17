@@ -1,8 +1,8 @@
 ---
-title: "Frequently asked questions"
-linkTitle: "FAQ"
+title: "Frequently asked questions and How-to guides"
+linkTitle: "FAQ / How-tos"
 description: "Knowledge base with FAQ and advanced configurations"
-weight: 144
+weight: 100
 aliases:
   - /docs/faq
   - /docs/guides/faq
@@ -84,35 +84,6 @@ After that, your Ingress will be available on the specified IPs:
 # kubectl get svc -n tenant-root root-ingress-controller
 root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135.181.169.168   80/TCP,443/TCP   133d
 ```
-
-### How to cleanup etcd state
-
-Sometimes you might want to flush etcd state from a node.
-This can be done with Talm or talosctl using the following commands:
-
-{{< tabs name="etcd reset tools" >}}
-{{% tab name="Talm" %}}
-
-Replace `nodeN` with the name of the failed node, for instance, `node0.yaml`:
-
-```bash
-talm reset -f nodes/nodeN.yaml --system-labels-to-wipe=EPHEMERAL --graceful=false --reboot
-```
-
-{{% /tab %}}
-
-{{% tab name="talosctl" %}}
-```bash
-talosctl reset --system-labels-to-wipe=EPHEMERAL --graceful=false --reboot
-```
-
-{{% /tab %}}
-{{< /tabs >}}
-
-{{% alert color="warning" %}}
-:warning: This command will remove the state from the specified node. Use it with caution.
-{{% /alert %}}
-
 
 ### How to generate kubeconfig for tenant users
 
@@ -247,6 +218,10 @@ Moved to Cluster Configuration, [How to enable Hugepages]({{% ref "/docs/operati
 ### How to Rotate Certificate Authority
 
 Moved to Cluster Maintenance, [How to Rotate Certificate Authority]({{% ref "/docs/operations/cluster/rotate-ca" %}}).
+
+### How to cleanup etcd state
+
+Moved to Troubleshooting: [How to clean up etcd state]({{% ref "/docs/operations/troubleshooting/etcd#how-to-clean-up-etcd-state" %}}).
 
 ## Bundles
 
