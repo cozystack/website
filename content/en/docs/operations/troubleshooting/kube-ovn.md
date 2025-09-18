@@ -5,6 +5,57 @@ description: "Explains how to resolve Kube-OVN crashes caused by a corrupted OVN
 weight: 20
 ---
 
+
+## Getting information about Kube-OVN database state
+
+```bash
+# Northbound DB
+kubectl -n cozy-kubeovn exec deploy/ovn-central -c ovn-central -- ovn-appctl \
+    -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound
+# Southbound DB
+kubectl -n cozy-kubeovn exec deploy/ovn-central -c ovn-central -- ovn-appctl \
+    -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound
+```
+
+Example output:
+
+```console
+Name: OVN_Northbound
+Cluster ID: abf6 (abf66f15-9382-4b2b-b14c-355d64ae1bda)
+Server ID: 8d8a (8d8a2985-c444-43bb-99f6-21c82f05b58d)
+Address: ssl:[10.200.1.22]:6643
+Status: cluster member
+Role: leader
+Term: 3
+Leader: self
+Vote: self
+
+Last Election started 146211 ms ago, reason: leadership_transfer
+Last Election won: 146202 ms ago
+Election timer: 5000
+Log: [2, 1569]
+Entries not yet committed: 0
+Entries not yet applied: 0
+Connections: ->2a66 ->c23f <-2a66 <-c23f
+Disconnections: 30
+Servers:
+    2a66 (2a66 at ssl:[10.200.1.18]:6643) next_index=1569 match_index=1568 last msg 17 ms ago
+    8d8a (8d8a at ssl:[10.200.1.22]:6643) (self) next_index=1471 match_index=1568
+    c23f (c23f at ssl:[10.200.1.1]:6643) next_index=1569 match_index=1568 last msg 18 ms ago
+```
+
+
+To kick a node out of the cluster (for example, if it is down, and you want to remove it from the cluster), use:
+
+```bash
+# Northbound DB
+kubectl -n cozy-kubeovn exec deploy/ovn-central -c ovn-central -- ovn-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/kick OVN_Northbound <server-id>
+# Southbound DB
+kubectl -n cozy-kubeovn exec deploy/ovn-central -c ovn-central -- ovn-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/kick OVN_Southbound <server-id>
+```
+
+## Resolving Kube-OVN Pods Crashing
+
 In complex cases, you may encounter issues where the Kube-OVN DaemonSet pods crash or fail to start properly.
 This usually indicates a corrupted OVN database.
 You can confirm this by checking the logs of the Kube-OVN CNI pods.
@@ -105,6 +156,6 @@ Once the cleanup is complete, delete the `ovn-cleanup` DaemonSet and restart the
 # Delete the cleanup DaemonSet
 kubectl -n cozy-kubeovn delete ds ovn-cleanup
 
-# Restart Kube-OVN CNI pods by deleting them
-kubectl -n cozy-kubeovn rollout restart ds kube-ovn-cni
+# Restart Kube-OVN pods by deleting them
+kubectl -n cozy-kubeovn delete pod -l app!=ovs
 ```
