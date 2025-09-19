@@ -27,6 +27,12 @@ update-k8s:
 update-services:
 	./hack/update_apps.sh --apps "$(SERVICES)" --dest "$(SERVICES_DEST_DIR)" --branch "$(BRANCH)" --pkgdir extra
 
+# requires cluster authentication
+# to be replaced with downloading a build/release artifact from github.com/cozystack/cozystack
+update-api:
+	kubectl get --raw '/openapi/v3/apis/apps.cozystack.io/v1alpha1' > content/en/docs/cozystack-api/api.json
+
+# doesn't include update-api, because it can't run in CI yet
 update-all:
 	$(MAKE) update-apps
 	$(MAKE) update-vms
