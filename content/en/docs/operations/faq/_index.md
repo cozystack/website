@@ -31,6 +31,9 @@ Instead of using it, you can expose the main ingress controller using the extern
 For deploying on Hetzner, follow the specialized [Hetzner installation guide]({{% ref "/docs/install/providers/hetzner" %}}).
 For other providers, follow the [Cozystack installation guide, Public IP Setup]({{% ref "/docs/install/cozystack#4b-public-ip-setup" %}}).
 
+### Public-network Kubernetes deployment
+
+Deploying Cozystack, [Deploy with public networks]({{% ref "/docs/install/how-to/public-ip" %}}).
 
 ## Operations
 
@@ -46,26 +49,6 @@ Here you can find reference repository to learn how to configure Cozystack servi
 
 - https://github.com/aenix-io/cozystack-gitops-example
 
-
-### Public-network Kubernetes deployment
-
-A Kubernetes/Cozystack cluster can be deployed using only public networks:
-
--   Both management and worker nodes have public IP addresses.
--   Worker nodes connect to the management nodes over the public Internet, without a private internal network or VPN.
-
-Such a setup is not recommended for production, but can be used for research and testing,
-when hosting limitations prevent provisioning a private network.
-
-To enable this setup when deploying with `talosctl`, add the following data in the node configuration files:
-
-```yaml
-cluster:
-  controlPlane:
-    endpoint: https://<MANAGEMENT_NODE_IP>:6443
-```
-
-For `talm`, append the same lines at end of the first node's configuration file, such as `nodes/node1.yaml`.
 
 
 ### How to generate kubeconfig for tenant users
