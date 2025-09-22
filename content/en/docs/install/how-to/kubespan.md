@@ -1,6 +1,6 @@
 ---
 title: How to Enable KubeSpan
-linkTitle: How to Enable KubeSpan
+linkTitle: Enable KubeSpan
 description: "How to Enable KubeSpan."
 weight: 110
 ---

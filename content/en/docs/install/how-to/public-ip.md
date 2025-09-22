@@ -2,7 +2,7 @@
 title: "Public-network Kubernetes deployment"
 linkTitle: "Deploy with public networks"
 description: ""
-weight: 40
+weight: 120
 ---
 
 A Kubernetes cluster for Cozystack can be deployed using only public networks:

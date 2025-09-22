@@ -17,11 +17,16 @@ Troubleshooting advice can be found on our [Troubleshooting Cheatsheet](/docs/op
 
 ### How to allocate space on system disk for user storage
 
-Installing Talos, [How to install Talos on a single-disk machine]({{% ref "/docs/install/talos/single-disk" %}})
+Deploying Cozystack, [How to install Talos on a single-disk machine]({{% ref "/docs/install/how-to/single-disk" %}})
 
 ### How to Enable KubeSpan
 
-Installing Talos, [How to Enable KubeSpan]({{% ref "/docs/install/talos/kubespan" %}})
+Deploying Cozystack, [How to Enable KubeSpan]({{% ref "/docs/install/how-to/kubespan" %}})
+
+### How to enable Hugepages
+
+Deploying Cozystack, [How to enable Hugepages]({{% ref "/docs/install/how-to/hugepages" %}}).
+
 
 ### What if my cloud provider does not support MetalLB
 
@@ -49,15 +54,9 @@ Here you can find reference repository to learn how to configure Cozystack servi
 
 - https://github.com/aenix-io/cozystack-gitops-example
 
-
-
 ### How to generate kubeconfig for tenant users
 
 Moved to [How to generate kubeconfig for tenant users]({{% ref "/docs/operations/faq/generate-kubeconfig" %}}).
-
-### How to enable Hugepages
-
-Moved to Cluster Configuration, [How to enable Hugepages]({{% ref "/docs/operations/configuration/hugepages" %}}).
 
 ### How to Rotate Certificate Authority
 
