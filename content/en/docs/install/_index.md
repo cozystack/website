@@ -48,4 +48,4 @@ the next actions:
 
 - [Configure OIDC]({{% ref "/docs/operations/oidc" %}})
 - [Deploy Cozystack in a Multi-Datacenter Setup]({{% ref "/docs/operations/stretched" %}})
-- [Upgrading Cozystack]({{% ref "/docs/operations/upgrade" %}})
+- [Upgrading Cozystack]({{% ref "/docs/operations/cluster/upgrade" %}})

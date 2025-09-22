@@ -2,9 +2,10 @@
 title: "Upgrading Cozystack and Post-upgrade Checks"
 linkTitle: "Upgrading Cozystack"
 description: "Upgrade Cozystack system components."
-weight: 31
+weight: 10
 aliases:
   - /docs/upgrade
+  - /docs/operations/upgrade
 ---
 
 ## About Cozystack Versions
