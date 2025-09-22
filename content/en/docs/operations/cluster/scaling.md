@@ -5,6 +5,40 @@ description: "Adding and removing nodes in a Cozystack cluster."
 weight: 10
 ---
 
+## How to add a node to a Cozystack cluster
+
+Adding a node is done in a way similar to regular Cozystack installation.
+
+1.  [Install Talos on the node]({{% ref "/docs/install/talos" %}}), using the Cozystack's custom-built Talos image.
+
+1.  Generate the configuration for the new node, using the [Talm]({{% ref "/docs/install/kubernetes/talm#3-generate-node-configuration-files" %}})
+    or [talosctl]({{% ref "/docs/install/kubernetes/talosctl#2-generate-node-configuration-files" %}}) guide.
+    
+    For example, configuring a control plane node:
+
+    ```bash
+    talm template -e 192.168.123.20 -n 192.168.123.20 -t templates/controlplane.yaml -i > nodes/nodeN.yaml
+    ```
+    
+    and for a worker node:
+    ```bash
+    talm template -e 192.168.123.20 -n 192.168.123.20 -t templates/worker.yaml -i > nodes/nodeN.yaml
+    ```
+
+1.  Apply the generated configuration to the node, using the [Talm]({{% ref "/docs/install/kubernetes/talm#41-apply-configuration-files" %}})
+    or [talosctl]({{% ref "/docs/install/kubernetes/talosctl#3-apply-node-configuration" %}}) guide.
+    For example:
+
+    ```bash
+    talm apply -f nodes/nodeN.yaml -i
+    ```
+
+1.  Wait for the node to reboot and bootstrap itself to the cluster.
+    You don't need to bootstrap it manually or to install Cozystack on it, as it is all done automatically.
+
+    You can check the result with `kubectl get nodes`.
+
+
 ## How to remove a node from a Cozystack cluster
 
 When a cluster node fails, Cozystack automatically handles high availability by recreating replicated PVCs and workloads on other nodes.
