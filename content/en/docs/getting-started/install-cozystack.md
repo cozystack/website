@@ -438,10 +438,6 @@ NAME                     TYPE       CLUSTER-IP   EXTERNAL-IP                    
 root-ingress-controller  ClusterIP  10.96.91.83  192.168.100.11,192.168.100.12,192.168.100.13  80/TCP,443/TCP  48m
 ```
 
-For more details, refer to the FAQ, [What if my cloud provider does not support MetalLB](
-{{% ref "/docs/operations/faq#what-if-my-cloud-provider-does-not-support-metallb" %}}).
-
-
 ## 5. Finalize Installation
 
 ### 5.1. Setup Root Tenant Services

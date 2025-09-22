@@ -19,6 +19,15 @@ Troubleshooting advice can be found on our [Troubleshooting Cheatsheet](/docs/op
 
 Installing Talos, [How to Enable KubeSpan]({{% ref "/docs/install/talos/kubespan" %}})
 
+### What if my cloud provider does not support MetalLB
+
+Most cloud providers don't support MetalLB.
+Instead of using it, you can expose the main ingress controller using the external IPs method.
+
+For deploying on Hetzner, follow the specialized [Hetzner installation guide]({{% ref "/docs/install/providers/hetzner" %}}).
+For other providers, follow the [Cozystack installation guide, Public IP Setup]({{% ref "/docs/install/cozystack#4b-public-ip-setup" %}}).
+
+
 ## Operations
 
 ### How to enable access to dashboard via ingress-controller
@@ -26,35 +35,6 @@ Installing Talos, [How to Enable KubeSpan]({{% ref "/docs/install/talos/kubespan
 Update your `ingress` application and enable `dashboard: true` option in it.
 Dashboard will become available under: `https://dashboard.<your_domain>`
 
-### What if my cloud provider does not support MetalLB
-
-You still have the opportunity to expose the main ingress controller using the external IPs method.
-
-Take IP addresses of the **external** network interfaces for your nodes.
-Add them to the `externalIPs` list in the Ingress configuration:
-
-```bash
-kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{"spec":{
-  "externalIPs": [
-    "192.168.100.11",
-    "192.168.100.12",
-    "192.168.100.13"
-  ]
-}}'
-
-kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
-  "data": {
-    "expose-external-ips": "192.168.100.11,192.168.100.12,192.168.100.13"
-  }
-}'
-```
-
-After that, your Ingress will be available on the specified IPs:
-
-```console
-# kubectl get svc -n tenant-root root-ingress-controller
-root-ingress-controller   ClusterIP   10.96.91.83   37.27.60.28,65.21.65.173,135.181.169.168   80/TCP,443/TCP   133d
-```
 
 ### How to configure Cozystack using FluxCD or ArgoCD
 
