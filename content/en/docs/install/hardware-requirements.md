@@ -64,7 +64,7 @@ Separating disks by role is the primary and more reliable option.
 **Using a single disk**
 
 It's possible to use a single disk with space allocated for user storage.
-See [How to install Talos on a single-disk machine]({{% ref "/docs/operations/faq/single-disk-installation" %}})
+See [How to install Talos on a single-disk machine]({{% ref "/docs/install/talos/single-disk" %}})
 
 **Networking:**
 

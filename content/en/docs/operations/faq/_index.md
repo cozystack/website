@@ -15,6 +15,10 @@ Troubleshooting advice can be found on our [Troubleshooting Cheatsheet](/docs/op
 
 ## Deploying Cozystack
 
+### How to allocate space on system disk for user storage
+
+Installing Talos, [How to install Talos on a single-disk machine]({{% ref "/docs/install/talos/single-disk" %}})
+
 ### How to Enable KubeSpan
 
 Installing Talos, [How to Enable KubeSpan]({{% ref "/docs/install/talos/kubespan" %}})
@@ -63,9 +67,6 @@ cluster:
 
 For `talm`, append the same lines at end of the first node's configuration file, such as `nodes/node1.yaml`.
 
-### How to allocate space on system disk for user storage
-
-Moved to [How to install Talos on a single-disk machine]({{% ref "/docs/operations/faq/single-disk-installation" %}})
 
 ### How to generate kubeconfig for tenant users
 

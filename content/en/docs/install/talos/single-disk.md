@@ -1,7 +1,10 @@
 ---
 title: "How to install Talos on a single-disk machine"
-linkTitle: "Single-disk Talos Installation"
+linkTitle: "How to install on single disk"
 description: "How to install Talos on a single-disk machine, allocating space on system disk for user storage"
+weight: 100
+aliases:
+  - /docs/operations/faq/single-disk-installation
 ---
 
 Default Talos setup assumes that each node has a primary and secondary disks, used for system and user storage, respectively.
