@@ -14,7 +14,7 @@ a specialized command line tool for managing Talos.
 
 ## Prerequisites
 
-By the start of this guide you should have Talos OS installed, but not initialized (bootstrapped), on several nodes.
+By the start of this guide you should have Talos OS booted from ISO, but not initialized (bootstrapped), on several nodes.
 These nodes should belong to one subnet or have public IPs.
 
 This guide uses an example where the nodes of a cluster are located in the subnet `192.168.123.0/24`, having the following IP addresses:
@@ -222,13 +222,13 @@ talosctl bootstrap -n 192.168.123.11 -e 192.168.123.11
 To access the cluster, generate an administrative `kubeconfig`:
 
 ```bash
-talosctl kubeconfig kubeconfig -f nodes/node1.yaml
+talosctl kubeconfig -n 192.168.123.11 -e 192.168.123.11 -f nodes/node1.yaml
 ```
 
 Set up `kubectl` to use this new config by exporting the `KUBECONFIG` variable:
 
 ```bash
-export KUBECONFIG=$PWD/kubeconfig
+export KUBECONFIG=$PWD/nodes/node1.yaml
 ```
 
 {{% alert color="info" %}}
