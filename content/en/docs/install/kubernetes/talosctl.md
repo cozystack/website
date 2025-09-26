@@ -14,7 +14,7 @@ a specialized command line tool for managing Talos.
 
 ## Prerequisites
 
-By the start of this guide you should have Talos OS installed, but not initialized (bootstrapped), on several nodes.
+By the start of this guide you should have Talos OS booted from ISO, but not initialized (bootstrapped), on several nodes.
 These nodes should belong to one subnet or have public IPs.
 
 This guide uses an example where the nodes of a cluster are located in the subnet `192.168.123.0/24`, having the following IP addresses:
