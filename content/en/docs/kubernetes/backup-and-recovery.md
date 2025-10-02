@@ -115,6 +115,7 @@ metadata:
   namespace: cozy-velero
 spec:
   snapshotVolumes: true
+  snapshotMoveData: true
   includedNamespaces:
     # change to the actual tenant name
     - tenant-backupexample
