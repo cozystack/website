@@ -115,6 +115,7 @@ metadata:
   namespace: cozy-velero
 spec:
   snapshotVolumes: true
+  snapshotMoveData: true
   includedNamespaces:
     # change to the actual tenant name
     - tenant-backupexample
@@ -123,6 +124,12 @@ spec:
       # change to the actual application name
       app: test-pod
   ttl: 720h0m0s  # Backup retention (30 days)
+```
+
+Check upload progress with:
+
+```bash
+kubectl get datauploads.velero.io
 ```
 
 Check the backup status with:
