@@ -88,7 +88,7 @@ kubectl annotate -n tenant-root hr/tenant-root reconcile.fluxcd.io/forceAt=$(dat
 
 You can now access Keycloak at `https://keycloak.example.org` (replace `example.org` with your infrastructure domain).
 
-To get the Keycloak credentials, run the following command:
+To get the Keycloak credentials for default user `admin`, run the following command:
 
 ```bash
 kubectl get secret -o yaml -n cozy-keycloak keycloak-credentials -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
