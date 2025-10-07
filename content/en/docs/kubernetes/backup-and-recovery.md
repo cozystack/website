@@ -150,6 +150,7 @@ spec:
   template:
     ttl: 720h0m0s # Backup retention (30 days)
     snapshotVolumes: true
+    snapshotMoveData: true
     includedNamespaces:
       # change to the actual tenant name
       - tenant-backupexample
