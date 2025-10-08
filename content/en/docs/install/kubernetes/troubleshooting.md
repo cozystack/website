@@ -54,3 +54,36 @@ If you encounter issues with the `talos-bootstrap` script not detecting any node
     ```
     
     Pay attention to the last command displayed before the error; it often indicates the command that failed and can provide clues for further troubleshooting.
+
+# fix ext-lldpd on talos nodes
+Waiting a runtime service in talos cause it to stay on booting in talos console, if you want to use lldpd you can patch the nodes,
+proceed if you have connectivity with `talosctl`
+```bash
+cat > lldpd.patch.yaml <<EOF
+apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: lldpd
+configFiles:
+  - content: |
+      configure lldp portidsubtype ifname
+      unconfigure lldp management-addresses-advertisements
+      unconfigure lldp capabilities-advertisements
+      configure system description "Talos Node"
+    mountPath: /usr/local/etc/lldp/lldpd.conf
+EOF
+```
+To apply the patch to a specific node, run:
+```bash
+talosctl patch mc -p @lldpd.patch.yaml -n <node> -e <node>
+```
+
+Verify which nodes have lldpd installed
+```bash
+node_net='192.168.100.0/24'
+nmap -Pn -n -T4 -p50000 --open -oG - $node_net  | awk '/50000\/open/ {print "talosctl get extensions -n "$2" -e "$2" | grep lldpd"}
+```
+
+If you want to patch all nodes:
+```bash
+nmap -Pn -n -T4 -p50000 --open -oG - $node_net  | awk '/50000\/open/ {print "talosctl patch mc -p @lldpd.patch.yaml -n "$2" -e "$2" "}'
+```
