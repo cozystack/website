@@ -65,10 +65,7 @@ kind: ExtensionServiceConfig
 name: lldpd
 configFiles:
   - content: |
-      configure lldp portidsubtype ifname
-      unconfigure lldp management-addresses-advertisements
-      unconfigure lldp capabilities-advertisements
-      configure system description "Talos Node"
+      configure lldp status disabled
     mountPath: /usr/local/etc/lldp/lldpd.conf
 EOF
 ```
