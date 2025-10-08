@@ -87,3 +87,8 @@ If you want to patch all nodes:
 ```bash
 nmap -Pn -n -T4 -p50000 --open -oG - $node_net  | awk '/50000\/open/ {print "talosctl patch mc -p @lldpd.patch.yaml -n "$2" -e "$2" "}'
 ```
+
+Verify state on talos console
+```bash
+talosctl dashboard -n $(nmap -Pn -n -T4 -p50000 --open -oG - $node_net | awk '/50000\/open/ {print $2}' | paste -sd,)
+```
