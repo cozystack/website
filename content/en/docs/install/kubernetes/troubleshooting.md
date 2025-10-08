@@ -80,7 +80,7 @@ talosctl patch mc -p @lldpd.patch.yaml -n <node> -e <node>
 Verify which nodes have lldpd installed
 ```bash
 node_net='192.168.100.0/24'
-nmap -Pn -n -T4 -p50000 --open -oG - $node_net  | awk '/50000\/open/ {print "talosctl get extensions -n "$2" -e "$2" | grep lldpd"}
+nmap -Pn -n -T4 -p50000 --open -oG - $node_net  | awk '/50000\/open/ {print "talosctl get extensions -n "$2" -e "$2" | grep lldpd"}'
 ```
 
 If you want to patch all nodes:
