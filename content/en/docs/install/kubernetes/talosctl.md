@@ -222,13 +222,13 @@ talosctl bootstrap -n 192.168.123.11 -e 192.168.123.11
 To access the cluster, generate an administrative `kubeconfig`:
 
 ```bash
-talosctl kubeconfig -n 192.168.123.11 -e 192.168.123.11 -f nodes/node1.yaml
+talosctl kubeconfig -n 192.168.123.11 -e 192.168.123.11 kubeconfig
 ```
 
 Set up `kubectl` to use this new config by exporting the `KUBECONFIG` variable:
 
 ```bash
-export KUBECONFIG=$PWD/nodes/node1.yaml
+export KUBECONFIG=$PWD/kubeconfig
 ```
 
 {{% alert color="info" %}}
