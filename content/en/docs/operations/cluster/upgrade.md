@@ -29,38 +29,32 @@ To learn more about Cozystack release process, read the [Cozystack Release Workf
 
 ### 1. Check the cluster status
 
-Before upgrading, check the current status of your Cozystack cluster.
+Before upgrading, check the current status of your Cozystack cluster by following steps from
 
+- [Troubleshooting Checklist]({{% ref "/docs/operations/troubleshooting/#troubleshooting-checklist" %}})
 
-1.  Find and repair all failed HelmReleases.
-    This command will show HelmReleases in states other than `READY: True`.
+Make sure that the Cozystack ConfigMap contains all the necessary variables:
+If there are missing keys in `data.*`, add them.
 
-    ```bash
-    kubectl get hr -A | grep -v "True"
-    ```
+```bash
+kubectl get configmap -n cozy-system cozystack -oyaml
+```
+Example output:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+data:
+  api-server-endpoint: https://33.44.55.66:6443
+  bundle-name: paas-full
+  ipv4-join-cidr: 100.64.0.0/16
+  ipv4-pod-cidr: 10.244.0.0/16
+  ipv4-pod-gateway: 10.244.0.1
+  ipv4-svc-cidr: 10.96.0.0/16
+  root-host: example.org
+  ...
+```
 
-1.  Make sure that the Cozystack ConfigMap contains all the necessary variables:
-    If there are missing keys in `data.*`, add them.
-    
-    ```bash
-    kubectl get configmap -n cozy-system cozystack -oyaml
-    ```
-    Example output:
-    ```yaml
-    apiVersion: v1
-    kind: ConfigMap
-    data:
-      api-server-endpoint: https://33.44.55.66:6443
-      bundle-name: paas-full
-      ipv4-join-cidr: 100.64.0.0/16
-      ipv4-pod-cidr: 10.244.0.0/16
-      ipv4-pod-gateway: 10.244.0.1
-      ipv4-svc-cidr: 10.96.0.0/16
-      root-host: example.org
-      ...
-    ```
-
-    Learn more about this file and its contents from the [Cozystack ConfigMap reference]({{% ref "/docs/operations/configuration/configmap" %}}).
+Learn more about this file and its contents from the [Cozystack ConfigMap reference]({{% ref "/docs/operations/configuration/configmap" %}}).
 
 ### 2. Apply the new manifest file
 
@@ -92,4 +86,7 @@ If pod status shows a failure, check the logs:
 kubectl logs -n cozy-system deploy/cozystack --previous
 ```
 
+To make sure everything works as expected, repeat the steps from
+
+  - [Troubleshooting Checklist]({{% ref "/docs/operations/troubleshooting/#troubleshooting-checklist" %}})
 
