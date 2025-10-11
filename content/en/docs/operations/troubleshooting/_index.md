@@ -10,6 +10,54 @@ aliases:
 This guide shows the initial steps to check your cluster's health and discover problems.
 In the bottom of the page you will find links to troubleshooting guides for various Cozystack components and aspects of cluster operations.
 
+## Troubleshooting Checklist
+
+You can use the following commands to check the health of your cluster.
+
+```bash
+# === Flux CD ===
+# broken Helm Releases are missing
+kubectl get hr -A | grep -v True
+
+# === Kubernetes ===
+# you have no Nodes that are not in Ready state
+kubectl get node
+
+# === LINSTOR ===
+alias linstor='kubectl exec -n cozy-linstor deploy/linstor-controller -ti -- linstor'
+
+# LINSTOR nodes are online
+linstor node list
+
+# LINSTOR storage-pools are Ok
+linstor storage-pool list
+
+# You have no broken resources
+linstor resource list --faulty
+
+# === Kube-OVN ===
+alias ovn-appctl='kubectl -n cozy-kubeovn exec deploy/ovn-central -c ovn-central -- ovn-appctl' 
+
+# Check Northbound database
+ovn-appctl -t /var/run/ovn/ovnnb_db.ctl cluster/status OVN_Northbound
+
+# Check Southbound database
+ovn-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound
+
+# make sure that you have
+# 1. Same amount of Servers as your control-plane nodes
+# 2. IPs are correct
+# 3. There are no duplicates (eg. two servers  with the same IP)
+
+# to list your control-plane nodes
+kubectl get node -o wide -l node-role.kubernetes.io/control-plane=
+```
+
+Additionally, you can check if there are any non-running pods in your cluster:
+```bash
+kubectl get pod -A | grep -v 'Running\|Completed'
+```
+
 ## Getting basic information
 
 You can see the logs of main installer by executing:
