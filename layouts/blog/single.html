@@ -1,0 +1,14 @@
+{{ define "main" }}
+<article class="td-content">
+  <header>
+    <h1>{{ .Title }}</h1>
+    {{ with .Params.date }}
+    <time datetime="{{ . }}">{{ .Format "January 2, 2006" }}</time>
+    {{ end }}
+  </header>
+  <div class="content">
+    {{ .Content }}
+  </div>
+</article>
+{{ end }}
+

@@ -7,6 +7,11 @@ nav.navbar {
     padding: 10px;
   }
 
+  // Disable navbar color change on scroll
+  &.navbar-bg-onscroll {
+    background: $cozy-black !important;
+  }
+
   .navbar-brand {
     flex-grow: 1;
     padding-bottom: 2px;
@@ -68,8 +73,15 @@ nav.navbar {
 }
 
 
+// Sidebar background
+.td-sidebar {
+  background-color: rgba(61, 109, 221, 0.03);
+}
+
 .td-sidebar-nav {
   .td-sidebar-link.tree-root {
+    color: #3d6ddd;
+
     @include media-breakpoint-up(md) {
       // https://github.com/fluxcd/website/pull/365#issuecomment-870876960
       // maybe report upstream docsy and fix there?
@@ -82,5 +94,16 @@ nav.navbar {
   .td-sidebar-link__page {
     color: $gray-900;
     font-weight: unset;
+  }
+
+  // Section title links color
+  &__section-title a {
+    color: #222;
+  }
+
+  // Links hover and focus color
+  a:focus,
+  a:hover {
+    color: #3c6ddd !important;
   }
 }

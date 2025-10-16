@@ -1,5 +1,4 @@
 ---
-layout: blog
 title: "DIY: Create Your Own Cloud with Kubernetes (Part 3)"
 slug: diy-create-your-own-cloud-with-kubernetes-part-3
 date: 2024-04-05T07:40:00+00:00

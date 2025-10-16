@@ -13,6 +13,29 @@
       word-break: break-word;
     }
   }
+
+  // Remove max-width restriction for pages without sidebar
+  @include media-breakpoint-up(lg) {
+    &.td-content > .tab-content .tab-pane,
+    &.td-content .footnotes,
+    &.td-content > .alert,
+    &.td-content > .highlight,
+    &.td-content > .lead,
+    &.td-content > .td-table,
+    &.td-content > table,
+    &.td-content > blockquote,
+    &.td-content > dl dd,
+    &.td-content > h1,
+    &.td-content > .h1,
+    &.td-content > h2,
+    &.td-content > .h2,
+    &.td-content > ol,
+    &.td-content > p,
+    &.td-content > pre,
+    &.td-content > ul {
+      max-width: none;
+    }
+  }
 }
 
 .td-404 .td-main {
