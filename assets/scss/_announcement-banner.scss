@@ -1,0 +1,39 @@
+.all-pages-info-banner {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  min-height: 50px;
+  width: 100%;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: calc(4rem + 5px); // Offset for fixed header + top padding
+  padding-bottom: 5px;
+  background-color: #0175e4;
+  color: #ffffff;
+  transition: opacity 150ms ease-out;
+  text-decoration: none;
+
+  &:hover {
+    color: #ffffff;
+    opacity: 0.9;
+  }
+
+  .container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &--title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-align: center;
+
+    @include media-breakpoint-down(md) {
+      font-size: 0.9rem;
+    }
+  }
+}
+
