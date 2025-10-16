@@ -1,11 +1,145 @@
+// Import Bootstrap functions first
+@import "../vendor/bootstrap/scss/functions";
+
+// Import Docsy variables and our project variables
+@import "docsy/variables_forward";
 @import "variables_project";
-@import "docsy/main.scss";
+@import "docsy/variables";
+@import "docsy/support/mixins";
+
+// Import Bootstrap
+@import "../vendor/bootstrap/scss/bootstrap";
+@import "docsy/support/bootstrap_vers_test";
+
+// Import Font Awesome
+@import "../vendor/Font-Awesome/scss/fontawesome";
+@import "../vendor/Font-Awesome/scss/solid";
+@import "../vendor/Font-Awesome/scss/brands";
+
+// Import Docsy components
+@import "docsy/variables_project_after_bs";
+@import "docsy/support/utilities";
+@import "docsy/colors";
+@import "docsy/table";
+@import "docsy/boxes";
+@import "docsy/blog";
+@import "docsy/code";
+@import "docsy/nav";
+@import "docsy/sidebar-tree";
+@import "docsy/sidebar-toc";
+@import "docsy/breadcrumb";
+@import "docsy/alerts";
+@import "docsy/content";
+@import "docsy/search";
+@import "docsy/main-container";
+@import "docsy/blocks/blocks";
+@import "docsy/section-index";
+@import "docsy/pageinfo";
+@import "docsy/taxonomy";
+@import "docsy/drawio";
+@import "docsy/shortcodes";
+@import "docsy/swagger";
+@import "docsy/support/rtl";
+
+// Docsy footer styles (from main.scss)
+.td-footer {
+  @extend .td-box--dark;
+
+  min-height: 150px;
+  padding-top: map-get($spacers, 5);
+
+  @include media-breakpoint-down(lg) {
+    min-height: 200px;
+  }
+
+  &__center {
+    @extend .small;
+    text-align: center;
+  }
+
+  &__right {
+    text-align: right;
+  }
+
+  &__about {
+    font-size: initial;
+  }
+
+  &__links {
+    &-list {
+      @extend .list-inline;
+      margin-bottom: 0;
+    }
+
+    &-item {
+      @extend .list-inline-item;
+      @extend .h3;
+
+      a {
+        color: inherit !important;
+      }
+    }
+  }
+
+  &__authors,
+  &__all_rights_reserved {
+    padding-left: map-get($spacers, 1);
+  }
+
+  &__all_rights_reserved {
+    display: none;
+  }
+}
+
+// Adjust anchors vs the fixed menu
+@include media-breakpoint-up(md) {
+  .td-offset-anchor:target {
+    display: block;
+    position: relative;
+    top: -4rem;
+    visibility: hidden;
+  }
+
+  h2[id]::before,
+  h3[id]::before,
+  h4[id]::before,
+  h5[id]::before {
+    display: block;
+    content: " ";
+    margin-top: -5rem;
+    height: 5rem;
+    visibility: hidden;
+  }
+}
+
+// Import Docsy styles_project (allows further customization)
+@import "docsy/styles_project";
+
+// Import Google Fonts (Montserrat)
+@import url($web-font-path);
+
+// Ensure Montserrat font is applied to body
+body {
+  font-family: $font-family-base;
+}
+
+// Global link styles - custom colors and no underline
+a {
+  color: #1f4aaf;
+  text-decoration: none;
+
+  &:hover {
+    color: #132e6e;
+    text-decoration: none;
+  }
+}
+
+// Import our custom styles
 @import "buttons";
 @import "blocks/blocks";
 @import "adopters";
 @import "page";
 @import "index";
-@import "buttons";
 @import "responsive-video";
 @import "highlight";
 @import "gallery";

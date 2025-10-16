@@ -1,5 +1,4 @@
 ---
-layout: blog
 title: "Introducing Cozystack: A Free PaaS Platform based on Kubernetes"
 slug: introducing-cozystack-a-free-paas-platform-based-on-kubernetes
 date: 2024-02-21

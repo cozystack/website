@@ -30,3 +30,15 @@ body.td-home .deprecation-warning, body.td-blog .deprecation-warning, body.td-do
     text-decoration: underline;
 }
 
+// Blog post styles
+@media (min-width: 768px) {
+  .pl-md-5, .px-md-5 {
+    padding-left: 3rem !important;
+  }
+}
+
+// Blog post date
+time {
+  margin-bottom: 1.5rem;
+  display: block;
+}

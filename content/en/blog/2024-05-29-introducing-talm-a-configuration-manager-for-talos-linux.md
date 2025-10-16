@@ -1,5 +1,4 @@
 ---
-layout: blog
 title: "Introducing Talm, a configuration manager for Talos Linux"
 slug: introducing-talm-a-configuration-manager-for-talos-linux
 date: 2024-05-29
