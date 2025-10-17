@@ -49,9 +49,6 @@ module:
     - path: github.com/mfg92/hugo-shortcode-gallery
       disable: false
   mounts:
-    # Mount local layouts FIRST to have highest priority
-    - source: layouts
-      target: layouts
     # Mount local content
     - source: content/en
       target: content
@@ -64,9 +61,11 @@ module:
       target: assets/vendor/Font-Awesome
     - source: node_modules/@fortawesome/fontawesome-free/webfonts
       target: static/webfonts
-    # Mount local assets, static (these override Docsy files)
+    # Mount local assets, layouts, static (these override Docsy files)
     - source: assets
       target: assets
+    - source: layouts
+      target: layouts
     - source: static
       target: static
     - source: i18n
@@ -115,8 +114,7 @@ params:
   support: /support
   images: [img/cozystack-social.png]
   # Enable Algolia DocSearch
-  search:
-    algolia: {}
+  algolia_docsearch: true
   offlineSearch: false
   version_menu: "Versions"
   version: "0.1"
