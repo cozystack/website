@@ -26,6 +26,11 @@ html {
   overflow-x: hidden;
 }
 
+// Remove default padding-top from main
+.td-main main {
+  padding-top: 2rem !important;
+}
+
 // center section contents and limit width for ultra-wide screens
 main.td-main {
   section.row {
