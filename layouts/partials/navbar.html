@@ -30,7 +30,7 @@
     {{- /**/ -}}
   </a>
   <!-- toggle navbar on mobile: https://github.com/fluxcd/website/pull/879 -->
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
@@ -47,7 +47,7 @@
         <!-- navbar with nested dropdown: https://github.com/fluxcd/website/commit/32c6b2f61886c3ede54483b399566ea40bea18a7 -->
         {{ if .HasChildren }}
         <li class="nav-item dropdown">
-          <a class="nav-link {{if $active }} active{{end}} dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <a class="nav-link {{if $active }} active{{end}} dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             {{ .Name }}
           </a>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">

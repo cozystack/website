@@ -1,0 +1,117 @@
+// Custom styles for tabs
+.tab-content {
+  border: 1px solid #dee2e6;
+  border-top: none;
+  padding: 1rem;
+  border-radius: 0 0 0.25rem 0.25rem;
+  background-color: #fff;
+  
+  .tab-pane {
+    p:first-child {
+      margin-top: 0;
+    }
+    
+    p:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+  
+  .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
+    
+    &.active {
+      border-color: #dee2e6 #dee2e6 #fff;
+      background-color: #fff;
+    }
+  }
+}
+
+// Custom styles for alerts - left border instead of background
+.td-content > .alert {
+  background-color: transparent !important;
+  border: none !important;
+  border-left: 4px solid !important;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  
+  &.alert-primary,
+  &.pageinfo-primary {
+    border-left-color: #3d6ddd !important;
+    color: #333;
+    
+    .alert-heading {
+      color: #3d6ddd;
+    }
+  }
+  
+  &.alert-secondary {
+    border-left-color: #6c757d !important;
+    color: #333;
+    
+    .alert-heading {
+      color: #6c757d;
+    }
+  }
+  
+  &.alert-success {
+    border-left-color: #28a745 !important;
+    color: #333;
+    
+    .alert-heading {
+      color: #28a745;
+    }
+  }
+  
+  &.alert-info {
+    border-left-color: #17a2b8 !important;
+    color: #333;
+    
+    .alert-heading {
+      color: #17a2b8;
+    }
+  }
+  
+  &.alert-warning {
+    border-left-color: #ffc107 !important;
+    color: #333;
+    
+    .alert-heading {
+      color: #e0a800;
+    }
+  }
+  
+  &.alert-danger {
+    border-left-color: #dc3545 !important;
+    color: #333;
+    
+    .alert-heading {
+      color: #dc3545;
+    }
+  }
+  
+  &.alert-light {
+    border-left-color: #f8f9fa !important;
+    color: #333;
+  }
+  
+  &.alert-dark {
+    border-left-color: #343a40 !important;
+    color: #333;
+    
+    .alert-heading {
+      color: #343a40;
+    }
+  }
+  
+  // Remove background from all alert children
+  * {
+    background-color: transparent !important;
+  }
+}
+
