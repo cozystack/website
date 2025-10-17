@@ -12,7 +12,7 @@
 
 .pageinfo {
     @include media-breakpoint-up(lg) {
-        max-width: 80%;
+        max-width: 90%;
     }
 }
 
@@ -41,4 +41,68 @@ body.td-home .deprecation-warning, body.td-blog .deprecation-warning, body.td-do
 time {
   margin-bottom: 1.5rem;
   display: block;
+}
+
+// Blog sidebar year grouping
+body.td-blog {
+  .td-sidebar-nav__section {
+    > li {
+      > input[type="checkbox"] {
+        display: none;
+      }
+
+      > label {
+        display: block;
+        cursor: pointer;
+        padding: 0.375rem 0.75rem;
+        font-weight: 500;
+        position: relative;
+        
+        &::before {
+          content: "▼";
+          position: absolute;
+          left: 0;
+          font-size: 0.75rem;
+          transition: transform 0.2s ease;
+        }
+        
+        .td-sidebar-link {
+          padding-left: 1rem;
+          display: inline-block;
+        }
+      }
+
+      > input[type="checkbox"]:not(:checked) ~ ul {
+        display: none;
+      }
+
+      > input[type="checkbox"]:not(:checked) ~ label::before {
+        transform: rotate(-90deg);
+      }
+
+      > ul {
+        list-style: none;
+        padding-left: 1rem;
+        
+        li {
+          margin: 0.25rem 0;
+          
+          a {
+            padding: 0.25rem 0.5rem;
+            display: block;
+            border-radius: 0.25rem;
+            
+            &:hover {
+              background-color: rgba(0, 0, 0, 0.05);
+            }
+            
+            &.active {
+              background-color: rgba(0, 0, 0, 0.1);
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+  }
 }
