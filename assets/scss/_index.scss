@@ -26,6 +26,11 @@ html {
   overflow-x: hidden;
 }
 
+// Remove default padding-top from main
+.td-main main {
+  padding-top: 2rem !important;
+}
+
 // center section contents and limit width for ultra-wide screens
 main.td-main {
   section.row {
@@ -230,9 +235,13 @@ main.td-main {
   @include gray-background-a;
   background-color: $cozy-gray;
 
-
   .td-box--dark {
     background-color: $cozy-gray;
+    padding-top: 4rem;
+
+    @include media-breakpoint-down(md) {
+      padding-top: 2rem;
+    }
   }
 
   a {
@@ -264,9 +273,13 @@ main.td-main {
     .community-row {
       display: flex;
       flex-wrap: wrap;
-      padding: 0;
+      padding: 0 0 4rem 0;
       margin: 0;
       justify-content: center !important;
+
+      @include media-breakpoint-down(md) {
+        padding-bottom: 2rem;
+      }
 
       .community-item {
         flex: none;
@@ -312,6 +325,11 @@ main.td-main {
 
 .cncf-footer {
   @include white-background-a;
+  padding: 4rem 0;
+
+  @include media-breakpoint-down(md) {
+    padding: 2rem 0;
+  }
 }
 
 .td-navbar {
