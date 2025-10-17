@@ -1,0 +1,56 @@
+<div id="td-sidebar-menu" class="td-sidebar__inner">
+  {{ if not .Site.Params.ui.sidebar_search_disable -}}
+  <form class="td-sidebar__search d-flex align-items-center">
+    {{ partial "search-input.html" . }}
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-section-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  {{ else -}}
+  <div id="content-mobile">
+  <form class="td-sidebar__search d-flex align-items-center">
+    <button class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" type="button" data-toggle="collapse" data-target="#td-section-nav" aria-controls="td-section-nav" aria-expanded="false" aria-label="Toggle section navigation">
+    </button>
+  </form>
+  </div>
+  <div id="content-desktop"></div>
+  {{ end -}}
+  <nav class="collapse td-sidebar-nav" id="td-section-nav">
+    {{ if  (gt (len .Site.Home.Translations) 0) -}}
+    <div class="nav-item dropdown d-block d-lg-none">
+      {{ partial "navbar-lang-selector.html" . }}
+    </div>
+    {{ end -}}
+    
+    {{/* Get all blog posts */}}
+    {{ $blogSection := .Site.GetPage "/blog" }}
+    {{ $blogPosts := where .Site.RegularPages "Section" "blog" }}
+    
+    <ul class="td-sidebar-nav__section pr-md-3">
+      <li class="td-sidebar-nav__section-title">
+        <a href="{{ $blogSection.RelPermalink }}" class="align-left pl-0 td-sidebar-link td-sidebar-link__section tree-root">
+          <span>{{ $blogSection.LinkTitle }}</span>
+        </a>
+      </li>
+      
+      {{/* Group posts by year */}}
+      {{ range $index, $element := ($blogPosts.GroupByDate "2006") }}
+        <li class="td-sidebar-nav__section-title td-sidebar-nav__section with-child">
+          <input type="checkbox" id="year-{{ .Key }}"{{ if eq $index 0 }} checked{{ end }}/>
+          <label for="year-{{ .Key }}">
+            <span class="td-sidebar-link">{{ .Key }}</span>
+          </label>
+          <ul class="ul-1 foldable">
+            {{ range .Pages }}
+              <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child{{ if eq $.RelPermalink .RelPermalink }} active-path{{ end }}">
+                <a href="{{ .RelPermalink }}" class="align-left pl-0 td-sidebar-link td-sidebar-link__page{{ if eq $.RelPermalink .RelPermalink }} active{{ end }}">
+                  <span class="{{ if eq $.RelPermalink .RelPermalink }}td-sidebar-nav-active-item{{ end }}">{{ .Title }}</span>
+                </a>
+              </li>
+            {{ end }}
+          </ul>
+        </li>
+      {{ end }}
+    </ul>
+  </nav>
+</div>
+
