@@ -1,12 +1,12 @@
 ---
-title: "Cozystack v0.22 Release: telemetry, patched Talos v1.9.1, new entities Workload и WorkloadMonitor"
-slug: cozystack-v0-22-release-telemetry-patched-talos-v1-9-1-new-entities-workload--workloadmonitor
+title: "Cozystack v0.22 Release: telemetry, patched Talos v1.9.1, new entities Workload and WorkloadMonitor"
+slug: cozystack-v0-22-release-telemetry-patched-talos-v1-9-1-new-entities-workload-and-workloadmonitor
 date: 2025-01-17
 author: "Timur Tukaev"
 description: "Main changes"
 ---
 
-### Cozystack v0.22 Release: telemetry, patched Talos v1.9.1, new entities Workload и WorkloadMonitor
+### Cozystack v0.22 Release: telemetry, patched Talos v1.9.1, new entities Workload and WorkloadMonitor
 
 ### Main changes
 
