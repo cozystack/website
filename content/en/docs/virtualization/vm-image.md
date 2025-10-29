@@ -16,6 +16,19 @@ By default, every time a user creates a virtual machine, Cozystack downloads the
 This can become a bottleneck when multiple VMs are created in quick succession.  
 Golden images solve this problem by caching the image locally, eliminating repeated downloads and speeding up deployment.
 
+## Naming Conventions (Important)
+
+Cozystack automatically adds prefixes to internal Kubernetes resources:
+
+| User-visible name | Resource Kind | Actual resource name |
+|-------------------|---------------|----------------------|
+| `<image>`         | DataVolume in `cozy-public` (golden image) | `vm-image-<image>` |
+| `<disk>`          | DataVolume created from VMDisk             | `vm-disk-<disk>`   |
+| `<vm>`            | VirtualMachine created from VMInstance     | `vm-instance-<vm>` |
+
+This means if you create a VMInstance named `ubuntu`, the VirtualMachine in Kubernetes will be `vm-instance-ubuntu`.
+
+
 ## Creating Golden Images
 
 Creating named VM images (golden images) requires an administrator account in Cozystack.
