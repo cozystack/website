@@ -54,7 +54,7 @@ For example, the resource `vm-image-ubuntu` creates a saved image named `ubuntu`
 You can track the process by running the following commands:
 ```bash
 kubectl -n cozy-public get dv
-kubectl -n cozy-public describe dv vm-image-alpinecustom
+kubectl -n cozy-public describe dv vm-image-ubuntu
 ```
 
 ## Using Golden Images
@@ -67,9 +67,6 @@ By default, users can choose from `ubuntu`, `fedora`, `cirros`, `alpine`, and `t
 These images are named but, in the default configuration, they are downloaded each time a VM is created.
 Using golden images allows these files to be downloaded once and stored locally, significantly speeding up VM deployment.
 
-To use a named VM image, specify the image name in `systemDisk.image` as you normally would:
-
-
 The next step is to create a VMDisk, which we will later attach to our future VM:
 
 ```bash
@@ -77,11 +74,11 @@ kubectl -n tenant-root create -f- <<EOF
 apiVersion: apps.cozystack.io/v1alpha1
 kind: VMDisk
 metadata:
-  name: alpinecustom
+  name: ubuntu
 spec:
   source:
     image:
-      name: alpinecustom
+      name: ubuntu
 EOF
 ```
 
@@ -89,7 +86,7 @@ You can monitor the process using the following commands:
 ```bash
 kubectl -n tenant-root get vmdisk
 kubectl -n tenant-root get dv
-kubectl -n tenant-root describe dv vm-disk-alpinecustom
+kubectl -n tenant-root describe dv vm-disk-ubuntu
 ```
 
 Next, we need to create a VMInstance:
@@ -98,10 +95,10 @@ kubectl -n tenant-root create -f- <<EOF
 apiVersion: apps.cozystack.io/v1alpha1
 kind: VMInstance
 metadata:
-  name: alpinecustom
+  name: ubuntu
 spec:
   disks:
-  - name: alpinecustom
+  - name: ubuntu
 EOF
 ```
 
@@ -112,5 +109,5 @@ kubectl get vm -n tenant-root
 
 To connect to the VM, run:
 ```bash
-virtctl console vm-instance-alpinecustom -n tenant-root
+virtctl console vm-instance-ubuntu -n tenant-root
 ```
