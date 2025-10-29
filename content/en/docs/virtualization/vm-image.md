@@ -51,6 +51,11 @@ Internally, the script creates Kubernetes resources of `kind: DataVolume` in the
 The resource name is the disk’s name prefixed with `vm-image-`.
 For example, the resource `vm-image-ubuntu` creates a saved image named `ubuntu`.
 
+You can track the process by running the following commands:
+```bash
+kubectl -n cozy-public get dv
+kubectl -n cozy-public describe dv vm-image-alpinecustom
+```
 
 ## Using Golden Images
 
@@ -64,21 +69,48 @@ Using golden images allows these files to be downloaded once and stored locally,
 
 To use a named VM image, specify the image name in `systemDisk.image` as you normally would:
 
-```yaml
-systemDisk:
-  image: ubuntu
-  storage: 5Gi
-  storageClass: replicated
+
+The next step is to create a VMDisk, which we will later attach to our future VM:
+
+```bash
+kubectl -n tenant-root create -f- <<EOF
+apiVersion: apps.cozystack.io/v1alpha1
+kind: VMDisk
+metadata:
+  name: alpinecustom
+spec:
+  source:
+    image:
+      name: alpinecustom
+EOF
 ```
 
-### Virtual Machine and VM-disk
+You can monitor the process using the following commands:
+```bash
+kubectl -n tenant-root get vmdisk
+kubectl -n tenant-root get dv
+kubectl -n tenant-root describe dv vm-disk-alpinecustom
+```
 
-Regular virtual machines (`vm-instance`) require a `vm-disk`, which has several options for image source.
-To use a named VM image, use the `source.image.name`
+Next, we need to create a VMInstance:
+```bash
+kubectl -n tenant-root create -f- <<EOF
+apiVersion: apps.cozystack.io/v1alpha1
+kind: VMInstance
+metadata:
+  name: alpinecustom
+spec:
+  disks:
+  - name: alpinecustom
+EOF
+```
 
-```yaml               
-## @param source The source image location used to create a disk
-source:
-  image:
-    name: ubuntu
+You can check the status of the VirtualMachine with:
+```bash
+kubectl get vm -n tenant-root
+```
+
+To connect to the VM, run:
+```bash
+virtctl console vm-instance-alpinecustom -n tenant-root
 ```
