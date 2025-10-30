@@ -5,7 +5,7 @@ description: "Learn how to add managed applications from external sources"
 weight: 5
 ---
 
-Since v0.35.0, Cozystack administrators can add applications from external sources in addition to the standard application catalog.
+Since v0.37.0, Cozystack administrators can add applications from external sources in addition to the standard application catalog.
 These applications will appear in the same application catalog and behave like regular managed applications for platform users.
 
 This guide explains howto define a managed application package and how to add it to Cozystack.
@@ -18,26 +18,25 @@ For a reference, see [github.com/cozystack/external-apps-example](https://github
 
 Application repository has the following structure:
 
-- `./apps`: Helm charts for applications that can be installed from the dashboard.
-- `./core`: Manifests for the platform.
-    - `./core/cozystackresourcedefinitions`: Manifests with `CozystackResourceDefinition` for registering new resources in the Kubernetes API.
-    - `./core/marketplacepanels`: Manifests with `MarketplacePanel` for creating application entries in the dashboard.
-- `./system`: `HelmReleases` for system applications and namespaces.
-    - `./system/charts`: Helm charts for system applications that will be installed permanently.
+- `./packages/core`: Manifests for the platform configuration and to deploy system applications.
+- `./packages/system`: Helm charts for system applications.
+- `./packages/apps`: Helm charts for applications that can be installed from the dashboard.
 
 Just like standard Cozystack applications, this external application package is using Helm and FluxCD.
-To learn more about developing application packages, read the FluxCD docs:
+To learn more about developing application packages, read Cozystack [Developer Guide](/docs/development/)
 
--   [HelmRelease](https://fluxcd.io/flux/components/helm/helmreleases/)
+These FluxCD documents will help you understand the resources used in this guide:
+
 -   [GitRepository](https://fluxcd.io/flux/components/source/gitrepositories/)
--   [Kustomization](https://fluxcd.io/flux/components/kustomize/kustomizations/)
+-   [HelmRelease](https://fluxcd.io/flux/components/helm/helmreleases/)
 
 ## 2. Add the Application Package with a Manifest
 
-Create a manifest file with resources `GitRepository` and `Kustomization`, as in the example:
+Create a manifest file with resources `GitRepository` and `HelmRelease`, as in the example:
 
 
 ```yaml
+---
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
@@ -48,22 +47,24 @@ spec:
   ref:
     branch: main
   timeout: 60s
-  url: https://github.com/<org>/<your-repo-name>.git
+  url: https://github.com/cozystack/external-apps-example.git
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
 metadata:
   name: external-apps
-  namespace: cozy-public
+  namespace: cozy-system
 spec:
-  force: false
-  interval: 10m0s
-  path: ./
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: external-apps
----
+  interval: 5m
+  targetNamespace: cozy-system
+  chart:
+    spec:
+      chart: ./packages/core/platform
+      sourceRef:
+        kind: GitRepository
+        name: external-apps
+        namespace: cozy-public
+      version: '*'
 ```
 
 For a detailed reference, read [Git Repositories in Flux CD](https://fluxcd.io/flux/components/source/gitrepositories/).
