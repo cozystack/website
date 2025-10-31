@@ -204,6 +204,15 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     linstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
     ```
 
+    It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020)
+    to set `failmode=continue` on ZFS storage pools to allow DRBD to handle disk failures instead of ZFS.
+    
+    ```bash
+    kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv1 -- zpool set failmode=continue data
+    kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv2 -- zpool set failmode=continue data
+    kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv3 -- zpool set failmode=continue data
+    ```
+
 1.  Check the results by listing the storage pools:
 
     ```bash

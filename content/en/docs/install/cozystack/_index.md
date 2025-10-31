@@ -225,6 +225,15 @@ linstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
 linstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
 ```
 
+It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020)
+to set `failmode=continue` on ZFS storage pools to allow DRBD to handle disk failures instead of ZFS.
+
+```bash
+kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv1 -- zpool set failmode=continue data
+kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv2 -- zpool set failmode=continue data
+kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv3 -- zpool set failmode=continue data
+```
+
     {{% /tab %}}
     {{% tab name="LVM" %}}
 
