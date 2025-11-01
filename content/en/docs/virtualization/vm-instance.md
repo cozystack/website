@@ -60,6 +60,8 @@ virtctl ssh <user>@<vm>
 | `disks`             | List of disks to attach.                                            | `[]object` | `[]`        |
 | `disks[i].name`     | Disk name.                                                          | `string`   | `""`        |
 | `disks[i].bus`      | Disk bus type (e.g. "sata").                                        | `string`   | `""`        |
+| `subnets`           | Additional subnets                                                  | `[]object` | `[]`        |
+| `subnets[i].name`   | Subnet name                                                         | `string`   | `""`        |
 | `gpus`              | List of GPUs to attach (NVIDIA driver requires at least 4 GiB RAM). | `[]object` | `[]`        |
 | `gpus[i].name`      | The name of the GPU resource to attach.                             | `string`   | `""`        |
 | `resources`         | Resource configuration for the virtual machine.                     | `object`   | `{}`        |
