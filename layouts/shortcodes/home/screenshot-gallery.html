@@ -1,0 +1,110 @@
+{{ $_hugo_config := `{ "version": 1 }` -}}
+<section class="screenshot-gallery">
+  <div class="container">
+    <div class="row mb-5"></div>
+    <div class="row">
+      <div class="col-lg-12 mt-5 mb-3">
+        <h2 class="text-center">Screenshots</h2>
+      </div>
+    </div>
+    
+    <!-- Light/Dark Mode Toggle -->
+    <div class="row mb-4">
+      <div class="col-12 text-center">
+        <div class="btn-group" role="group" aria-label="Theme toggle">
+          <button type="button" class="btn btn-outline-primary active" id="lightModeBtn" onclick="showLightMode()">Light Mode</button>
+          <button type="button" class="btn btn-outline-primary" id="darkModeBtn" onclick="showDarkMode()">Dark Mode</button>
+        </div>
+      </div>
+    </div>
+    
+    <div id="galleryCarousel" class="carousel slide" data-bs-ride="false">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+        <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="2"></button>
+        <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="3"></button>
+      </div>
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <div class="screenshot-wrapper">
+            <img src="/img/carousel/1-light.png" class="screenshot-img light-mode-img" alt="Screenshot 1 - Light Mode">
+            <img src="/img/carousel/1-dark.png" class="screenshot-img dark-mode-img hidden" alt="Screenshot 1 - Dark Mode">
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="screenshot-wrapper">
+            <img src="/img/carousel/2-light.png" class="screenshot-img light-mode-img" alt="Screenshot 2 - Light Mode">
+            <img src="/img/carousel/2-dark.png" class="screenshot-img dark-mode-img hidden" alt="Screenshot 2 - Dark Mode">
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="screenshot-wrapper">
+            <img src="/img/carousel/3-light.png" class="screenshot-img light-mode-img" alt="Screenshot 3 - Light Mode">
+            <img src="/img/carousel/3-dark.png" class="screenshot-img dark-mode-img hidden" alt="Screenshot 3 - Dark Mode">
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="screenshot-wrapper">
+            <img src="/img/carousel/4-light.png" class="screenshot-img light-mode-img" alt="Screenshot 4 - Light Mode">
+            <img src="/img/carousel/4-dark.png" class="screenshot-img dark-mode-img hidden" alt="Screenshot 4 - Dark Mode">
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+    
+    <div class="row mb-5"></div>
+  </div>
+</section>
+
+<script>
+function showLightMode() {
+  document.querySelectorAll('.light-mode-img').forEach(img => img.classList.remove('hidden'));
+  document.querySelectorAll('.dark-mode-img').forEach(img => img.classList.add('hidden'));
+  document.getElementById('lightModeBtn').classList.add('active');
+  document.getElementById('darkModeBtn').classList.remove('active');
+}
+
+function showDarkMode() {
+  document.querySelectorAll('.light-mode-img').forEach(img => img.classList.add('hidden'));
+  document.querySelectorAll('.dark-mode-img').forEach(img => img.classList.remove('hidden'));
+  document.getElementById('lightModeBtn').classList.remove('active');
+  document.getElementById('darkModeBtn').classList.add('active');
+}
+</script>
+
+<style>
+.screenshot-gallery .screenshot-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.screenshot-gallery .screenshot-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.3s ease;
+}
+
+.screenshot-gallery .screenshot-img:first-child {
+  position: relative;
+}
+
+.screenshot-gallery .screenshot-img.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+</style>
