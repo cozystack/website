@@ -25,9 +25,9 @@ To run this tutorial, you will need the following setup:
 
 -   CPU: 4 cores, `x86` architecture.
 -   RAM: 16 GiB.
--   Hard disks:
-    -   HDD1: 32GiB<br>Primary disk, used for Talos Linux, etcd storage, and downloaded images.
-    -   HDD2: 100GiB<br>Secondary disk, used for user application data.
+-   Storage: local SSDs recommended: 
+    -   SSD1: 32GiB<br>Primary disk, used for Talos Linux, etcd storage, and downloaded images. Low latency is required.
+    -   SSD2: 100GiB<br>Secondary disk, used for user application data.
 -   OS:
     -   Any Linux distribution, for example, Ubuntu.<br>
     -   There are [other installation methods]({{% ref "/docs/install/talos" %}}) which require either any Linux or no OS at all to start. 
