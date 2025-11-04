@@ -87,6 +87,17 @@ Cilium is a highly promising project, widely adopted and supported by numerous c
 
 These are components that provide the user-side functionality to Cozystack and its managed applications.
 
+### OpenAPI UI
+
+OpenAPI UI provides the main web interface for deploying and managing applications in Cozystack.
+It serves as the primary dashboard that allows users to interact with the Cozystack API through a user-friendly interface.
+
+The interface is built on top of the Cozystack OpenAPI specifications, automatically generating forms and documentation
+for all available managed applications. Users can deploy databases, Kubernetes clusters, virtual machines, and other services
+directly through the dashboard without needing to write YAML manifests manually.
+
+The dashboard also integrates with OIDC authentication via Keycloak, providing secure single sign-on access to the platform.
+
 ### Kamaji
 
 Cozystack uses Kamaji Control Plane to deploy tenant Kubernetes clusters.
