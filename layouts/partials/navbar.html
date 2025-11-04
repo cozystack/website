@@ -34,7 +34,7 @@
     <span class="navbar-toggler-icon"></span>
   </button>
   <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
-    <ul class="navbar-nav mt-2 mt-lg-0">
+    <ul class="navbar-nav mt-lg-0">
       {{ $p := . -}}
       {{ range .Site.Menus.main -}}
         {{ $active := or ($p.IsMenuCurrent "main" .) ($p.HasMenuCurrent "main" .) -}}
@@ -58,7 +58,7 @@
          </div>
         </li>
         {{ else }}
-        <li class="nav-item mr-4 mb-2 mb-lg-0">
+        <li class="nav-item mr-lg-4 mb-2 mb-lg-0">
           <a {{/**/ -}}
             class="nav-link {{- if $active }} active {{- end }}" {{/**/ -}}
             href="{{ with .Page }}{{ .RelPermalink }}{{ else }}{{ .URL | relLangURL }}{{ end }}"
@@ -75,13 +75,13 @@
 	    {{ end -}}
 
       {{ if .Site.Params.versions -}}
-      <li class="nav-item dropdown mr-4">
+      <li class="nav-item dropdown mr-lg-4">
         {{ partial "navbar-version-selector.html" . -}}
       </li>
       {{ end -}}
 
       {{ if (gt (len .Site.Home.Translations) 0) -}}
-      <li class="nav-item dropdown mr-4 d-none d-lg-block">
+      <li class="nav-item dropdown mr-lg-4 d-none d-lg-block">
         {{ partial "navbar-lang-selector.html" . -}}
       </li>
       {{ end -}}

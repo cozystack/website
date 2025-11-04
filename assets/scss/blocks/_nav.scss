@@ -5,6 +5,15 @@ nav.navbar {
   padding: 0;
   @include media-breakpoint-down(md) {
     padding: 10px;
+    min-height: auto !important;
+    flex-wrap: wrap;
+  }
+  
+  // Fix for small and medium screens (tablets)
+  @media (min-width: 576px) and (max-width: 991.98px) {
+    padding: 10px 15px;
+    flex-wrap: nowrap;
+    align-items: center;
   }
 
   // Disable navbar color change on scroll
@@ -13,7 +22,16 @@ nav.navbar {
   }
 
   .navbar-brand {
-    flex-grow: 1;
+    @include media-breakpoint-down(md) {
+      flex: 1 1 auto;
+    }
+    @media (min-width: 576px) and (max-width: 991.98px) {
+      flex: 0 0 auto;
+      margin-right: 1rem;
+    }
+    @include media-breakpoint-up(lg) {
+      flex-grow: 1;
+    }
     padding-bottom: 2px;
 
     svg {
@@ -26,11 +44,68 @@ nav.navbar {
     }
   }
 
+  .navbar-toggler {
+    // Show hamburger only on very small screens (xs)
+    @media (max-width: 575.98px) {
+      margin-left: auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.5rem;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    // Hide hamburger on small and medium screens (menu is always visible)
+    @media (min-width: 576px) and (max-width: 991.98px) {
+      display: none !important;
+    }
+    
+    .navbar-toggler-icon {
+      width: 1.5em;
+      height: 1.5em;
+    }
+  }
+
+  // Mobile menu collapse behavior
+  .navbar-collapse {
+    // Very small screens (xs) - hide by default, show when opened
+    @media (max-width: 575.98px) {
+      &.collapse:not(.show) {
+        display: none !important;
+      }
+      
+      &.collapse.show {
+        flex-basis: 100%;
+        display: flex !important;
+        flex-direction: column;
+      }
+    }
+    
+    // Small and medium screens (sm-md) - show menu always, horizontal layout
+    @media (min-width: 576px) and (max-width: 991.98px) {
+      // Force show menu on small and medium screens
+      display: flex !important;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
   .navbar-nav {
     margin-top: 0 !important;
     overflow: visible !important;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    
+    // Small and medium screens - ensure proper alignment
+    @media (min-width: 576px) and (max-width: 991.98px) {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-left: auto;
+    }
+    
+    @include media-breakpoint-up(lg) {
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
 
     .nav-link {
       font-size: 1rem;
@@ -38,11 +113,54 @@ nav.navbar {
       font-weight: 700;
 
       margin-top: 3px;
+      
+      @include media-breakpoint-down(sm) {
+        padding: 0.75rem 0;
+        margin-top: 0;
+      }
+    }
+    
+    .nav-item {
+      @include media-breakpoint-down(sm) {
+        width: 100%;
+        margin: 0 !important;
+      }
+      
+      // Small and medium screens - reset width
+      @media (min-width: 576px) and (max-width: 991.98px) {
+        width: auto;
+        margin: 0 0.5rem !important;
+      }
+    }
+  }
+  
+  // Styles for opened mobile menu (very small screens only)
+  .navbar-collapse.collapse.show {
+    @media (max-width: 575.98px) {
+      .navbar-nav {
+        flex-direction: column;
+        width: 100%;
+        padding-top: 1rem;
+      }
     }
   }
 
   .nav-search-item {
     height: 40px;
+    
+    @include media-breakpoint-down(sm) {
+      width: 100%;
+      height: auto;
+      margin-top: 1rem !important;
+    }
+    
+    // Small and medium screens - keep search inline
+    @media (min-width: 576px) and (max-width: 991.98px) {
+      width: auto;
+      height: 40px;
+      margin-top: 0 !important;
+      margin-left: 0.5rem;
+    }
 
     #docsearch {
       height: 28px;
@@ -50,10 +168,11 @@ nav.navbar {
       max-width: 11rem;
       padding-left: 9px;
       margin-top: 4px;
-      @include media-breakpoint-down(md) {
+      @include media-breakpoint-down(sm) {
         max-width: 100%;
         margin-right: 0;
         padding-left: 0;
+        margin-top: 0;
         .DocSearch-Button {
           margin-left: 0;
           width: 100%;
@@ -68,6 +187,23 @@ nav.navbar {
       }
 
       margin-right: 1rem;
+      
+      @include media-breakpoint-down(sm) {
+        margin-right: 0;
+      }
+    }
+  }
+  
+  // Dropdown menu for mobile
+  .nav-item.dropdown {
+    @include media-breakpoint-down(sm) {
+      .dropdown-menu {
+        width: 100%;
+        position: static !important;
+        float: none;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
     }
   }
 }
