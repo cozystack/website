@@ -333,7 +333,13 @@ main.td-main {
 }
 
 .td-navbar {
-  min-height: auto !important;
+  @include media-breakpoint-down(md) {
+    min-height: auto !important;
+    max-height: none !important;
+    height: auto !important;
+    position: relative !important;
+  }
+  
   @include media-breakpoint-up(lg) {
     min-height: 4rem !important;
   }
