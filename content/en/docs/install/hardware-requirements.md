@@ -122,3 +122,7 @@ Achieving high availability adds to the basic production environment requirement
 - Expect a significant amount of horizontal, inter-node traffic inside clusters.
   It is usually caused by multiple replicas of services and databases deployed across different nodes exchanging data.
   Also, virtual machines with live migration require replicated volumes, which further increases the amount of traffic.
+
+## System Resource Planning
+
+For detailed recommendations on system resource allocation (CPU and memory) per node, based on cluster scale and number of tenants, refer to [System Resource Planning Recommendations]({{% ref "/docs/install/resource-planning" %}}).
