@@ -26,7 +26,7 @@ The minimum recommended configuration for each node is as follows:
 | CPU              | 4 cores      |
 | CPU Type         | host         |
 | RAM              | 16 GB        |
-| Primary Disk     | 32 GB        |
+| Primary Disk     | 32 GB SSD    |
 | Secondary Disk   | 100 GB (raw) |
 
 
@@ -41,13 +41,14 @@ The minimum recommended configuration for each node is as follows:
 
 Storage in a Cozystack cluster is used both by the system and by the user workloads.
 There are two options: having a dedicated disk for each role or allocating space on system disk for user storage.
+Low latency is critical for control-plane nodes storage, local SSDs are recommended. 
 
 **Using two disks**
 
 Separating disks by role is the primary and more reliable option.
 
 - **Primary Disk**: This disk contains the Talos Linux operating system, essential system kernel modules and
-  Cozystack system base pods, logs, and base container images.
+  Cozystack system base pods, logs, and base container images. Also an etcd cluster will be running on top of it, so a low-latency volume should be used, preferably a local SSD.
 
   Minimum: 32 GB; approximately 26 GB is used in a standard Cozystack setup.
   Talos installation expects `/dev/sda` as the system disk (virtio drives usually appear as `/dev/vda`).
@@ -65,6 +66,7 @@ Separating disks by role is the primary and more reliable option.
 
 It's possible to use a single disk with space allocated for user storage.
 See [How to install Talos on a single-disk machine]({{% ref "/docs/install/how-to/single-disk" %}})
+Using a local SSD disk is recommended.
 
 **Networking:**
 
