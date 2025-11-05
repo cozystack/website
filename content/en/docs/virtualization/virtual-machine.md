@@ -61,6 +61,8 @@ virtctl ssh <user>@<vm>
 | `systemDisk.image`        | The base image for the virtual machine.                 | `string`   | `ubuntu`     |
 | `systemDisk.storage`      | The size of the disk allocated for the virtual machine. | `string`   | `5Gi`        |
 | `systemDisk.storageClass` | StorageClass used to store the data.                    | `string`   | `replicated` |
+| `subnets`                 | Additional subnets                                      | `[]object` | `[]`         |
+| `subnets[i].name`         | Subnet name                                             | `string`   | `""`         |
 | `gpus`                    | List of GPUs to attach.                                 | `[]object` | `[]`         |
 | `gpus[i].name`            | The name of the GPU resource to attach.                 | `string`   | `""`         |
 | `resources`               | Resource configuration for the virtual machine.         | `object`   | `{}`         |
