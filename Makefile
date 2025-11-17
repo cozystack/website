@@ -2,7 +2,7 @@
 APPS       ?= tenant clickhouse redis ferretdb rabbitmq postgres nats kafka mysql
 K8S       ?= kubernetes
 VMS       ?= virtual-machine vm-disk vm-instance
-NETWORKING       ?= vpn http-cache tcp-balancer
+NETWORKING       ?= vpc vpn http-cache tcp-balancer
 SERVICES       ?= bootbox etcd ingress monitoring seaweedfs
 APPS_DEST_DIR   ?= content/en/docs/applications
 K8S_DEST_DIR   ?= content/en/docs
