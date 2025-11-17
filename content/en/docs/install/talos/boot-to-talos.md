@@ -3,6 +3,8 @@ title: "Install Talos Linux using boot-to-talos"
 linkTitle: boot-to-talos
 description: "Install Talos Linux using boot-to-talos, a convenient CLI application requiring nothing but a Talos image."
 weight: 5
+aliases:
+  - /docs/talos/install/kexec
 ---
 
 This guide explains how to install Talos Linux on a host running any other Linux distribution using `boot-to-talos`.
@@ -11,6 +13,17 @@ This guide explains how to install Talos Linux on a host running any other Linux
 It works entirely from userspace and has no external dependencies except the Talos installer image.
 
 Note that Cozystack provides its own Talos builds, which are tested and optimized for running a Cozystack cluster.
+
+## Modes
+
+`boot-to-talos` supports two installation modes:
+
+1. **boot** – Extract the kernel and initrd from the Talos installer and boot them directly using the kexec mechanism.
+2. **install** – Prepare the environment, run the Talos installer, and then overwrite the system disk with the installed image.
+
+{{< note >}}
+If one mode doesn't work on your system, try the other. Different methods may work better on different operating systems.
+{{< /note >}}
 
 ## Installation
 
@@ -35,7 +48,10 @@ Make sure to use Cozystack's own Talos build, found at [ghcr.io/cozystack/cozyst
 
 
 ```console
-$ boot-to-talos
+Mode:
+  1. boot – extract the kernel and initrd from the Talos installer and boot them directly using the kexec mechanism.
+  2. install – prepare the environment, run the Talos installer, and then overwrite the system disk with the installed image.
+Mode [1]: 2
 Target disk [/dev/sda]:
 Talos installer image [ghcr.io/cozystack/cozystack/talos:v1.10.5]:
 Add networking configuration? [yes]:
@@ -97,7 +113,25 @@ There are builds for several architectures:
 
 Understanding these steps is not required to install Talos Linux.
 
-`boot-to-talos` performs a series of steps after it receives the configuration values: 
+The workflow depends on the selected mode:
+
+#### Boot Mode
+
+When using the **boot** mode, `boot-to-talos` performs the following steps:
+
+1.  **Unpacks Talos installer in RAM**<br>
+    Extracts layers from the Talos‑installer container into a throw‑away `tmpfs`.
+    Note that Docker is not needed during this step.
+2.  **Extracts kernel and initrd**<br>
+    Extracts the kernel (`vmlinuz`) and initial ramdisk (`initramfs.xz`) from the Talos installer image.
+3.  **Loads kernel via kexec**<br>
+    Uses the `kexec` system call to load the Talos kernel and initrd into memory with the provided kernel command line parameters.
+4.  **Reboots into Talos**<br>
+    Executes `kexec --exec` to switch to the Talos kernel without a physical reboot. After booting, you can apply Talos configuration to complete the installation.
+
+#### Install Mode
+
+When using the **install** mode, `boot-to-talos` performs the following steps:
 
 1.  **Unpacks Talos installer in RAM**<br>
     Extracts layers from the Talos‑installer container into a throw‑away `tmpfs`.

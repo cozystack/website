@@ -25,8 +25,6 @@ They have various limitations and optimal use cases:
     a simple installation method, which can be used completely from userspace, and with no external dependencies except the Talos image.
 
     Choose this option if you are new to Talos or if you have VMs with pre-installed OS from a cloud provider.
--   [Boot to Talos Linux from another Linux OS using `kexec`]({{% ref "/docs/install/talos/kexec" %}}) — another simple installation method,
-    but with some extra requirements. 
 -   [Install using temporary DHCP and PXE servers running in Docker containers]({{% ref "/docs/install/talos/pxe" %}}) — 
     requires an extra management machine, but allows for installing on multiple hosts at once.
 -   [Install using ISO image]({{% ref "/docs/install/talos/iso" %}}) — optimal for systems which can automate ISO installation.
