@@ -94,20 +94,24 @@ To get the Keycloak credentials for default user `admin`, run the following comm
 kubectl get secret -o yaml -n cozy-keycloak keycloak-credentials -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
 ```
 
-1. Create a user in the realm `cozy`.
+1. Switch realm to `cozy`.
+2. Create a user in the realm `cozy`.
 
    Follow the [Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/index.html#proc-creating-user_server_administration_guide) to create a user in the realm `cozy`.
 
-   {{% alert color="info" %}}
-   Users must have a verified email address in Keycloak. This is required for proper OIDC authentication.
-   To verify an email:
-   1. Access the user details in Keycloak admin console
-   2. Navigate to the Credentials tab
-   3. Use the "Email Verification" action
+3. After a user is created, go to the user details in Keycloak admin console and turn on the "Verified email" toggle. This is needed for OIDC authentication to work properly.
+
+4. Add the user to the `cozystack-cluster-admin` group.
+
+5. Now you should be able to login to the dashboard using your OIDC credentials.
+
+   {{% alert color="warning" %}}
+   If the dashboard is still requesting a token instead of login/password, manually reconcile it:
+   
+   ```bash
+   kubectl annotate helmrepositories.source.toolkit.fluxcd.io -n cozy-dashboard dashboard reconcile.fluxcd.io/requestedAt=$(date +"%Y-%m-%dT%H:%M:%SZ") --overwrite
+   ```
    {{% /alert %}}
-
-2. Add the user to the `cozystack-cluster-admin` group.
-
 
 ### Step 4: Retrieve Kubeconfig
 
