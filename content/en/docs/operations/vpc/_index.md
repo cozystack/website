@@ -24,5 +24,5 @@ While creating a VM, fill in subnets IDs in Subnets part of a resource settings.
 ![VM Subnets](vm-subnets.png)
 
 Each subnet will be represented as a secondary network interface.
-For some distributions you will need to add networking interfaces setup to virtual machine's user-data.
+For some guest operating system distributions, you will need to add network interface configuration to the virtual machine's user-data.
 You can also bring secondary interfaces up manually, getting IP addresses from DHCP.
