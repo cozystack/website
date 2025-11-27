@@ -21,25 +21,28 @@ You will need the following tools installed on your workstation:
 
 To run this tutorial, you will need the following setup:
 
-**Cluster nodes:** three bare-metal servers or virtual machines in the following minimal configuration:
+**Cluster nodes:** three bare-metal servers or virtual machines. Hardware requirements depend on your usage scenario:
 
--   CPU: 4 cores, `x86` architecture.
--   RAM: 16 GiB.
--   Storage: local SSDs recommended: 
-    -   SSD1: 32GiB<br>Primary disk, used for Talos Linux, etcd storage, and downloaded images. Low latency is required.
-    -   SSD2: 100GiB<br>Secondary disk, used for user application data.
--   OS:
-    -   Any Linux distribution, for example, Ubuntu.<br>
-    -   There are [other installation methods]({{% ref "/docs/install/talos" %}}) which require either any Linux or no OS at all to start. 
--   Networking:
-    -   Routable FQDN domain.<br>If you don't have one, you can use [nip.io](https://nip.io/) with dash notation
-    -   Located in the same L2 network segment.
+{{< include "docs/install/_include/hardware-config-tabs.md" >}}
+
+**Storage:**
+-   **Primary Disk**: Used for Talos Linux, etcd storage, and downloaded images. Low latency is required.
+-   **Secondary Disk**: Used for user application data (ZFS pool).
+
+**OS:**
+-   Any Linux distribution, for example, Ubuntu.<br>
+-   There are [other installation methods]({{% ref "/docs/install/talos" %}}) which require either any Linux or no OS at all to start.
+
+**Networking:**
+-   Routable FQDN domain.<br>If you don't have one, you can use [nip.io](https://nip.io/) with dash notation
+-   Located in the same L2 network segment.
 -   Anti-spoofing disabled.<br>
     It is required for MetalLB, the load balancer used in Cozystack.
--   If using virtual machines, there are extra requirements:
-    -   CPU passthrough enabled and CPU model set to `host` in the hypervisor settings.
-    -   Nested virtualization enabled.<br>
-        Required for virtual machines and tenant kubernetes clusters.
+
+**Virtual machines:**
+-   CPU passthrough enabled and CPU model set to `host` in the hypervisor settings.
+-   Nested virtualization enabled.<br>
+    Required for virtual machines and tenant kubernetes clusters.
 
 For a more detailed explanation of hardware requirements for different setups, refer to the [Hardware Requirements]({{% ref "/docs/install/hardware-requirements" %}})
     

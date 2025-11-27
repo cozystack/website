@@ -16,23 +16,11 @@ in a fully containerized or virtualized environment.
 Hardware requirements depend on your usage scenario.
 Below are several common deployment options; review them to determine which setup fits your needs best.
 
-## Small lab
-
-Here are the baseline requirements for running a tiny installation.
-The minimum recommended configuration for each node is as follows:
-
-| Component        | Requirement  |
-|------------------|--------------|
-| CPU              | 4 cores      |
-| CPU Type         | host         |
-| RAM              | 16 GB        |
-| Primary Disk     | 32 GB SSD    |
-| Secondary Disk   | 100 GB (raw) |
-
+{{< include "docs/install/_include/hardware-config-tabs.md" >}}
 
 **Compute:**
 
-- Three physical or virtual servers with amd64/x86_64 architecture, with at least 16 GB RAM and 4 CPU cores each.
+- Three or more physical or virtual servers with amd64/x86_64 architecture, with the specifications shown in the table above.
 - Virtualized servers need nested virtualization enabled and the CPU model set to `host` (without emulation).
 - PXE installation requires an extra management instance connected to the same network, with any Linux system able to run a Docker container.
   It should also have `x86-64-v2` architecture, which most probably may be achieved by setting CPU model to `host` in case of a VM.
@@ -50,13 +38,12 @@ Separating disks by role is the primary and more reliable option.
 - **Primary Disk**: This disk contains the Talos Linux operating system, essential system kernel modules and
   Cozystack system base pods, logs, and base container images. Also an etcd cluster will be running on top of it, so a low-latency volume should be used, preferably a local SSD.
 
-  Minimum: 32 GB; approximately 26 GB is used in a standard Cozystack setup.
-  Talos installation expects `/dev/sda` as the system disk (virtio drives usually appear as `/dev/vda`).
+  Minimum sizes vary by configuration (see table above). Talos installation expects `/dev/sda` as the system disk (virtio drives usually appear as `/dev/vda`).
 
 - **Secondary Disk**: Dedicated to workload data and can be increased based on workload requirements.
   Used for provisioning volumes via PersistentVolumeClaims (PVCs).
 
-  Suggested: 100 GB. Disk path (usually `/dev/sdb`) will be defined in the storage configuration.
+  Minimum sizes vary by configuration (see table above). Disk path (usually `/dev/sdb`) will be defined in the storage configuration.
   It does not affect the Talos installation.
 
   Learn more about configuring Linstor StorageClass from the
@@ -73,7 +60,11 @@ Using a local SSD disk is recommended.
 - Machines must be allowed to use additional IPs, or an external load balancer must be available.
   Using additional IPs is disabled by default and must be enabled explicitly in most public clouds.
 - Additional public IPs for ingress and virtual machines may be needed. Check if your public cloud provider supports floating IPs.
-
+- Routable FQDN domain (or use [nip.io](https://nip.io/) with dash notation)
+- Located in the same L2 network segment
+- Anti-spoofing disabled (required for MetalLB)
+- Minimum 1 Gbps (10 Gbps recommended for production)
+- Low latency between cluster nodes
 
 ## Production Cluster
 
