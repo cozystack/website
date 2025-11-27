@@ -1,0 +1,11 @@
+// Override Docsy's max-width: 80% rule
+@media (min-width: 992px) {
+  .td-content > ul {
+    max-width: 100% !important;
+  }
+  
+  .td-content > .tab-content .tab-pane {
+    max-width: 100% !important;
+  }
+}
+

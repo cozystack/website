@@ -7,6 +7,11 @@
   background-color: #fff;
   
   .tab-pane {
+    // Remove border styles
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    
     p:first-child {
       margin-top: 0;
     }

@@ -1,0 +1,13 @@
+{{- $path := .Get 0 -}}
+{{- $filePath := path.Join "content/en" $path -}}
+{{- if fileExists $filePath -}}
+{{- $content := readFile $filePath -}}
+{{- with $.Page -}}
+{{- $content | .RenderString -}}
+{{- else -}}
+{{- $content | markdownify -}}
+{{- end -}}
+{{- else -}}
+{{- errorf "Include file not found: %s" $filePath -}}
+{{- end -}}
+
