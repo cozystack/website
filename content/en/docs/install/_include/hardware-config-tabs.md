@@ -9,7 +9,7 @@ The minimum recommended configuration for each node is as follows:
 | Hosts            | 3x Physical hosts (or VMs with host CPU passthrough) |
 | Architecture     | x86_64        |
 | CPU              | 8 cores      |
-| RAM              | 32 GB        |
+| RAM              | 24 GB        |
 | Primary Disk     | 50 GB SSD (or RAW for VMs) |
 | Secondary Disk   | 256 GB SSD (raw) |
 
