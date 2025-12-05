@@ -61,7 +61,7 @@ Follow these steps:
     nvidia-vfio-manager-thfwf                       1/1     Running   0          78s
     ```
 
-To verify the GPU binding, access the node using `kubectl debug node` or `kubectl node-shell -x` and run:
+To verify the GPU binding, access the node using `kubectl node-shell -n cozy-system -x` or `kubectl debug node` and run:
 
 ```bash
 lspci -nnk -d 10de:
