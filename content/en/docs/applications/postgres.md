@@ -89,6 +89,7 @@ See:
 | `size`             | Persistent Volume Claim size available for application data.                                                                         | `quantity` | `10Gi`  |
 | `storageClass`     | StorageClass used to store the data.                                                                                                 | `string`   | `""`    |
 | `external`         | Enable external access from outside the cluster.                                                                                     | `bool`     | `false` |
+| `version`          | PostgreSQL major version to deploy                                                                                                   | `string`   | `v18`   |
 
 
 ### Application-specific parameters
