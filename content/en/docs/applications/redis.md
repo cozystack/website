@@ -36,6 +36,7 @@ Service utilizes the Spotahome Redis Operator for efficient management and orche
 | `size`             | Persistent Volume Claim size available for application data.                                                                    | `quantity` | `1Gi`   |
 | `storageClass`     | StorageClass used to store the data.                                                                                            | `string`   | `""`    |
 | `external`         | Enable external access from outside the cluster.                                                                                | `bool`     | `false` |
+| `version`          | Redis major version to deploy                                                                                                   | `string`   | `v8`    |
 
 
 ### Application-specific parameters
