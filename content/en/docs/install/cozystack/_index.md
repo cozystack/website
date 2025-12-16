@@ -361,33 +361,22 @@ This step has two options depending on your available infrastructure:
 
 Cozystack has three types of IP addresses used:
 
--   Node IPs: constant and valid only within the cluster.
+-   Node IPs: persistent and valid only within the cluster.
 -   Virtual floating IP: used to access one of the nodes in the cluster and valid only within the cluster.
--   External access IPs: used by the load balancer to expose services outside the cluster.
+-   External access IPs: used by LoadBalancers to expose services outside the cluster.
 
-Select a range of unused IPs to enable access to the services, for example, `192.168.100.200-192.168.100.250`.
-These IPs should be from the same network as the nodes, or they should have all necessary routes to them.
+Services with external IPs may be exposed in two modes: L2 and BGP.
+L2 mode is a simple one, but requires that nodes belong to a single L2 domain, and does not load-balance well.
+BGP has more complicated setup -- you need BGP peers ready to accept announces, but gives the ability to make proper load-balancing, and provides more options for choosing IP address ranges.
 
-Configure MetalLB to use and announce this range:
+Select a range of unused IPs for the services, here will use the `192.168.100.200-192.168.100.250` range.
+If you use L2 mode, these IPs should either be from the same network as the nodes, or have all necessary routes to them.
 
-```bash
-kubectl create -f metallb-l2-advertisement.yml
-kubectl create -f metallb-ip-address-pool.yml
-```
+For BGP mode, you will also need BGP peer IP addresses and local and remote AS numbers. Here we will use `192.168.20.254` as peer IP, and AS numbers 65000 and 65001 as local and remote.
 
-**metallb-l2-advertisement.yml**:
-```yaml
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: cozystack
-  namespace: cozy-metallb
-spec:
-  ipAddressPools:
-    - cozystack
-```
+Create and apply a file describing an address pool.
 
-**metallb-ip-address-pool.yml**:
+**metallb-ip-address-pool.yml**
 ```yaml
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -402,6 +391,75 @@ spec:
   avoidBuggyIPs: false
 ```
 
+```bash
+kubectl create -f metallb-ip-address-pool.yml
+```
+
+Create and apply resources needed for an L2 or a BGP advertisement.
+
+{{< tabs name="metallb_announce" >}}
+{{% tab name="L2 mode" %}}
+L2Advertisement uses the name of the IPAddressPool resource we created previously. 
+
+**metallb-l2-advertisement.yml**
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: cozystack
+  namespace: cozy-metallb
+spec:
+  ipAddressPools:
+    - cozystack
+```
+<br/>
+
+Apply changes.
+
+```bash
+kubectl create -f metallb-l2-advertisement.yml
+```
+{{% /tab %}}
+{{% tab name="BGP mode" %}}
+First, create a separate BGPPeer resource for **each** peer.
+
+**metallb-bgp-peer.yml**
+```yaml
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: peer1
+  namespace: cozy-metallb
+spec:
+  myASN: 65000
+  peerASN: 65001
+  peerAddress: 192.168.20.254
+```  
+<br/>
+
+Next, create a single BGPAdvertisement resource.
+
+**metallb-bgp-advertisement.yml**
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+  name: cozystack
+  namespace: cozy-metallb
+spec:
+  ipAddressPools:
+  - cozystack
+```
+<br/>
+Apply changes.
+
+```bash
+kubectl create -f metallb-bgp-peer.yml
+kubectl create -f metallb-bgp-advertisement.yml
+```
+{{% /tab %}}
+{{< /tabs >}}
+<br/>
 
 Now that MetalLB is configured, enable `ingress` in the `tenant-root`:
 
@@ -438,15 +496,16 @@ NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP       PORT(
 root-ingress-controller   LoadBalancer   10.96.91.83     192.168.100.200   80/TCP,443/TCP   48m
 ```
 
+### 4.b. Node Public IP Setup
 
-### 4.b. Public IP Setup
+If your cloud provider does not support MetalLB, you can expose ingress controller using external IPs on your nodes.
 
-If your cloud provider does not support MetalLB, you can expose the ingress controller using the external IPs of your nodes.
+If public IPs are attached directly to nodes, specify them.
+If public IPs are provided with a 1:1 NAT, as some clouds do, use IP addresses of **external** network interfaces.
 
-Use the IP addresses of the **external** network interfaces for your nodes.
-For example, the IPs of external interfaces are `192.168.100.11`, `192.168.100.12`, and `192.168.100.13`.
+Here we will use `192.168.100.11`, `192.168.100.12`, and `192.168.100.13`.
 
-First, patch the ConfigMap to expose these IPs:
+First, patch the ConfigMap with IPs to expose:
 
 ```bash
 kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
@@ -466,7 +525,7 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{
 }'
 ```
 
-Finally, add the list of external network interface IPs to the `externalIPs` list in the Ingress configuration:
+Finally, add external IPs to the `externalIPs` list in the Ingress configuration:
 
 ```bash
 kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{
