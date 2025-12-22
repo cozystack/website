@@ -466,20 +466,6 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{
 }'
 ```
 
-Finally, add the list of external network interface IPs to the `externalIPs` list in the Ingress configuration:
-
-```bash
-kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{
-  "spec":{
-    "externalIPs": [
-      "192.168.100.11",
-      "192.168.100.12",
-      "192.168.100.13"
-    ]
-  }
-}'
-```
-
 After that, your Ingress will be available on the specified IPs.
 Check it in the following way:
 
