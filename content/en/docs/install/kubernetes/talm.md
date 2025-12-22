@@ -240,7 +240,7 @@ Further steps require Kubernetes API and `kubectl`, which require a `kubeconfig`
 Use Talm to generate an administrative `kubeconfig`:
 
 ```bash
-talm kubeconfig kubeconfig -f nodes/node1.yaml
+talm kubeconfig -f nodes/node1.yaml
 ```
 
 This command will produce a `kubeconfig` file in the current directory.

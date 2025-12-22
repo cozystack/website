@@ -228,7 +228,7 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
 
 1.   Get `kubeconfig` from the first node, example:
      ```bash
-     talm kubeconfig kubeconfig -f nodes/node1.yml
+     talm kubeconfig -f nodes/node1.yml
      ```
 
 1.   Edit `kubeconfig` to set the IP address to one of control-plane node, example:
