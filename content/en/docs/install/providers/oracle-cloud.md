@@ -356,7 +356,7 @@ The next stage is to initialize Talos nodes and bootstrap a Kubernetes cluster.
 1.  Get the `kubeconfig` from any control‑plane node using Talm. In this example, all three nodes are control‑plane nodes:
 
     ```bash
-    talm kubeconfig kubeconfig -f nodes/node0.yaml
+    talm kubeconfig -f nodes/node0.yaml
     ```
 
 1.  Edit the `kubeconfig` to set the server IP address to one of the control‑plane nodes, for example:

@@ -229,7 +229,7 @@ talm bootstrap -f nodes/node1.yaml
 Save the kubeconfig to your current directory:
 
 ``` graf
-talm kubeconfig kubeconfig -f nodes/node1.yaml
+talm kubeconfig -f nodes/node1.yaml
 ```
 
 Unlike the official *talosctl* utility, the generated configs do not contain secrets, allowing them to be stored in git without additional encryption. The secrets are stored at the root of your project and only in these files: `secrets.yaml`, `talosconfig`, and `kubeconfig`.

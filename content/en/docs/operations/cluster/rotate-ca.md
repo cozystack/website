@@ -51,7 +51,7 @@ talosctl rotate-ca -e 12.34.56.77,12.34.56.78,12.34.56.79 \
 
 Get a new kubeconfig:
 ```bash
-talm kubeconfig kubeconfig -f nodes/srv1.yaml
+talm kubeconfig -f nodes/srv1.yaml
 ```
 
 ### Rotate CA for Talos API

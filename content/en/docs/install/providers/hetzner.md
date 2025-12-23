@@ -374,7 +374,7 @@ but has instructions and examples specific to Hetzner.
 1.  Generate an administrative `kubeconfig` to access the cluster using the same control plane node:
 
     ```bash
-    talm kubeconfig kubeconfig -f nodes/node1.yaml
+    talm kubeconfig -f nodes/node1.yaml
     ```
 
 1.  Edit the server URL in the `kubeconfig` to a public IP
