@@ -109,7 +109,7 @@ kubectl get secret -o yaml -n cozy-keycloak keycloak-credentials -o go-template=
    If the dashboard is still requesting a token instead of login/password, manually reconcile it:
    
    ```bash
-   kubectl annotate helmrepositories.source.toolkit.fluxcd.io -n cozy-dashboard dashboard reconcile.fluxcd.io/requestedAt=$(date +"%Y-%m-%dT%H:%M:%SZ") --overwrite
+   kubectl annotate -n cozy-dashboard hr/dashboard reconcile.fluxcd.io/forceAt=$(date +"%Y-%m-%dT%H:%M:%SZ") --overwrite
    ```
    {{% /alert %}}
 

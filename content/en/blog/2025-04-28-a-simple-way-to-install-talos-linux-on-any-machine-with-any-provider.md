@@ -131,9 +131,9 @@ Talm includes almost all of the features of *talosctl*, adding a few extras. It 
 First, initialize a configuration for a new cluster:
 
 ``` graf
-mkdir talos
-cd talos
-talm init
+mkdir talos-config
+cd talos-config
+talm init --preset generic --name talos
 ```
 
 Adjust values for your cluster in `values.yaml`:

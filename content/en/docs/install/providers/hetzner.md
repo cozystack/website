@@ -260,12 +260,12 @@ but has instructions and examples specific to Hetzner.
     Note that Talm has a built-in preset for Cozystack, which we use with `--preset cozystack`:
 
     ```bash
-    mkdir -p hetzner
-    cd hetzner
-    talm init --preset cozystack
+    mkdir -p hetzner-cluster
+    cd hetzner-cluster
+    talm init --preset cozystack --name hetzner
     ```
 
-    A bunch of files is now created in the `hetzner` directory.
+    A bunch of files is now created in the `hetzner-cluster` directory.
     To learn more about the role of each file, refer to the
     [Talm guide]({{% ref "docs/install/kubernetes/talm#1-initialize-cluster-configuration" %}}).
 

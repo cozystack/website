@@ -65,25 +65,26 @@ source: https://github.com/cozystack/cozystack/blob/main/packages/extra/monitori
 
 ### Alerta configuration
 
-| Name                                      | Description                                                       | Type       | Value   |
-| ----------------------------------------- | ----------------------------------------------------------------- | ---------- | ------- |
-| `alerta`                                  | Configuration for the Alerta service.                             | `object`   | `{}`    |
-| `alerta.storage`                          | Persistent volume size for the database.                          | `string`   | `10Gi`  |
-| `alerta.storageClassName`                 | StorageClass used for the database.                               | `string`   | `""`    |
-| `alerta.resources`                        | Resource configuration.                                           | `object`   | `{}`    |
-| `alerta.resources.requests`               | Resource requests.                                                | `object`   | `{}`    |
-| `alerta.resources.requests.cpu`           | CPU request.                                                      | `quantity` | `100m`  |
-| `alerta.resources.requests.memory`        | Memory request.                                                   | `quantity` | `256Mi` |
-| `alerta.resources.limits`                 | Resource limits.                                                  | `object`   | `{}`    |
-| `alerta.resources.limits.cpu`             | CPU limit.                                                        | `quantity` | `1`     |
-| `alerta.resources.limits.memory`          | Memory limit.                                                     | `quantity` | `1Gi`   |
-| `alerta.alerts`                           | Alert routing configuration.                                      | `object`   | `{}`    |
-| `alerta.alerts.telegram`                  | Configuration for Telegram alerts.                                | `object`   | `{}`    |
-| `alerta.alerts.telegram.token`            | Telegram bot token.                                               | `string`   | `""`    |
-| `alerta.alerts.telegram.chatID`           | Telegram chat ID(s), separated by commas.                         | `string`   | `""`    |
-| `alerta.alerts.telegram.disabledSeverity` | List of severities without alerts (e.g. "informational,warning"). | `string`   | `""`    |
-| `alerta.alerts.slack`                     | Configuration for Slack alerts.                                   | `object`   | `{}`    |
-| `alerta.alerts.slack.url`                 | Configuration uri for Slack alerts.                               | `string`   | `""`    |
+| Name                                      | Description                                                           | Type       | Value   |
+| ----------------------------------------- | --------------------------------------------------------------------- | ---------- | ------- |
+| `alerta`                                  | Configuration for the Alerta service.                                 | `object`   | `{}`    |
+| `alerta.storage`                          | Persistent volume size for the database.                              | `string`   | `10Gi`  |
+| `alerta.storageClassName`                 | StorageClass used for the database.                                   | `string`   | `""`    |
+| `alerta.resources`                        | Resource configuration.                                               | `object`   | `{}`    |
+| `alerta.resources.requests`               | Resource requests.                                                    | `object`   | `{}`    |
+| `alerta.resources.requests.cpu`           | CPU request.                                                          | `quantity` | `100m`  |
+| `alerta.resources.requests.memory`        | Memory request.                                                       | `quantity` | `256Mi` |
+| `alerta.resources.limits`                 | Resource limits.                                                      | `object`   | `{}`    |
+| `alerta.resources.limits.cpu`             | CPU limit.                                                            | `quantity` | `1`     |
+| `alerta.resources.limits.memory`          | Memory limit.                                                         | `quantity` | `1Gi`   |
+| `alerta.alerts`                           | Alert routing configuration.                                          | `object`   | `{}`    |
+| `alerta.alerts.telegram`                  | Configuration for Telegram alerts.                                    | `object`   | `{}`    |
+| `alerta.alerts.telegram.token`            | Telegram bot token.                                                   | `string`   | `""`    |
+| `alerta.alerts.telegram.chatID`           | Telegram chat ID(s), separated by commas.                             | `string`   | `""`    |
+| `alerta.alerts.telegram.disabledSeverity` | List of severities without alerts (e.g. ["informational","warning"]). | `[]string` | `[]`    |
+| `alerta.alerts.slack`                     | Configuration for Slack alerts.                                       | `object`   | `{}`    |
+| `alerta.alerts.slack.url`                 | Configuration uri for Slack alerts.                                   | `string`   | `""`    |
+| `alerta.alerts.slack.disabledSeverity`    | List of severities without alerts (e.g. ["informational","warning"]). | `[]string` | `[]`    |
 
 
 ### Grafana configuration
@@ -100,4 +101,13 @@ source: https://github.com/cozystack/cozystack/blob/main/packages/extra/monitori
 | `grafana.resources.limits`          | Resource limits.                         | `object`   | `{}`    |
 | `grafana.resources.limits.cpu`      | CPU limit.                               | `quantity` | `1`     |
 | `grafana.resources.limits.memory`   | Memory limit.                            | `quantity` | `1Gi`   |
+
+
+### Vmagent configuration
+
+| Name                     | Description                              | Type     | Value |
+| ------------------------ | ---------------------------------------- | -------- | ----- |
+| `vmagent`                | Configuration for VictoriaMetrics Agent. | `object` | `{}`  |
+| `vmagent.externalLabels` | External labels applied to all metrics.  | `object` | `{}`  |
+| `vmagent.remoteWrite`    | Remote write configuration.              | `object` | `{}`  |
 
