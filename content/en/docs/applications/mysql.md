@@ -92,6 +92,7 @@ more details:
 | `size`             | Persistent Volume Claim size available for application data.                                                                      | `quantity` | `10Gi`  |
 | `storageClass`     | StorageClass used to store the data.                                                                                              | `string`   | `""`    |
 | `external`         | Enable external access from outside the cluster.                                                                                  | `bool`     | `false` |
+| `version`          | MariaDB major.minor version to deploy                                                                                             | `string`   | `v11.8` |
 
 
 ### Application-specific parameters
