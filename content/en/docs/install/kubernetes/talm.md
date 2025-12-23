@@ -81,9 +81,9 @@ The first step is to initialize configuration templates and provide configuratio
 Start by initializing configuration for a new cluster, using the `cozystack` preset:
 
 ```bash
-mkdir -p cluster1
-cd cluster1
-talm init --preset cozystack
+mkdir -p cozystack-cluster
+cd cozystack-cluster
+talm init --preset cozystack --name mycluster
 ```
 
 The structure of the project mostly mirrors an ordinary Helm chart:

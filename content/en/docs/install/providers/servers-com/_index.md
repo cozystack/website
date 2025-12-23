@@ -152,14 +152,14 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
 1. Create directory for the new cluster:
 
    ```bash
-   mkdir -p mycluster
-   cd mycluster
+   mkdir -p cozystack-cluster
+   cd cozystack-cluster
    ```
 
 1. Run the following command to initialize Talm for Cozystack:
 
    ```bash
-   talm init -p cozystack
+   talm init --preset cozystack --name mycluster
    ```
 
    After initializing, generate a configuration template with the command:
