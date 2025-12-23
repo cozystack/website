@@ -257,14 +257,14 @@ mv talm /usr/local/bin/talm
 
 1.  Create a directory for the new cluster's configuration files:
     ```bash
-    mkdir -p mycluster
-    cd mycluster
+    mkdir -p cozystack-cluster
+    cd cozystack-cluster
     ```
 
 1.  Initialize Talm configuration for Cozystack:
 
     ```bash
-    talm init -p cozystack
+    talm init --preset cozystack --name mycluster
     ```
 
 1.  Generate a configuration template for each node, providing the node's IP address:
