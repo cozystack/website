@@ -33,6 +33,10 @@ To run this tutorial, you will need the following setup:
 -   Any Linux distribution, for example, Ubuntu.<br>
 -   There are [other installation methods]({{% ref "/docs/install/talos" %}}) which require either any Linux or no OS at all to start.
 
+**BIOS/UEFI Settings:**
+-   **Secure Boot must be disabled.**<br>
+    Secure Boot is currently not supported and must be disabled in the BIOS/UEFI settings before installation.
+
 **Networking:**
 -   Routable FQDN domain.<br>If you don't have one, you can use [nip.io](https://nip.io/) with dash notation
 -   Located in the same L2 network segment.
