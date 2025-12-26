@@ -9,9 +9,6 @@ metadata: https://github.com/cozystack/website/blob/main/content/en/docs/operati
 source: https://github.com/cozystack/cozystack/blob/main/packages/extra/monitoring/README.md
 -->
 
-
-## Parameters
-
 ### Common parameters
 
 | Name   | Description                                                                                           | Type     | Value |
@@ -109,5 +106,20 @@ source: https://github.com/cozystack/cozystack/blob/main/packages/extra/monitori
 | ------------------------ | ---------------------------------------- | -------- | ----- |
 | `vmagent`                | Configuration for VictoriaMetrics Agent. | `object` | `{}`  |
 | `vmagent.externalLabels` | External labels applied to all metrics.  | `object` | `{}`  |
-| `vmagent.remoteWrite`    | Remote write configuration.              | `object` | `{}`  |
+| `vmagent.remoteWrite` | Remote write configuration. | `object` | `{}` |
+
+## Alerting Flow
+
+```mermaid
+sequenceDiagram
+    participant P as Prometheus
+    participant AM as Alertmanager
+    participant A as Alerta
+    participant T as Telegram
+    participant S as Slack
+    P->>AM: Send Alert
+    AM->>A: Forward Alert
+    A->>T: Send Notification
+    A->>S: Send Notification
+```
 
