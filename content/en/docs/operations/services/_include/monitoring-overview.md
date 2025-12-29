@@ -1,8 +1,3 @@
----
-title: "Monitoring Overview"
-linkTitle: "Monitoring Overview"
----
-
 ## Data Flow Architecture
 
 ```mermaid
