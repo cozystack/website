@@ -2,11 +2,11 @@
 title: "Monitoring Setup"
 linkTitle: "Setup"
 description: "Guide to setting up and configuring monitoring in Cozystack"
-weight: 1
+weight: 2
 menu:
   docs:
     parent: "Monitoring"
-    weight: 10
+    weight: 11
 ---
 
 ## Overview

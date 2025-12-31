@@ -79,8 +79,13 @@ for app in "${APPS[@]}"; do
     src_file="${DEST_DIR%/}/${app}/_include/_index.md"
     dest_file="${DEST_DIR%/}/${app}/_index.md"
   else
-    src_file="${DEST_DIR%/}/_include/${app}.md"
-    dest_file="${DEST_DIR%/}/${app}.md"
+    if [[ "$app" == "monitoring" ]]; then
+      src_file="${DEST_DIR%/}/_include/parameters.md"
+      dest_file="${DEST_DIR%/}/monitoring/parameters.md"
+    else
+      src_file="${DEST_DIR%/}/_include/${app}.md"
+      dest_file="${DEST_DIR%/}/${app}.md"
+    fi
   fi
 
   # Ensure template exists (touch if missing)

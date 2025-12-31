@@ -89,7 +89,8 @@ alerta:
     telegram:
       token: "your-telegram-bot-token"
       chatID: "chat-id-1,chat-id-2"
-      disabledSeverity: ["informational"]
+      disabledSeverity:
+        - informational
 ```
 
 #### Slack Integration
@@ -101,7 +102,9 @@ alerta:
   alerts:
     slack:
       url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
-      disabledSeverity: ["informational", "warning"]
+      disabledSeverity:
+        - informational
+        - warning
 ```
 
 #### Email Integration
@@ -118,7 +121,8 @@ alerta:
       smtpPassword: "your-password"
       fromAddress: "alerts@example.com"
       toAddress: "team@example.com"
-      disabledSeverity: ["informational"]
+      disabledSeverity: 
+        - informational
 ```
 
 #### PagerDuty Integration
@@ -130,7 +134,9 @@ alerta:
   alerts:
     pagerduty:
       serviceKey: "YOUR_PAGERDUTY_INTEGRATION_KEY"
-      disabledSeverity: ["informational", "warning"]
+      disabledSeverity:
+        - informational
+        - warning
 ```
 
 For detailed configuration options, see [Monitoring Hub Reference]({{% ref "docs/operations/services/monitoring" %}}).
