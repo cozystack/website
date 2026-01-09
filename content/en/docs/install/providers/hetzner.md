@@ -489,18 +489,35 @@ Now it needs a token to create a load balancer resource in Hetzner.
 
 1.  Pass the token to RobotLB to create a load balancer in Hetzner.
 
-    Use the Hetzner API token and Hetzner network name to create a Kubernetes secret in Cozystack:
+    Use the Hetzner API token to create a Kubernetes secret in Cozystack.
 
-    ```bash
-    export ROBOTLB_HCLOUD_TOKEN="<token>"
-    export ROBOTLB_DEFAULT_NETWORK="<network name>"
-    
-    kubectl create secret generic hetzner-robotlb-credentials \
-      --namespace=cozy-hetzner-robotlb \
-      --from-literal=ROBOTLB_HCLOUD_TOKEN="$ROBOTLB_HCLOUD_TOKEN" \
-      --from-literal=ROBOTLB_DEFAULT_NETWORK="$ROBOTLB_DEFAULT_NETWORK"
-    ```
-    
+    -   If you're using a **private network** (vSwitch), specify the network name:
+
+        ```bash
+        export ROBOTLB_HCLOUD_TOKEN="<token>"
+        export ROBOTLB_DEFAULT_NETWORK="<network name>"
+
+        kubectl create secret generic hetzner-robotlb-credentials \
+          --namespace=cozy-hetzner-robotlb \
+          --from-literal=ROBOTLB_HCLOUD_TOKEN="$ROBOTLB_HCLOUD_TOKEN" \
+          --from-literal=ROBOTLB_DEFAULT_NETWORK="$ROBOTLB_DEFAULT_NETWORK"
+        ```
+
+    -   If you're using **public IPs only** (no vSwitch), omit `ROBOTLB_DEFAULT_NETWORK`:
+
+        ```bash
+        export ROBOTLB_HCLOUD_TOKEN="<token>"
+
+        kubectl create secret generic hetzner-robotlb-credentials \
+          --namespace=cozy-hetzner-robotlb \
+          --from-literal=ROBOTLB_HCLOUD_TOKEN="$ROBOTLB_HCLOUD_TOKEN"
+        ```
+
+        In this case, RobotLB will use nodes' public IPs (ExternalIP) as load balancer targets.
+        For this to work, the nodes must have ExternalIP addresses configured.
+        The simplest way to achieve this is by installing [local-ccm](https://github.com/cozystack/local-ccm),
+        which automatically assigns public IPs to nodes' `.status.addresses` field.
+
     Upon receiving the token, RobotLB service in Cozystack will create a load balancer in Hetzner.
 
 ### 3.3 Configure Storage with LINSTOR
