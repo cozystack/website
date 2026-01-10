@@ -13,14 +13,6 @@ aliases:
 
 ### 1. Network
 
-1.  **Remove Aggregate Interface**
-
-    1.  Go to **Dedicated Server > Server Details**, and click the second column (highlighted in blue) to remove the aggregate interface.
-
-    1.  Ensure the status appears as shown in the screenshot.
-
-        ![Remove Aggregate Interface](img/remove_aggregate_interface.png)
-
 1.  **Set Up L2 Network**
 
     1.  Navigate to **Networks > L2 Segment** and click **Add Segment**.
@@ -53,19 +45,26 @@ aliases:
 
 ## Setup OS
 
-### 1. Rescue Mode / Access
+### 1. Operating System and Access
 
-1.  Go to **Dedicated Servers > Server Details**, and click **Reboot to Rescue**. Select your SSH key.
+{{% alert color="warning" %}}
+:warning: In rescue mode only the public network is available; the private L2 network is not reachable.
+For Talos installation use a regular OS (for example Ubuntu) instead of rescue mode.
+{{% /alert %}}
 
-    ![Rescue](img/rescue.png)
+1.  In the Servers.com control panel, install Ubuntu on the server (for example via **Dedicated Servers > Server Details > OS install**) and make sure your SSH key is selected.
 
-1.  Connect via SSH. Log in via SSH using the external IP of the server (**Details** > **Public IP** ).
+1.  After the installation is complete, connect via SSH using the external IP of the server (**Details** > **Public IP**).
 
     ![Public IP](img/public_ip.png)
 
-### 2. Setup
+### 2. Install Talos with boot-to-talos
 
-1.  Check the information on block devices:
+Talos will be booted from the installed Ubuntu using the [`boot-to-talos`](https://github.com/cozystack/boot-to-talos) utility.
+Later, when you apply Talm configuration, Talos will be installed to disk.
+Run these steps on each server.
+
+1.  Check the information on block devices to find the disk that will be used for Talos later (for example, `/dev/sda`).
 
     ```console
     # lsblk
@@ -74,66 +73,42 @@ aliases:
     sdb     259:0     0    476.9G   0    disk
     ```
 
-1.  Wipe disks.
-
-    {{% alert color="warning" %}}
-    :warning: The following commands will erase your data!
-    {{% /alert %}}
+1.  Download and install `boot-to-talos`:
 
     ```bash
-    wipefs -a /dev/sda
-    wipefs -a /dev/sdb
+    curl -sSL https://github.com/cozystack/boot-to-talos/raw/refs/heads/main/hack/install.sh | sudo sh -s
     ```
 
-1.  Install `kexec-tools`:
+    After installation, verify that the binary is available:
 
     ```bash
-    dnf install kexec-tools -y
+    boot-to-talos -h
     ```
 
-1.  Download kernel and initramfs:
+1.  Run the installer:
 
     ```bash
-    wget -O /tmp/vmlinuz https://github.com/cozystack/cozystack/releases/latest/download/kernel-amd64
-    wget -O /tmp/initramfs.xz https://github.com/cozystack/cozystack/releases/latest/download/initramfs-metal-amd64.xz
+    sudo boot-to-talos
     ```
 
-1.  Set environment variables:
+    When prompted:
+
+    -   Select mode `1. boot`.
+    -   Confirm or change the Talos installer image (the default Cozystack image is suitable).
+    -   Provide network settings matching the public interface (`bond0`) and default gateway.
+
+    The utility will download the Talos installer image and boot the node into Talos Linux (using the kexec mechanism) without modifying the disks.
+
+    For fully automated installations you can use non-interactive mode:
 
     ```bash
-    INTERFACE=$(ip -o link show | grep 'master bond0' | grep -m1 'state UP' | awk -F': ' '{print $2}')
-    INTERFACE_NAME=$(udevadm info -q property "/sys/class/net/$INTERFACE" | grep "ID_NET_NAME_ONBOARD=" | cut -d'=' -f2)
-    IP_CIDR=$(ip addr show bond0 | grep "inet\b" | awk '{print $2}')
-    IP=$(echo $IP_CIDR | cut -d/ -f1)
-    NETMASK=$(ipcalc -m $IP_CIDR | cut -d= -f2-)
-    GATEWAY=$(ip route | grep default | awk '{print $3}')
-    ```
-
-1.  Set `CMDLINE`, and echo it to verify:
-
-    ```bash
-    CMDLINE="init_on_alloc=1 slab_nomerge pti=on console=tty0 console=ttyS0 printk.devkmsg=on talos.platform=metal ip=${IP}::${GATEWAY}:${NETMASK}::${INTERFACE_NAME}:::::"
-    echo $CMDLINE
+    sudo boot-to-talos -yes
     ```
 
 ### 3. Boot into Talos
 
-1.  Load the kernel and initramfs:
-
-    ```bash
-    kexec -l /tmp/vmlinuz --initrd=/tmp/initramfs.xz --command-line="$CMDLINE"
-    ```
-
-1.  Boot into the new kernel:
-
-    ```bash
-    kexec -e
-    ```
-
-After executing the command, the system will reboot into the new kernel.
-Your SSH session will stop responding, and the server will reboot.
-
-Wait for around 5 minutes for the system to boot.
+After `boot-to-talos` finishes, the server reboots automatically into Talos Linux in maintenance mode.
+Repeat the same procedure for all servers, then proceed to configure them with Talm.
 
 ## Talos Configuration
 
@@ -195,17 +170,33 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
        machine:
          network:
            interfaces:
-             - interface: eno2
+             - interface: bond0
                addresses:
                  - 1.2.3.4/29
                routes:
                  - network: 0.0.0.0/0
                    gateway: 1.2.3.1
-             - interface: eno1
+               bond:
+                 interfaces:
+                   - enp1s0f1
+                   - enp3s0f1
+                 mode: 802.3ad
+                 xmitHashPolicy: layer3+4
+                 lacpRate: slow
+                 miimon: 100
+             - interface: bond1
                addresses:
-                 - 192.168.100.11/24
+                 - 192.168.102.11/23
+               bond:
+                 interfaces:
+                   - enp1s0f0
+                   - enp3s0f0
+                 mode: 802.3ad
+                 xmitHashPolicy: layer3+4
+                 lacpRate: slow
+                 miimon: 100
                vip:
-                 ip: 192.168.100.10
+                 ip: 192.168.102.10
        ```
 
 **Execution steps:**
@@ -219,8 +210,6 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
      ```
 
      If the output is empty, it means that Talos still runs in RAM and hasn't been installed on the disk yet.
-1.   Click **Exit rescue mode** for each node in the Servers.com panel. The nodes will reboot again.
-
 1.   Execute bootstrap command for the first node in the cluster, example:
      ```bash
      talm bootstrap -f nodes/node1.yml

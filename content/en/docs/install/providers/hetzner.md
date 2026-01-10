@@ -83,160 +83,54 @@ Talos is a Linux distribution made for running Kubernetes in the most secure and
 To learn why Cozystack adopted Talos as the foundation of the cluster,
 read [Talos Linux in Cozystack]({{% ref "/docs/guides/talos" %}}).
 
-### 1.1 Write Talos Image on Primary Disk
+### 1.1 Install boot-to-talos in Rescue Mode
 
-First stage is to prepare the primary disk and write the Talos Linux image on it.
-Run these steps with each of the dedicated servers.
+Talos will be booted from the Hetzner rescue system using the [`boot-to-talos`](https://github.com/cozystack/boot-to-talos) utility.
+Later, when you apply Talm configuration, Talos will be installed to disk.
+Run these steps on each dedicated server.
 
-1.  Switch your server into rescue mode and login to the server using SSH.
+1.  Switch your server into rescue mode and log in to the server using SSH.
 
-1.  Check the available disks:
+1.  Identify the disk that will be used for Talos later (for example, `/dev/nvme0n1`).
 
-    ```console
-    # lsblk
-    NAME        MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINTS
-    nvme0n1     259:4    0 476.9G  0 disk
-    nvme1n1     259:0    0 476.9G  0 disk
-    ```
-
-    In this example, we have two NVMe disks: `nvme0n1` and `nvme1n1`.
-    We will use `nvme0n1` as a primary disk for the Talos Linux installation and `nvme1n1` as a secondary disk for user data.
-
-    Further on in this guide, all Bash snippets will use variables for disk names.
-    Set them up in your console to conveniently copy and run the commands:
-    
-    ```bash
-    DISK1=nvme0n1
-    DISK2=nvme1n1
-    ```
-
-1.  Wipe both disks selected for Cozystack installation.
-
-    {{% alert color="warning" %}}
-    :warning: The following commands will erase your data.
-    Make sure that all valuable information is backed up elsewhere.
-    {{% /alert %}}
-    
-    ```bash
-    sfdisk /dev/$DISK1 --delete
-    sfdisk /dev/$DISK2 --delete
-    wipefs -a /dev/$DISK1
-    wipefs -a /dev/$DISK2
-    ```
-
-1.  Download Talos Linux asset from the Cozystack's [releases page](https://github.com/cozystack/cozystack/releases), and write it on the primary disk:
+1.  Download and install `boot-to-talos`:
 
     ```bash
-    cd /tmp
-    wget https://github.com/cozystack/cozystack/releases/latest/download/nocloud-amd64.raw.xz
-    xz -d -c /tmp/nocloud-amd64.raw.xz | dd of="/dev/$DISK1" bs=4M oflag=sync
+    curl -sSL https://github.com/cozystack/boot-to-talos/raw/refs/heads/main/hack/install.sh | sh -s
     ```
-    
-    Note that Cozystack has its own Talos distribution and there are several options.
-    For dedicated servers, you need the `nocloud-amd64.raw.xz`.
 
-1.  Resize the partition table and prepare an additional partition for the cloud-init data:
+    After this, the `boot-to-talos` binary should be available in your `PATH`:
 
     ```bash
-    # resize gpt partition
-    sgdisk -e "/dev/$DISK1"
-    
-    # Create 20MB partition at the end of the disk
-    end=$(sgdisk -E "/dev/$DISK1")
-    sgdisk -n7:$(( $end - 40960 )):$end -t7:ef00 "/dev/$DISK1"
-    
-    # Create FAT filesystem for cloud-init and mount it
-    PARTITION=$(sfdisk -d "/dev/$DISK1" | awk 'END{print $1}' | awk -F/ '{print $NF}')
-    mkfs.vfat -n CIDATA "/dev/$PARTITION"
-    mount  "/dev/$PARTITION" /mnt
+    boot-to-talos -h
     ```
 
-### 1.2. Configure Cloud-Init
+### 1.2. Install Talos Linux with boot-to-talos
 
-Proceed by configuring cloud-init for each dedicated server.
+1.  Start the installer:
 
-1.  Start by setting environment variables:
-    
     ```bash
-    INTERFACE_NAME=$(udevadm info -q property /sys/class/net/eth0 | grep "ID_NET_NAME_PATH=" | cut -d'=' -f2)
-    IP_CIDR=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}')
-    GATEWAY=$(ip route | grep default | awk '{print $3}')
-    
-    echo "INTERFACE_NAME=$INTERFACE_NAME"
-    echo "IP_CIDR=$IP_CIDR"
-    echo "GATEWAY=$GATEWAY"
+    boot-to-talos
     ```
 
-1.  Write the cloud-init configuration files.
+    When prompted:
 
-    Edit network-config and specify your network settings using [network-config-format-v2](https://cloudinit.readthedocs.io/en/latest/reference/network-config-format-v2.html).
-    This step depends on whether your installation is using a vSwitch-enabled subnet or public IPs.
+    -   Select mode `1. boot`.
+    -   Confirm or change the Talos installer image.
+        The default value points to the Cozystack Talos image (the default Cozystack image is suitable),
+    -   Provide network settings (interface name, IP address, netmask, gateway) matching the configuration you prepared earlier
+        (vSwitch subnet or public IPs).
+    -   Optionally configure a serial console if you use it for remote access.
 
-    -   Cloud-init configuration using [Hetzner vSwitch](https://docs.hetzner.com/robot/dedicated-server/network/vswitch/).
-
-        Note how this example is using subnet, VLAN ID, and subnet IPs of each node.
-        
-        ```bash
-        echo 'hostname: talos' > /mnt/meta-data
-        echo '#cloud-config' > /mnt/user-data
-        cat > /mnt/network-config <<EOT
-        version: 2
-        ethernets:
-          $INTERFACE_NAME:
-            dhcp4: false
-            addresses:
-              - "${IP_CIDR}"
-            gateway4: "${GATEWAY}"
-            nameservers:
-              addresses: [8.8.8.8]
-        vlans:
-          vlan4000:
-            id: 4000
-            link: $INTERFACE_NAME
-            mtu: 1400
-            dhcp4: false
-            addresses:
-              # node's own IP in the vSwitch subnet, change it for each node
-              - 10.0.1.101/24           
-            routes:
-              # Hetzner cloud network
-              - to: 10.0.0.0/16
-                via: 10.0.1.1
-        EOT
-        ```
-
-    -   Cloud-init configuration using [public IPs]({{% ref "/docs/operations/faq#public-network-kubernetes-deployment" %}}):
-            
-        ```bash
-        echo 'hostname: talos' > /mnt/meta-data
-        echo '#cloud-config' > /mnt/user-data
-        cat > /mnt/network-config <<EOT
-        version: 2
-        ethernets:
-          $INTERFACE_NAME:
-            dhcp4: false
-            addresses:
-              - "${IP_CIDR}"
-            gateway4: "${GATEWAY}"
-            nameservers:
-              addresses: [8.8.8.8]
-        EOT
-        ```
-
-    You can find more comprehensive examples in the codebase of [siderolabs/talos](
-    https://github.com/siderolabs/talos/blob/10f958cf41ec072209f8cb8724e6f89db24ca1b6/internal/app/machined/pkg/runtime/v1alpha1/platform/nocloud/testdata/metadata-v2.yaml)
+    The utility will download the Talos installer image, extract the kernel and initramfs, and boot the node into Talos Linux
+    (using the kexec mechanism) without modifying the disks.
 
 ### 1.3. Boot into Talos Linux
 
-On each server, unmount the cloud-init partition, sync changes, and reboot the server:
+After `boot-to-talos` finishes, the server reboots automatically into Talos Linux in maintenance mode.
 
-```bash
-umount /mnt
-sync
-reboot
-```
-
-At this point, each node (server) has Talos Linux installed and booted in the maintenance mode.
+Repeat the same procedure for all dedicated servers in the cluster.
+Once all nodes are booted into Talos, proceed to the next section and configure them using Talm.
 
 ## 2. Install Kubernetes Cluster
 
