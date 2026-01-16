@@ -7,62 +7,18 @@ aliases:
   - /docs/operations/storage/nfs
 ---
 
-## Driver and provisioner setup
+## Enable NFS driver
+
+Add `bundle-enable: nfs-driver` to your Cozystack configuration:
 
 ```yaml
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    cozystack.io/system: "true"
-    pod-security.kubernetes.io/enforce: privileged
-  name: cozy-nfs-driver
-spec:
-  finalizers:
-  - kubernetes
----
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
-metadata:
-  labels:
-    cozystack.io/repository: system
-    cozystack.io/system-app: "true"
-  name: nfs-driver
-  namespace: cozy-nfs-driver
-spec:
-  chart:
-    spec:
-      chart: cozy-nfs-driver
-      reconcileStrategy: Revision
-      sourceRef:
-        kind: HelmRepository
-        name: cozystack-system
-        namespace: cozy-system
-      version: '>= 0.0.0-0'
-  dependsOn:
-  - name: cilium
-    namespace: cozy-cilium
-  - name: kubeovn
-    namespace: cozy-kubeovn
-  install:
-    crds: CreateReplace
-    remediation:
-      retries: -1
-  interval: 5m
-  releaseName: nfs-driver
-  suspend: true
-  upgrade:
-    crds: CreateReplace
-    remediation:
-      retries: -1
+bundle-enable: nfs-driver
 ```
 
-Finally, apply the configuration:
+Wait a minute for the platform chart to reconcile, then verify the HelmRelease has been created:
 
 ```bash
-cd packages/system/csi-driver-nfs
-make apply
+kubectl get helmrelease --namespace cozy-nfs-driver nfs-driver
 ```
 
 ## Export share
