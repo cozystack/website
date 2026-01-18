@@ -38,7 +38,7 @@ fi
 # add the replica back
 kubectl etcd -n $NAMESPACE -p $POD add-member "https://$RM.etcd-headless.$NAMESPACE.svc:2380"
 
-kubectl wait --for=condition=ready pod $RM --timeout=2m
+kubectl wait --for=condition=ready pod -n $NAMESPACE $RM --timeout=2m
 
 kubectl etcd -n $NAMESPACE -p $RM members
 ```
