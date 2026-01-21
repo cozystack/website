@@ -201,3 +201,27 @@ We are now ready to create a VM.
             Kernel driver in use: nvidia
             Kernel modules: nvidiafb, nvidia_drm, nvidia
     ```
+
+## GPU Sharing for Virtual Machines
+
+GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU between multiple VMs, you need **NVIDIA vGPU**.
+
+### vGPU (Virtual GPU)
+
+NVIDIA vGPU uses mediated devices (mdev) to create virtual GPUs assignable to VMs. This is the only production-ready solution for GPU sharing between VMs.
+
+**Requirements:**
+- NVIDIA vGPU license (commercial, purchased from NVIDIA)
+- NVIDIA vGPU Manager installed on host nodes
+
+{{% alert color="info" %}}
+**Why not MIG?** MIG (Multi-Instance GPU) partitions a GPU into isolated instances, but these are logical divisions within a single PCIe device. VFIO cannot pass them to VMs — MIG only works with containers. To use MIG with VMs, you need vGPU on top of MIG partitions (still requires a license).
+{{% /alert %}}
+
+### Open-Source vGPU (Experimental)
+
+NVIDIA is developing open-source vGPU support for the Linux kernel. Once merged, this could enable GPU sharing without a license.
+
+- Status: RFC stage, not merged into mainline kernel
+- Supports Ada Lovelace and newer (L4, L40, etc.)
+- References: [Phoronix announcement](https://www.phoronix.com/news/NVIDIA-Open-GPU-Virtualization), [kernel patches](https://lore.kernel.org/all/20240922124951.1946072-1-zhiw@nvidia.com/)
