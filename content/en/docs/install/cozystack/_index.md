@@ -550,8 +550,7 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 {"spec":{
   "ingress": true,
   "monitoring": true,
-  "etcd": true,
-  "isolated": true
+  "etcd": true
 }}'
 ```
 

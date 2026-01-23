@@ -518,8 +518,7 @@ Enable `etcd` and `monitoring` for the root tenant:
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 {"spec":{
   "monitoring": true,
-  "etcd": true,
-  "isolated": true
+  "etcd": true
 }}'
 ```
 
