@@ -16,55 +16,38 @@ Rotation of the root CA is only needed:
 - when you want to revoke access to the cluster for a leaked `talosconfig` or `kubeconfig`;
 - once in 10 years.
 
-### Rotate CA for the Management Kubernetes Cluster:
-
-See: https://www.talos.dev/v1.9/advanced/ca-rotation/#kubernetes-api
-
-```bash
-git clone https://github.com/cozystack/cozystack.git
-cd packages/core/testing
-make apply
-make exec
-```
-
-Add this to your talosconfig in a pod:
-
-```yaml
-client-aenix-new:
-    endpoints:
-    - 12.34.56.77
-    - 12.34.56.78
-    - 12.34.56.79
-    nodes:
-    - 12.34.56.77
-    - 12.34.56.78
-    - 12.34.56.79
-```
-
-Execute in a pod:
-```bash
-talosctl rotate-ca -e 12.34.56.77,12.34.56.78,12.34.56.79 \
-    --control-plane-nodes 12.34.56.77,12.34.56.78,12.34.56.79 \
-    --talos=false \
-    --dry-run=false &
-```
-
-Get a new kubeconfig:
-```bash
-talm kubeconfig -f nodes/srv1.yaml
-```
-
 ### Rotate CA for Talos API
 
-See: https://www.talos.dev/v1.9/advanced/ca-rotation/#talos-api
+To rotate the Talos CA for the management cluster, use the following command:
 
-All commands are like for the management k8s cluster, but with `talosctl` command:
+First, run in dry-run mode to preview the changes:
 
 ```bash
-talosctl rotate-ca -e 12.34.56.77,12.34.56.78,12.34.56.79 \
-    --control-plane-nodes 12.34.56.77,12.34.56.78,12.34.56.79 \
-    --kubernetes=false \
-    --dry-run=false &
+talm -f nodes/node.yaml rotate-ca --talos=true --kubernetes=false
+```
+
+Then, execute the actual rotation:
+
+```bash
+talm -f nodes/node.yaml rotate-ca --talos=true --kubernetes=false --dry-run=false
+```
+
+After the rotation is complete, download the new `talosconfig` from the secrets.
+
+### Rotate CA for the Management Kubernetes Cluster
+
+To rotate the Kubernetes CA for the management cluster, use the following command:
+
+First, run in dry-run mode to preview the changes:
+
+```bash
+talm -f nodes/node.yaml rotate-ca --talos=false --kubernetes=true
+```
+
+Then, execute the actual rotation:
+
+```bash
+talm -f nodes/node.yaml rotate-ca --talos=false --kubernetes=true --dry-run=false
 ```
 
 ### Rotate CA for a Tenant Kubernetes Cluster
