@@ -51,6 +51,9 @@ ovn-appctl -t /var/run/ovn/ovnsb_db.ctl cluster/status OVN_Southbound
 
 # to list your control-plane nodes
 kubectl get node -o wide -l node-role.kubernetes.io/control-plane=
+
+# Check that you are not hitting namespace quotas and have resources for an update
+kubectl get resourcequota --all-namespaces
 ```
 
 Additionally, you can check if there are any non-running pods in your cluster:
