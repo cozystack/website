@@ -1,14 +1,16 @@
 ---
-title: "Cozypkg: How We Simplified Local Development with Helm and Flux"
-slug: cozypkg-how-we-simplified-local-development-with-helm-and-flux
+title: "Cozyhr: How We Simplified Local Development with Helm and Flux"
+slug: cozyhr-how-we-simplified-local-development-with-helm-and-flux
 date: 2025-06-18
 author: "Andrei Kvapil"
-description: "Hi! I’m Andrei Kvapil CEO of Ænix and developer of Cozystack, an open source platform and framework for building cloud infrastructure. In…"
+description: "Hi! I'm Andrei Kvapil CEO of Ænix and developer of Cozystack, an open source platform and framework for building cloud infrastructure. In…"
+aliases:
+  - /blog/cozypkg-how-we-simplified-local-development-with-helm-and-flux/
 ---
 
-### Cozypkg: How We Simplified Local Development with Helm and Flux
+### Cozyhr: How We Simplified Local Development with Helm and Flux
 
-Hi! I’m Andrei Kvapil CEO of Ænix and developer of Cozystack, an open source platform and framework for building cloud infrastructure. In this article I’ll walk through the way we deliver applications to Kubernetes, explain why regular GitOps can be awkward in local development, an show how the new tool [cozypkg](https://github.com/cozystack/cozypkg) fixes those pain points. The article targets engineers who already know Helm and Flux.
+Hi! I’m Andrei Kvapil CEO of Ænix and developer of Cozystack, an open source platform and framework for building cloud infrastructure. In this article I’ll walk through the way we deliver applications to Kubernetes, explain why regular GitOps can be awkward in local development, an show how the new tool [cozyhr](https://github.com/cozystack/cozyhr) fixes those pain points. The article targets engineers who already know Helm and Flux.
 
 ![](https://cdn-images-1.medium.com/max/800/1*St3iowqHrppmH_dV7mqDCQ.png)
 
@@ -83,23 +85,23 @@ All these Makefiles are quite simple on the inside. Originally each `make` targe
 We used the [helm-diff](https://github.com/databus23/helm-diff) plugin, which shows a neat diff showing what would change in the cluster. Another script, [fluxcd-kustomize.sh](https://github.com/cozystack/cozystack/blob/release-0.31/scripts/fluxcd-kustomize.sh), post‑processed the output to add Flux annotations so that `helm diff` showed only real changes.
 
 At some point we wanted a single tool that did all of that.  
-Enter `cozypkg` — a tiny Go binary (5× smaller than `kubectl`!) that wraps the functionality of multiple other tools: Helm, `helm-diff`, `flux` CLI, `kubectl`, and our own Flux post-processor.
+Enter `cozyhr` — a tiny Go binary (5× smaller than `kubectl`!) that wraps the functionality of multiple other tools: Helm, `helm-diff`, `flux` CLI, `kubectl`, and our own Flux post-processor.
 
 ![](https://cdn-images-1.medium.com/max/800/1*lhDT9REuXI-MRj0aHYJyIg.png)
 
-`cozypkg` is focused on *local* chart development and integrates tightly with Flux.  
+`cozyhr` is focused on *local* chart development and integrates tightly with Flux.  
 The default assumption is that you run it from the chart directory.
 
-Here’s the list of all available `cozypkg` commands:
+Here’s the list of all available `cozyhr` commands:
 
 ``` graf
-$ cozypkg --help
+$ cozyhr --help
 Cozy wrapper around Helm and Flux CD for local development
 ```
 
 ``` graf
 Usage:
-  cozypkg [command]
+  cozyhr [command]
 ```
 
 ``` graf
@@ -117,9 +119,9 @@ Available Commands:
   version     Print version
 ```
 
-When you deploy local changes, `cozypkg` auto‑sets `suspend: true` on the `HelmRelease` to avoid a race with Flux. To re‑enable Flux, run `cozypkg resume`.
+When you deploy local changes, `cozyhr` auto‑sets `suspend: true` on the `HelmRelease` to avoid a race with Flux. To re‑enable Flux, run `cozyhr resume`.
 
-We also wanted to improve how charts are processed. For that, we enabled `cozypkg` to add proper `conditions` into the statuses of `HelmRelease` resources, so other dependent releases no longer have to wait for Flux and get the correct status immediately.
+We also wanted to improve how charts are processed. For that, we enabled `cozyhr` to add proper `conditions` into the statuses of `HelmRelease` resources, so other dependent releases no longer have to wait for Flux and get the correct status immediately.
 
 > *We use such composite charts to deploy resources into tenant clusters. For example, one* *`HelmRelease`* *can spawn a batch of child releases that install components in the user’s cluster.*
 
@@ -127,16 +129,16 @@ We also wanted to improve how charts are processed. For that, we enabled `cozypk
 
 You might ask, “Why not name the tool `cozyctl`?"
 
-The answer is that Cozystack positions itself as a platform that exposes high‑level resources, ones of `kind: Kubernetes`, `kind: Postgres`, and `kind: VirtualMachine`. End users operate the higher‑level API and never have to touch Helm. We therefore decided to save `cozyctl for a future tool aimed at those resources. `cozypkg\`, in contrast, stays low‑level and is primarily for developers who use Helm and Flux in their own projects.
+The answer is that Cozystack positions itself as a platform that exposes high‑level resources, ones of `kind: Kubernetes`, `kind: Postgres`, and `kind: VirtualMachine`. End users operate the higher‑level API and never have to touch Helm. We therefore decided to save `cozyctl for a future tool aimed at those resources. `cozyhr\`, in contrast, stays low‑level and is primarily for developers who use Helm and Flux in their own projects.
 
 Right now we’re actively modularising Cozystack and plan to expand the framework so you can plug in your own repo and offer management services powered by Cozystack.  
-`cozypkg` is one of the steps toward shipping an example repo and a ready‑made development flow for Cozystack plugins.
+`cozyhr` is one of the steps toward shipping an example repo and a ready‑made development flow for Cozystack plugins.
 
 ### Conclusion
 
-With `cozypkg`, we accumulate our experience in accelerating development in a single tool and share our approach with the community.
+With `cozyhr`, we accumulate our experience in accelerating development in a single tool and share our approach with the community.
 
-We welcome feedback and pull requests: [https://github.com/cozystack/cozypkg](https://github.com/cozystack/cozypkg)
+We welcome feedback and pull requests: [https://github.com/cozystack/cozyhr](https://github.com/cozystack/cozyhr)
 
 *Happy coding & stay cozy!*
 
