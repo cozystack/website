@@ -95,7 +95,7 @@ Your Kubernetes distribution must be configured to **not** install these compone
 ### Required Configuration
 
 | Component | Requirement |
-|-----------|-------------|
+| ----------- | ------------- |
 | CNI | **Disabled** — Cozystack deploys Cilium or KubeOVN |
 | Ingress Controller | **Disabled** — Cozystack deploys NGINX |
 | Storage Provisioner | **Disabled** — Cozystack deploys LINSTOR |
@@ -206,7 +206,7 @@ data:
 Adjust the values:
 
 | Field | Description |
-|-------|-------------|
+| ------- | ------------- |
 | `bundle-name` | Must be `isp-full-generic` for non-Talos clusters |
 | `root-host` | Your domain for Cozystack services |
 | `api-server-endpoint` | Kubernetes API endpoint URL |
