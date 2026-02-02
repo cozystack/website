@@ -175,7 +175,17 @@ kubectl create namespace cozy-system
 
 ### 3. Create ConfigMap
 
-Create `cozystack-config.yaml` with your cluster configuration:
+Create `cozystack-config.yaml` with your cluster configuration.
+
+{{% alert color="warning" %}}
+:warning: **Important**: The `ipv4-pod-cidr` and `ipv4-svc-cidr` values **must match** your Kubernetes cluster configuration.
+Different distributions use different defaults:
+- **k3s**: `10.42.0.0/16` (pods), `10.43.0.0/16` (services)
+- **kubeadm**: `10.244.0.0/16` (pods), `10.96.0.0/16` (services)
+- **RKE2**: `10.42.0.0/16` (pods), `10.43.0.0/16` (services)
+{{% /alert %}}
+
+Example for **k3s** (adjust CIDRs for other distributions):
 
 ```yaml
 apiVersion: v1
@@ -284,6 +294,8 @@ Below is a minimal Ansible playbook for preparing nodes and deploying Cozystack.
 
 ### Cozystack Deployment Playbook
 
+This example uses k3s default CIDRs. Adjust for kubeadm (`10.244.0.0/16`, `10.96.0.0/16`) or your custom configuration.
+
 ```yaml
 ---
 - name: Deploy Cozystack
@@ -292,6 +304,7 @@ Below is a minimal Ansible playbook for preparing nodes and deploying Cozystack.
   vars:
     cozystack_root_host: "example.com"
     cozystack_api_endpoint: "https://10.0.0.1:6443"
+    # k3s defaults - adjust for kubeadm (10.244.0.0/16, 10.96.0.0/16)
     cozystack_pod_cidr: "10.42.0.0/16"
     cozystack_svc_cidr: "10.43.0.0/16"
   tasks:
