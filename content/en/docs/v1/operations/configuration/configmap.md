@@ -1,15 +1,20 @@
 ---
-title: "Cozystack ConfigMap Reference"
-linkTitle: "ConfigMap"
-description: "Reference for the Cozystack ConfigMap, which defines key configuration values for a Cozystack installation and operations."
+title: "Cozystack ConfigMap Reference (v0.x)"
+linkTitle: "ConfigMap (v0.x)"
+description: "Reference for the Cozystack ConfigMap used in v0.x installations"
 weight: 10
 aliases:
   - /docs/v1/install/cozystack/configmap
 ---
 
-This page explains the role of Cozystack's main ConfigMap and provides a full reference for its values.
+{{< alert color="info" >}}
+**Version Note**: This guide applies to Cozystack v0.x installations.
+For v1.x and later, see [Package Configuration (v1.x)]({{% ref "/docs/v1/operations/configuration/package" %}}).
+{{< /alert >}}
 
-Cozystack's main configuration is defined by a single [Kubernetes ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/).
+This page explains the role of Cozystack's main ConfigMap in v0.x and provides a full reference for its values.
+
+Cozystack v0.x configuration is defined by a single [Kubernetes ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/).
 This ConfigMap includes [Cozystack bundle]({{% ref "/docs/v1/operations/configuration/bundles" %}}) and [components setup]({{% ref "/docs/v1/operations/configuration/components" %}}),
 key network settings, exposed services, and other options.
 
