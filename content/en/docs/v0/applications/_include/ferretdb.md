@@ -3,6 +3,6 @@ title: "Managed FerretDB Service"
 linkTitle: "FerretDB"
 weight: 20
 aliases:
-  - /docs/reference/applications/ferretdb
+  - /docs/v0/reference/applications/ferretdb
 ---
 

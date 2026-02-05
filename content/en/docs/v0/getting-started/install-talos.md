@@ -4,21 +4,21 @@ linkTitle: "1. Install Talos"
 description: "Install Talos Linux on any machine using cozystack/boot-to-talos."
 weight: 10
 aliases:
-  - /docs/getting-started/first-deployment
-  - /docs/getting-started/deploy-cluster
+  - /docs/v0/getting-started/first-deployment
+  - /docs/v0/getting-started/deploy-cluster
 ---
 
 ## Before you begin
 
 Make sure that you have nodes (bare-metal servers or VMs) that fit the
-[hardware requirements]({{% ref "/docs/getting-started/requirements" %}}).
+[hardware requirements]({{{% ref "/docs/v0/getting-started/requirements" %}}).
 
 ## Objectives
 
 On this step of the tutorial you will install Talos Linux on bare-metal servers or VMs running some other Linux distribution.
 
 The tutorial is using `boot-to-talos`, a simple-to-use CLI app made by Cozystack team for users and teams adopting Cozystack.
-There are multiple ways to [install Talos Linux for Cozystack]({{% ref "/docs/install/talos" %}}), not used here and covered in separate guides.
+There are multiple ways to [install Talos Linux for Cozystack]({{{% ref "/docs/v0/install/talos" %}}), not used here and covered in separate guides.
 
 ## Installation
 
@@ -86,11 +86,11 @@ Continue? [yes]:
 
 ## Next Step
 
-Continue the Cozystack tutorial by [installing and bootstrapping a Kubernetes cluster using Talm]({{% ref "/docs/getting-started/install-kubernetes" %}}).
+Continue the Cozystack tutorial by [installing and bootstrapping a Kubernetes cluster using Talm]({{{% ref "/docs/v0/getting-started/install-kubernetes" %}}).
 
 Extra tasks:
 
--   Read the [Talos Linux overview]({{% ref "/docs/guides/talos" %}}) to learn why Talos Linux is the optimal OS choice for Cozystack
+-   Read the [Talos Linux overview]({{{% ref "/docs/v0/guides/talos" %}}) to learn why Talos Linux is the optimal OS choice for Cozystack
     and what it brings to the platform.
--   Learn more about [`boot-to-talos`]({{% ref "/docs/install/talos/boot-to-talos#about-the-application" %}}).
+-   Learn more about [`boot-to-talos`]({{{% ref "/docs/v0/install/talos/boot-to-talos#about-the-application" %}}).
 -   Check out [github.com/cozystack/boot-to-talos](https://github.com/cozystack/boot-to-talos) and give it a star!

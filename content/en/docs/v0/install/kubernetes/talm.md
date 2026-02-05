@@ -4,9 +4,9 @@ linkTitle: Talm
 description: "`talm` is a declarative CLI tool made by Cozystack devs and optimized for deploying Cozystack.<br> Recommended for infrastructure-as-code and GitOps."
 weight: 5
 aliases:
-  - /docs/operations/talos/configuration/talm
-  - /docs/talos/bootstrap/talm
-  - /docs/talos/configuration/talm
+  - /docs/v0/operations/talos/configuration/talm
+  - /docs/v0/talos/bootstrap/talm
+  - /docs/v0/talos/configuration/talm
 ---
 
 This guide explains how to install and configure Kubernetes on a Talos Linux cluster using Talm.
@@ -18,7 +18,7 @@ Talm comes with pre-built presets for Cozystack.
 
 ## Prerequisites
 
-By the start of this guide you should have [Talos Linux installed]({{% ref "/docs/install/talos" %}}), but not initialized (bootstrapped), on several nodes.
+By the start of this guide you should have [Talos Linux installed]({{{% ref "/docs/v0/install/talos" %}}), but not initialized (bootstrapped), on several nodes.
 These nodes should belong to one subnet or have public IPs.
 
 This guide uses an example where the nodes of a cluster are located in the subnet `192.168.123.0/24`, having the following IP addresses:
@@ -323,4 +323,4 @@ was disabled in the Talos configuration to enable Cozystack installing its own C
 
 Now you have a Kubernetes cluster bootstrapped and ready for installing Cozystack.
 To complete the installation, follow the deployment guide, starting with the
-[Install Cozystack]({{% ref "/docs/getting-started/install-cozystack" %}}) section.
+[Install Cozystack]({{{% ref "/docs/v0/getting-started/install-cozystack" %}}) section.

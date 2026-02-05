@@ -4,9 +4,9 @@ linkTitle: Hetzner.com
 description: "How to install Cozystack in Hetzner"
 weight: 30
 aliases:
-  - /docs/operations/talos/installation/hetzner
-  - /docs/talos/installation/hetzner
-  - /docs/talos/install/hetzner
+  - /docs/v0/operations/talos/installation/hetzner
+  - /docs/v0/talos/installation/hetzner
+  - /docs/v0/talos/install/hetzner
 ---
 
 This guide will help you to install Cozystack on a dedicated server from [Hetzner](https://www.hetzner.com/).
@@ -15,7 +15,7 @@ There are several steps to follow, including preparing the infrastructure, insta
 
 ## Prepare Infrastructure and Networking
 
-Installation on Hetzner includes the common [hardware requirements]({{% ref "/docs/install/hardware-requirements" %}}) with several additions.
+Installation on Hetzner includes the common [hardware requirements]({{{% ref "/docs/v0/install/hardware-requirements" %}}) with several additions.
 
 ### Networking Options
 
@@ -81,7 +81,7 @@ The first stage of deploying Cozystack is to install Talos Linux on the dedicate
 
 Talos is a Linux distribution made for running Kubernetes in the most secure and efficient way.
 To learn why Cozystack adopted Talos as the foundation of the cluster,
-read [Talos Linux in Cozystack]({{% ref "/docs/guides/talos" %}}).
+read [Talos Linux in Cozystack]({{{% ref "/docs/v0/guides/talos" %}}).
 
 ### 1.1 Install boot-to-talos in Rescue Mode
 
@@ -135,10 +135,10 @@ Once all nodes are booted into Talos, proceed to the next section and configure 
 ## 2. Install Kubernetes Cluster
 
 Now, when Talos is booted in the maintenance mode, it should receive configuration and set up a Kubernetes cluster.
-There are [several options]({{% ref "/docs/install/kubernetes" %}}) to write and apply Talos configuration.
+There are [several options]({{{% ref "/docs/v0/install/kubernetes" %}}) to write and apply Talos configuration.
 This guide will focus on [Talm](https://github.com/cozystack/talm), Cozystack's own Talos configuration management tool.
 
-This part of the guide is based on the generic [Talm guide]({{% ref "/docs/install/kubernetes/talm" %}}),
+This part of the guide is based on the generic [Talm guide]({{{% ref "/docs/v0/install/kubernetes/talm" %}}),
 but has instructions and examples specific to Hetzner.
 
 ### 2.1. Prepare Node Configuration with Talm
@@ -161,7 +161,7 @@ but has instructions and examples specific to Hetzner.
 
     A bunch of files is now created in the `hetzner-cluster` directory.
     To learn more about the role of each file, refer to the
-    [Talm guide]({{% ref "docs/install/kubernetes/talm#1-initialize-cluster-configuration" %}}).
+    [Talm guide]({{{{% ref "/docs/v0/install/kubernetes/talm#1-initialize-cluster-configuration" %}}).
 
 1.  Edit `values.yaml`, modifying the following values:
 
@@ -417,7 +417,7 @@ Now it needs a token to create a load balancer resource in Hetzner.
 ### 3.3 Configure Storage with LINSTOR
 
 Configuring LINSTOR in Hetzner has no difference from other infrastructure setups.
-Follow the [Storage configuration guide]({{% ref "docs/getting-started/install-cozystack#3-configure-storage" %}}) from the Cozystack tutorial.
+Follow the [Storage configuration guide]({{{{% ref "/docs/v0/getting-started/install-cozystack#3-configure-storage" %}}) from the Cozystack tutorial.
 
 ### 3.4. Start Services in the Root Tenant
 

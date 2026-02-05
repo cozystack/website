@@ -5,8 +5,11 @@ description: "How to install Talos Linux using ISO"
 weight: 20
 aliases:
   - /docs/talos/installation/iso
+  - /docs/v1/talos/installation/iso
   - /docs/talos/install/iso
+  - /docs/v1/talos/install/iso
   - /docs/operations/talos/installation/iso
+  - /docs/v1/operations/talos/installation/iso
 ---
 
 This guide explains how to install Talos Linux on bare metal servers or virtual machines.
@@ -28,4 +31,4 @@ Note that Cozystack provides its own Talos builds, which are tested and optimize
 
 ## Next steps
 
-Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/install/kubernetes" %}}).
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{{% ref "/docs/v1/install/kubernetes" %}}).

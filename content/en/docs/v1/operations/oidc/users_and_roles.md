@@ -5,6 +5,7 @@ description: "How to create users and add roles for them"
 weight: 50
 aliases:
   - /docs/oidc/users_and_roles
+  - /docs/v1/oidc/users_and_roles
 ---
 
 Creating users and add roles for them

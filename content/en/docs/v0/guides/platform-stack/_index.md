@@ -24,7 +24,7 @@ Talos Linux is a Linux distribution made and optimized for a single purpose: to 
 It provides the foundation for reliability and security in a Cozystack cluster.
 Its use allows Cozystack to limit the technology stack, improving stability and security.
 
-Read more about it in the [Talos Linux]({{%ref "/docs/guides/talos" %}}) section.
+Read more about it in the [Talos Linux]({{{% ref "/docs/v0/guides/talos" %}}) section.
 
 ### Kubernetes
 
@@ -128,7 +128,7 @@ but also from outside your cluster network.
 HAProxy is an advanced and widely known TCP balancer.
 It continuously checks service availability and carefully balances production traffic between them in real time.
 
-See the application reference: [TCP Balancer]({{% ref "/docs/networking/tcp-balancer" %}})
+See the application reference: [TCP Balancer]({{{% ref "/docs/v0/networking/tcp-balancer" %}})
 
 ### SeaweedFS
 
@@ -144,10 +144,10 @@ Cozystack includes a set of Kubernetes operators, used for managing system servi
 Cozystack is shipped with a number of user-side applications, pre-configured for reliability and resource efficiency,
 coming with monitoring and observability included:
 
--   [Tenant Kubernetes clusters]({{% ref "/docs/kubernetes" %}}), fully-functional managed Kubernetes clusters for development and production workloads.
--   [Managed applications]({{% ref "/docs/applications" %}}), such as databases and queues.
--   [Virtual machines]({{% ref "/docs/virtualization" %}}), supporting Linux and Windows OS.
--   [Networking appliances]({{% ref "/docs/networking" %}}), including VPN, HTTP cache, TCP load balancer, and virtual routers.
+-   [Tenant Kubernetes clusters]({{{% ref "/docs/v0/kubernetes" %}}), fully-functional managed Kubernetes clusters for development and production workloads.
+-   [Managed applications]({{{% ref "/docs/v0/applications" %}}), such as databases and queues.
+-   [Virtual machines]({{{% ref "/docs/v0/virtualization" %}}), supporting Linux and Windows OS.
+-   [Networking appliances]({{{% ref "/docs/v0/networking" %}}), including VPN, HTTP cache, TCP load balancer, and virtual routers.
 
 ### Managed Kubernetes
 
@@ -171,18 +171,18 @@ This architecture ensures isolated, scalable, and efficient Kubernetes environme
 
 -   Supported version: Kubernetes v1.32.4
 -   Operator: [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator) v0.4.2
--   Managed application reference: [Kubernetes]({{% ref "/docs/kubernetes" %}})
+-   Managed application reference: [Kubernetes]({{{% ref "/docs/v0/kubernetes" %}})
 
 
 ### Virtual Machines
 
-In Cozystack, virtualization features are powered by [KubeVirt]({{% ref "/docs/guides/platform-stack#kubevirt" %}}).
+In Cozystack, virtualization features are powered by [KubeVirt]({{{% ref "/docs/v0/guides/platform-stack#kubevirt" %}}).
 Cozystack has a number of applications providing virtualization functionality:
 
--   [Simple virtual machine]({{% ref "/docs/virtualization/virtual-machine" %}}).
--   [Virtual machine instance]({{% ref "/docs/virtualization/vm-instance" %}}) with more advanced configuration.
--   [Virtual machine disk]({{% ref "/docs/virtualization/vm-disk" %}}), offering a choice of image sources.
--   [VM image (Golden Disk)]({{% ref "/docs/virtualization/vm-image" %}}), which makes OS images locally available, improving VM creation time and saving network traffic.
+-   [Simple virtual machine]({{{% ref "/docs/v0/virtualization/virtual-machine" %}}).
+-   [Virtual machine instance]({{{% ref "/docs/v0/virtualization/vm-instance" %}}) with more advanced configuration.
+-   [Virtual machine disk]({{{% ref "/docs/v0/virtualization/vm-disk" %}}), offering a choice of image sources.
+-   [VM image (Golden Disk)]({{{% ref "/docs/v0/virtualization/vm-image" %}}), which makes OS images locally available, improving VM creation time and saving network traffic.
 
 
 ### ClickHouse
@@ -194,7 +194,7 @@ In the Cozystack platform, we use the Altinity operator to provide ClickHouse.
 -   Supported version: 24.9.2.42
 -   Kubernetes operator: [Altinity/clickhouse-operator](https://github.com/Altinity/clickhouse-operator) v0.25.0
 -   Website: [clickhouse.com](https://clickhouse.com/)
--   Managed application reference: [ClickHouse]({{% ref "/docs/applications/clickhouse" %}})
+-   Managed application reference: [ClickHouse]({{{% ref "/docs/v0/applications/clickhouse" %}})
 
 
 ### FerretDB
@@ -205,7 +205,7 @@ In Cozystack, it is backed by PostgreSQL.
 
 -   Supported version: FerretDB 1.24.0.
 -   Website: [ferretdb.io](https://www.ferretdb.io/)
--   Managed application reference: [FerretDB]({{% ref "/docs/applications/ferretdb" %}})
+-   Managed application reference: [FerretDB]({{{% ref "/docs/v0/applications/ferretdb" %}})
 
 
 ### Kafka
@@ -218,7 +218,7 @@ to run an Apache Kafka cluster on Kubernetes in various deployment configuration
 -   Supported version: Apache Kafka 3.9.0
 -   Kubernetes operator: [strimzi/strimzi-kafka-operator](https://github.com/strimzi/strimzi-kafka-operator) v0.45.0
 -   Website: [kafka.apache.org](https://kafka.apache.org/)
--   Managed application reference: [Kafka]({{% ref "/docs/applications/kafka" %}})
+-   Managed application reference: [Kafka]({{{% ref "/docs/v0/applications/kafka" %}})
 
 
 ### MySQL (MariaDB)
@@ -233,7 +233,7 @@ as well as schedules for creating backups using [Restic](https://restic.net/), o
 -   Supported version: MariaDB 11.4.3
 -   Kubernetes operator: [mariadb-operator/mariadb-operator](https://github.com/mariadb-operator/mariadb-operator) v0.18.0
 -   Website: [mariadb.com](https://mariadb.com/)
--   Managed application reference: [MySQL]({{% ref "/docs/applications/mysql" %}})
+-   Managed application reference: [MySQL]({{{% ref "/docs/v0/applications/mysql" %}})
 
 
 ### NATS Messaging
@@ -243,7 +243,7 @@ It provides a data layer for cloud native applications, IoT messaging, and micro
 
 -   Supported version: NATS 2.10.17
 -   Website: [nats.io](https://nats.io/)
--   Managed application reference: [NATS]({{% ref "/docs/applications/nats" %}})
+-   Managed application reference: [NATS]({{{% ref "/docs/v0/applications/nats" %}})
 
 
 ### PostgreSQL
@@ -256,7 +256,7 @@ This is managed with the increasingly popular CloudNativePG operator within the 
 -   Supported version: PostgreSQL 17
 -   Kubernetes operator: [cloudnative-pg/cloudnative-pg](https://github.com/cloudnative-pg/cloudnative-pg) v1.24.0
 -   Website: [cloudnative-pg.io](https://cloudnative-pg.io/)
--   Managed application reference: [PostgreSQL]({{% ref "/docs/applications/postgres" %}})
+-   Managed application reference: [PostgreSQL]({{{% ref "/docs/v0/applications/postgres" %}})
 
 
 ### RabbitMQ
@@ -267,7 +267,7 @@ The platform-side implementation allows you to create failover clusters managed 
 -   Supported version: RabbitMQ 4.1.0+ (latest stable version)
 -   Kubernetes operator: [rabbitmq/cluster-operator](https://github.com/rabbitmq/cluster-operator) v1.10.0
 -   Website: [rabbitmq.com](https://www.rabbitmq.com/)
--   Managed application reference: [RabbitMQ]({{% ref "/docs/applications/rabbitmq" %}})
+-   Managed application reference: [RabbitMQ]({{{% ref "/docs/v0/applications/rabbitmq" %}})
 
 
 ### Redis
@@ -280,7 +280,7 @@ This is managed by the spotahome/redis-operator.
 -   Supported version: Redis 6.2.6+ (based on `alpine`)
 -   Kubernetes operator: [spotahome/redis-operator](https://github.com/spotahome/redis-operator) v1.3.0-rc1
 -   Website: [redis.io](https://redis.io/)
--   Managed application reference: [Redis]({{% ref "/docs/applications/redis" %}})
+-   Managed application reference: [Redis]({{{% ref "/docs/v0/applications/redis" %}})
 
 
 ### VPN Service
@@ -294,7 +294,7 @@ This enables fast internet access while complicating traffic analysis and blocki
 
 -   Supported version: Outline Server, v1.12.3+ (stable)
 -   Website: [getoutline.org](https://getoutline.org/)
--   Managed application reference: [VPN]({{% ref "/docs/networking/vpn" %}})
+-   Managed application reference: [VPN]({{{% ref "/docs/v0/networking/vpn" %}})
 
 ### HTTP Cache
 
@@ -306,7 +306,7 @@ It also supports horizontal scaling without duplicating data on multiple servers
 
 -   Included versions: Nginx 1.25.3, HAProxy latest stable.
 -   Website: [nginx.org](https://nginx.org/)
--   Managed application reference: [HTTP Cache]({{% ref "/docs/networking/http-cache" %}})
+-   Managed application reference: [HTTP Cache]({{{% ref "/docs/v0/networking/http-cache" %}})
 
 
 ### TCP Balancer
@@ -316,11 +316,11 @@ It efficiently distributes incoming TCP traffic across multiple backend servers,
 
 TCP Load Balancer service is powered by [HAProxy](https://www.haproxy.org/), a mature and reliable TCP load balancer.
 
--   Managed application reference: [TCP balancer]({{% ref "/docs/networking/tcp-balancer" %}})
+-   Managed application reference: [TCP balancer]({{{% ref "/docs/v0/networking/tcp-balancer" %}})
 -   Docs: [HAProxy Documentation](https://www.haproxy.com/documentation/)
 
 
 ### Tenants
 
 Tenants in Cozystack are implemented as managed applications.
-Learn more about tenants in [Tenant System]({{% ref "/docs/guides/tenants" %}}).
+Learn more about tenants in [Tenant System]({{{% ref "/docs/v0/guides/tenants" %}}).

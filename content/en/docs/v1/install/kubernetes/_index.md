@@ -5,16 +5,19 @@ description: "Step 2: Installing and configuring a Kubernetes cluster on Talos L
 weight: 20
 aliases:
   - /docs/operations/talos/configuration
+  - /docs/v1/operations/talos/configuration
   - /docs/talos/bootstrap
+  - /docs/v1/talos/bootstrap
   - /docs/talos/configuration
+  - /docs/v1/talos/configuration
 ---
 
 
 **The second step** in deploying a Cozystack cluster is to install and configure a Kubernetes cluster on Talos Linux nodes.
-A prerequisite to this step is having [installed Talos Linux]({{% ref "/docs/install/talos" %}}).
+A prerequisite to this step is having [installed Talos Linux]({{{% ref "/docs/v1/install/talos" %}}).
 The result is a Kubernetes cluster installed, configured, and ready to install Cozystack.
 
-If this is your first time installing Cozystack, [start with the Cozystack tutorial]({{% ref "/docs/getting-started" %}}).
+If this is your first time installing Cozystack, [start with the Cozystack tutorial]({{{% ref "/docs/v1/getting-started" %}}).
 
 ## Installation Options
 
@@ -30,4 +33,4 @@ If you encounter problems with installation, refer to the [Troubleshooting secti
 ## Further Steps
 
 -   After installing and configuring Kubernetes on top of Talos Linux nodes, you will have a Kubernetes cluster ready to
-    [install and configure Cozystack]({{% ref "/docs/install/cozystack" %}}).
+    [install and configure Cozystack]({{{% ref "/docs/v1/install/cozystack" %}}).

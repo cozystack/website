@@ -4,8 +4,8 @@ linkTitle: "LINSTOR DRBD"
 description: "Parameters required to make Linstor work in a stretched cluster"
 weight: 30
 aliases:
-  - /docs/stretched/linstor
-  - /docs/operations/stretched/linstor
+  - /docs/v0/stretched/linstor
+  - /docs/v0/operations/stretched/linstor
 ---
 
 ## Introduction
@@ -49,4 +49,4 @@ These values are tuned for inter-datacenter environments with higher latency tha
 
 Adjusting these settings helps avoid unnecessary fencing and workload disruption in stretched clusters.
 
-Also note the guide on [generic DRBD tuning]({{% ref "/docs/storage/drbd-tuning" %}}).
+Also note the guide on [generic DRBD tuning]({{{% ref "/docs/v0/storage/drbd-tuning" %}}).

@@ -25,7 +25,7 @@ Log storages are configured through the monitoring hub parameters. Each tenant c
 | `logsStorages[i].storage` | Persistent volume size | `string` | `"10Gi"` |
 | `logsStorages[i].storageClassName` | StorageClass for data persistence | `string` | `"replicated"` |
 
-For detailed configuration options, see [Monitoring Hub Reference]({{% ref "docs/operations/services/monitoring" %}}).
+For detailed configuration options, see [Monitoring Hub Reference]({{{{% ref "/docs/v0/operations/services/monitoring" %}}).
 
 ### Fluent Bit Inputs and Outputs
 
@@ -156,4 +156,4 @@ def log_event(level, message, **kwargs):
     logger.info(json.dumps(log_entry))
 ```
 
-Ensure Fluent Bit parsers are configured to handle your log format. For setup details, see [Monitoring Setup]({{% ref "docs/operations/services/monitoring/setup" %}}).
+Ensure Fluent Bit parsers are configured to handle your log format. For setup details, see [Monitoring Setup]({{{{% ref "/docs/v0/operations/services/monitoring/setup" %}}).

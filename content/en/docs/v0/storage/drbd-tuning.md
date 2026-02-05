@@ -13,7 +13,7 @@ This allows you to optimize the speed of resynchronization without overloading t
 For detailed explanations of all available parameters and tuning recommendations, please refer to the official LINBIT guide:
 [Tuning the DRBD Resync Controller](https://kb.linbit.com/drbd/tuning-the-drbd-resync-controller/).
 
-For a multi-datacenter setup, also read the [Multi-DC DRBD configuration]({{% ref "/docs/operations/stretched/drbd-tuning" %}}).
+For a multi-datacenter setup, also read the [Multi-DC DRBD configuration]({{{% ref "/docs/v0/operations/stretched/drbd-tuning" %}}).
 
 ## Recommended Settings for 10G Networks
 

@@ -4,9 +4,9 @@ linkTitle: talos-bootstrap
 description: "`talos-bootstrap` is a CLI for step-by-step cluster bootstrapping, made by Cozystack devs.<br> Recommended for first deployments."
 weight: 10
 aliases:
-  - /docs/talos/bootstrap/talos-bootstrap
-  - /docs/talos/configuration/talos-bootstrap
-  - /docs/operations/talos/configuration/talos-bootstrap
+  - /docs/v0/talos/bootstrap/talos-bootstrap
+  - /docs/v0/talos/configuration/talos-bootstrap
+  - /docs/v0/operations/talos/configuration/talos-bootstrap
 ---
 
 [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) is an interactive script for bootstrapping Kubernetes clusters on Talos OS.
@@ -206,4 +206,4 @@ This happens because the default CNI plugin was disabled in the previous step to
 
 Now you have a Kubernetes cluster bootstrapped and ready for installing Cozystack.
 To complete the installation, follow the deployment guide, starting with the
-[Install Cozystack]({{% ref "/docs/getting-started/install-cozystack" %}}) section.
+[Install Cozystack]({{{% ref "/docs/v0/getting-started/install-cozystack" %}}) section.

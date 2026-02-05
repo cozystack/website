@@ -4,7 +4,7 @@ linkTitle: "Dedicated Network"
 description: "Redirect LINSTOR replication traffic to a dedicated network interface for better reliability and performance."
 weight: 10
 aliases:
-  - /docs/operations/storage/dedicated-network
+  - /docs/v0/operations/storage/dedicated-network
 ---
 
 This guide explains how to improve storage reliability and performance by redirecting LINSTOR replication traffic
@@ -381,4 +381,4 @@ LINSTOR ==> node-connection path list node01 node02
 ### Advanced CRD method
 
 See the example in
-[Multi Datacenter dedicated storage network guide]({{% ref "/docs/operations/stretched/linstor-dedicated-network" %}})
+[Multi Datacenter dedicated storage network guide]({{{% ref "/docs/v0/operations/stretched/linstor-dedicated-network" %}})

@@ -5,6 +5,7 @@ description: "How to use Cozystack to build private cloud"
 weight: 20
 aliases:
   - /docs/use-cases/private-cloud
+  - /docs/v1/use-cases/private-cloud
 ---
 
 You can use Cozystack as platform to build a private cloud powered by Infrastructure-as-Code

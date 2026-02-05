@@ -4,6 +4,6 @@ linkTitle: "VPC"
 description: "Dedicated subnets"
 weight: 10
 aliases:
-  - /docs/reference/applications/vpc
+  - /docs/v0/reference/applications/vpc
 ---
 

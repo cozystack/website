@@ -4,8 +4,8 @@ linkTitle: "MikroTik RouterOS"
 description: "Deploying MikroTik RouterOS (CHR) as a virtual appliance on Cozystack"
 weight: 60
 aliases:
-  - /docs/operations/virtualization/mikrotik
-  - /docs/networking/mikrotik
+  - /docs/v0/operations/virtualization/mikrotik
+  - /docs/v0/networking/mikrotik
 ---
 
 ## Prerequisites

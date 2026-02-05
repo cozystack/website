@@ -4,9 +4,9 @@ linkTitle: Servers.com
 description: "Install Cozystack in the Servers.com infrastructure."
 weight: 40
 aliases:
-  - /docs/operations/talos/installation/servers_com
-  - /docs/talos/installation/servers_com
-  - /docs/talos/install/servers_com
+  - /docs/v0/operations/talos/installation/servers_com
+  - /docs/v0/talos/installation/servers_com
+  - /docs/v0/talos/install/servers_com
 ---
 
 ## Before Installation
@@ -231,4 +231,4 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
      kubectl get nodes
      ```
 
-Now follow **Get Started** guide starting from the [**Install Cozystack**](/docs/getting-started/install-cozystack) section, to continue the installation.
+Now follow **Get Started** guide starting from the [**Install Cozystack**](/docs/v0/getting-started/install-cozystack) section, to continue the installation.

@@ -28,10 +28,10 @@ The monitoring system in Cozystack provides comprehensive observability for both
 
 Metrics flow from exporters (e.g., node-exporters, kube-state-metrics) to VMAgent, which then writes to VMCluster. Grafana queries VMCluster for visualization, and Alerta processes alerts from VMCluster or other sources.
 
-For detailed configuration, see [Monitoring Hub Reference]({{% ref "docs/operations/services/monitoring" %}}).
+For detailed configuration, see [Monitoring Hub Reference]({{{{% ref "/docs/v0/operations/services/monitoring" %}}).
 
 Cozystack includes a number of cluster services.
 They are deployed through tenant settings, and not through the application catalog.
 
 Each tenant can have its own copy of cluster service or use the parent tenant's services.
-Read more about the services sharing mechanism in [Tenant System]({{% ref "docs/guides/tenants#sharing-cluster-services" %}})
+Read more about the services sharing mechanism in [Tenant System]({{{{% ref "/docs/v0/guides/tenants#sharing-cluster-services" %}})

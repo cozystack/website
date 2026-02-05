@@ -5,6 +5,7 @@ description: "Deploy a virtual router in a VM"
 weight: 40
 aliases:
   - /docs/operations/virtualization/virtual-router
+  - /docs/v1/operations/virtualization/virtual-router
 ---
 
 Starting with version [v0.27.0](https://github.com/cozystack/cozystack/releases/tag/v0.27.0),

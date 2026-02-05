@@ -3,6 +3,6 @@ title: "Managed MongoDB Service"
 linkTitle: "MongoDB"
 weight: 65
 aliases:
-  - /docs/reference/applications/mongodb
+  - /docs/v0/reference/applications/mongodb
 ---
 

@@ -21,7 +21,7 @@ To access Grafana and explore dashboards:
 2. Log in using your tenant credentials (OIDC or token-based authentication).
 3. Once logged in, you can browse pre-configured dashboards in the "Dashboards" section.
 
-For initial setup and configuration details, refer to [Monitoring Setup]({{% ref "docs/operations/services/monitoring/setup" %}}).
+For initial setup and configuration details, refer to [Monitoring Setup]({{{{% ref "/docs/v0/operations/services/monitoring/setup" %}}).
 
 ## Pre-built Dashboards
 
@@ -121,7 +121,7 @@ For applications exposing custom metrics:
 - Configure VMAgent in Cozystack to scrape these endpoints by updating the monitoring configuration.
 - Metrics will be ingested into VM and available for querying in Grafana.
 
-Follow Prometheus [metric naming conventions](https://prometheus.io/docs/practices/naming/) to ensure compatibility. For configuration examples, see [Monitoring Hub Reference]({{% ref "docs/operations/services/monitoring" %}}).
+Follow Prometheus [metric naming conventions](https://prometheus.io/docs/practices/naming/) to ensure compatibility. For configuration examples, see [Monitoring Hub Reference]({{{{% ref "/docs/v0/operations/services/monitoring" %}}).
 
 ### Grafana Data Sources Integration
 
@@ -155,4 +155,4 @@ Grafana in Cozystack is pre-configured with optimized data sources for seamless 
 - **Configuration**: Automatically set up for tenant-specific log streams.
 - **Usage**: Add log panels to dashboards to combine metrics and logs, e.g., for troubleshooting application issues.
 
-To modify data source settings, access the Grafana admin panel (admin privileges required) or update the monitoring configuration via the Cozystack API. For detailed parameters, refer to [Monitoring Hub Reference]({{% ref "docs/operations/services/monitoring" %}}).
+To modify data source settings, access the Grafana admin panel (admin privileges required) or update the monitoring configuration via the Cozystack API. For detailed parameters, refer to [Monitoring Hub Reference]({{{{% ref "/docs/v0/operations/services/monitoring" %}}).

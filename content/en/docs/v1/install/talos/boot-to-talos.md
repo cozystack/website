@@ -5,6 +5,7 @@ description: "Install Talos Linux using boot-to-talos, a convenient CLI applicat
 weight: 5
 aliases:
   - /docs/talos/install/kexec
+  - /docs/v1/talos/install/kexec
 ---
 
 This guide explains how to install Talos Linux on a host running any other Linux distribution using `boot-to-talos`.
@@ -146,4 +147,4 @@ When using the **install** mode, `boot-to-talos` performs the following steps:
 
 ## Next Steps
 
-Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/install/kubernetes" %}}).
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{{% ref "/docs/v1/install/kubernetes" %}}).

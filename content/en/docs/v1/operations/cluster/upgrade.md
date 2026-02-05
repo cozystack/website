@@ -5,7 +5,9 @@ description: "Upgrade Cozystack system components."
 weight: 10
 aliases:
   - /docs/upgrade
+  - /docs/v1/upgrade
   - /docs/operations/upgrade
+  - /docs/v1/operations/upgrade
 ---
 
 ## About Cozystack Versions
@@ -31,7 +33,7 @@ To learn more about Cozystack release process, read the [Cozystack Release Workf
 
 Before upgrading, check the current status of your Cozystack cluster by following steps from
 
-- [Troubleshooting Checklist]({{% ref "/docs/operations/troubleshooting/#troubleshooting-checklist" %}})
+- [Troubleshooting Checklist]({{{% ref "/docs/v1/operations/troubleshooting/#troubleshooting-checklist" %}})
 
 Make sure that the Cozystack ConfigMap contains all the necessary variables:
 If there are missing keys in `data.*`, add them.
@@ -54,7 +56,7 @@ data:
   ...
 ```
 
-Learn more about this file and its contents from the [Cozystack ConfigMap reference]({{% ref "/docs/operations/configuration/configmap" %}}).
+Learn more about this file and its contents from the [Cozystack ConfigMap reference]({{{% ref "/docs/v1/operations/configuration/configmap" %}}).
 
 ### 2. Apply the new manifest file
 
@@ -88,5 +90,5 @@ kubectl logs -n cozy-system deploy/cozystack --previous
 
 To make sure everything works as expected, repeat the steps from
 
-  - [Troubleshooting Checklist]({{% ref "/docs/operations/troubleshooting/#troubleshooting-checklist" %}})
+  - [Troubleshooting Checklist]({{{% ref "/docs/v1/operations/troubleshooting/#troubleshooting-checklist" %}})
 

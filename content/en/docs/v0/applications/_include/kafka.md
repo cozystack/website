@@ -3,6 +3,6 @@ title: "Managed Kafka Service"
 linkTitle: "Kafka"
 weight: 30
 aliases:
-  - /docs/reference/applications/kafka
+  - /docs/v0/reference/applications/kafka
 ---
 

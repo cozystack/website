@@ -5,6 +5,7 @@ description: "This guide shows the initial steps to check your cluster's health 
 weight: 110
 aliases:
   - /docs/troubleshooting
+  - /docs/v1/troubleshooting
 ---
 
 This guide shows the initial steps to check your cluster's health and discover problems.
@@ -109,19 +110,19 @@ Normally all of them should be `Ready` and `Release reconciliation succeeded`
 
 ### Cluster Bootstrapping
 
-See the [Kubernetes installation troubleshooting]({{% ref "/docs/install/kubernetes/troubleshooting" %}}).
+See the [Kubernetes installation troubleshooting]({{{% ref "/docs/v1/install/kubernetes/troubleshooting" %}}).
 
 ### Cluster Maintenance
 
 #### Remove a failed node from the cluster
 
-See the [Cluster Maintenance > Cluster Scaling]({{% ref "/docs/operations/cluster/scaling" %}}).
+See the [Cluster Maintenance > Cluster Scaling]({{{% ref "/docs/v1/operations/cluster/scaling" %}}).
 
 ### Flux CD
 
-[Flux CD troubleshooting]({{% ref "/docs/operations/troubleshooting/flux-cd" %}}).
+[Flux CD troubleshooting]({{{% ref "/docs/v1/operations/troubleshooting/flux-cd" %}}).
 
 ### Kube-OVN
 
-[Kube-OVN troubleshooting]({{% ref "/docs/operations/troubleshooting/kube-ovn" %}}).
+[Kube-OVN troubleshooting]({{{% ref "/docs/v1/operations/troubleshooting/kube-ovn" %}}).
 

@@ -4,13 +4,13 @@ linkTitle: "ConfigMap"
 description: "Reference for the Cozystack ConfigMap, which defines key configuration values for a Cozystack installation and operations."
 weight: 10
 aliases:
-  - /docs/install/cozystack/configmap
+  - /docs/v0/install/cozystack/configmap
 ---
 
 This page explains the role of Cozystack's main ConfigMap and provides a full reference for its values.
 
 Cozystack's main configuration is defined by a single [Kubernetes ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/).
-This ConfigMap includes [Cozystack bundle]({{% ref "/docs/operations/configuration/bundles" %}}) and [components setup]({{% ref "/docs/operations/configuration/components" %}}),
+This ConfigMap includes [Cozystack bundle]({{{% ref "/docs/v0/operations/configuration/bundles" %}}) and [components setup]({{{% ref "/docs/v0/operations/configuration/components" %}}),
 key network settings, exposed services, and other options.
 
 
@@ -58,9 +58,9 @@ data:
 | `oidc-enabled`         | `paas-full`, `paas-hosted` | Enable [oidc] feature in Cozystack (default: `false`)                                                                                                                                  |
 | `cpu-allocation-ratio` | `paas-full`, `paas-hosted` | CPU allocation ratio: `1/cpu-allocation-ratio` CPU requested per 1 vCPU. Defaults to 10. See [Resource Management] for detailed explanation and examples.                              |
 
-[enable-disable]: {{% ref "/docs/operations/configuration/components#enabling-and-disabling-components" %}}
-[overwrite-parameters]: {{% ref "/docs/operations/configuration/components#overwriting-component-parameters" %}}
-[Resource Management]: {{% ref "/docs/guides/resource-management#cpu-allocation-ratio" %}}
-[oidc]: {{% ref "/docs/operations/oidc" %}}
-[telemetry]: {{% ref "/docs/operations/configuration/telemetry" %}}
+[enable-disable]: {{{% ref "/docs/v0/operations/configuration/components#enabling-and-disabling-components" %}}
+[overwrite-parameters]: {{{% ref "/docs/v0/operations/configuration/components#overwriting-component-parameters" %}}
+[Resource Management]: {{{% ref "/docs/v0/guides/resource-management#cpu-allocation-ratio" %}}
+[oidc]: {{{% ref "/docs/v0/operations/oidc" %}}
+[telemetry]: {{{% ref "/docs/v0/operations/configuration/telemetry" %}}
 [kube-ovn]: https://kubeovn.github.io/docs/en/guide/subnet/#join-subnet

@@ -139,7 +139,7 @@ alerta:
         - warning
 ```
 
-For detailed configuration options, see [Monitoring Hub Reference]({{% ref "docs/operations/services/monitoring" %}}).
+For detailed configuration options, see [Monitoring Hub Reference]({{{% ref "docs/v1/operations/services/monitoring" %}}).
 
 ## Alert Examples
 

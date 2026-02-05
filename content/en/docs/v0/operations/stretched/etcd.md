@@ -4,7 +4,7 @@ linkTitle: "etcd configuration"
 description: "Parameters required to make etcd work in a stretched cluster"
 weight: 10
 aliases:
-  - /docs/stretched/etcd
+  - /docs/v0/stretched/etcd
 ---
 
 ## Potential problems

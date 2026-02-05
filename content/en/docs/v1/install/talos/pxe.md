@@ -5,8 +5,11 @@ description: "How to install Talos Linux using temporary DHCP and PXE servers ru
 weight: 15
 aliases:
   - /docs/talos/installation/pxe
+  - /docs/v1/talos/installation/pxe
   - /docs/talos/install/pxe
+  - /docs/v1/talos/install/pxe
   - /docs/operations/talos/installation/pxe
+  - /docs/v1/operations/talos/installation/pxe
 ---
 
 This guide explains how to install Talos Linux on bare metal servers or virtual machines
@@ -88,4 +91,4 @@ Now they should automatically boot from your PXE server.
 
 ## Next Steps
 
-Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/install/kubernetes" %}}).
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{{% ref "/docs/v1/install/kubernetes" %}}).

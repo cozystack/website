@@ -4,5 +4,6 @@ linkTitle: "PostgreSQL"
 weight: 60
 aliases:
   - /docs/reference/applications/postgres
+  - /docs/v1/reference/applications/postgres
 ---
 

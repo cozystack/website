@@ -5,7 +5,9 @@ description: "Learn how to deploy, configure, access, and backup managed applica
 weight: 45
 aliases:
   - /docs/components
+  - /docs/v1/components
   - /docs/guides/applications
+  - /docs/v1/guides/applications
 ---
 
 ## Available Application Versions

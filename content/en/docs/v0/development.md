@@ -4,7 +4,7 @@ title: Cozystack Internals and Developer Guides
 description: Cozystack Internals and Development
 weight: 100
 aliases:
-- /docs/development/development
+- /docs/v0/development/development
 ---
 
 
@@ -64,7 +64,7 @@ back to the cluster.
 
 It primarily reads the `cozystack` ConfigMap from `cozy-system` namespace, and templates
 manifests according to the specified options. This ConfigMap
-specifies the [bundle](/docs/bundles/) name and options, detailing which system components should be
+specifies the [bundle](/docs/v0/bundles/) name and options, detailing which system components should be
 installed in the cluster.
 
 {{% alert color="info" %}}
@@ -93,7 +93,7 @@ They should not contain business logic, because they are managed by operators in
 Similar to `apps` but not shown in the application catalog. They can only be installed as part of a tenant.
 They are allowed to use by bottom tenants installed in current tenant namespace.
 
-Read more about [Tenant System](/docs/guides/concepts/#tenant-system) on the Core Concepts page.
+Read more about [Tenant System](/docs/v0/guides/concepts/#tenant-system) on the Core Concepts page.
 
 It is possible to use only one application type within a single tenant namespace.
 

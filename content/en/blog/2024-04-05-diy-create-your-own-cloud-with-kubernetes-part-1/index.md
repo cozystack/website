@@ -170,7 +170,7 @@ two years ago was entirely built using this approach. But unfortunately, it does
 deploy your very first parent cluster that will hold the others. So now you have prepared a
 solution that will help you do this the same using PXE approach.
 
-Essentially, all you need to do is [run temporary]({{% ref "/docs/install/talos/pxe" %}})
+Essentially, all you need to do is [run temporary]({{% ref "/docs/v1/install/talos/pxe" %}})
 **DHCP** and **PXE** servers inside containers. Then your nodes will boot from your
 image, and you can use a simple Debian-flavored script to help you bootstrap your nodes.
 

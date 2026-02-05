@@ -5,10 +5,12 @@ description: "Define the hardware requirements for your Cozystack use case."
 weight: 5
 aliases:
   - /docs/getting-started/hardware-requirements
+  - /docs/v1/getting-started/hardware-requirements
   - /docs/talos/hardware-requirements
+  - /docs/v1/talos/hardware-requirements
 ---
 
-Cozystack utilizes [Talos Linux]({{% ref "/docs/guides/talos" %}}), a minimalistic Linux distribution designed solely to run Kubernetes.
+Cozystack utilizes [Talos Linux]({{{% ref "/docs/v1/guides/talos" %}}), a minimalistic Linux distribution designed solely to run Kubernetes.
 Usually, this means you cannot share a server with any services other than those run by Cozystack.
 The good news is that whichever service you need, Cozystack will run it perfectly: securely, efficiently, and
 in a fully containerized or virtualized environment.
@@ -16,7 +18,7 @@ in a fully containerized or virtualized environment.
 Hardware requirements depend on your usage scenario.
 Below are several common deployment options; review them to determine which setup fits your needs best.
 
-{{< include "docs/install/_include/hardware-config-tabs.md" >}}
+{{< include "docs/v1/install/_include/hardware-config-tabs.md" >}}
 
 **Compute:**
 
@@ -52,7 +54,7 @@ Separating disks by role is the primary and more reliable option.
 **Using a single disk**
 
 It's possible to use a single disk with space allocated for user storage.
-See [How to install Talos on a single-disk machine]({{% ref "/docs/install/how-to/single-disk" %}})
+See [How to install Talos on a single-disk machine]({{{% ref "/docs/v1/install/how-to/single-disk" %}})
 Using a local SSD disk is recommended.
 
 **Networking:**
@@ -85,7 +87,7 @@ For a production environment, consider the following:
 
 ## Distributed Cluster
 
-You can build a [distributed cluster]({{% ref "/docs/operations/stretched/" %}}) with Cozystack.
+You can build a [distributed cluster]({{{% ref "/docs/v1/operations/stretched/" %}}) with Cozystack.
 
 **Networking:**
 
@@ -118,4 +120,4 @@ Achieving high availability adds to the basic production environment requirement
 
 ## System Resource Planning
 
-For detailed recommendations on system resource allocation (CPU and memory) per node, based on cluster scale and number of tenants, refer to [System Resource Planning Recommendations]({{% ref "/docs/install/resource-planning" %}}).
+For detailed recommendations on system resource allocation (CPU and memory) per node, based on cluster scale and number of tenants, refer to [System Resource Planning Recommendations]({{{% ref "/docs/v1/install/resource-planning" %}}).

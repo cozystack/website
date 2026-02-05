@@ -52,7 +52,7 @@ Ensure TLS is enabled for secure metric collection:
 - Verify certificates in the VMAgent configuration.
 - Check RBAC roles allow VMAgent to access required endpoints.
 
-For more details, see [Monitoring Setup]({{% ref "/docs/operations/services/monitoring/setup" %}}).
+For more details, see [Monitoring Setup]({{{% ref "/docs/v0/operations/services/monitoring/setup" %}}).
 
 ## Alerts Not Arriving
 
@@ -109,7 +109,7 @@ alerta:
 - Use RBAC to restrict alert access.
 - Enable TLS for alert endpoints.
 
-See [Monitoring Alerting]({{% ref "/docs/operations/services/monitoring/alerting" %}}) for configuration details.
+See [Monitoring Alerting]({{{% ref "/docs/v0/operations/services/monitoring/alerting" %}}) for configuration details.
 
 ## Grafana Issues
 
@@ -154,7 +154,7 @@ grafana:
 - Enable authentication and authorization.
 - Use TLS for Grafana access.
 
-Refer to [Monitoring Dashboards]({{% ref "/docs/operations/services/monitoring/dashboards" %}}) for dashboard setup.
+Refer to [Monitoring Dashboards]({{{% ref "/docs/v0/operations/services/monitoring/dashboards" %}}) for dashboard setup.
 
 ## Log Collection Problems
 
@@ -199,4 +199,4 @@ logsStorages:
 - Use RBAC for log access.
 - Enable TLS for log shipping.
 
-For more information, see [Monitoring Logs]({{% ref "/docs/operations/services/monitoring/logs" %}}).
+For more information, see [Monitoring Logs]({{{% ref "/docs/v0/operations/services/monitoring/logs" %}}).

@@ -4,8 +4,10 @@ linkTitle: "Virtualization"
 description: "Everything about deploying, configuring, and using virtual machines in Cozystack."
 weight: 50
 aliases:
-   - /docs/operations/virtualization
-   - /docs/operations/virtualization/virtual-machines
+  - /docs/operations/virtualization
+  - /docs/v1/operations/virtualization
+  - /docs/operations/virtualization/virtual-machines
+  - /docs/v1/operations/virtualization/virtual-machines
 ---
 
 This guide explains how virtualization works within Cozystack.
@@ -25,7 +27,7 @@ It allows you to specify the bare minimum parameters to run a VM, but it only su
 
 For production workloads, it is recommended to use `vm-disk` and `vm-instance` instead.
 
-See the application reference: [`virtual-machine`]({{% ref "/docs/virtualization/virtual-machine" %}}).
+See the application reference: [`virtual-machine`]({{{% ref "/docs/v1/virtualization/virtual-machine" %}}).
 
 ### Virtual Machine Disk
 
@@ -93,7 +95,7 @@ optical: true
 
 Created disks can be attached to a Virtual Machine instance.
 
-See the application reference: [`vm-disk`]({{% ref "/docs/virtualization/vm-disk" %}}).
+See the application reference: [`vm-disk`]({{{% ref "/docs/v1/virtualization/vm-disk" %}}).
 
 ### Virtual Machine Instance
 
@@ -108,7 +110,7 @@ disks:
 
 The rest parameters are similar to Virtual Machine (simple).
 
-See the application reference: [`vm-instance`]({{% ref "/docs/virtualization/vm-instance" %}}).
+See the application reference: [`vm-instance`]({{{% ref "/docs/v1/virtualization/vm-instance" %}}).
 
 ## Accessing Virtual Machines
 

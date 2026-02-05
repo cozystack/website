@@ -16,16 +16,16 @@ Before you begin:
 
 
 -   Complete the previous steps of the tutorial to get 
-    a [Cozystack cluster]({{% ref "/docs/getting-started/install-cozystack" %}}) running,
+    a [Cozystack cluster]({{{% ref "/docs/v1/getting-started/install-cozystack" %}}) running,
     with storage, networking, and management dashboard configured.
     
 -   Make sure you can access the dashboard, as described in the
-    [previous step of the tutorial]({{% ref "/docs/getting-started/install-cozystack" %}}).
+    [previous step of the tutorial]({{{% ref "/docs/v1/getting-started/install-cozystack" %}}).
     
 -   If you're using OIDC, users and roles must be configured.
-    See the [OIDC guide]({{% ref "/docs/operations/oidc" %}}) for details on how to work with the built-in OIDC server.
+    See the [OIDC guide]({{{% ref "/docs/v1/operations/oidc" %}}) for details on how to work with the built-in OIDC server.
 
-During [Kubernetes installation]({{% ref "/docs/getting-started/install-kubernetes" %}}) for Cozystack, 
+During [Kubernetes installation]({{{% ref "/docs/v1/getting-started/install-kubernetes" %}}) for Cozystack, 
 you should have obtained the administrative `kubeconfig` file for your new cluster.
 Keep it at hand — it may be useful later for troubleshooting.
 However, for day-to-day operations, you'll want to create user-specific credentials.
@@ -39,7 +39,7 @@ Each tenant has its own set of applications and one or more nested Kubernetes cl
 Tenant users have full access to their clusters.
 Optionally, you can configure quotas for each tenant to limit resource usage and prevent overconsumption.
 
-To learn more about tenants, read the [Core Concepts]({{% ref "/docs/guides/concepts#tenant-system" %}}) guide.
+To learn more about tenants, read the [Core Concepts]({{{% ref "/docs/v1/guides/concepts#tenant-system" %}}) guide.
 
 
 ## Create a Tenant
@@ -137,7 +137,7 @@ The method to retrieve it depends on whether OIDC is enabled in your Cozystack s
 ### With OIDC Enabled
 
 You can retrieve the kubeconfig file directly from the dashboard, as described in the
-[OIDC guide]({{% ref "/docs/operations/oidc/enable_oidc#step-4-retrieve-kubeconfig" %}}).
+[OIDC guide]({{{% ref "/docs/v1/operations/oidc/enable_oidc#step-4-retrieve-kubeconfig" %}}).
 
 ### Without OIDC
 

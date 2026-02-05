@@ -5,6 +5,7 @@ description: "Learn how to configure and use at-rest volume encryption for persi
 weight: 100
 aliases:
   - /docs/operations/storage/disk-encryption
+  - /docs/v1/operations/storage/disk-encryption
 ---
 
 Cozystack administrators can enable encrypted storage by creating a custom StorageClass.

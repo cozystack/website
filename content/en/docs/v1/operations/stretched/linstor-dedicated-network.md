@@ -23,13 +23,13 @@ while falling back to shared links between datacenters when needed.
 
 ## Prerequisites
 
-This guide builds on the [Dedicated Network for LINSTOR]({{% ref "/docs/storage/dedicated-network" %}}) guide,
+This guide builds on the [Dedicated Network for LINSTOR]({{{% ref "/docs/v1/storage/dedicated-network" %}}) guide,
 adding additional methods and configuration patterns specific to multi-datacenter environments.
 To apply the patterns in this guide, it's important to understand how node interfaces and connection paths work.
 Be sure to review the previous guide first, as it explains these concepts in detail.
 
 To apply different node connection settings depending on node location, you’ll need to label your nodes accordingly.
-Refer to the [Topology node labels guide]({{% ref "/docs/operations/stretched/labels" %}}) for instructions.
+Refer to the [Topology node labels guide]({{{% ref "/docs/v1/operations/stretched/labels" %}}) for instructions.
 This guide uses the `topology.kubernetes.io/zone` label to distinguish datacenters.
 
 ## Connection configuration

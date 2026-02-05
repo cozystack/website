@@ -5,6 +5,7 @@ description: "Label your nodes to help the workloads to be scheduled correctly"
 weight: 20
 aliases:
   - /docs/stretched/labels
+  - /docs/v1/stretched/labels
 ---
 
 ## How topology labels work

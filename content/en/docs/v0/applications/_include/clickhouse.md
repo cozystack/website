@@ -4,6 +4,6 @@ linkTitle: "ClickHouse"
 description: ""
 weight: 10
 aliases:
-  - /docs/reference/applications/clickhouse
+  - /docs/v0/reference/applications/clickhouse
 ---
 

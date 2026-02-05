@@ -5,13 +5,14 @@ description: "How to install Talos on a single-disk machine, allocating space on
 weight: 100
 aliases:
   - /docs/operations/faq/single-disk-installation
+  - /docs/v1/operations/faq/single-disk-installation
 ---
 
 Default Talos setup assumes that each node has a primary and secondary disks, used for system and user storage, respectively.
 However, it's possible to use a single disk, allocating space for user storage.
 
-This configuration must be applied with the first [`talosctl apply`]({{% ref "/docs/install/kubernetes/talosctl#3-apply-node-configuration" %}})
-or [`talm apply`]({{% ref "/docs/install/kubernetes/talm#3-apply-node-configuration" %}})
+This configuration must be applied with the first [`talosctl apply`]({{{% ref "/docs/v1/install/kubernetes/talosctl#3-apply-node-configuration" %}})
+or [`talm apply`]({{{% ref "/docs/v1/install/kubernetes/talm#3-apply-node-configuration" %}})
 — the one with the `-i` (`--insecure`) flag.
 Applying changes after initialization will not have any effect.
 

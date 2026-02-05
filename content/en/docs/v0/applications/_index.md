@@ -4,8 +4,8 @@ linkTitle: "Managed Applications"
 description: "Learn how to deploy, configure, access, and backup managed applications in Cozystack."
 weight: 45
 aliases:
-  - /docs/components
-  - /docs/guides/applications
+  - /docs/v0/components
+  - /docs/v0/guides/applications
 ---
 
 ## Available Application Versions

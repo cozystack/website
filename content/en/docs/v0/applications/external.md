@@ -23,7 +23,7 @@ Application repository has the following structure:
 - `./packages/apps`: Helm charts for applications that can be installed from the dashboard.
 
 Just like standard Cozystack applications, this external application package is using Helm and FluxCD.
-To learn more about developing application packages, read Cozystack [Developer Guide](/docs/development/)
+To learn more about developing application packages, read Cozystack [Developer Guide](/docs/v0/development/)
 
 These FluxCD documents will help you understand the resources used in this guide:
 

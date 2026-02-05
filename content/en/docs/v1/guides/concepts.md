@@ -5,6 +5,7 @@ description: "Learn about the key concepts of Cozystack, such as management clus
 weight: 10
 aliases:
   - /docs/concepts
+  - /docs/v1/concepts
 ---
 
 Cozystack is an open-source, Kubernetes-native platform that turns bare-metal or virtual infrastructure into a fully featured, multi-tenant cloud.
@@ -38,7 +39,7 @@ Some cloud providers use the term "projects" for a similar entity.
 When Cozystack is used to build a private cloud and an internal development platform, a tenant usually belongs to a team or subteam.
 In a hosting business, where Cozystack is the foundation of a public cloud, a tenant can belong to a customer.
 
-Read more: [Tenant System]({{% ref "docs/guides/tenants" %}}).
+Read more: [Tenant System]({{{% ref "docs/v1/guides/tenants" %}}).
 
 ## Tenant Cluster
 
@@ -48,7 +49,7 @@ These are not namespaces of the management cluster, but complete Kubernetes-in-K
 Tenant clusters are what many cloud providers call "managed Kubernetes".
 They are used as development, testing, and production environments.
 
-Read more: [tenant Kubernetes clusters]({{% ref "docs/kubernetes" %}}).
+Read more: [tenant Kubernetes clusters]({{{% ref "docs/v1/kubernetes" %}}).
 
 ## Managed Applications
 
@@ -58,7 +59,7 @@ These include relational databases (PostgreSQL, MySQL/MariaDB), NoSQL/queues (Re
 Tenants, tenant Kubernetes clusters, and VMs are also managed applications in terms of Cozystack.
 They are created with the same user workflow and are managed with Helm and Flux, just as other applications.
 
-Read more: [managed applications]({{% ref "/docs/applications" %}}).
+Read more: [managed applications]({{{% ref "/docs/v1/applications" %}}).
 
 ## Cozystack API
 
@@ -70,7 +71,7 @@ This approach combines well with role-based access control.
 Non-administrative users can use `kubectl` to access the management cluster, 
 but their kubeconfig will authorize them only to create custom resources in their tenants.
 
-Read more: [Cozystack API]({{% ref "/docs/cozystack-api" %}}).
+Read more: [Cozystack API]({{{% ref "/docs/v1/cozystack-api" %}}).
 
 ## Bundles
 
@@ -78,4 +79,4 @@ Bundles are pre-defined combinations of Cozystack components.
 Each bundle is tested, versioned, and guaranteed to work as a unit.
 They simplify installation, reduce the risk of misconfiguration, and make it easier to choose the right set of features for your deployment.
 
-Read more: [Bundles]({{% ref "/docs/operations/configuration/bundles" %}}).
+Read more: [Bundles]({{{% ref "/docs/v1/operations/configuration/bundles" %}}).

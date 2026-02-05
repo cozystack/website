@@ -5,4 +5,5 @@ description: "Cozystack use cases."
 weight: 30
 aliases:
   - /docs/use-cases
+  - /docs/v1/use-cases
 ---

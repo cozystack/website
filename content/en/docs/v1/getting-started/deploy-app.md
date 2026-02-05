@@ -25,7 +25,7 @@ Once you're done, you’ll have a working setup ready for your own applications�
 
 Before you begin:
 
--   **Cozystack cluster** should already be [installed and running]({{% ref "/docs/getting-started/install-cozystack" %}}).
+-   **Cozystack cluster** should already be [installed and running]({{{% ref "/docs/v1/getting-started/install-cozystack" %}}).
     You won’t need to install or configure anything on the infrastructure level—this
     guide assumes that part is already done, possibly by you or someone else on your team.
 -   **Tenant and credentials:** You must have access to your tenant in Cozystack.

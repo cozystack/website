@@ -4,5 +4,5 @@ linkTitle: "OpenID Connect"
 description: "OIDC in Cozystack"
 weight: 36
 aliases:
-  - /docs/oidc
+  - /docs/v0/oidc
 ---

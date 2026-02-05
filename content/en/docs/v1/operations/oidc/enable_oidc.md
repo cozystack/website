@@ -5,6 +5,7 @@ description: "How to enable OIDC Server"
 weight: 36
 aliases:
   - /docs/oidc/enable_oidc
+  - /docs/v1/oidc/enable_oidc
 ---
 
 ## Prerequisites

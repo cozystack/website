@@ -4,7 +4,7 @@ linkTitle: "Resources Reference"
 description: "Reference for VM Instance Types and Instance Profiles"
 weight: 100
 aliases:
-  - /docs/operations/virtualization/resources
+  - /docs/v0/operations/virtualization/resources
 ---
 
 Each virtual machine has these two configuration settings:
@@ -221,5 +221,5 @@ windows.2k25.virtio | Microsoft Windows Server 2025 (virtio)
 ## Developing Instance Types and Profiles
 
 To get started with customizing or creating your own instancetypes and preferences
-see [the development guide](/docs/development/development.md).
+see [the development guide](/docs/v0/development/development.md).
 
