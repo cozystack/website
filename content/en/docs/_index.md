@@ -1,19 +1,27 @@
 ---
-title: "Cozystack Documentation"
+title: "Choose Documentation Version"
 linkTitle: "Documentation"
-description: "Free PaaS platform and framework for building clouds"
-taxonomyCloud: []
+description: "Select the version of Cozystack documentation that matches your installation"
+weight: 40
 cascade:
   type: docs
 menu:
   main:
     weight: 40
-aliases:
-  - /docs/reference
 ---
 
-Cozystack is a free PaaS platform and framework for building clouds
+## Documentation Versions
 
-With Cozystack, you can transform your bunch of servers into an intelligent system with a simple REST API for spawning Kubernetes clusters, Database-as-a-Service, virtual machines, load balancers, HTTP caching services, and other services with ease.
+Cozystack documentation is available for two major versions. Please select the version that corresponds to the Cozystack installation you are using:
 
-You can use Cozystack to build your own cloud or to provide a cost-effective development environments.
+### [Cozystack v0 Documentation](/docs/v0/)
+
+Documentation for Cozystack version 0.x releases. Use this if you are running Cozystack v0.
+
+### [Cozystack v1 Documentation](/docs/v1/)
+
+Documentation for Cozystack version 1.x releases. Use this if you are running Cozystack v1.
+
+---
+
+If you're unsure which version you're using, check your Cozystack installation or refer to the [release notes](https://github.com/cozystack/cozystack/releases).
