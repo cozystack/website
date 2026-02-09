@@ -47,7 +47,7 @@ Separating disks by role is the primary and more reliable option.
   It does not affect the Talos installation.
 
   Learn more about configuring Linstor StorageClass from the
-  [Deploy Cozystack tutorial](https://cozystack.io/docs/getting-started/install-cozystack/#configure-storage)
+  [Deploy Cozystack tutorial]({{% ref "/docs/v0/getting-started/install-cozystack#3-configure-storage" %}})
 
 **Using a single disk**
 

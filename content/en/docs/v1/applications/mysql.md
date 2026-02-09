@@ -72,7 +72,7 @@ more details:
   https://github.com/mariadb-operator/mariadb-operator/issues/141#issuecomment-1804760231
 
 - **Corrupted indices**
-  Sometimes some indecies can be corrupted on master replica, you can recover them from slave:
+  Sometimes some indices can be corrupted on master replica, you can recover them from slave:
 
   ```bash
   mysqldump -h <slave> -P 3306 -u<user> -p<password> --column-statistics=0 <database> <table> ~/tmp/fix-table.sql
