@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Managed ClickHouse Service"
 linkTitle: "ClickHouse"
 description: ""
@@ -111,4 +111,3 @@ This setting is ignored if the corresponding `resources` value is set.
 | `large`     | `2`    | `2Gi`   |
 | `xlarge`    | `4`    | `4Gi`   |
 | `2xlarge`   | `8`    | `8Gi`   |
-

@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Tenant Application Reference"
 linkTitle: "Tenant"
 weight: 90
@@ -41,8 +41,8 @@ Kubernetes clusters created in this tenant namespace would get domains like: `ku
 Example:
 ```text       
 tenant-root (example.org)
-в””в”Ђв”Ђ tenant-foo (foo.example.org)
-    в””в”Ђв”Ђ kubernetes-cluster1 (kubernetes-cluster1.foo.example.org)
+└── tenant-foo (foo.example.org)
+    └── kubernetes-cluster1 (kubernetes-cluster1.foo.example.org)
 ```
 
 ### Nesting tenants and reusing parent services
@@ -71,12 +71,12 @@ This in turn means:
 Example:
 ```
 tenant-u1
-в”њв”Ђв”Ђ etcd
-в”њв”Ђв”Ђ ingress
-в”њв”Ђв”Ђ monitoring
-в””в”Ђв”Ђ tenant-u2
-    в”њв”Ђв”Ђ kubernetes-cluster1
-    в””в”Ђв”Ђ postgres-db1
+├── etcd
+├── ingress
+├── monitoring
+└── tenant-u2
+    ├── kubernetes-cluster1
+    └── postgres-db1
 ```
 
 ## Parameters
@@ -123,4 +123,3 @@ resourceQuotas:
   services.loadbalancers: "3"
   pods: "50"
 ```
-

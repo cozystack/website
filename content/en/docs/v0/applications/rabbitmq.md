@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Managed RabbitMQ Service"
 linkTitle: "RabbitMQ"
 weight: 70
@@ -75,5 +75,4 @@ This setting is ignored if the corresponding `resources` value is set.
 | `large`     | `1`    | `2Gi`   |
 | `xlarge`    | `2`    | `4Gi`   |
 | `2xlarge`   | `4`    | `8Gi`   |
-
 

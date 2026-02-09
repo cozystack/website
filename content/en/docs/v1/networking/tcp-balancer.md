@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Managed TCP Load Balancer Service"
 linkTitle: "TCP Load Balancer"
 description: "The Managed TCP Load Balancer Service simplifies the deployment and management of load balancers."
@@ -76,4 +76,3 @@ This setting is ignored if the corresponding `resources` value is set.
 | `large`     | `2`    | `2Gi`   |
 | `xlarge`    | `4`    | `4Gi`   |
 | `2xlarge`   | `8`    | `8Gi`   |
-

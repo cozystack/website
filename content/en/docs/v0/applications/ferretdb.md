@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Managed FerretDB Service"
 linkTitle: "FerretDB"
 weight: 20
@@ -93,4 +93,3 @@ This setting is ignored if the corresponding `resources` value is set.
 | `large`     | `2`    | `2Gi`   |
 | `xlarge`    | `4`    | `4Gi`   |
 | `2xlarge`   | `8`    | `8Gi`   |
-

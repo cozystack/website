@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Managed Kafka Service"
 linkTitle: "Kafka"
 weight: 30
@@ -106,4 +106,3 @@ topics:
     partitions: 1
     replicas: 3
 ```
-

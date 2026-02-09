@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Set UTF-8 locale to ensure proper character encoding
-export LC_ALL=C.UTF-8
-export LANG=C.UTF-8
-
 usage() {
   cat <<'EOF'
 Usage: hack/update_apps.sh [OPTIONS]
@@ -113,7 +109,7 @@ EOF
   echo "Processing $app..."
 
   if curl -fsSL --compressed "$readme_url" \
-    | sed $'1s/^\uFEFF//' \
+    | sed '1s/\xEF\xBB\xBF//' \
     | awk 'NR==1 && /^#{1,2} / { next } { print }' >> "$dest_file"; then
     echo "✓ Appended README for $app -> $dest_file"
   else

@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Managed MariaDB Service"
 linkTitle: "MariaDB"
 weight: 40
@@ -174,4 +174,3 @@ databases:
       readonly:
       - user2
 ```
-

@@ -1,4 +1,4 @@
-﻿---
+---
 title: "VPC"
 linkTitle: "VPC"
 description: "Dedicated subnets"
@@ -62,4 +62,3 @@ spec:
     sub02:
       cidr: 172.16.2.0/24
 ```
-

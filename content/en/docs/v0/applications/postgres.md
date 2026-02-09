@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Managed PostgreSQL Service"
 linkTitle: "PostgreSQL"
 weight: 60
@@ -212,4 +212,3 @@ databases:
     extensions:     
     - hstore        
 ```
-
