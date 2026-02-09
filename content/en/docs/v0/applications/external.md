@@ -8,7 +8,7 @@ weight: 5
 Since v0.37.0, Cozystack administrators can add applications from external sources in addition to the standard application catalog.
 These applications will appear in the same application catalog and behave like regular managed applications for platform users.
 
-This guide explains howto define a managed application package and how to add it to Cozystack.
+This guide explains how to define a managed application package and how to add it to Cozystack.
 
 
 ## 1. Create an Application Package Repository

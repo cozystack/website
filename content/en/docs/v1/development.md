@@ -267,6 +267,6 @@ make login    # Downloads the kubeconfig into a temporary directory and runs a s
 make proxy    # Enable a SOCKS5 proxy server; mirrord and gost must be installed.
 ```
 
-Socks5 proxy can be configured in a browser to access services of a cluster running in sandbox. Firefox has an handy extension for toogling proxy on/off:
+Socks5 proxy can be configured in a browser to access services of a cluster running in sandbox. Firefox has a handy extension for toogling proxy on/off:
 
 - [Proxy Toggle](https://addons.mozilla.org/en-US/firefox/addon/proxy-toggle/)
