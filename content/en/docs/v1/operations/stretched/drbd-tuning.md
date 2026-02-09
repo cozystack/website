@@ -51,4 +51,4 @@ These values are tuned for inter-datacenter environments with higher latency tha
 
 Adjusting these settings helps avoid unnecessary fencing and workload disruption in stretched clusters.
 
-Also note the guide on [generic DRBD tuning]({{{% ref "/docs/v1/storage/drbd-tuning" %}}).
+Also note the guide on [generic DRBD tuning]({{% ref "/docs/v1/storage/drbd-tuning" %}}).

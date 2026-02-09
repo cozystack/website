@@ -8,7 +8,7 @@ aliases:
   - /docs/v0/talos/hardware-requirements
 ---
 
-Cozystack utilizes [Talos Linux]({{{% ref "/docs/v0/guides/talos" %}}), a minimalistic Linux distribution designed solely to run Kubernetes.
+Cozystack utilizes [Talos Linux]({{% ref "/docs/v0/guides/talos" %}}), a minimalistic Linux distribution designed solely to run Kubernetes.
 Usually, this means you cannot share a server with any services other than those run by Cozystack.
 The good news is that whichever service you need, Cozystack will run it perfectly: securely, efficiently, and
 in a fully containerized or virtualized environment.
@@ -52,7 +52,7 @@ Separating disks by role is the primary and more reliable option.
 **Using a single disk**
 
 It's possible to use a single disk with space allocated for user storage.
-See [How to install Talos on a single-disk machine]({{{% ref "/docs/v0/install/how-to/single-disk" %}})
+See [How to install Talos on a single-disk machine]({{% ref "/docs/v0/install/how-to/single-disk" %}})
 Using a local SSD disk is recommended.
 
 **Networking:**
@@ -85,7 +85,7 @@ For a production environment, consider the following:
 
 ## Distributed Cluster
 
-You can build a [distributed cluster]({{{% ref "/docs/v0/operations/stretched/" %}}) with Cozystack.
+You can build a [distributed cluster]({{% ref "/docs/v0/operations/stretched/" %}}) with Cozystack.
 
 **Networking:**
 
@@ -118,4 +118,4 @@ Achieving high availability adds to the basic production environment requirement
 
 ## System Resource Planning
 
-For detailed recommendations on system resource allocation (CPU and memory) per node, based on cluster scale and number of tenants, refer to [System Resource Planning Recommendations]({{{% ref "/docs/v0/install/resource-planning" %}}).
+For detailed recommendations on system resource allocation (CPU and memory) per node, based on cluster scale and number of tenants, refer to [System Resource Planning Recommendations]({{% ref "/docs/v0/install/resource-planning" %}}).

@@ -10,7 +10,7 @@ A **tenant** in Cozystack is the primary unit of isolation and security, analogo
 Each tenant represents an isolated environment with its own resources, networking, and RBAC (role-based access control).
 Some cloud providers use the term "projects" for a similar entity.
 
-Cozystack administrators and users create tenants using the [Tenant application]({{{% ref "/docs/v0/applications/tenant" %}})
+Cozystack administrators and users create tenants using the [Tenant application]({{% ref "/docs/v0/applications/tenant" %}})
 from the application catalog.
 Tenants can be created via the Cozystack dashboard (UI), `kubectl`, or directly via Cozystack API.
 
@@ -30,7 +30,7 @@ In turn, children can use their parent's services.
 
 ### Sharing Cluster Services
 
-Tenants may have [cluster services]({{{% ref "/docs/v0/operations/services" %}}) deployed in them.
+Tenants may have [cluster services]({{% ref "/docs/v0/operations/services" %}}) deployed in them.
 Cluster services are middleware services providing core functionality to the tenants and user-facing applications.
 
 The `root` tenant has a set of services like `etcd`, `ingress`, and `monitoring` by default.
@@ -40,8 +40,8 @@ For example, a Cozystack user creates the following tenants and services:
 
 - Tenant `foo` inside of tenant `root`, having its own instances of `etcd` and `monitoring` running.
 - Tenant `bar` inside of tenant `foo`, having its own instance of `etcd`.
-- [Tenant Kubernetes cluster]({{{% ref "/docs/v0/kubernetes" %}}) and a
-  [Postgres database]({{{% ref "/docs/v0/applications/postgres" %}}) in the tenant `bar`.
+- [Tenant Kubernetes cluster]({{% ref "/docs/v0/kubernetes" %}}) and a
+  [Postgres database]({{% ref "/docs/v0/applications/postgres" %}}) in the tenant `bar`.
 
 All applications need services like `ingress` and `monitoring`. 
 Since tenant `bar` does not have these services, the applications will use the parent tenant's services.
@@ -80,5 +80,5 @@ For example:
 
 ### Reference
 
-See the reference for the application implementing tenant management: [`tenant`]({{{% ref "/docs/v0/applications/tenant#parameters" %}})
+See the reference for the application implementing tenant management: [`tenant`]({{% ref "/docs/v0/applications/tenant#parameters" %}})
 

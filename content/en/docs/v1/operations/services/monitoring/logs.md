@@ -3,10 +3,6 @@ title: "Monitoring Logs"
 linkTitle: "Logs"
 description: "Learn how to collect, store, search, and analyze logs in Cozystack using Fluent Bit and VictoriaLogs for comprehensive observability."
 weight: 11
-menu:
-  docs:
-    parent: "Monitoring"
-    weight: 40
 ---
 
 ## Collecting and Storing Logs
@@ -25,7 +21,7 @@ Log storages are configured through the monitoring hub parameters. Each tenant c
 | `logsStorages[i].storage` | Persistent volume size | `string` | `"10Gi"` |
 | `logsStorages[i].storageClassName` | StorageClass for data persistence | `string` | `"replicated"` |
 
-For detailed configuration options, see [Monitoring Hub Reference]({{{% ref "docs/v1/operations/services/monitoring" %}}).
+For detailed configuration options, see [Monitoring Hub Reference]({{% ref "docs/v1/operations/services/monitoring" %}}).
 
 ### Fluent Bit Inputs and Outputs
 
@@ -156,4 +152,4 @@ def log_event(level, message, **kwargs):
     logger.info(json.dumps(log_entry))
 ```
 
-Ensure Fluent Bit parsers are configured to handle your log format. For setup details, see [Monitoring Setup]({{{% ref "docs/v1/operations/services/monitoring/setup" %}}).
+Ensure Fluent Bit parsers are configured to handle your log format. For setup details, see [Monitoring Setup]({{% ref "docs/v1/operations/services/monitoring/setup" %}}).

@@ -12,7 +12,7 @@ aliases:
 
 You might want to override specific options for the components.
 To achieve this, you must specify values in JSON or YAML format using the `data.values-<component>` option
-in the [Cozystack ConfigMap]({{{% ref "/docs/v1/operations/configuration/configmap" %}}).
+in the [Cozystack ConfigMap]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
 
 For example, if you want to overwrite `k8sServiceHost` and `k8sServicePort` for cilium,
 take a look at its [values.yaml](https://github.com/cozystack/cozystack/blob/238061efbc0da61d60068f5de31d6eaa35c4d994/packages/system/cilium/values.yaml#L18-L19) file.
@@ -41,7 +41,7 @@ Bundles have optional components that need to be explicitly enabled (included) i
 Regular bundle components can, on the other hand, be disabled (excluded) from the installation, when you don't need them.
 
 Use options `bundle-enable` and `bundle-disable`, providing comma-separated lists of the components.
-For example, [installing Cozystack in Hetzner]({{{% ref "/docs/v1/install/providers/hetzner" %}})
+For example, [installing Cozystack in Hetzner]({{% ref "/docs/v1/install/providers/hetzner" %}})
 requires swapping default load balancer, MetalLB, with one made specifically for Hetzner, called RobotLB:
 
 ```yaml

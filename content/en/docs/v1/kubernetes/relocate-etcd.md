@@ -43,4 +43,4 @@ kubectl wait --for=condition=ready pod -n $NAMESPACE $RM --timeout=2m
 kubectl etcd -n $NAMESPACE -p $RM members
 ```
 
-To learn more about tenant nesting and shared services, read the [Tenants guide]({{{% ref "/docs/v1/guides/tenants" %}}).
+To learn more about tenant nesting and shared services, read the [Tenants guide]({{% ref "/docs/v1/guides/tenants" %}}).

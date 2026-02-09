@@ -6,17 +6,17 @@ weight: 30
 ---
 
 **The third step** in deploying a Cozystack cluster is to install Cozystack on a Kubernetes cluster that has been previously installed and configured on Talos Linux nodes.
-A prerequisite to this step is having [installed a Kubernetes cluster]({{{% ref "/docs/v0/install/kubernetes" %}}).
+A prerequisite to this step is having [installed a Kubernetes cluster]({{% ref "/docs/v0/install/kubernetes" %}}).
 
-If this is your first time installing Cozystack, consider starting with the [Cozystack tutorial]({{{% ref "/docs/v0/getting-started" %}}).
+If this is your first time installing Cozystack, consider starting with the [Cozystack tutorial]({{% ref "/docs/v0/getting-started" %}}).
 
 To plan a production-ready installation, follow the guide below.
 It mirrors the tutorial in structure, but gives much more details and explains various installation options.
 
 ## 1. Define Cluster Configuration
 
-Installing Cozystack starts with a single [ConfigMap]({{{% ref "/docs/v0/operations/configuration/configmap" %}}).
-This ConfigMap includes [Cozystack bundle]({{{% ref "/docs/v0/operations/configuration/bundles" %}}) and [components setup]({{{% ref "/docs/v0/operations/configuration/components" %}}),
+Installing Cozystack starts with a single [ConfigMap]({{% ref "/docs/v0/operations/configuration/configmap" %}}).
+This ConfigMap includes [Cozystack bundle]({{% ref "/docs/v0/operations/configuration/bundles" %}}) and [components setup]({{% ref "/docs/v0/operations/configuration/components" %}}),
 key network settings, exposed services, and other options.
 
 Cozystack configuration can be updated after installing it.
@@ -41,7 +41,7 @@ data:
   ipv4-join-cidr: "100.64.0.0/16"
 ```
 
-For the explanation of each configuration parameter, see the [ConfigMap reference]({{{% ref "/docs/v0/operations/configuration/configmap" %}}).
+For the explanation of each configuration parameter, see the [ConfigMap reference]({{% ref "/docs/v0/operations/configuration/configmap" %}}).
 
 
 ### 1.1. Choose a Bundle
@@ -51,16 +51,16 @@ Bundle `paas-full` is the most complete one, as it covers all layers from hardwa
 Choose it if you deploy Cozystack on bare metal or VMs and if you want to use its full power.
 
 If you deploy Cozystack on a provided Kubernetes cluster, or if you only want to deploy a Kubernetes cluster without services, 
-refer to the [bundles overview and comparison]({{{% ref "/docs/v0/operations/configuration/bundles" %}}).
+refer to the [bundles overview and comparison]({{% ref "/docs/v0/operations/configuration/bundles" %}}).
 
 ### 1.2. Fine-tune the Components
 
 You can add some optional components or remove ones that are included by default.
-Refer to the [components reference]({{{% ref "/docs/v0/operations/configuration/components" %}}).
+Refer to the [components reference]({{% ref "/docs/v0/operations/configuration/components" %}}).
 
 If you deploy on VMs or dedicated servers of a cloud provider, you'll likely need to disable MetalLB and
 enable a provider-specific load balancer, or use a different network setup.
-Check out the [provider-specific installation]({{{% ref "/docs/v0/install/providers" %}}) section.
+Check out the [provider-specific installation]({{% ref "/docs/v0/install/providers" %}}) section.
 It may include a complete guide for your provider that you can use to deploy a production-ready cluster.
 
 ### 1.3. Define Network Configuration
@@ -80,7 +80,7 @@ ipv4-join-cidr: "100.64.0.0/16"
 ```
 
 {{% alert color="info" %}}
-Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{{% ref "/docs/v0/operations/configuration/telemetry" %}}).
+Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/v0/operations/configuration/telemetry" %}}).
 {{% /alert %}}
 
 
@@ -354,7 +354,7 @@ This step has two options depending on your available infrastructure:
 -   For VMs and dedicated servers from cloud providers, choose the public IP setup.
     [Most cloud providers don't support MetalLB](https://metallb.universe.tf/installation/clouds/).
 
-    Check out the [provider-specific installation]({{{% ref "/docs/v0/install/providers" %}}) section.
+    Check out the [provider-specific installation]({{% ref "/docs/v0/install/providers" %}}) section.
     It may have instructions for your provider, which you can use to deploy a production-ready cluster.
 
 ### 4.a MetalLB Setup
@@ -678,5 +678,5 @@ In this example, `grafana.example.org` is located at 192.168.100.200.
 
 ## Next Steps
 
--   [Configure OIDC]({{{% ref "/docs/v0/operations/oidc/" %}}).
--   [Create a user tenant]({{{% ref "/docs/v0/getting-started/create-tenant" %}}).
+-   [Configure OIDC]({{% ref "/docs/v0/operations/oidc/" %}}).
+-   [Create a user tenant]({{% ref "/docs/v0/getting-started/create-tenant" %}}).

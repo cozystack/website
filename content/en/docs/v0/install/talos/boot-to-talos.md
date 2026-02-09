@@ -146,4 +146,4 @@ When using the **install** mode, `boot-to-talos` performs the following steps:
 
 ## Next Steps
 
-Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{{% ref "/docs/v0/install/kubernetes" %}}).
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/v0/install/kubernetes" %}}).

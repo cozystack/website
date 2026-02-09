@@ -263,4 +263,4 @@ This happens because the default CNI plugin was disabled in the previous step to
 
 Now you have a Kubernetes cluster bootstrapped and ready for installing Cozystack.
 To complete the installation, follow the deployment guide, starting with the
-[Install Cozystack]({{{% ref "/docs/v0/getting-started/install-cozystack" %}}) section.
+[Install Cozystack]({{% ref "/docs/v0/getting-started/install-cozystack" %}}) section.

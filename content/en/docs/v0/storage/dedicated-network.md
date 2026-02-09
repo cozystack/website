@@ -381,4 +381,4 @@ LINSTOR ==> node-connection path list node01 node02
 ### Advanced CRD method
 
 See the example in
-[Multi Datacenter dedicated storage network guide]({{{% ref "/docs/v0/operations/stretched/linstor-dedicated-network" %}})
+[Multi Datacenter dedicated storage network guide]({{% ref "/docs/v0/operations/stretched/linstor-dedicated-network" %}})

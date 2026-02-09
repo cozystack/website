@@ -28,4 +28,4 @@ Note that Cozystack provides its own Talos builds, which are tested and optimize
 
 ## Next steps
 
-Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{{% ref "/docs/v0/install/kubernetes" %}}).
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/v0/install/kubernetes" %}}).

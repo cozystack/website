@@ -3,10 +3,6 @@ title: "Monitoring Alerting"
 linkTitle: "Alerting"
 description: "Configure and manage alerts in Cozystack monitoring system using Alerta and Alertmanager."
 weight: 36
-menu:
-  docs:
-    parent: "Monitoring"
-    weight: 20
 ---
 
 ## Overview
@@ -139,7 +135,7 @@ alerta:
         - warning
 ```
 
-For detailed configuration options, see [Monitoring Hub Reference]({{{% ref "docs/v1/operations/services/monitoring" %}}).
+For detailed configuration options, see [Monitoring Hub Reference]({{% ref "docs/v1/operations/services/monitoring" %}}).
 
 ## Alert Examples
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Set UTF-8 locale to ensure proper character encoding
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
 usage() {
   cat <<'EOF'
 Usage: hack/fill_templates.sh [OPTIONS]

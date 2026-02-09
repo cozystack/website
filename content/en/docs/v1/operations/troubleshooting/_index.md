@@ -110,19 +110,19 @@ Normally all of them should be `Ready` and `Release reconciliation succeeded`
 
 ### Cluster Bootstrapping
 
-See the [Kubernetes installation troubleshooting]({{{% ref "/docs/v1/install/kubernetes/troubleshooting" %}}).
+See the [Kubernetes installation troubleshooting]({{% ref "/docs/v1/install/kubernetes/troubleshooting" %}}).
 
 ### Cluster Maintenance
 
 #### Remove a failed node from the cluster
 
-See the [Cluster Maintenance > Cluster Scaling]({{{% ref "/docs/v1/operations/cluster/scaling" %}}).
+See the [Cluster Maintenance > Cluster Scaling]({{% ref "/docs/v1/operations/cluster/scaling" %}}).
 
 ### Flux CD
 
-[Flux CD troubleshooting]({{{% ref "/docs/v1/operations/troubleshooting/flux-cd" %}}).
+[Flux CD troubleshooting]({{% ref "/docs/v1/operations/troubleshooting/flux-cd" %}}).
 
 ### Kube-OVN
 
-[Kube-OVN troubleshooting]({{{% ref "/docs/v1/operations/troubleshooting/kube-ovn" %}}).
+[Kube-OVN troubleshooting]({{% ref "/docs/v1/operations/troubleshooting/kube-ovn" %}}).
 

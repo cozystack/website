@@ -95,14 +95,6 @@ languages:
 permalinks:
   blog: /:section/:year/:month/:slug/
 
-outputFormats:
-  SearchIndex:
-    baseName: index
-    mediaType: application/json
-
-outputs:
-  home: [HTML, SearchIndex]
-  page: [HTML, SearchIndex]
 
 params:
   description: Free Cloud Platform based on Kubernetes
@@ -114,7 +106,8 @@ params:
   support: /support
   images: [img/cozystack-social.png]
   # Enable Algolia DocSearch
-  algolia_docsearch: true
+  search:
+    algolia: {}
   offlineSearch: false
   version_menu: "Versions"
   version: "0.1"

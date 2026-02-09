@@ -130,7 +130,7 @@ Finally, bootstrap the cluster as usual:
 talm bootstrap -f nodes/node1.yaml
 ```
 
-Read the [Talm configuration guide]({{{% ref "/docs/v0/install/kubernetes/talm" %}}) to learn more.
+Read the [Talm configuration guide]({{% ref "/docs/v0/install/kubernetes/talm" %}}) to learn more.
 
 ### Using talosctl
 
@@ -146,7 +146,7 @@ Finally, bootstrap the cluster using one of the nodes:
 talosctl bootstrap -n <ip> -e <ip>
 ```
 
-Read the [`talosctl` configuration guide]({{{% ref "/docs/v0/install/kubernetes/talosctl" %}}) to learn more.
+Read the [`talosctl` configuration guide]({{% ref "/docs/v0/install/kubernetes/talosctl" %}}) to learn more.
 
 ## 5. Configure Container Registry Mirrors for Tenant Kubernetes
 

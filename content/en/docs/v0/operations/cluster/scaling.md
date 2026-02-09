@@ -9,10 +9,10 @@ weight: 20
 
 Adding a node is done in a way similar to regular Cozystack installation.
 
-1.  [Install Talos on the node]({{{% ref "/docs/v0/install/talos" %}}), using the Cozystack's custom-built Talos image.
+1.  [Install Talos on the node]({{% ref "/docs/v0/install/talos" %}}), using the Cozystack's custom-built Talos image.
 
-1.  Generate the configuration for the new node, using the [Talm]({{{% ref "/docs/v0/install/kubernetes/talm#3-generate-node-configuration-files" %}})
-    or [talosctl]({{{% ref "/docs/v0/install/kubernetes/talosctl#2-generate-node-configuration-files" %}}) guide.
+1.  Generate the configuration for the new node, using the [Talm]({{% ref "/docs/v0/install/kubernetes/talm#3-generate-node-configuration-files" %}})
+    or [talosctl]({{% ref "/docs/v0/install/kubernetes/talosctl#2-generate-node-configuration-files" %}}) guide.
     
     For example, configuring a control plane node:
 
@@ -25,8 +25,8 @@ Adding a node is done in a way similar to regular Cozystack installation.
     talm template -e 192.168.123.20 -n 192.168.123.20 -t templates/worker.yaml -i > nodes/nodeN.yaml
     ```
 
-1.  Apply the generated configuration to the node, using the [Talm]({{{% ref "/docs/v0/install/kubernetes/talm#41-apply-configuration-files" %}})
-    or [talosctl]({{{% ref "/docs/v0/install/kubernetes/talosctl#3-apply-node-configuration" %}}) guide.
+1.  Apply the generated configuration to the node, using the [Talm]({{% ref "/docs/v0/install/kubernetes/talm#41-apply-configuration-files" %}})
+    or [talosctl]({{% ref "/docs/v0/install/kubernetes/talosctl#3-apply-node-configuration" %}}) guide.
     For example:
 
     ```bash

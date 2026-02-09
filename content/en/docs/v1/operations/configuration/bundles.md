@@ -49,17 +49,17 @@ or just need a minimal Kubernetes cluster.
 
 <sup>*</sup> Bundle `iaas-full` is currently on the roadmap, see [cozystack/cozystack#730][iaas-full-gh].
 
-[apps]: {{{% ref "/docs/v1/applications" %}}
-[vm]: {{{% ref "/docs/v1/virtualization" %}}
-[k8s]: {{{% ref "/docs/v1/kubernetes" %}}
-[api]: {{{% ref "/docs/v1/cozystack-api" %}}
-[monitoring subsystem]: {{{% ref "/docs/v1/guides/platform-stack#victoria-metrics" %}}
-[linstor]: {{{% ref "/docs/v1/guides/platform-stack#drbd" %}}
-[kube-ovn]: {{{% ref "/docs/v1/guides/platform-stack#kube-ovn" %}}
-[cilium]: {{{% ref "/docs/v1/guides/platform-stack#cilium" %}}
-[kubevirt]: {{{% ref "/docs/v1/guides/platform-stack#kubevirt" %}}
-[talos linux]: {{{% ref "/docs/v1/guides/platform-stack#talos-linux" %}}
-[kubernetes]: {{{% ref "/docs/v1/guides/platform-stack#kubernetes" %}}
+[apps]: {{% ref "/docs/v1/applications" %}}
+[vm]: {{% ref "/docs/v1/virtualization" %}}
+[k8s]: {{% ref "/docs/v1/kubernetes" %}}
+[api]: {{% ref "/docs/v1/cozystack-api" %}}
+[monitoring subsystem]: {{% ref "/docs/v1/guides/platform-stack#victoria-metrics" %}}
+[linstor]: {{% ref "/docs/v1/guides/platform-stack#drbd" %}}
+[kube-ovn]: {{% ref "/docs/v1/guides/platform-stack#kube-ovn" %}}
+[cilium]: {{% ref "/docs/v1/guides/platform-stack#cilium" %}}
+[kubevirt]: {{% ref "/docs/v1/guides/platform-stack#kubevirt" %}}
+[talos linux]: {{% ref "/docs/v1/guides/platform-stack#talos-linux" %}}
+[kubernetes]: {{% ref "/docs/v1/guides/platform-stack#kubernetes" %}}
 [kubernetes operators]: https://github.com/cozystack/cozystack/blob/c0f742595f1e942a9bf4921e9655142cc9040551/packages/core/platform/bundles/paas-full.yaml#L185-L243
 
 [paas-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/paas-full.yaml
@@ -68,11 +68,11 @@ or just need a minimal Kubernetes cluster.
 [distro-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/distro-full.yaml
 [distro-hosted-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/distro-hosted.yaml
 
-[paas-full]: {{{% ref "/docs/v1/operations/configuration/bundles#paas-full" %}}
+[paas-full]: {{% ref "/docs/v1/operations/configuration/bundles#paas-full" %}}
 [iaas-full]: https://github.com/cozystack/cozystack/issues/730
-[paas-hosted]: {{{% ref "/docs/v1/operations/configuration/bundles#paas-hosted" %}}
-[distro-full]: {{{% ref "/docs/v1/operations/configuration/bundles#distro-full" %}}
-[distro-hosted]: {{{% ref "/docs/v1/operations/configuration/bundles#distro-hosted" %}}
+[paas-hosted]: {{% ref "/docs/v1/operations/configuration/bundles#paas-hosted" %}}
+[distro-full]: {{% ref "/docs/v1/operations/configuration/bundles#distro-full" %}}
+[distro-hosted]: {{% ref "/docs/v1/operations/configuration/bundles#distro-hosted" %}}
 
 
 ## Choosing the Right Bundle
@@ -201,12 +201,12 @@ See [cozystack/cozystack#730][iaas-full-gh].
 ## Learn More
 
 For a full list of configuration options for each bundle, refer to the
-[ConfigMap reference]({{{% ref "/docs/v1/operations/configuration/configmap" %}}).
+[ConfigMap reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
 
 To see the full list of components, how to enable and disable them, refer to the
-[Components reference]({{{% ref "/docs/v1/operations/configuration/components" %}}).
+[Components reference]({{% ref "/docs/v1/operations/configuration/components" %}}).
 
-To deploy a selected bundle, follow the [Cozystack installation guide]({{{% ref "/docs/v1/install/cozystack" %}}) 
-or [provider-specific guides]({{{% ref "/docs/v1/install/providers" %}}).
+To deploy a selected bundle, follow the [Cozystack installation guide]({{% ref "/docs/v1/install/cozystack" %}}) 
+or [provider-specific guides]({{% ref "/docs/v1/install/providers" %}}).
 However, if this your first time installing Cozystack, it's best to use the complete bundle `paas-full` and
-go through the [Cozystack tutorial]({{{% ref "/docs/v1/getting-started" %}}).
+go through the [Cozystack tutorial]({{% ref "/docs/v1/getting-started" %}}).

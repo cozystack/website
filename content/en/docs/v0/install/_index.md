@@ -10,7 +10,7 @@ aliases:
 
 ## Cozystack Tutorial
 
-If this is your first time installing Cozystack, consider [going through the Cozystack tutorial]({{{% ref "/docs/v0/getting-started" %}}).
+If this is your first time installing Cozystack, consider [going through the Cozystack tutorial]({{% ref "/docs/v0/getting-started" %}}).
 It shows the shortest way to getting a proof-of-concept Cozystack cluster.
 
 ## Generic Installation Path
@@ -36,16 +36,16 @@ The key difference of such installation is in using proxy registries for images:
 There are specific guides for cloud providers, covering all the steps from preparing infrastructure to installing and configuring Cozystack.
 If that's your case, we recommend using the guides below:
 
-- [Hetzner]({{{% ref "/docs/v0/install/providers/hetzner" %}})
-- [Oracle Cloud Infrastructure (OCI)]({{{% ref "/docs/v0/install/providers/oracle-cloud" %}})
-- [Servers.com]({{{% ref "/docs/v0/install/providers/servers-com" %}})
+- [Hetzner]({{% ref "/docs/v0/install/providers/hetzner" %}})
+- [Oracle Cloud Infrastructure (OCI)]({{% ref "/docs/v0/install/providers/oracle-cloud" %}})
+- [Servers.com]({{% ref "/docs/v0/install/providers/servers-com" %}})
 
 
 ## Upgrading and Post-deployment Configuration
 
-After you've deployed a cluster, proceed to the [Cluster Administration]({{{% ref "/docs/v0/operations" %}}) section for
+After you've deployed a cluster, proceed to the [Cluster Administration]({{% ref "/docs/v0/operations" %}}) section for
 the next actions:
 
-- [Configure OIDC]({{{% ref "/docs/v0/operations/oidc" %}})
-- [Deploy Cozystack in a Multi-Datacenter Setup]({{{% ref "/docs/v0/operations/stretched" %}})
-- [Upgrading Cozystack]({{{% ref "/docs/v0/operations/cluster/upgrade" %}})
+- [Configure OIDC]({{% ref "/docs/v0/operations/oidc" %}})
+- [Deploy Cozystack in a Multi-Datacenter Setup]({{% ref "/docs/v0/operations/stretched" %}})
+- [Upgrading Cozystack]({{% ref "/docs/v0/operations/cluster/upgrade" %}})

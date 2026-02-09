@@ -31,7 +31,7 @@ To run this tutorial, you will need the following setup:
 
 **OS:**
 -   Any Linux distribution, for example, Ubuntu.<br>
--   There are [other installation methods]({{{% ref "/docs/v1/install/talos" %}}) which require either any Linux or no OS at all to start.
+-   There are [other installation methods]({{% ref "/docs/v1/install/talos" %}}) which require either any Linux or no OS at all to start.
 
 **BIOS/UEFI Settings:**
 -   **Secure Boot must be disabled.**<br>
@@ -48,5 +48,5 @@ To run this tutorial, you will need the following setup:
 -   Nested virtualization enabled.<br>
     Required for virtual machines and tenant kubernetes clusters.
 
-For a more detailed explanation of hardware requirements for different setups, refer to the [Hardware Requirements]({{{% ref "/docs/v1/install/hardware-requirements" %}})
+For a more detailed explanation of hardware requirements for different setups, refer to the [Hardware Requirements]({{% ref "/docs/v1/install/hardware-requirements" %}})
     

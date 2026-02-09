@@ -19,15 +19,15 @@ Troubleshooting advice can be found on our [Troubleshooting Cheatsheet](/docs/op
 
 ### How to allocate space on system disk for user storage
 
-Deploying Cozystack, [How to install Talos on a single-disk machine]({{{% ref "/docs/v1/install/how-to/single-disk" %}})
+Deploying Cozystack, [How to install Talos on a single-disk machine]({{% ref "/docs/v1/install/how-to/single-disk" %}})
 
 ### How to Enable KubeSpan
 
-Deploying Cozystack, [How to Enable KubeSpan]({{{% ref "/docs/v1/install/how-to/kubespan" %}})
+Deploying Cozystack, [How to Enable KubeSpan]({{% ref "/docs/v1/install/how-to/kubespan" %}})
 
 ### How to enable Hugepages
 
-Deploying Cozystack, [How to enable Hugepages]({{{% ref "/docs/v1/install/how-to/hugepages" %}}).
+Deploying Cozystack, [How to enable Hugepages]({{% ref "/docs/v1/install/how-to/hugepages" %}}).
 
 
 ### What if my cloud provider does not support MetalLB
@@ -35,12 +35,12 @@ Deploying Cozystack, [How to enable Hugepages]({{{% ref "/docs/v1/install/how-to
 Most cloud providers don't support MetalLB.
 Instead of using it, you can expose the main ingress controller using the external IPs method.
 
-For deploying on Hetzner, follow the specialized [Hetzner installation guide]({{{% ref "/docs/v1/install/providers/hetzner" %}}).
-For other providers, follow the [Cozystack installation guide, Public IP Setup]({{{% ref "/docs/v1/install/cozystack#4b-public-ip-setup" %}}).
+For deploying on Hetzner, follow the specialized [Hetzner installation guide]({{% ref "/docs/v1/install/providers/hetzner" %}}).
+For other providers, follow the [Cozystack installation guide, Public IP Setup]({{% ref "/docs/v1/install/cozystack#4b-public-ip-setup" %}}).
 
 ### Public-network Kubernetes deployment
 
-Deploying Cozystack, [Deploy with public networks]({{{% ref "/docs/v1/install/how-to/public-ip" %}}).
+Deploying Cozystack, [Deploy with public networks]({{% ref "/docs/v1/install/how-to/public-ip" %}}).
 
 ## Operations
 
@@ -58,22 +58,22 @@ Here you can find reference repository to learn how to configure Cozystack servi
 
 ### How to generate kubeconfig for tenant users
 
-Moved to [How to generate kubeconfig for tenant users]({{{% ref "/docs/v1/operations/faq/generate-kubeconfig" %}}).
+Moved to [How to generate kubeconfig for tenant users]({{% ref "/docs/v1/operations/faq/generate-kubeconfig" %}}).
 
 ### How to Rotate Certificate Authority
 
-Moved to Cluster Maintenance, [How to Rotate Certificate Authority]({{{% ref "/docs/v1/operations/cluster/rotate-ca" %}}).
+Moved to Cluster Maintenance, [How to Rotate Certificate Authority]({{% ref "/docs/v1/operations/cluster/rotate-ca" %}}).
 
 ### How to cleanup etcd state
 
-Moved to Troubleshooting: [How to clean up etcd state]({{{% ref "/docs/v1/operations/troubleshooting/etcd#how-to-clean-up-etcd-state" %}}).
+Moved to Troubleshooting: [How to clean up etcd state]({{% ref "/docs/v1/operations/troubleshooting/etcd#how-to-clean-up-etcd-state" %}}).
 
 ## Bundles
 
 ### How to overwrite parameters for specific components
 
-Moved to Cluster configuration, [Components reference]({{{% ref "/docs/v1/operations/configuration/components#overwriting-component-parameters" %}}).
+Moved to Cluster configuration, [Components reference]({{% ref "/docs/v1/operations/configuration/components#overwriting-component-parameters" %}}).
 
 ### How to disable some components from bundle
 
-Moved to Cluster configuration, [Components reference]({{{% ref "/docs/v1/operations/configuration/components#enabling-and-disabling-components" %}}).
+Moved to Cluster configuration, [Components reference]({{% ref "/docs/v1/operations/configuration/components#enabling-and-disabling-components" %}}).

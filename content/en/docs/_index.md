@@ -10,6 +10,22 @@ menu:
     weight: 40
 ---
 
-Cozystack documentation is available for two major versions. Please select the version that corresponds to the Cozystack installation you are using.
+**New users:** Start with [v1 documentation](/docs/v1/) — the current stable release.
 
-If you're unsure which version you're using, check your Cozystack installation or refer to the [release notes](https://github.com/cozystack/cozystack/releases).
+**Existing v0.4x users:** Continue with [v0 documentation](/docs/v0/) until you're ready to [upgrade](/docs/v1/operations/upgrades/).
+
+### Check Your Current Version
+
+If you have an existing installation, run:
+
+```bash
+kubectl get deployment -n cozy-system
+```
+
+- **v1:** You will see a `cozystack-operator` deployment.
+- **v0:** You will see a `cozystack` deployment (the legacy installer).
+- **Namespace not found:** Cozystack is not installed — start with [v1](/docs/v1/).
+
+**Additional Resources:**
+- [Release notes](https://github.com/cozystack/cozystack/releases)
+- [v0 to v1 upgrade guide](/docs/v1/operations/upgrades/)

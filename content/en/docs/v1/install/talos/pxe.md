@@ -91,4 +91,4 @@ Now they should automatically boot from your PXE server.
 
 ## Next Steps
 
-Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{{% ref "/docs/v1/install/kubernetes" %}}).
+Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/v1/install/kubernetes" %}}).

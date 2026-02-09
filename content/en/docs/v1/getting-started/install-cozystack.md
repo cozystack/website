@@ -55,14 +55,14 @@ However, let's overview and explain each value:
 -   `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
 -   `api-server-endpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
 -   `data.bundle-name: "paas-full"` means that we're using the Cozystack bundle `paas-full`, the most complete set of components.
-    Learn more about bundles in the [Cozystack Bundles reference]({{{% ref "/docs/v1/operations/configuration/bundles" %}}).
+    Learn more about bundles in the [Cozystack Bundles reference]({{% ref "/docs/v1/operations/configuration/bundles" %}}).
 -   `data.expose-services: "dashboard,api"` means that we want to make Cozystack dashboard (UI) and API accessible by users.
 -   `ipv4-*` are internal networking configurations for the underlying Kubernetes cluster.
 
-You can learn more about this configuration file in the [Cozystack ConfigMap reference]({{{% ref "/docs/v1/operations/configuration/configmap" %}}).
+You can learn more about this configuration file in the [Cozystack ConfigMap reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
 
 {{% alert color="info" %}}
-Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{{% ref "/docs/v1/operations/configuration/telemetry" %}}).
+Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/v1/operations/configuration/telemetry" %}}).
 {{% /alert %}}
 
 
@@ -309,7 +309,7 @@ This step has two options depending on your available infrastructure:
 -   For VMs and dedicated servers from cloud providers, choose the public IP setup.
     [Most cloud providers don't support MetalLB](https://metallb.universe.tf/installation/clouds/).
 
-    Check out the [provider-specific installation]({{{% ref "/docs/v1/install/providers" %}}) section.
+    Check out the [provider-specific installation]({{% ref "/docs/v1/install/providers" %}}) section.
     It may have instructions for your provider, which you can use to deploy a production-ready cluster.
 
 ### 4.a MetalLB Setup
@@ -646,4 +646,4 @@ In this example, `grafana.example.org` is located at 192.168.100.200.
 
 ## Next Step
 
-Continue the Cozystack tutorial by [creating a user tenant]({{{% ref "/docs/v1/getting-started/create-tenant" %}}).
+Continue the Cozystack tutorial by [creating a user tenant]({{% ref "/docs/v1/getting-started/create-tenant" %}}).
