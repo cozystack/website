@@ -74,9 +74,15 @@ Core packages do not use Helm to apply manifests; they are intended to be used o
 ### [system](https://github.com/cozystack/cozystack/tree/main/packages/system)
 
 System packages configure the system to manage and deploy user applications. The
-necessary system components are specified in the bundle configuration. This can also
-include components without an operator, whose installation can be triggered as part
-of user applications.
+necessary system components are specified in the bundle configuration.
+
+System packages include two kinds of components:
+
+- **Operators** (e.g., `postgres-operator`, `kafka-operator`, `redis-operator`): Controllers
+  that know how to manage the full lifecycle of a specific application, including day-2 operations.
+- **Upstream Helm charts** for applications without a dedicated operator (e.g., `nats`, `ingress-nginx`):
+  These charts are placed in system so that apps and extra packages can deploy them
+  via Flux `HelmRelease` CRs, effectively using FluxCD as the operator.
 
 {{% alert color="info" %}}
 System packages use Helm to install and are managed by FluxCD.
@@ -86,7 +92,42 @@ System packages use Helm to install and are managed by FluxCD.
 
 These user-facing applications appear in the dashboard and include manifests to be applied to the cluster.
 
-They should not contain business logic, because they are managed by operators installed from system.
+Apps charts serve as a high-level API for users. They define only the parameters that
+should be exposed and validated through `values.schema.json`, keeping the interface
+minimal and secure. Apps charts should not contain business logic for deploying the
+application itself — instead they delegate to an operator or to FluxCD.
+
+Depending on whether the application has a dedicated operator, apps follow one of two patterns:
+
+#### Operator-based pattern
+
+When an application has a dedicated operator (e.g., PostgreSQL, MongoDB, Redis, Kafka),
+the app chart creates **CRD instances** that the operator manages:
+
+```
+packages/system/postgres-operator/   # Operator Helm chart
+packages/apps/postgres/              # App chart creates postgresql.cnpg.io/v1.Cluster CRs
+```
+
+The operator handles all deployment details and day-2 operations (scaling, backups, failover).
+The app chart simply creates the appropriate CRD with values derived from user input.
+
+#### HelmRelease-based pattern
+
+When an application has no dedicated operator and a Helm chart is the standard deployment
+method, the upstream chart is placed in `system/` and the app chart creates a
+**Flux `HelmRelease` CR** pointing to it:
+
+```
+packages/system/nats/                # Upstream NATS Helm chart
+packages/apps/nats/                  # App chart creates helm.toolkit.fluxcd.io/v2.HelmRelease
+```
+
+In this case FluxCD acts as the operator, managing the Helm release lifecycle. The app
+chart controls which upstream values are exposed to the user, providing an additional layer
+of security — users cannot bypass validation to deploy the chart with arbitrary values.
+
+Other examples of this pattern: `extra/ingress`, `extra/seaweedfs`, `extra/monitoring`.
 
 ### [extra](https://github.com/cozystack/cozystack/tree/main/packages/extra)
 
@@ -96,6 +137,8 @@ They are allowed to use by bottom tenants installed in current tenant namespace.
 Read more about [Tenant System](/docs/guides/concepts/#tenant-system) on the Core Concepts page.
 
 It is possible to use only one application type within a single tenant namespace.
+
+Extra packages follow the same two architectural patterns as apps (operator-based or HelmRelease-based).
 
 {{% alert color="info" %}}
 Apps and extra packages use Helm for application and are installed from the dashboard and managed by FluxCD.

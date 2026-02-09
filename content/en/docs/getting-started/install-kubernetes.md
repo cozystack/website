@@ -10,7 +10,7 @@ weight: 15
 We start this step of the tutorial, having [three nodes with Talos Linux installed on them]({{% ref "/docs/getting-started/install-talos" %}}).
 
 As a result of this step, we will have a Kubernetes cluster installed, configured, and ready to install Cozystack.
-We will also have a `kubeconfgig` for this cluster, and will have performed basic checks on the cluster.
+We will also have a `kubeconfig` for this cluster, and will have performed basic checks on the cluster.
 
 ## Installing Kubernetes
 
