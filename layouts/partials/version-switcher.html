@@ -1,0 +1,28 @@
+{{- if .Site.Params.versions -}}
+{{- $currentPath := .Page.RelPermalink -}}
+{{- $currentVersionID := "" -}}
+{{- $currentVersionUrl := "" -}}
+{{- range .Site.Params.versions -}}
+  {{- if hasPrefix $currentPath .url -}}
+    {{- $currentVersionID = .id -}}
+    {{- $currentVersionUrl = .url -}}
+  {{- end -}}
+{{- end -}}
+
+<div class="version-switcher">
+  {{- range .Site.Params.versions }}
+  {{- $targetPath := .url -}}
+  {{- if $currentVersionUrl -}}
+    {{- $subPath := strings.TrimPrefix $currentVersionUrl $currentPath -}}
+    {{- $candidatePath := printf "%s%s" .url $subPath -}}
+    {{- $trimmed := strings.TrimRight "/" $candidatePath -}}
+    {{- with site.GetPage $trimmed -}}
+      {{- $targetPath = .RelPermalink -}}
+    {{- end -}}
+  {{- end -}}
+  <a href="{{ $targetPath }}" class="version-switcher__item{{ if eq .id $currentVersionID }} version-switcher__item--active{{ end }}">
+    {{- .version -}}
+  </a>
+  {{- end }}
+</div>
+{{- end -}}

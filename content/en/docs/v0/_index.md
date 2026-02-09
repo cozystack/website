@@ -1,6 +1,6 @@
 ---
 title: "Cozystack v0 Documentation"
-linkTitle: "v0"
+linkTitle: "Cozystack v0"
 description: "Free PaaS platform and framework for building clouds"
 taxonomyCloud: []
 cascade:

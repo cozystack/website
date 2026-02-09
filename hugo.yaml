@@ -110,17 +110,15 @@ params:
     algolia: {}
   offlineSearch: false
   version_menu: "Versions"
-  version: "0.1"
-  archived_version: false
   version_menu_pagelinks: true
-  url_latest_version: https://cozystack.io/docs
-  #versions:
-  #  - version: "v2.2"
-  #    url: https://fluxcd.io
-  #  - version: "v2.1"
-  #    url: https://v2-1.docs.fluxcd.io
-  #  - version: "v2.0"
-  #    url: https://v2-0.docs.fluxcd.io
+  latest_version_id: "v1"
+  versions:
+    - version: "v1"
+      url: "/docs/v1/"
+      id: "v1"
+    - version: "v0"
+      url: "/docs/v0/"
+      id: "v0"
   logos:
   #  navbar: flux-horizontal-white.png
   #  hero: flux-horizontal-color.png

@@ -247,3 +247,41 @@ nav.navbar {
     color: #3c6ddd !important;
   }
 }
+
+// Sidebar version switcher
+.version-switcher {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+
+  &__item {
+    flex: 1;
+    text-align: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $cozy-dark-blue;
+    background: rgba($cozy-dark-blue, 0.05);
+    border: 1px solid rgba($cozy-dark-blue, 0.2);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: rgba($cozy-dark-blue, 0.12);
+      color: $cozy-dark-blue !important;
+      text-decoration: none;
+    }
+
+    &--active {
+      background: $cozy-dark-blue;
+      color: $cozy-white;
+      border-color: $cozy-dark-blue;
+
+      &:hover {
+        background: $cozy-darkest-blue;
+        color: $cozy-white !important;
+      }
+    }
+  }
+}
