@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Virtual Machine Disk"
 linkTitle: "Virtual Machine Disk"
 weight: 20

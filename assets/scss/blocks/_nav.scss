@@ -269,8 +269,6 @@ nav.navbar {
 
     &:hover {
       background: rgba($cozy-dark-blue, 0.12);
-      color: $cozy-dark-blue !important;
-      text-decoration: none;
     }
 
     &--active {
@@ -280,7 +278,6 @@ nav.navbar {
 
       &:hover {
         background: $cozy-darkest-blue;
-        color: $cozy-white !important;
       }
     }
   }

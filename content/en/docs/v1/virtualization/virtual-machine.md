@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Virtual Machine (simple)"
 linkTitle: "Virtual Machine (simple)"
 weight: 30

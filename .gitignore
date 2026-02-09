@@ -21,3 +21,6 @@ hugo/
 
 # IDE files
 .idea
+
+# Claude Code local settings
+.claude/

@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Managed MongoDB Service"
 linkTitle: "MongoDB"
 weight: 65
