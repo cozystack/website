@@ -182,7 +182,16 @@ machine:
     nodeIP:
       validSubnets:
         - 10.2.0.0/24                  # Azure VNet subnet
+    # Required for external cloud provider (ProviderID assignment)
+    extraArgs:
+      cloud-provider: external
 ```
+
+{{% alert title="Important" color="warning" %}}
+The `cloud-provider: external` setting is required for the Azure cloud-controller-manager to assign ProviderID to nodes.
+Without it, the cluster-autoscaler cannot match Kubernetes nodes to Azure VMSS instances.
+This setting must be present on **all** nodes in the cluster, including control plane nodes.
+{{% /alert %}}
 
 All other settings (cluster tokens, control plane endpoint, extensions, etc.) remain the same as the Hetzner config.
 
