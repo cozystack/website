@@ -1,0 +1,49 @@
+.all-pages-info-banner {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  min-height: 50px;
+  width: 100%;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  background-color: #0175e4;
+  color: #ffffff;
+  transition: opacity 150ms ease-out;
+  text-decoration: none;
+
+  // Add padding-top only on larger screens where header is fixed
+  @include media-breakpoint-up(md) {
+    padding-top: calc(5.5rem + 5px); // Offset for fixed header (multi-line on medium screens)
+  }
+
+  // Optimal padding for large screens where navbar is single-line
+  @include media-breakpoint-up(lg) {
+    padding-top: calc(4rem + 5px); // Reduced padding for single-line navbar
+  }
+
+  &:hover {
+    color: #ffffff;
+    opacity: 0.9;
+  }
+
+  .container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &--title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    text-align: center;
+
+    @include media-breakpoint-down(md) {
+      font-size: 0.9rem;
+    }
+  }
+}
+
