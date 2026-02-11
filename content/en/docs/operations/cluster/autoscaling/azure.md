@@ -175,8 +175,11 @@ Create a machine config similar to the Hetzner one, with these Azure-specific ch
 
 ```yaml
 machine:
-  nodeLabels:
+  # Kilo annotations for WireGuard mesh (applied automatically on join)
+  nodeAnnotations:
     kilo.squat.ai/location: azure
+    kilo.squat.ai/persistent-keepalive: "20"
+  nodeLabels:
     topology.kubernetes.io/zone: azure
   kubelet:
     nodeIP:
@@ -186,6 +189,10 @@ machine:
     extraArgs:
       cloud-provider: external
 ```
+
+{{% alert title="Note" color="info" %}}
+Kilo reads `kilo.squat.ai/location` from **node annotations**, not labels. The `persistent-keepalive` annotation is critical for Azure nodes behind NAT -- it enables WireGuard NAT traversal, allowing Kilo to discover the real public endpoint of the node automatically.
+{{% /alert %}}
 
 {{% alert title="Important" color="warning" %}}
 The `cloud-provider: external` setting is required for the Azure cloud-controller-manager to assign ProviderID to nodes.
@@ -261,29 +268,19 @@ Apply:
 kubectl apply -f package.yaml
 ```
 
-## Step 6: Kilo WireGuard Endpoint Configuration
+## Step 6: Kilo WireGuard Connectivity
 
-Azure nodes behind NAT need their public IP advertised as the WireGuard endpoint. Without this, the WireGuard tunnel between on-premises and Azure nodes will not be established.
+Azure nodes are behind NAT, so their initial WireGuard endpoint will be a private IP. Kilo handles this automatically through WireGuard's built-in NAT traversal when `persistent-keepalive` is configured (already included in the machine config from Step 3).
 
-Each new Azure node needs the annotation:
+The flow works as follows:
+1. The Azure node initiates a WireGuard handshake to the on-premises leader (which has a public IP)
+2. `persistent-keepalive` sends periodic keepalive packets, maintaining the NAT mapping
+3. The on-premises Kilo leader discovers the real public endpoint of the Azure node through WireGuard
+4. Kilo stores the discovered endpoint and uses it for subsequent connections
 
-```bash
-kubectl annotate node <NODE_NAME> \
-  kilo.squat.ai/force-endpoint=<PUBLIC_IP>:51820
-```
-
-### Automated Endpoint Configuration
-
-For automated endpoint detection, create a DaemonSet that runs on Azure nodes (`topology.kubernetes.io/zone=azure`) and:
-
-1. Queries Azure Instance Metadata Service (IMDS) for the public IP:
-   ```bash
-   curl -s -H "Metadata: true" \
-     "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01&format=text"
-   ```
-2. Annotates the node with `kilo.squat.ai/force-endpoint=<PUBLIC_IP>:51820`
-
-This ensures new autoscaled nodes automatically get proper WireGuard connectivity.
+{{% alert title="Note" color="info" %}}
+No manual `force-endpoint` annotation is needed. The `kilo.squat.ai/persistent-keepalive: "20"` annotation in the machine config is sufficient for Kilo to discover NAT endpoints automatically. Without this annotation, Kilo's NAT traversal mechanism is disabled and the tunnel will not stabilize.
+{{% /alert %}}
 
 ## Testing
 
@@ -341,9 +338,11 @@ spec:
 - Check VMSS instance provisioning state: `az vmss list-instances --resource-group <resource-group> --name workers`
 
 ### WireGuard tunnel not established
-- Verify `kilo.squat.ai/force-endpoint` annotation is set with the public IP
+- Verify the node has `kilo.squat.ai/persistent-keepalive: "20"` annotation
+- Verify the node has `kilo.squat.ai/location: azure` annotation (not just as a label)
 - Check NSG allows inbound UDP 51820
 - Inspect kilo logs: `kubectl logs -n cozy-kilo <kilo-pod>`
+- Check for "WireGuard configurations are different" messages repeating every 30 seconds -- this indicates `persistent-keepalive` annotation is missing
 
 ### VM quota errors
 - Check quota: `az vm list-usage --location <location>`

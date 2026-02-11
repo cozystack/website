@@ -102,9 +102,11 @@ machine:
   token: <worker-token>
   ca:
     crt: <base64-encoded-ca-cert>
-  # Node labels (applied automatically on join)
-  nodeLabels:
+  # Kilo annotations for WireGuard mesh (applied automatically on join)
+  nodeAnnotations:
     kilo.squat.ai/location: hetzner-cloud
+    kilo.squat.ai/persistent-keepalive: "20"
+  nodeLabels:
     topology.kubernetes.io/zone: hetzner-cloud
   kubelet:
     image: ghcr.io/siderolabs/kubelet:v1.33.1
@@ -364,13 +366,16 @@ kubectl -n cozy-cluster-autoscaler-hetzner rollout restart \
 
 ## Integration with Kilo
 
-For multi-location clusters using Kilo mesh networking, add location label to machine config:
+For multi-location clusters using Kilo mesh networking, add location and persistent-keepalive as **node annotations** in the machine config:
 
 ```yaml
 machine:
-  nodeLabels:
+  nodeAnnotations:
     kilo.squat.ai/location: hetzner-cloud
-    topology.kubernetes.io/zone: hetzner-cloud
+    kilo.squat.ai/persistent-keepalive: "20"
 ```
 
-This allows Kilo to create proper WireGuard tunnels between your bare-metal nodes and Hetzner Cloud nodes.
+{{% alert title="Important" color="warning" %}}
+Kilo reads `kilo.squat.ai/location` from **node annotations**, not labels. Using `nodeLabels` for this value will not work.
+The `persistent-keepalive` annotation enables WireGuard NAT traversal, which is required for nodes behind NAT and recommended for all cloud nodes to maintain stable tunnels.
+{{% /alert %}}
