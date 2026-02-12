@@ -105,7 +105,7 @@ Typically, the system disk is `/dev/sda`, `/dev/vda`, or similar.
 
 ### Step 2: Locate Node Configuration
 
-If you used [Talm]({{% ref "/docs/install/kubernetes/talm" %}}) to bootstrap your cluster, your node configurations are stored in `nodes/*.yaml` files in your cluster configuration directory.
+If you used [Talm]({{% ref "/docs/v1/install/kubernetes/talm" %}}) to bootstrap your cluster, your node configurations are stored in `nodes/*.yaml` files in your cluster configuration directory.
 
 Each file corresponds to a specific node (e.g., `nodes/node1.yaml`, `nodes/node2.yaml`).
 
@@ -234,7 +234,7 @@ If you need to wipe disks on worker nodes, ensure your node configuration allows
 
 ## Related Documentation
 
-- [Using Talm to Bootstrap Cozystack]({{% ref "/docs/install/kubernetes/talm" %}})
-- [Configuring a Dedicated Network for LINSTOR]({{% ref "/docs/storage/dedicated-network" %}})
-- [Configuring DRBD Resync Controller]({{% ref "/docs/storage/drbd-tuning" %}})
-- [LINSTOR Troubleshooting]({{% ref "/docs/operations/troubleshooting/linstor-controller" %}})
+- [Using Talm to Bootstrap Cozystack]({{% ref "/docs/v1/install/kubernetes/talm" %}})
+- [Configuring a Dedicated Network for LINSTOR]({{% ref "/docs/v1/storage/dedicated-network" %}})
+- [Configuring DRBD Resync Controller]({{% ref "/docs/v1/storage/drbd-tuning" %}})
+- [LINSTOR Troubleshooting]({{% ref "/docs/v1/operations/troubleshooting/linstor-controller" %}})

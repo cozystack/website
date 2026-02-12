@@ -3,6 +3,8 @@ title: "Migrating Virtual Machines from Proxmox"
 linkTitle: "Proxmox Migration"
 description: "Step-by-step guide to migrating virtual machines from Proxmox VE to Cozystack"
 weight: 65
+aliases:
+  - /docs/virtualization/proxmox-migration
 ---
 
 This guide describes the process of migrating virtual machines from Proxmox VE to Cozystack by exporting VM disk images and uploading them to the target environment.
@@ -207,6 +209,6 @@ Use this checklist to track your migration progress:
 
 After successful migration:
 
-- Configure [cloud-init]({{% ref "/docs/virtualization/virtual-machine" %}}) for automated VM setup
-- Review [instance types and profiles]({{% ref "/docs/virtualization/resources" %}}) for optimal resource allocation
-- Consider creating [golden images]({{% ref "/docs/virtualization/vm-image" %}}) for future VM deployments
+- Configure [cloud-init]({{% ref "/docs/v0/virtualization/virtual-machine" %}}) for automated VM setup
+- Review [instance types and profiles]({{% ref "/docs/v0/virtualization/resources" %}}) for optimal resource allocation
+- Consider creating [golden images]({{% ref "/docs/v0/virtualization/vm-image" %}}) for future VM deployments
