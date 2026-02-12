@@ -1,65 +1,70 @@
 ---
 title: "3. Install and Configure Cozystack"
 linkTitle: "3. Install Cozystack"
-description: "Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard."
+description: "Install Cozystack v1.x using Package-based configuration, set up storage and networking, and access the dashboard."
 weight: 20
 ---
 
 ## Objectives
 
-In this step of the tutorial, we'll install Cozystack on top of a [Kubernetes cluster, prepared in the previous step]({{% ref "./install-kubernetes" %}}).
+In this step of the tutorial, we'll install Cozystack v1.x on top of a [Kubernetes cluster, prepared in the previous step]({{% ref "./install-kubernetes" %}}).
 
 The tutorial will guide you through the following stages:
 
-1.  Prepare a Cozystack configuration file
+1.  Prepare a Cozystack Package configuration
 1.  Install Cozystack by applying configuration
 1.  Configure storage
 1.  Configure networking
 1.  Deploy etcd, ingress and monitoring stack in the root tenant
 1.  Finalize deployment and access Cozystack dashboard
 
-## 1. Prepare a Configuration File
+## 1. Prepare a Package Configuration
 
-We will start installing Cozystack by making a configuration file.
-Take the example below and write it in a file **cozystack.yaml**:
+Cozystack v1.x uses a Package resource for configuration instead of a ConfigMap.
+Take the example below and write it in a file **cozystack-package.yaml**:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
+  name: cozystack.cozystack-platform
   namespace: cozy-system
-data:
-  bundle-name: "paas-full"
-  root-host: "example.org"
-  api-server-endpoint: "https://api.example.org:443"
-  expose-services: "dashboard,api"
-  ipv4-pod-cidr: "10.244.0.0/16"
-  ipv4-pod-gateway: "10.244.0.1"
-  ipv4-svc-cidr: "10.96.0.0/16"
-  ipv4-join-cidr: "100.64.0.0/16"
+spec:
+  variant: isp-full
+  components:
+    platform:
+      values:
+        networking:
+          podCIDR: "10.244.0.0/16"
+          podGateway: "10.244.0.1"
+          serviceCIDR: "10.96.0.0/16"
+          joinCIDR: "100.64.0.0/16"
+        publishing:
+          host: "example.org"
+          apiServerEndpoint: "https://api.example.org:6443"
+          exposedServices:
+            - dashboard
+            - api
 ```
 
 Action points:
 
-1.  Replace `example.org` in `data.root-host` and `data.api-server-endpoint` with a routable fully-qualified domain name (FQDN) that you control.
+1.  Replace `example.org` in `publishing.host` and `publishing.apiServerEndpoint` with a routable fully-qualified domain name (FQDN) that you control.
     If you only have a public IP, but no FQDN, use [nip.io](https://nip.io/) with dash notation.
-2.  Use the same values for `data.ipv4*` as on the previous step, where you bootstrapped a Kubernetes cluster with Talm or `talosctl`.
+2.  Use the same values for networking CIDRs as in the previous step, where you bootstrapped a Kubernetes cluster with Talm or `talosctl`.
     Settings provided in the example are sane defaults that can be used in most cases.
 
 There are other values in this config that you don't need to change in the course of the tutorial.
 However, let's overview and explain each value:
 
--   `metadata.name` and `metadata.namespace` define that this is the main
-    [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) of Cozystack.
--   `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
--   `api-server-endpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
--   `data.bundle-name: "paas-full"` means that we're using the Cozystack bundle `paas-full`, the most complete set of components.
-    Learn more about bundles in the [Cozystack Bundles reference]({{% ref "/docs/v1/operations/configuration/bundles" %}}).
--   `data.expose-services: "dashboard,api"` means that we want to make Cozystack dashboard (UI) and API accessible by users.
--   `ipv4-*` are internal networking configurations for the underlying Kubernetes cluster.
+-   `metadata.name` and `metadata.namespace` define that this is the main Package resource for Cozystack platform.
+-   `spec.variant: "isp-full"` specifies the bundle variant - `isp-full` is the most complete set of components (replaces v0.x `paas-full`).
+-   `publishing.host` is the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
+-   `publishing.apiServerEndpoint` is the Kubernetes API endpoint used for generating kubeconfig files. Use routable addresses instead of local-only addresses.
+-   `publishing.exposedServices` defines which services to expose via ingress (dashboard and API in this example).
+-   `networking.*` fields configure internal Kubernetes networking and must match your cluster bootstrap configuration.
 
-You can learn more about this configuration file in the [Cozystack ConfigMap reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
+You can learn more about Package configuration in the [Package Configuration reference]({{% ref "/docs/v1/operations/configuration/package" %}}).
 
 {{% alert color="info" %}}
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/v1/operations/configuration/telemetry" %}}).
@@ -73,11 +78,11 @@ Next, we will install Cozystack and check that the installation is complete and 
 
 ### 2.1. Create Namespace and Apply Configuration
 
-Create a namespace `cozy-system`, then apply the ConfigMap created in the previous step and the installer configuration:
+Create a namespace `cozy-system`, then apply the Package created in the previous step:
 
   ```bash
   kubectl create ns cozy-system
-  kubectl apply -f cozystack.yaml
+  kubectl apply -f cozystack-package.yaml
   ```
 
 
