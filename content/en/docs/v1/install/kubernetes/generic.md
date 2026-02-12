@@ -154,6 +154,8 @@ Initialize the cluster without the default CNI:
 kubeadm init --config kubeadm-config.yaml --skip-phases=addon/kube-proxy
 ```
 
+Do not install a CNI plugin after `kubeadm init` — Cozystack will deploy Cilium automatically.
+
 ### RKE2 Configuration
 
 Create `/etc/rancher/rke2/config.yaml`:
