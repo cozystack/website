@@ -111,7 +111,7 @@ params:
   offlineSearch: false
   version_menu: "Versions"
   version_menu_pagelinks: true
-  latest_version_id: "v1"
+  latest_version_id: "v0"
   versions:
     - version: "v1"
       url: "/docs/v1/"
