@@ -6,6 +6,9 @@ weight: 100
 aliases:
   - /docs/v0/faq
   - /docs/v0/guides/faq
+  - /docs/operations/faq
+  - /docs/faq
+  - /docs/guides/faq
 ---
 
 {{% alert title="Troubleshooting" %}}

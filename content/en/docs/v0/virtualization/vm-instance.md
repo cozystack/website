@@ -4,6 +4,8 @@ linkTitle: "Virtual Machine"
 weight: 10
 aliases:
   - /docs/v0/reference/applications/vm-instance
+  - /docs/virtualization/vm-instance
+  - /docs/reference/applications/vm-instance
 ---
 
 <!--

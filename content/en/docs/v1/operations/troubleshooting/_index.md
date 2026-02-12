@@ -4,7 +4,6 @@ linkTitle: "Troubleshooting"
 description: "This guide shows the initial steps to check your cluster's health and discover problems."
 weight: 110
 aliases:
-  - /docs/troubleshooting
   - /docs/v1/troubleshooting
 ---
 

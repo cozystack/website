@@ -3,6 +3,8 @@ title: "Requirements and Toolchain"
 linkTitle: "Requirements"
 description: "Prepare infrastructure and install the toolchain."
 weight: 1
+aliases:
+  - /docs/getting-started/requirements
 ---
 
 ## Toolchain

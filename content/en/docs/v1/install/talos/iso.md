@@ -4,11 +4,8 @@ linkTitle: ISO
 description: "How to install Talos Linux using ISO"
 weight: 20
 aliases:
-  - /docs/talos/installation/iso
   - /docs/v1/talos/installation/iso
-  - /docs/talos/install/iso
   - /docs/v1/talos/install/iso
-  - /docs/operations/talos/installation/iso
   - /docs/v1/operations/talos/installation/iso
 ---
 

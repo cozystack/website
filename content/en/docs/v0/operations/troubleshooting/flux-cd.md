@@ -3,6 +3,8 @@ title: "Troubleshooting Flux CD"
 linkTitle: "Flux CD"
 description: "Explains how to resolve Flux CD errors."
 weight: 10
+aliases:
+  - /docs/operations/troubleshooting/flux-cd
 ---
 
 ## Diagnosing `install retries exhausted` error

@@ -5,6 +5,8 @@ description: "Configure optional module `nfs-driver` to order volumes from NFS s
 weight: 30
 aliases:
   - /docs/v0/operations/storage/nfs
+  - /docs/storage/nfs
+  - /docs/operations/storage/nfs
 ---
 
 ## Enable NFS driver

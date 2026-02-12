@@ -3,6 +3,8 @@ title: "Monitoring Alerting"
 linkTitle: "Alerting"
 description: "Configure and manage alerts in Cozystack monitoring system using Alerta and Alertmanager."
 weight: 36
+aliases:
+  - /docs/operations/services/monitoring/alerting
 ---
 
 ## Overview

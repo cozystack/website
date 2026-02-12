@@ -7,6 +7,10 @@ aliases:
   - /docs/v0/operations/talos/configuration/talm
   - /docs/v0/talos/bootstrap/talm
   - /docs/v0/talos/configuration/talm
+  - /docs/install/kubernetes/talm
+  - /docs/operations/talos/configuration/talm
+  - /docs/talos/bootstrap/talm
+  - /docs/talos/configuration/talm
 ---
 
 This guide explains how to install and configure Kubernetes on a Talos Linux cluster using Talm.

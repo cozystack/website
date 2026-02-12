@@ -5,6 +5,8 @@ description: "The Nginx-based HTTP caching service is designed to optimize web t
 weight: 20
 aliases:
   - /docs/v0/reference/applications/http-cache
+  - /docs/networking/http-cache
+  - /docs/reference/applications/http-cache
 ---
 
 <!--

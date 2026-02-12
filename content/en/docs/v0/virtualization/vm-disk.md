@@ -4,6 +4,8 @@ linkTitle: "Virtual Machine Disk"
 weight: 20
 aliases:
   - /docs/v0/reference/applications/vm-disk
+  - /docs/virtualization/vm-disk
+  - /docs/reference/applications/vm-disk
 ---
 
 <!--

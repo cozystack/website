@@ -1,6 +1,8 @@
 ---
 title: "Etcd Service Reference"
 linkTitle: "Etcd"
+aliases:
+  - /docs/operations/services/etcd
 ---
 
 <!--

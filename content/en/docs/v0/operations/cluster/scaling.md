@@ -3,6 +3,8 @@ title: "Cluster Scaling: Adding and Removing Nodes"
 linkTitle: "Cluster Scaling"
 description: "Adding and removing nodes in a Cozystack cluster."
 weight: 20
+aliases:
+  - /docs/operations/cluster/scaling
 ---
 
 ## How to add a node to a Cozystack cluster

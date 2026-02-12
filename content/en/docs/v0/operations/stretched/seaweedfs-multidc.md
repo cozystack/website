@@ -3,6 +3,8 @@ title: "SeaweedFS Multi-DC Configuration"
 linkTitle: "SeaweedFS Multi-DC"
 description: "How to deploy SeaweedFS across multiple data-centres"
 weight: 175
+aliases:
+  - /docs/operations/stretched/seaweedfs-multidc
 ---
 
 This guide explains how to deploy SeaweedFS over several data centers ("multi-DC").

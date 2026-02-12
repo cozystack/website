@@ -3,6 +3,8 @@ title: "Troubleshooting LINSTOR controller crash loops"
 linkTitle: "LINSTOR: controller problems"
 description: "Explains how to resolve LINSTOR controller problems."
 weight: 100
+aliases:
+  - /docs/operations/troubleshooting/linstor-controller
 ---
 
 ## Restarting the controller

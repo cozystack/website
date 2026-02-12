@@ -3,6 +3,8 @@ title: "Talos Linux in Cozystack"
 linkTitle: "Talos Linux"
 description: "Learn why Cozystack uses Talos Linux as the foundation for its Kubernetes clusters. Discover the benefits of Talos Linux, including reliability, scalability, and Kubernetes optimization."
 weight: 30
+aliases:
+  - /docs/guides/talos
 ---
 
 ## Why Cozystack is Using Talos Linux

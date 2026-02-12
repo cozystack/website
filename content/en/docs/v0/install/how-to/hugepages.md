@@ -3,6 +3,8 @@ title: "How to enable Hugepages"
 linkTitle: "Enable Hugepages"
 description: "How to enable Hugepages"
 weight: 130
+aliases:
+  - /docs/install/how-to/hugepages
 ---
 
 Enabling Hugepages for Cozystack can be done both on initial installation and at any time after it.

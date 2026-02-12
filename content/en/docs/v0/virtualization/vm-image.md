@@ -3,6 +3,8 @@ title: "Creating and Using Named VM Images"
 linkTitle: "Golden Images"
 description: "Guide to creating, managing, and using golden (named) VM images in Cozystack to speed up virtual machine deployment."
 weight: 35
+aliases:
+  - /docs/virtualization/vm-image
 ---
 
 <!--

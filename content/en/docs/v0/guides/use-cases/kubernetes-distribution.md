@@ -5,6 +5,8 @@ description: "How to use Cozystack as Kubernetes distribution"
 weight: 30
 aliases:
   - /docs/v0/use-cases/kubernetes-distribution
+  - /docs/guides/use-cases/kubernetes-distribution
+  - /docs/use-cases/kubernetes-distribution
 ---
 
 You can use Cozystack as Kubernetes distribution for Bare Metal

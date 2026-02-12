@@ -4,6 +4,7 @@ linkTitle: Troubleshooting
 description: "Instructions for resolving typical problems that can occur when installing Kubernetes with `talm`, `talos-bootstrap`, or `talosctl`."
 weight: 40
 aliases:
+  - /docs/install/kubernetes/troubleshooting
 ---
 
 This page has instructions for resolving typical problems that can occur when installing Kubernetes with `talm`, `talos-bootstrap`, or `talosctl`.

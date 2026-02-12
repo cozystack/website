@@ -5,6 +5,8 @@ description: "Guides for deploying Cozystack clusters on specific cloud and host
 weight: 40
 aliases:
   - /docs/v0/talos/install
+  - /docs/install/providers
+  - /docs/talos/install
 ---
 
 This section has guides for deploying Cozystack clusters on specific cloud and hosting providers.

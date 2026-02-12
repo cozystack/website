@@ -5,6 +5,8 @@ description: "Reference for the Cozystack ConfigMap, which defines key configura
 weight: 10
 aliases:
   - /docs/v0/install/cozystack/configmap
+  - /docs/operations/configuration/configmap
+  - /docs/install/cozystack/configmap
 ---
 
 This page explains the role of Cozystack's main ConfigMap and provides a full reference for its values.

@@ -3,6 +3,8 @@ title: "VPCs and Subnets"
 linkTitle: "VPCs and Subnets"
 description: "How to use VPCs and Subnets"
 weight: 20
+aliases:
+  - /docs/operations/vpc
 ---
 
 ## Attaching Workloads to Subnets

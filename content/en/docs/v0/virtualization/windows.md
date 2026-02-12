@@ -5,6 +5,8 @@ description: "Running Windows VMs in Cozystack"
 weight: 50
 aliases:
   - /docs/v0/operations/virtualization/windows
+  - /docs/virtualization/windows
+  - /docs/operations/virtualization/windows
 ---
 
 Cozystack can run Windows virtual machines.

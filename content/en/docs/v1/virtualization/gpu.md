@@ -4,7 +4,6 @@ linkTitle: "GPU Passthrough"
 description: "Running VMs with GPU Passthrough"
 weight: 40
 aliases:
-  - /docs/operations/virtualization/gpu
   - /docs/v1/operations/virtualization/gpu
 ---
 

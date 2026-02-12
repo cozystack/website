@@ -7,6 +7,10 @@ aliases:
   - /docs/v0/operations/talos/installation/hetzner
   - /docs/v0/talos/installation/hetzner
   - /docs/v0/talos/install/hetzner
+  - /docs/install/providers/hetzner
+  - /docs/operations/talos/installation/hetzner
+  - /docs/talos/installation/hetzner
+  - /docs/talos/install/hetzner
 ---
 
 This guide will help you to install Cozystack on a dedicated server from [Hetzner](https://www.hetzner.com/).

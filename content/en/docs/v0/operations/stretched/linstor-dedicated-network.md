@@ -3,6 +3,8 @@ title: "Configuring a Dedicated Network for Distributed Storage with LINSTOR"
 linkTitle: "Distributed Storage Network"
 description: "Configure LINSTOR to prefer local links for storage and fall back to inter-datacenter connections"
 weight: 40
+aliases:
+  - /docs/operations/stretched/linstor-dedicated-network
 ---
 
 ## Introduction

@@ -6,6 +6,9 @@ weight: 20
 aliases:
   - /docs/v0/operations/talos/configuration/air-gapped
   - /docs/v0/talos/bootstrap/air-gapped
+  - /docs/install/kubernetes/air-gapped
+  - /docs/operations/talos/configuration/air-gapped
+  - /docs/talos/bootstrap/air-gapped
 ---
 
 ## Introduction

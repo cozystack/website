@@ -4,11 +4,8 @@ linkTitle: Hetzner.com
 description: "How to install Cozystack in Hetzner"
 weight: 30
 aliases:
-  - /docs/operations/talos/installation/hetzner
   - /docs/v1/operations/talos/installation/hetzner
-  - /docs/talos/installation/hetzner
   - /docs/v1/talos/installation/hetzner
-  - /docs/talos/install/hetzner
   - /docs/v1/talos/install/hetzner
 ---
 

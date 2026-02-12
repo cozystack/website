@@ -4,9 +4,7 @@ linkTitle: "Telemetry"
 description: "Cozystack Telemetry"
 weight: 60
 aliases:
-  - /docs/telemetry
   - /docs/v1/telemetry
-  - /docs/operations/telemetry
   - /docs/v1/operations/telemetry
 ---
 

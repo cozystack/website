@@ -4,6 +4,8 @@ linkTitle: "FerretDB"
 weight: 20
 aliases:
   - /docs/v0/reference/applications/ferretdb
+  - /docs/applications/ferretdb
+  - /docs/reference/applications/ferretdb
 ---
 
 <!--

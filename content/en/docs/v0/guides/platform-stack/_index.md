@@ -3,6 +3,8 @@ title: "Cozystack Architecture and Platform Stack"
 linkTitle: "Platform Stack"
 description: "Learn of the core components that power the functionality and flexibility of Cozystack"
 weight: 15
+aliases:
+  - /docs/guides/platform-stack
 ---
 
 This article explains Cozystack composition through its four layers, and shows the role and value of each component in the platform stack.

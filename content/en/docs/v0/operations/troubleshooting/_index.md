@@ -5,6 +5,8 @@ description: "This guide shows the initial steps to check your cluster's health 
 weight: 110
 aliases:
   - /docs/v0/troubleshooting
+  - /docs/operations/troubleshooting
+  - /docs/troubleshooting
 ---
 
 This guide shows the initial steps to check your cluster's health and discover problems.

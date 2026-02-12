@@ -3,6 +3,8 @@ title: "Installing and Configuring Cozystack"
 linkTitle: "3. Install Cozystack"
 description: "Step 3: Installing Cozystack on a Kubernetes Cluster, getting administrative access, and configuring the dashboard."
 weight: 30
+aliases:
+  - /docs/install/cozystack
 ---
 
 **The third step** in deploying a Cozystack cluster is to install Cozystack on a Kubernetes cluster that has been previously installed and configured on Talos Linux nodes.

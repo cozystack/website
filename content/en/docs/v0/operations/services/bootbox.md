@@ -1,6 +1,8 @@
 ---
 title: "BootBox Service Reference"
 linkTitle: "BootBox"
+aliases:
+  - /docs/operations/services/bootbox
 ---
 
 <!--

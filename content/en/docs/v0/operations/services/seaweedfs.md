@@ -1,6 +1,8 @@
 ---
 title: "SeaweedFS Service Reference"
 linkTitle: "SeaweedFS"
+aliases:
+  - /docs/operations/services/seaweedfs
 ---
 
 <!--

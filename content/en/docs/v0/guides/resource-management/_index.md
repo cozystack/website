@@ -5,6 +5,8 @@ description: >
   How CPU, memory, and presets work across VMs, Kubernetes clusters, and managed
   workloads in Cozystack; and how to reconfigure resources via the UI, CLI, or API.
 weight: 25
+aliases:
+  - /docs/guides/resource-management
 ---
 
 ## Introduction

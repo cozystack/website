@@ -4,7 +4,6 @@ linkTitle: "Resources Reference"
 description: "Reference for VM Instance Types and Instance Profiles"
 weight: 100
 aliases:
-  - /docs/operations/virtualization/resources
   - /docs/v1/operations/virtualization/resources
 ---
 

@@ -1,6 +1,8 @@
 ---
 title: "Ingress-NGINX Controller Reference"
 linkTitle: "Ingress"
+aliases:
+  - /docs/operations/services/ingress
 ---
 
 <!--

@@ -4,11 +4,8 @@ linkTitle: PXE
 description: "How to install Talos Linux using temporary DHCP and PXE servers running in Docker containers."
 weight: 15
 aliases:
-  - /docs/talos/installation/pxe
   - /docs/v1/talos/installation/pxe
-  - /docs/talos/install/pxe
   - /docs/v1/talos/install/pxe
-  - /docs/operations/talos/installation/pxe
   - /docs/v1/operations/talos/installation/pxe
 ---
 

@@ -4,7 +4,9 @@ linkTitle: "Getting Started"
 description: "Make your first steps, run a home lab, build a POC with Cozystack."
 weight: 10
 aliases:
-- /docs/v0/get-started
+  - /docs/v0/get-started
+  - /docs/getting-started
+  - /docs/get-started
 ---
 
 This tutorial will guide you through your first deployment of a Cozystack cluster.

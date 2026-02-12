@@ -6,6 +6,9 @@ weight: 10
 aliases:
   - /docs/v0/upgrade
   - /docs/v0/operations/upgrade
+  - /docs/operations/cluster/upgrade
+  - /docs/upgrade
+  - /docs/operations/upgrade
 ---
 
 ## About Cozystack Versions

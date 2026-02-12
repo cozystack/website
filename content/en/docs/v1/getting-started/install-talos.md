@@ -4,9 +4,7 @@ linkTitle: "1. Install Talos"
 description: "Install Talos Linux on any machine using cozystack/boot-to-talos."
 weight: 10
 aliases:
-  - /docs/getting-started/first-deployment
   - /docs/v1/getting-started/first-deployment
-  - /docs/getting-started/deploy-cluster
   - /docs/v1/getting-started/deploy-cluster
 ---
 

@@ -6,6 +6,9 @@ weight: 60
 aliases:
   - /docs/v0/operations/virtualization/mikrotik
   - /docs/v0/networking/mikrotik
+  - /docs/virtualization/mikrotik
+  - /docs/operations/virtualization/mikrotik
+  - /docs/networking/mikrotik
 ---
 
 ## Prerequisites

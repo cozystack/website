@@ -6,6 +6,9 @@ weight: 30
 aliases:
   - /docs/v0/stretched/linstor
   - /docs/v0/operations/stretched/linstor
+  - /docs/operations/stretched/drbd-tuning
+  - /docs/stretched/linstor
+  - /docs/operations/stretched/linstor
 ---
 
 ## Introduction

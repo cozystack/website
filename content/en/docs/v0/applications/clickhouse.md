@@ -5,6 +5,8 @@ description: ""
 weight: 10
 aliases:
   - /docs/v0/reference/applications/clickhouse
+  - /docs/applications/clickhouse
+  - /docs/reference/applications/clickhouse
 ---
 
 <!--

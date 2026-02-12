@@ -7,6 +7,10 @@ aliases:
   - /docs/v0/operations/talos/configuration
   - /docs/v0/talos/bootstrap
   - /docs/v0/talos/configuration
+  - /docs/install/kubernetes
+  - /docs/operations/talos/configuration
+  - /docs/talos/bootstrap
+  - /docs/talos/configuration
 ---
 
 

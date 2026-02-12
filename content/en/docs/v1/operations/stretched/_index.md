@@ -4,7 +4,6 @@ linkTitle: "Multi Datacenter"
 description: "How to run Cozystack on stretched Kubernetes cluster"
 weight: 37
 aliases:
-  - /docs/stretched
   - /docs/v1/stretched
 ---
 

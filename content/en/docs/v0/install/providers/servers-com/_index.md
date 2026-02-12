@@ -7,6 +7,10 @@ aliases:
   - /docs/v0/operations/talos/installation/servers_com
   - /docs/v0/talos/installation/servers_com
   - /docs/v0/talos/install/servers_com
+  - /docs/install/providers/servers-com
+  - /docs/operations/talos/installation/servers_com
+  - /docs/talos/installation/servers_com
+  - /docs/talos/install/servers_com
 ---
 
 ## Before Installation

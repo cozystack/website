@@ -5,6 +5,8 @@ description: "How to configure Google as an Identity Provider"
 weight: 30
 aliases:
   - /docs/v0/oidc/identity_providers/google
+  - /docs/operations/oidc/identity_providers/google
+  - /docs/oidc/identity_providers/google
 ---
 
 ## Configure Google

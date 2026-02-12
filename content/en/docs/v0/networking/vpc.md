@@ -5,6 +5,8 @@ description: "Dedicated subnets"
 weight: 10
 aliases:
   - /docs/v0/reference/applications/vpc
+  - /docs/networking/vpc
+  - /docs/reference/applications/vpc
 ---
 
 <!--

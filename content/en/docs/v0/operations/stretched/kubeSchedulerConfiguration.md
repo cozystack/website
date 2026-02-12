@@ -5,6 +5,8 @@ description: "Kube scheduler configuration"
 weight: 20
 aliases:
   - /docs/v0/stretched/kubeSchedulerConfiguration
+  - /docs/operations/stretched/kubeSchedulerConfiguration
+  - /docs/stretched/kubeSchedulerConfiguration
 ---
 
 ## Label nodes

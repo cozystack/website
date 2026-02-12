@@ -2,6 +2,8 @@
 title: Tenant System
 description: "Learn about tenants, the way Cozystack helps manage resources and improve security."
 weight: 17
+aliases:
+  - /docs/guides/tenants
 ---
 
 ## Introduction

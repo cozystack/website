@@ -5,6 +5,8 @@ description: "Reference for VM Instance Types and Instance Profiles"
 weight: 100
 aliases:
   - /docs/v0/operations/virtualization/resources
+  - /docs/virtualization/resources
+  - /docs/operations/virtualization/resources
 ---
 
 Each virtual machine has these two configuration settings:

@@ -4,7 +4,6 @@ linkTitle: "Dedicated Network"
 description: "Redirect LINSTOR replication traffic to a dedicated network interface for better reliability and performance."
 weight: 10
 aliases:
-  - /docs/operations/storage/dedicated-network
   - /docs/v1/operations/storage/dedicated-network
 ---
 

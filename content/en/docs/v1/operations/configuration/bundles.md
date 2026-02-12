@@ -4,19 +4,12 @@ linkTitle: "Bundles"
 description: "Cozystack bundles reference: composition, configuration, and troubleshooting."
 weight: 20
 aliases:
-  - /docs/guides/bundles
   - /docs/v1/guides/bundles
-  - /docs/operations/bundles/
   - /docs/v1/operations/bundles/
-  - /docs/operations/bundles/paas-full
   - /docs/v1/operations/bundles/paas-full
-  - /docs/operations/bundles/paas-hosted
   - /docs/v1/operations/bundles/paas-hosted
-  - /docs/operations/bundles/distro-full
   - /docs/v1/operations/bundles/distro-full
-  - /docs/operations/bundles/distro-hosted
   - /docs/v1/operations/bundles/distro-hosted
-  - /docs/install/cozystack/bundles
   - /docs/v1/install/cozystack/bundles
 ---
 

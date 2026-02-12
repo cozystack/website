@@ -8,6 +8,11 @@ aliases:
   - /docs/v0/talos/install
   - /docs/v0/operations/talos/installation
   - /docs/v0/operations/talos
+  - /docs/install/talos
+  - /docs/talos/installation
+  - /docs/talos/install
+  - /docs/operations/talos/installation
+  - /docs/operations/talos
 ---
 
 **The first step** in deploying a Cozystack cluster is to install Talos Linux on your bare-metal servers or virtual machines.

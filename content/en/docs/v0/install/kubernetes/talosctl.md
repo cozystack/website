@@ -7,6 +7,10 @@ aliases:
   - /docs/v0/talos/bootstrap/talosctl
   - /docs/v0/talos/configuration/talosctl
   - /docs/v0/operations/talos/configuration/talosctl
+  - /docs/install/kubernetes/talosctl
+  - /docs/talos/bootstrap/talosctl
+  - /docs/talos/configuration/talosctl
+  - /docs/operations/talos/configuration/talosctl
 ---
 
 This guide explains how to prepare a Talos Linux cluster for deploying Cozystack using `talosctl`,

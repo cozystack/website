@@ -3,6 +3,8 @@ title: "3. Install and Configure Cozystack"
 linkTitle: "3. Install Cozystack"
 description: "Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard."
 weight: 20
+aliases:
+  - /docs/getting-started/install-cozystack
 ---
 
 ## Objectives

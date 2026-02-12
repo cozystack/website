@@ -4,13 +4,9 @@ linkTitle: "1. Install Talos"
 description: "Step 1: Installing Talos Linux on virtual machines or bare metal, ready to bootstrap Cozystack cluster."
 weight: 10
 aliases:
-  - /docs/talos/installation
   - /docs/v1/talos/installation
-  - /docs/talos/install
   - /docs/v1/talos/install
-  - /docs/operations/talos/installation
   - /docs/v1/operations/talos/installation
-  - /docs/operations/talos
   - /docs/v1/operations/talos
 ---
 

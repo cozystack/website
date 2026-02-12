@@ -7,6 +7,10 @@ aliases:
   - /docs/v0/talos/installation/pxe
   - /docs/v0/talos/install/pxe
   - /docs/v0/operations/talos/installation/pxe
+  - /docs/install/talos/pxe
+  - /docs/talos/installation/pxe
+  - /docs/talos/install/pxe
+  - /docs/operations/talos/installation/pxe
 ---
 
 This guide explains how to install Talos Linux on bare metal servers or virtual machines

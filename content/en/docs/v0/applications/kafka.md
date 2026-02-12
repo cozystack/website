@@ -4,6 +4,8 @@ linkTitle: "Kafka"
 weight: 30
 aliases:
   - /docs/v0/reference/applications/kafka
+  - /docs/applications/kafka
+  - /docs/reference/applications/kafka
 ---
 
 <!--

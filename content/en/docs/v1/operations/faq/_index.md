@@ -4,9 +4,7 @@ linkTitle: "FAQ / How-tos"
 description: "Knowledge base with FAQ and advanced configurations"
 weight: 100
 aliases:
-  - /docs/faq
   - /docs/v1/faq
-  - /docs/guides/faq
   - /docs/v1/guides/faq
 ---
 

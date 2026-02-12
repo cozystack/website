@@ -5,6 +5,8 @@ description: "The Managed TCP Load Balancer Service simplifies the deployment an
 weight: 30
 aliases:
   - /docs/v0/reference/applications/tcp-balancer
+  - /docs/networking/tcp-balancer
+  - /docs/reference/applications/tcp-balancer
 ---
 
 <!--

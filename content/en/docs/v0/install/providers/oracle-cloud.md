@@ -6,6 +6,9 @@ weight: 25
 aliases:
   - /docs/v0/operations/talos/installation/oracle-cloud
   - /docs/v0/talos/install/oracle-cloud
+  - /docs/install/providers/oracle-cloud
+  - /docs/operations/talos/installation/oracle-cloud
+  - /docs/talos/install/oracle-cloud
 ---
 
 ## Introduction

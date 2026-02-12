@@ -4,7 +4,6 @@ linkTitle: Key Concepts
 description: "Learn about the key concepts of Cozystack, such as management cluster, tenants, and bundles."
 weight: 10
 aliases:
-  - /docs/concepts
   - /docs/v1/concepts
 ---
 

@@ -3,6 +3,8 @@ title: "Monitoring Dashboards"
 linkTitle: "Dashboards"
 description: "Learn how to visualize metrics and create custom dashboards in Grafana for monitoring Cozystack clusters and applications."
 weight: 10
+aliases:
+  - /docs/operations/services/monitoring/dashboards
 ---
 
 ## Overview

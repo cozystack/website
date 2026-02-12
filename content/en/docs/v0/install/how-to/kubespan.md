@@ -3,6 +3,8 @@ title: How to Enable KubeSpan
 linkTitle: Enable KubeSpan
 description: "How to Enable KubeSpan."
 weight: 120
+aliases:
+  - /docs/install/how-to/kubespan
 ---
 
 Talos Linux provides a full mesh WireGuard network for your cluster.

@@ -5,6 +5,8 @@ description: "How to configure GitLab as an Identity Provider"
 weight: 30
 aliases:
   - /docs/v0/oidc/identity_providers/gitlab
+  - /docs/operations/oidc/identity_providers/gitlab
+  - /docs/oidc/identity_providers/gitlab
 ---
 
 You can use Gitlab identity provider for Keycloak

@@ -4,7 +4,7 @@ title: Cozystack Internals and Developer Guides
 description: Cozystack Internals and Development
 weight: 100
 aliases:
-- /docs/development/development
+  - /docs/v1/development/development
 ---
 
 

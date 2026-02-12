@@ -3,6 +3,8 @@ title: How to relocate etcd replicas in tenant clusters
 linkTitle: How to relocate etcd replicas
 description: "Learn how to relocate replicas of tenant etcd clusters, which are used by tenant Kubernetes clusters."
 weight: 100
+aliases:
+  - /docs/kubernetes/relocate-etcd
 ---
 
 Tenant Kubernetes clusters are using their own etcd clusters, not the one that is used by the management cluster.

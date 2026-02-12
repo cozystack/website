@@ -3,6 +3,8 @@ title: "Monitoring Setup"
 linkTitle: "Setup"
 description: "Guide to setting up and configuring monitoring in Cozystack"
 weight: 2
+aliases:
+  - /docs/operations/services/monitoring/setup
 ---
 
 ## Overview

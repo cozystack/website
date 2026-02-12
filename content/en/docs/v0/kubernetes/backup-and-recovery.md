@@ -5,6 +5,8 @@ description: "How to back up and restore resources in a Cozystack cluster."
 weight: 40
 aliases:
   - /docs/v0/guides/backups
+  - /docs/kubernetes/backup-and-recovery
+  - /docs/guides/backups
 ---
 
 {{% alert color="warning" %}}

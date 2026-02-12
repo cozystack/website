@@ -4,7 +4,6 @@ linkTitle: "Kube scheduler configuration"
 description: "Kube scheduler configuration"
 weight: 20
 aliases:
-  - /docs/stretched/kubeSchedulerConfiguration
   - /docs/v1/stretched/kubeSchedulerConfiguration
 ---
 

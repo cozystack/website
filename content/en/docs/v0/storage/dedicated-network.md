@@ -5,6 +5,8 @@ description: "Redirect LINSTOR replication traffic to a dedicated network interf
 weight: 10
 aliases:
   - /docs/v0/operations/storage/dedicated-network
+  - /docs/storage/dedicated-network
+  - /docs/operations/storage/dedicated-network
 ---
 
 This guide explains how to improve storage reliability and performance by redirecting LINSTOR replication traffic

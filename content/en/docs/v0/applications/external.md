@@ -3,6 +3,8 @@ title: "Adding External Applications to Cozystack Catalog"
 linkTitle: "External Apps"
 description: "Learn how to add managed applications from external sources"
 weight: 5
+aliases:
+  - /docs/applications/external
 ---
 
 Since v0.37.0, Cozystack administrators can add applications from external sources in addition to the standard application catalog.

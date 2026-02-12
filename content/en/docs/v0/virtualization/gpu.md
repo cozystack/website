@@ -5,6 +5,8 @@ description: "Running VMs with GPU Passthrough"
 weight: 40
 aliases:
   - /docs/v0/operations/virtualization/gpu
+  - /docs/virtualization/gpu
+  - /docs/operations/virtualization/gpu
 ---
 
 This section demonstrates how to deploy virtual machines (VMs) with GPU passthrough using Cozystack.

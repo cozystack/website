@@ -4,7 +4,6 @@ linkTitle: "Components"
 description: "Full reference for Cozystack components."
 weight: 30
 aliases:
-  - /docs/install/cozystack/components
   - /docs/v1/install/cozystack/components
 ---
 

@@ -3,6 +3,8 @@ title: "Monitoring Logs"
 linkTitle: "Logs"
 description: "Learn how to collect, store, search, and analyze logs in Cozystack using Fluent Bit and VictoriaLogs for comprehensive observability."
 weight: 11
+aliases:
+  - /docs/operations/services/monitoring/logs
 ---
 
 ## Collecting and Storing Logs

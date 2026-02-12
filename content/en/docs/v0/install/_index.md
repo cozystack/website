@@ -6,6 +6,9 @@ weight: 30
 aliases:
   - /docs/v0/talos
   - /docs/v0/operations/talos
+  - /docs/install
+  - /docs/talos
+  - /docs/operations/talos
 ---
 
 ## Cozystack Tutorial

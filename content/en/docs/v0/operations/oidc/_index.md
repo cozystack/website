@@ -5,4 +5,6 @@ description: "OIDC in Cozystack"
 weight: 36
 aliases:
   - /docs/v0/oidc
+  - /docs/operations/oidc
+  - /docs/oidc
 ---

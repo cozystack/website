@@ -3,6 +3,8 @@ title: "System Resource Planning Recommendations"
 linkTitle: "Resource Planning"
 description: "How much system resources to allocate per node depending on cluster scale."
 weight: 6
+aliases:
+  - /docs/install/resource-planning
 ---
 
 ## System Resource Planning Recommendations

@@ -3,6 +3,8 @@ title: "Troubleshooting Piraeus custom resources"
 linkTitle: "Piraeus: custom resources got stuck"
 description: "Explains how to resolve issues with stuck Piraeus custom resources."
 weight: 150
+aliases:
+  - /docs/operations/troubleshooting/piraeus-custom-resources
 ---
 
 ## Introduction

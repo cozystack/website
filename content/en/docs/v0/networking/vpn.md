@@ -5,6 +5,8 @@ description: "Managed VPN Service simplifies the deployment and management of VP
 weight: 10
 aliases:
   - /docs/v0/reference/applications/vpn
+  - /docs/networking/vpn
+  - /docs/reference/applications/vpn
 ---
 
 <!--

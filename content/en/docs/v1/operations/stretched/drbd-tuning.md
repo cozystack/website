@@ -4,9 +4,7 @@ linkTitle: "LINSTOR DRBD"
 description: "Parameters required to make Linstor work in a stretched cluster"
 weight: 30
 aliases:
-  - /docs/stretched/linstor
   - /docs/v1/stretched/linstor
-  - /docs/operations/stretched/linstor
   - /docs/v1/operations/stretched/linstor
 ---
 

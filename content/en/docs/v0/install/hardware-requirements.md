@@ -6,6 +6,9 @@ weight: 5
 aliases:
   - /docs/v0/getting-started/hardware-requirements
   - /docs/v0/talos/hardware-requirements
+  - /docs/install/hardware-requirements
+  - /docs/getting-started/hardware-requirements
+  - /docs/talos/hardware-requirements
 ---
 
 Cozystack utilizes [Talos Linux]({{% ref "/docs/v0/guides/talos" %}}), a minimalistic Linux distribution designed solely to run Kubernetes.

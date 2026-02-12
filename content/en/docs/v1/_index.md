@@ -7,7 +7,6 @@ cascade:
   type: docs
 weight: 10
 aliases:
-  - /docs/reference
   - /docs/v1/reference
 ---
 

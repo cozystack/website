@@ -4,7 +4,6 @@ linkTitle: "ConfigMap"
 description: "Reference for the Cozystack ConfigMap, which defines key configuration values for a Cozystack installation and operations."
 weight: 10
 aliases:
-  - /docs/install/cozystack/configmap
   - /docs/v1/install/cozystack/configmap
 ---
 

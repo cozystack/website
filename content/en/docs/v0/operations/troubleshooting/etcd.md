@@ -3,6 +3,8 @@ title: "Troubleshooting etcd"
 linkTitle: "etcd"
 description: "Explains how to resolve etcd problems and errors."
 weight: 10
+aliases:
+  - /docs/operations/troubleshooting/etcd
 ---
 
 

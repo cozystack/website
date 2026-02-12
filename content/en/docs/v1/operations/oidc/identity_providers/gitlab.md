@@ -4,7 +4,6 @@ linkTitle: Gitlab
 description: "How to configure GitLab as an Identity Provider"
 weight: 30
 aliases:
-  - /docs/oidc/identity_providers/gitlab
   - /docs/v1/oidc/identity_providers/gitlab
 ---
 

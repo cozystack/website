@@ -3,6 +3,8 @@ title: "Troubleshooting LINSTOR CrashLoopBackOff related to a broken database"
 linkTitle: "LINSTOR: broken database"
 description: "Explains how to resolve LINSTOR CrashLoopBackOff related to a broken database."
 weight: 110
+aliases:
+  - /docs/operations/troubleshooting/linstor-database
 ---
 
 {{% alert color="warning" %}}

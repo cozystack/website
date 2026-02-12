@@ -4,9 +4,7 @@ linkTitle: "Hardware Requirements"
 description: "Define the hardware requirements for your Cozystack use case."
 weight: 5
 aliases:
-  - /docs/getting-started/hardware-requirements
   - /docs/v1/getting-started/hardware-requirements
-  - /docs/talos/hardware-requirements
   - /docs/v1/talos/hardware-requirements
 ---
 

@@ -4,6 +4,8 @@ linkTitle: "RabbitMQ"
 weight: 70
 aliases:
   - /docs/v0/reference/applications/rabbitmq
+  - /docs/applications/rabbitmq
+  - /docs/reference/applications/rabbitmq
 ---
 
 <!--

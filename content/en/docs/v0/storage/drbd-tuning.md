@@ -3,6 +3,8 @@ title: "Configuring DRBD Resync Controller in LINSTOR"
 linkTitle: "Configuring DRBD"
 description: "Learn how to tune DRBD resync controller parameters in LINSTOR for faster synchronization"
 weight: 20
+aliases:
+  - /docs/storage/drbd-tuning
 ---
 
 Cozystack administrators can adjust DRBD synchronization performance by setting tuning parameters

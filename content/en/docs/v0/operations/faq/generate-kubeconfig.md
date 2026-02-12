@@ -2,6 +2,8 @@
 title: "How to generate kubeconfig for tenant users"
 linkTitle: "Generate tenant kubeconfig"
 description: "A guide on how to generate a kubeconfig file for tenant users in Cozystack."
+aliases:
+  - /docs/operations/faq/generate-kubeconfig
 ---
 
 To generate a `kubeconfig` for tenant users, use the following script.

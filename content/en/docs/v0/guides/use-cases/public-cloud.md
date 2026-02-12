@@ -5,6 +5,8 @@ description: "How to use Cozystack to build public cloud"
 weight: 10
 aliases:
   - /docs/v0/use-cases/public-cloud
+  - /docs/guides/use-cases/public-cloud
+  - /docs/use-cases/public-cloud
 ---
 
 You can use Cozystack as backend for a public cloud

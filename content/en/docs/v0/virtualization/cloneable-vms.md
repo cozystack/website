@@ -3,6 +3,8 @@ title: "Cloneable Virtual Machines"
 linkTitle: "Cloneable Virtual Machines"
 description: "Creating cloneable virtual machines"
 weight: 40
+aliases:
+  - /docs/virtualization/cloneable-vms
 ---
 
 To create a cloneable VM, you will need to create a `VMDisk` and a `VMInstance`. This guide uses an `ubuntu` base image

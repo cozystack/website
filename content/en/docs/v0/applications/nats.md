@@ -4,6 +4,8 @@ linkTitle: "NATS"
 weight: 50
 aliases:
   - /docs/v0/reference/applications/nats
+  - /docs/applications/nats
+  - /docs/reference/applications/nats
 ---
 
 <!--

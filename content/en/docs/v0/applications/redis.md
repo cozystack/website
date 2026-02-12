@@ -4,6 +4,8 @@ linkTitle: "Redis"
 weight: 80
 aliases:
   - /docs/v0/reference/applications/redis
+  - /docs/applications/redis
+  - /docs/reference/applications/redis
 ---
 
 <!--

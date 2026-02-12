@@ -7,6 +7,10 @@ aliases:
   - /docs/v0/talos/bootstrap/talos-bootstrap
   - /docs/v0/talos/configuration/talos-bootstrap
   - /docs/v0/operations/talos/configuration/talos-bootstrap
+  - /docs/install/kubernetes/talos-bootstrap
+  - /docs/talos/bootstrap/talos-bootstrap
+  - /docs/talos/configuration/talos-bootstrap
+  - /docs/operations/talos/configuration/talos-bootstrap
 ---
 
 [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) is an interactive script for bootstrapping Kubernetes clusters on Talos OS.

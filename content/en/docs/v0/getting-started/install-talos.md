@@ -6,6 +6,9 @@ weight: 10
 aliases:
   - /docs/v0/getting-started/first-deployment
   - /docs/v0/getting-started/deploy-cluster
+  - /docs/getting-started/install-talos
+  - /docs/getting-started/first-deployment
+  - /docs/getting-started/deploy-cluster
 ---
 
 ## Before you begin

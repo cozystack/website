@@ -5,6 +5,8 @@ description: "Install Talos Linux using boot-to-talos, a convenient CLI applicat
 weight: 5
 aliases:
   - /docs/v0/talos/install/kexec
+  - /docs/install/talos/boot-to-talos
+  - /docs/talos/install/kexec
 ---
 
 This guide explains how to install Talos Linux on a host running any other Linux distribution using `boot-to-talos`.

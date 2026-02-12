@@ -7,6 +7,10 @@ aliases:
   - /docs/v0/talos/installation/iso
   - /docs/v0/talos/install/iso
   - /docs/v0/operations/talos/installation/iso
+  - /docs/install/talos/iso
+  - /docs/talos/installation/iso
+  - /docs/talos/install/iso
+  - /docs/operations/talos/installation/iso
 ---
 
 This guide explains how to install Talos Linux on bare metal servers or virtual machines.

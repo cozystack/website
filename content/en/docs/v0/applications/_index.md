@@ -6,6 +6,9 @@ weight: 45
 aliases:
   - /docs/v0/components
   - /docs/v0/guides/applications
+  - /docs/applications
+  - /docs/components
+  - /docs/guides/applications
 ---
 
 ## Available Application Versions

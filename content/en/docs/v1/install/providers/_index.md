@@ -4,7 +4,6 @@ linkTitle: "Provider-Specific Guides"
 description: "Guides for deploying Cozystack clusters on specific cloud and hosting providers."
 weight: 40
 aliases:
-  - /docs/talos/install
   - /docs/v1/talos/install
 ---
 

@@ -4,6 +4,8 @@ linkTitle: "Virtual Machine (simple)"
 weight: 30
 aliases:
   - /docs/v0/reference/applications/virtual-machine
+  - /docs/virtualization/virtual-machine
+  - /docs/reference/applications/virtual-machine
 ---
 
 <!--

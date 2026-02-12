@@ -4,7 +4,6 @@ linkTitle: boot-to-talos
 description: "Install Talos Linux using boot-to-talos, a convenient CLI application requiring nothing but a Talos image."
 weight: 5
 aliases:
-  - /docs/talos/install/kexec
   - /docs/v1/talos/install/kexec
 ---
 

@@ -3,6 +3,8 @@ title: "Monitoring Troubleshooting"
 linkTitle: "Troubleshooting"
 description: "Guide to diagnosing and resolving issues with monitoring components in Cozystack"
 weight: 10
+aliases:
+  - /docs/operations/troubleshooting/monitoring-troubleshooting
 ---
 
 This guide provides troubleshooting steps for common issues with monitoring components in Cozystack, including metrics collection, alerting, visualization, and log collection.

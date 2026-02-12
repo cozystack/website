@@ -4,9 +4,7 @@ linkTitle: "Upgrading Cozystack"
 description: "Upgrade Cozystack system components."
 weight: 10
 aliases:
-  - /docs/upgrade
   - /docs/v1/upgrade
-  - /docs/operations/upgrade
   - /docs/v1/operations/upgrade
 ---
 

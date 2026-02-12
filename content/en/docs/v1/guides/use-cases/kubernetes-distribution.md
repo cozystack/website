@@ -4,7 +4,6 @@ linkTitle: Kubernetes Distribution
 description: "How to use Cozystack as Kubernetes distribution"
 weight: 30
 aliases:
-  - /docs/use-cases/kubernetes-distribution
   - /docs/v1/use-cases/kubernetes-distribution
 ---
 

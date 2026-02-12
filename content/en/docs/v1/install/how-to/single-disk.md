@@ -4,7 +4,6 @@ linkTitle: "Install on a single disk"
 description: "How to install Talos on a single-disk machine, allocating space on system disk for user storage"
 weight: 100
 aliases:
-  - /docs/operations/faq/single-disk-installation
   - /docs/v1/operations/faq/single-disk-installation
 ---
 

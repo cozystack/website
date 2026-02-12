@@ -5,6 +5,8 @@ description: "Full reference for Cozystack components."
 weight: 30
 aliases:
   - /docs/v0/install/cozystack/components
+  - /docs/operations/configuration/components
+  - /docs/install/cozystack/components
 ---
 
 ### Overwriting Component Parameters

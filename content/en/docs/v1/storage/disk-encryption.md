@@ -4,7 +4,6 @@ linkTitle: "Encrypted Storage"
 description: "Learn how to configure and use at-rest volume encryption for persistent volumes with LINSTOR"
 weight: 100
 aliases:
-  - /docs/operations/storage/disk-encryption
   - /docs/v1/operations/storage/disk-encryption
 ---
 

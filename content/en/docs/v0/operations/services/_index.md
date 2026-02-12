@@ -3,6 +3,8 @@ title: "Cluster Services Reference"
 linkTitle: "Cluster Services"
 description: "Learn about middleware system packages, deployed to tenants and providing major functionality to user apps."
 weight: 35
+aliases:
+  - /docs/operations/services
 ---
 
 ## Monitoring

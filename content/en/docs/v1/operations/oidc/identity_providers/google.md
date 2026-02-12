@@ -4,7 +4,6 @@ linkTitle: Google
 description: "How to configure Google as an Identity Provider"
 weight: 30
 aliases:
-  - /docs/oidc/identity_providers/google
   - /docs/v1/oidc/identity_providers/google
 ---
 

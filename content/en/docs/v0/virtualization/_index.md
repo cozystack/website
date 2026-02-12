@@ -4,8 +4,11 @@ linkTitle: "Virtualization"
 description: "Everything about deploying, configuring, and using virtual machines in Cozystack."
 weight: 50
 aliases:
-   - /docs/v0/operations/virtualization
-   - /docs/v0/operations/virtualization/virtual-machines
+  - /docs/v0/operations/virtualization
+  - /docs/v0/operations/virtualization/virtual-machines
+  - /docs/virtualization
+  - /docs/operations/virtualization
+  - /docs/operations/virtualization/virtual-machines
 ---
 
 This guide explains how virtualization works within Cozystack.

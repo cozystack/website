@@ -4,6 +4,8 @@ linkTitle: "MariaDB"
 weight: 40
 aliases:
   - /docs/v0/reference/applications/mariadb
+  - /docs/applications/mysql
+  - /docs/reference/applications/mariadb
 ---
 
 <!--

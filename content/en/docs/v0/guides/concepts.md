@@ -5,6 +5,8 @@ description: "Learn about the key concepts of Cozystack, such as management clus
 weight: 10
 aliases:
   - /docs/v0/concepts
+  - /docs/guides/concepts
+  - /docs/concepts
 ---
 
 Cozystack is an open-source, Kubernetes-native platform that turns bare-metal or virtual infrastructure into a fully featured, multi-tenant cloud.

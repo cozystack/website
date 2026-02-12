@@ -3,6 +3,8 @@ title: "2. Install and Bootstrap a Kubernetes cluster"
 linkTitle: "2. Install Kubernetes"
 description: "Use Talm CLI to bootstrap a Kubernetes cluster, ready for Cozystack."
 weight: 15
+aliases:
+  - /docs/getting-started/install-kubernetes
 ---
 
 ## Objectives

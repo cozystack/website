@@ -3,6 +3,8 @@ title: "How to Rotate Certificate Authority"
 linkTitle: "How to rotate CA"
 description: "How to Rotate Certificate Authority"
 weight: 110
+aliases:
+  - /docs/operations/cluster/rotate-ca
 ---
 
 

@@ -11,6 +11,14 @@ aliases:
   - /docs/v0/operations/bundles/distro-full
   - /docs/v0/operations/bundles/distro-hosted
   - /docs/v0/install/cozystack/bundles
+  - /docs/operations/configuration/bundles
+  - /docs/guides/bundles
+  - /docs/operations/bundles/
+  - /docs/operations/bundles/paas-full
+  - /docs/operations/bundles/paas-hosted
+  - /docs/operations/bundles/distro-full
+  - /docs/operations/bundles/distro-hosted
+  - /docs/install/cozystack/bundles
 ---
 
 ## Introduction

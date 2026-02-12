@@ -3,7 +3,9 @@ title: Cozystack API
 description: Cozystack API
 weight: 70
 aliases:
-- /docs/v0/development/cozystack-api
+  - /docs/v0/development/cozystack-api
+  - /docs/cozystack-api
+  - /docs/development/cozystack-api
 ---
 
 ## Cozystack API

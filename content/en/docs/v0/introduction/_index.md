@@ -3,6 +3,8 @@ title: "Introduction to Cozystack"
 linkTitle: "Introduction"
 description: "Learn what Cozystack is and what you can build with it."
 weight: 9
+aliases:
+  - /docs/introduction
 ---
 
 ## What is Cozystack

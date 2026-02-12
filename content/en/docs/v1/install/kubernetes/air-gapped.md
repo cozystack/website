@@ -4,9 +4,7 @@ linkTitle: Air-Gapped
 description: "Bootstrap a Cozystack cluster in an isolated (air-gapped) environment with container registry mirrors."
 weight: 20
 aliases:
-  - /docs/operations/talos/configuration/air-gapped
   - /docs/v1/operations/talos/configuration/air-gapped
-  - /docs/talos/bootstrap/air-gapped
   - /docs/v1/talos/bootstrap/air-gapped
 ---
 
