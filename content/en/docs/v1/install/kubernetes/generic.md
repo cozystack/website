@@ -43,6 +43,15 @@ apt-get update
 apt-get install -y nfs-common open-iscsi multipath-tools
 ```
 
+### Required Kernel Modules
+
+Load the `br_netfilter` module (required for bridge netfilter sysctl settings):
+
+```bash
+modprobe br_netfilter
+echo "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
+```
+
 ### Required Services
 
 Enable and start required services:
@@ -168,19 +177,28 @@ Download and apply Custom Resource Definitions:
 kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-crds.yaml
 ```
 
-### 2. Create Namespace
+### 2. Deploy Cozystack Operator
+
+Download the generic operator manifest, replace the API server address placeholder, and apply:
 
 ```bash
-kubectl create namespace cozy-system
+curl -fsSL https://github.com/cozystack/cozystack/releases/latest/download/cozystack-operator-generic.yaml \
+  | sed 's/REPLACE_ME/<YOUR_NODE_IP>/' \
+  | kubectl apply -f -
 ```
 
-### 3. Create ConfigMap
+Replace `<YOUR_NODE_IP>` with the IP address of your Kubernetes API server (IP only, without protocol or port).
 
-Create `cozystack-config.yaml` with your cluster configuration.
+The manifest includes the operator deployment, the `cozystack-operator-config` ConfigMap with the API server address, and the `PackageSource` resource.
+
+### 3. Create Platform Package
+
+After the operator starts and reconciles the `PackageSource`, create a `Package` resource to trigger the platform installation.
 
 {{% alert color="warning" %}}
-:warning: **Important**: The `ipv4-pod-cidr` and `ipv4-svc-cidr` values **must match** your Kubernetes cluster configuration.
+:warning: **Important**: The `podCIDR` and `serviceCIDR` values **must match** your Kubernetes cluster configuration.
 Different distributions use different defaults:
+
 - **k3s**: `10.42.0.0/16` (pods), `10.43.0.0/16` (services)
 - **kubeadm**: `10.244.0.0/16` (pods), `10.96.0.0/16` (services)
 - **RKE2**: `10.42.0.0/16` (pods), `10.43.0.0/16` (services)
@@ -189,80 +207,35 @@ Different distributions use different defaults:
 Example for **k3s** (adjust CIDRs for other distributions):
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
-  namespace: cozy-system
-data:
-  root-host: "example.com"
-  api-server-endpoint: "https://<YOUR_NODE_IP>:6443"
-  ipv4-pod-cidr: "10.42.0.0/16"
-  ipv4-pod-gateway: "10.42.0.1"
-  ipv4-svc-cidr: "10.43.0.0/16"
-  ipv4-join-cidr: "100.64.0.0/16"
+  name: cozystack.cozystack-platform
+  # Package is cluster-scoped — no namespace needed
+spec:
+  variant: isp-full-generic
+  components:
+    platform:
+      values:
+        publishing:
+          host: "example.com"
+          apiServerEndpoint: "https://<YOUR_NODE_IP>:6443"
+        networking:
+          podCIDR: "10.42.0.0/16"
+          podGateway: "10.42.0.1"
+          serviceCIDR: "10.43.0.0/16"
+          joinCIDR: "100.64.0.0/16"
 ```
 
 Adjust the values:
 
 | Field | Description |
 | ------- | ------------- |
-| `root-host` | Your domain for Cozystack services |
-| `api-server-endpoint` | Kubernetes API endpoint URL |
-| `ipv4-pod-cidr` | Pod network CIDR (must match your k8s config) |
-| `ipv4-svc-cidr` | Service network CIDR (must match your k8s config) |
-| `ipv4-join-cidr` | Network for nested cluster communication |
-
-Apply the ConfigMap:
-
-```bash
-kubectl apply -f cozystack-config.yaml
-```
-
-### 4. Create Operator Configuration
-
-The generic operator manifest reads the Kubernetes API server address from a ConfigMap.
-You **must** create this ConfigMap before deploying the operator, otherwise the operator pod will fail to start.
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: cozystack-operator-config
-  namespace: cozy-system
-data:
-  KUBERNETES_SERVICE_HOST: "<YOUR_NODE_IP>"
-  KUBERNETES_SERVICE_PORT: "6443"
-```
-
-Replace `<YOUR_NODE_IP>` with the IP address of your Kubernetes API server (the same address used in `api-server-endpoint` above, without the `https://` prefix and port).
-
-Apply it:
-
-```bash
-kubectl apply -f cozystack-operator-config.yaml
-```
-
-### 5. Deploy Cozystack Operator
-
-Apply the generic operator manifest:
-
-```bash
-kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-operator-generic.yaml
-```
-
-### 6. Create Platform Package
-
-After the operator starts and reconciles the `PackageSource`, create a `Package` resource to trigger the platform installation:
-
-```yaml
-apiVersion: cozystack.io/v1alpha1
-kind: Package
-metadata:
-  name: cozystack.cozystack-platform
-spec:
-  variant: isp-full-generic
-```
+| `publishing.host` | Your domain for Cozystack services |
+| `publishing.apiServerEndpoint` | Kubernetes API endpoint URL |
+| `networking.podCIDR` | Pod network CIDR (must match your k8s config) |
+| `networking.serviceCIDR` | Service network CIDR (must match your k8s config) |
+| `networking.joinCIDR` | Network for nested cluster communication |
 
 Apply it:
 
@@ -275,7 +248,7 @@ The Package name **must** match the PackageSource name (`cozystack.cozystack-pla
 You can verify available PackageSources with `kubectl get packagesource`.
 {{% /alert %}}
 
-### 7. Monitor Installation
+### 4. Monitor Installation
 
 Watch the installation progress:
 
@@ -311,6 +284,11 @@ Below is a minimal Ansible playbook for preparing nodes and deploying Cozystack.
   hosts: all
   become: true
   tasks:
+    - name: Load br_netfilter module
+      community.general.modprobe:
+        name: br_netfilter
+        persistent: present
+
     - name: Install required packages
       ansible.builtin.apt:
         name:
@@ -363,7 +341,8 @@ This example uses k3s default CIDRs. Adjust for kubeadm (`10.244.0.0/16`, `10.96
   connection: local
   vars:
     cozystack_root_host: "example.com"
-    cozystack_api_endpoint: "https://10.0.0.1:6443"
+    cozystack_api_host: "10.0.0.1"
+    cozystack_api_port: "6443"
     # k3s defaults - adjust for kubeadm (10.244.0.0/16, 10.96.0.0/16)
     cozystack_pod_cidr: "10.42.0.0/16"
     cozystack_svc_cidr: "10.43.0.0/16"
@@ -373,48 +352,12 @@ This example uses k3s default CIDRs. Adjust for kubeadm (`10.244.0.0/16`, `10.96
         cmd: kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-crds.yaml
       changed_when: true
 
-    - name: Create cozy-system namespace
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: cozy-system
-
-    - name: Create Cozystack ConfigMap
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: ConfigMap
-          metadata:
-            name: cozystack
-            namespace: cozy-system
-          data:
-            root-host: "{{ cozystack_root_host }}"
-            api-server-endpoint: "{{ cozystack_api_endpoint }}"
-            ipv4-pod-cidr: "{{ cozystack_pod_cidr }}"
-            ipv4-pod-gateway: "{{ cozystack_pod_cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
-            ipv4-svc-cidr: "{{ cozystack_svc_cidr }}"
-            ipv4-join-cidr: "100.64.0.0/16"
-
-    - name: Create Cozystack operator config
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: ConfigMap
-          metadata:
-            name: cozystack-operator-config
-            namespace: cozy-system
-          data:
-            KUBERNETES_SERVICE_HOST: "{{ cozystack_api_endpoint | urlsplit('hostname') }}"
-            KUBERNETES_SERVICE_PORT: "{{ cozystack_api_endpoint | urlsplit('port') | default('6443', true) }}"
-
-    - name: Apply Cozystack operator
-      ansible.builtin.command:
-        cmd: kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-operator-generic.yaml
+    - name: Download and apply Cozystack operator manifest
+      ansible.builtin.shell:
+        cmd: >
+          curl -fsSL https://github.com/cozystack/cozystack/releases/latest/download/cozystack-operator-generic.yaml
+          | sed 's/REPLACE_ME/{{ cozystack_api_host }}/'
+          | kubectl apply -f -
       changed_when: true
 
     - name: Wait for PackageSource to be ready
@@ -445,6 +388,17 @@ This example uses k3s default CIDRs. Adjust for kubeadm (`10.244.0.0/16`, `10.96
             name: cozystack.cozystack-platform
           spec:
             variant: isp-full-generic
+            components:
+              platform:
+                values:
+                  publishing:
+                    host: "{{ cozystack_root_host }}"
+                    apiServerEndpoint: "https://{{ cozystack_api_host }}:{{ cozystack_api_port }}"
+                  networking:
+                    podCIDR: "{{ cozystack_pod_cidr }}"
+                    podGateway: "{{ cozystack_pod_cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
+                    serviceCIDR: "{{ cozystack_svc_cidr }}"
+                    joinCIDR: "100.64.0.0/16"
 ```
 
 ## Troubleshooting
@@ -480,7 +434,7 @@ spec:
 
 **Cause**: Single-node clusters or non-standard API endpoints require explicit configuration.
 
-**Solution**: Verify your ConfigMap includes correct `api-server-endpoint` and ensure the Platform Package has:
+**Solution**: Verify your Platform Package includes correct API server settings:
 
 ```yaml
 spec:
