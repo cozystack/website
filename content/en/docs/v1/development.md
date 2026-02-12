@@ -168,6 +168,34 @@ You can use bitnami's [readme-generator](https://github.com/bitnami/readme-gener
 
 Just install it as `readme-generator` binary in your system and run generation using `make generate` command.
 
+## Helm Chart Development Principles
+
+The package structure and development workflow in Cozystack are guided by the following principles:
+
+### Easy to update upstream charts
+
+The original upstream chart must be easy to update, override, and modify. We use the umbrella chart pattern — upstream charts live in the `./charts` directory and are vendored as-is. Customizations go into `values.yaml` overrides and additional `templates/`, while structural changes to the upstream chart are applied via `patches/`. This separation ensures that updating to a new upstream version is straightforward: run `make update`, review the diff, and re-apply patches if needed.
+
+### Local-first artifacts
+
+Patches and container images are stored locally and are part of the package. The `patches/` directory holds any modifications to the upstream chart, and the `images/` directory contains Dockerfiles for building all required images. This ensures full reproducibility — everything needed to build and deploy the package is self-contained within the repository.
+
+{{% alert color="info" %}}
+Currently, not all packages build their images locally — some still reference externally-built images. We are actively working toward fully local image builds to achieve complete self-containment and reproducibility.
+{{% /alert %}}
+
+### Local development and testing workflow
+
+Every package must be easy to update and test locally against a real cluster, without relying on CI. The standard `make` targets (`make image`, `make diff`, `make apply`) provide a fast feedback loop: build images, compare rendered manifests against the live cluster, and apply changes — all from a developer's workstation.
+
+### No external dependencies
+
+Packages must not depend on external resources at runtime. All charts, images, and patches are vendored into the repository. This guarantees that builds and deployments are deterministic and do not break due to upstream registry outages, removed tags, or network issues.
+
+{{% alert color="info" %}}
+As noted above, full image self-containment is a work in progress. Some packages still pull images from external registries — this is a known gap that we plan to close as capacity allows.
+{{% /alert %}}
+
 ## Development
 
 ### Buildx configuration
