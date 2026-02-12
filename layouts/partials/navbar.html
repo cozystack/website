@@ -74,11 +74,7 @@
         {{ end -}}
 	    {{ end -}}
 
-      {{ if .Site.Params.versions -}}
-      <li class="nav-item dropdown mr-lg-4">
-        {{ partial "navbar-version-selector.html" . -}}
-      </li>
-      {{ end -}}
+      {{/* Version selector moved to sidebar — see version-switcher.html */}}
 
       {{ if (gt (len .Site.Home.Translations) 0) -}}
       <li class="nav-item dropdown mr-lg-4 d-none d-lg-block">

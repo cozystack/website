@@ -95,14 +95,6 @@ languages:
 permalinks:
   blog: /:section/:year/:month/:slug/
 
-outputFormats:
-  SearchIndex:
-    baseName: index
-    mediaType: application/json
-
-outputs:
-  home: [HTML, SearchIndex]
-  page: [HTML, SearchIndex]
 
 params:
   description: Free Cloud Platform based on Kubernetes
@@ -114,20 +106,19 @@ params:
   support: /support
   images: [img/cozystack-social.png]
   # Enable Algolia DocSearch
-  algolia_docsearch: true
+  search:
+    algolia: {}
   offlineSearch: false
   version_menu: "Versions"
-  version: "0.1"
-  archived_version: false
   version_menu_pagelinks: true
-  url_latest_version: https://cozystack.io/docs
-  #versions:
-  #  - version: "v2.2"
-  #    url: https://fluxcd.io
-  #  - version: "v2.1"
-  #    url: https://v2-1.docs.fluxcd.io
-  #  - version: "v2.0"
-  #    url: https://v2-0.docs.fluxcd.io
+  latest_version_id: "v0"
+  versions:
+    - version: "v1"
+      url: "/docs/v1/"
+      id: "v1"
+    - version: "v0"
+      url: "/docs/v0/"
+      id: "v0"
   logos:
   #  navbar: flux-horizontal-white.png
   #  hero: flux-horizontal-color.png

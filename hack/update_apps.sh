@@ -108,7 +108,8 @@ EOF
   readme_url="${RAW_BASE_URL}/${app}/README.md"
   echo "Processing $app..."
 
-  if curl -fsSL "$readme_url" \
+  if curl -fsSL --compressed "$readme_url" \
+    | sed '1s/\xEF\xBB\xBF//' \
     | awk 'NR==1 && /^#{1,2} / { next } { print }' >> "$dest_file"; then
     echo "✓ Appended README for $app -> $dest_file"
   else

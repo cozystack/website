@@ -212,7 +212,10 @@ nav.navbar {
 // Sidebar background
 .td-sidebar {
   background-color: rgba(61, 109, 221, 0.03);
-  padding-top: 0 !important;
+
+  @include media-breakpoint-up(md) {
+    padding-top: 1rem;
+  }
 }
 
 .td-sidebar-nav {
@@ -242,5 +245,40 @@ nav.navbar {
   a:focus,
   a:hover {
     color: #3c6ddd !important;
+  }
+}
+
+// Sidebar version switcher
+.version-switcher {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+
+  &__item {
+    flex: 1;
+    text-align: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $cozy-dark-blue;
+    background: rgba($cozy-dark-blue, 0.05);
+    border: 1px solid rgba($cozy-dark-blue, 0.2);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: rgba($cozy-dark-blue, 0.12);
+    }
+
+    &--active {
+      background: $cozy-dark-blue;
+      color: $cozy-white;
+      border-color: $cozy-dark-blue;
+
+      &:hover {
+        background: $cozy-darkest-blue;
+      }
+    }
   }
 }

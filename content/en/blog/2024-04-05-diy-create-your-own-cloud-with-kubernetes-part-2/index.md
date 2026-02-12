@@ -27,7 +27,7 @@ project and development team.
 Virtual machines are the primary means of isolating tenants from each other in a cloud environment.
 In virtual machines, users can execute code and programs with administrative privilege, but this
 doesn't affect other tenants or the environment itself. In other words, virtual machines allow to
-achieve [hard multi-tenancy isolation]({{% ref "/docs/guides/concepts#tenant-system" %}}), and run
+achieve [hard multi-tenancy isolation]({{% ref "/docs/v1/guides/concepts#tenant-system" %}}), and run
 in environments where tenants do not trust each other.
 
 ## Virtualization technologies in Kubernetes
