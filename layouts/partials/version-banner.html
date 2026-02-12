@@ -9,17 +9,33 @@
 {{- end -}}
 
 {{- if $currentVersionID -}}
-  {{- $isLatest := eq $currentVersionID (.Site.Params.latest_version_id | default "v1") -}}
+  {{- $latestVersionID := .Site.Params.latest_version_id | default "v1" -}}
+  {{- $isLatest := eq $currentVersionID $latestVersionID -}}
   {{- if not $isLatest }}
+  {{- $currentNum := int (strings.TrimPrefix "v" $currentVersionID) -}}
+  {{- $latestNum := int (strings.TrimPrefix "v" $latestVersionID) -}}
+  {{- if gt $currentNum $latestNum }}
+  <div class="pageinfo pageinfo-warning">
+    <p>
+      You are viewing documentation for <strong>Cozystack {{ $currentVersion.version }}</strong>, which is currently in beta.
+      {{ range $.Site.Params.versions }}
+        {{- if eq .id $latestVersionID }}
+          For the latest stable version, see the <a href="{{ .url }}">{{ .version }} documentation</a>.
+        {{- end }}
+      {{- end }}
+    </p>
+  </div>
+  {{- else }}
   <div class="pageinfo pageinfo-warning">
     <p>
       You are viewing documentation for <strong>Cozystack {{ $currentVersion.version }}</strong>.
       {{ range $.Site.Params.versions }}
-        {{- if eq .id ($.Site.Params.latest_version_id | default "v1") }}
+        {{- if eq .id $latestVersionID }}
           For the latest version, see the <a href="{{ .url }}">{{ .version }} documentation</a>.
         {{- end }}
       {{- end }}
     </p>
   </div>
+  {{- end }}
   {{- end }}
 {{- end }}
