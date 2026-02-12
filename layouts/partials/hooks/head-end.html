@@ -1,5 +1,5 @@
 <!-- Algolia changes: https://github.com/fluxcd/website/pull/936 -->
-{{ with .Site.Params.algolia_docsearch }}
+{{ if and .Site.Params.search (isset .Site.Params.search "algolia") }}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css@3" />
 {{ end }}
 

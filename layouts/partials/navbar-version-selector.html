@@ -1,13 +1,28 @@
-<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-	{{ .Site.Params.version_menu }}
+{{- $currentPath := .Page.RelPermalink -}}
+{{- $currentVersionID := "" -}}
+{{- range .Site.Params.versions -}}
+  {{- if hasPrefix $currentPath .url -}}
+    {{- $currentVersionID = .id -}}
+  {{- end -}}
+{{- end -}}
+
+<a class="nav-link dropdown-toggle" href="#" role="button"
+   data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  {{- if $currentVersionID -}}
+    {{- range .Site.Params.versions -}}
+      {{- if eq .id $currentVersionID }}{{ .version }}{{ end -}}
+    {{- end -}}
+  {{- else -}}
+    {{ .Site.Params.version_menu }}
+  {{- end -}}
 </a>
 <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-	{{ $path := "" }}
-	{{ if .Site.Params.version_menu_pagelinks }}
-		{{ $path = .Page.RelPermalink }}
-	{{ end }}
-    <a class="dropdown-item" href="/flux/releases">Release Information</a>
-	{{ range .Site.Params.versions }}
-	<a class="dropdown-item" href="{{ .url }}{{ $path }}">{{ .version }}</a>
-	{{ end }}
+  {{- range .Site.Params.versions }}
+  <a class="dropdown-item{{ if eq .id $currentVersionID }} active{{ end }}"
+     href="{{ .url }}"
+     data-version-id="{{ .id }}"
+     data-version-url="{{ .url }}">
+    {{ .version }}
+  </a>
+  {{- end }}
 </div>

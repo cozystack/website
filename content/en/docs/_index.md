@@ -1,19 +1,31 @@
 ---
-title: "Cozystack Documentation"
+title: "Choose Documentation Version"
 linkTitle: "Documentation"
-description: "Free PaaS platform and framework for building clouds"
-taxonomyCloud: []
+description: "Select the version of Cozystack documentation that matches your installation"
+weight: 40
 cascade:
   type: docs
 menu:
   main:
     weight: 40
-aliases:
-  - /docs/reference
 ---
 
-Cozystack is a free PaaS platform and framework for building clouds
+**New users:** Start with [v1 documentation](/docs/v1/) — the current stable release.
 
-With Cozystack, you can transform your bunch of servers into an intelligent system with a simple REST API for spawning Kubernetes clusters, Database-as-a-Service, virtual machines, load balancers, HTTP caching services, and other services with ease.
+**Existing v0.4x users:** Continue with [v0 documentation](/docs/v0/) until you're ready to [upgrade](/docs/v1/operations/upgrades/).
 
-You can use Cozystack to build your own cloud or to provide a cost-effective development environments.
+### Check Your Current Version
+
+If you have an existing installation, run:
+
+```bash
+kubectl get deployment -n cozy-system
+```
+
+- **v1:** You will see a `cozystack-operator` deployment.
+- **v0:** You will see a `cozystack` deployment (the legacy installer).
+- **Namespace not found:** Cozystack is not installed — start with [v1](/docs/v1/).
+
+**Additional Resources:**
+- [Release notes](https://github.com/cozystack/cozystack/releases)
+- [v0 to v1 upgrade guide](/docs/v1/operations/upgrades/)
