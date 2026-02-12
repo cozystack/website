@@ -234,6 +234,7 @@ Adjust the values:
 | `publishing.host` | Your domain for Cozystack services |
 | `publishing.apiServerEndpoint` | Kubernetes API endpoint URL |
 | `networking.podCIDR` | Pod network CIDR (must match your k8s config) |
+| `networking.podGateway` | First IP in pod CIDR (e.g., `10.42.0.1` for `10.42.0.0/16`) |
 | `networking.serviceCIDR` | Service network CIDR (must match your k8s config) |
 | `networking.joinCIDR` | Network for nested cluster communication |
 
@@ -275,6 +276,12 @@ kubectl wait --for=condition=Ready nodes --all --timeout=300s
 ## Example: Ansible Playbook
 
 Below is a minimal Ansible playbook for preparing nodes and deploying Cozystack.
+
+Install the required Ansible collections first:
+
+```bash
+ansible-galaxy collection install ansible.posix community.general kubernetes.core ansible.utils
+```
 
 ### Node Preparation Playbook
 

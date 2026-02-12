@@ -39,5 +39,5 @@ If you encounter problems with installation, refer to the [Troubleshooting secti
 
 ## Further Steps
 
--   After installing and configuring a Kubernetes cluster, you will have it ready to
+-   After installing and configuring a Kubernetes cluster, you are ready to
     [install and configure Cozystack]({{% ref "/docs/v1/install/cozystack" %}}).
