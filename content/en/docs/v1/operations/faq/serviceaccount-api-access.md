@@ -27,7 +27,7 @@ The Secret has the same name as the tenant and is located in the tenant's namesp
 1.  Log in to the Dashboard as a user with access to the tenant.
 1.  Switch context to the target tenant if needed.
 1.  On the left sidebar, navigate to the **Administration** → **Info** page and open the **Secrets** tab.
-1.  Find the secret named `tenant-<name>` (e.g. `tenant-team1`).
+1.  Find the secret named `tenant-<name>` (e.g. `tenant-team1`), where the **Key** is **token**.
 1.  Click the eye icon to reveal the **Value** field, then click the revealed data. The text will be copied to the clipboard automatically.
 
 {{% /tab %}}
@@ -37,13 +37,13 @@ The Secret has the same name as the tenant and is located in the tenant's namesp
 Retrieve the token for a tenant named `<name>`:
 
 ```bash
-kubectl -n tenant-<name> get secret tenant-<name> -o json | jq -r '.data.token | @base64d'
+kubectl -n tenant-<name> get tenantsecret tenant-<name> -o json | jq -r '.data.token | @base64d'
 ```
 
 To store the token in a variable for subsequent commands:
 
 ```bash
-export TOKEN=$(kubectl -n tenant-<name> get secret tenant-<name> -o json | jq -r '.data.token | @base64d')
+export TOKEN=$(kubectl -n tenant-<name> get tenantsecret tenant-<name> -o json | jq -r '.data.token | @base64d')
 ```
 
 {{% /tab %}}
