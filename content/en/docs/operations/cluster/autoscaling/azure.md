@@ -83,6 +83,54 @@ az network vnet subnet update \
   --network-security-group cozystack-nsg
 ```
 
+### 1.5 Create Route Table for Kilo Routing
+
+Azure SDN routes packets based on destination IP, not the Linux next-hop set by Kilo. Without a custom route table, reply traffic from non-leader nodes to remote subnets (e.g. on-premises networks) is sent to the Internet route and dropped, making non-leader nodes unreachable from outside Azure.
+
+Create a route table that directs remote subnet traffic through the Kilo location leader:
+
+```bash
+# Create route table
+az network route-table create \
+  --resource-group <resource-group> \
+  --name kilo-routes \
+  --location <location>
+
+# Add routes for each remote subnet reachable via Kilo WireGuard mesh
+# Replace <leader-internal-ip> with the internal IP of the Kilo leader node in this subnet
+az network route-table route create \
+  --resource-group <resource-group> \
+  --route-table-name kilo-routes \
+  --name to-onprem \
+  --address-prefix <on-premises-subnet-cidr> \
+  --next-hop-type VirtualAppliance \
+  --next-hop-ip-address <leader-internal-ip>
+
+# Add route for WireGuard overlay IPs
+az network route-table route create \
+  --resource-group <resource-group> \
+  --route-table-name kilo-routes \
+  --name to-wireguard-ips \
+  --address-prefix 100.66.0.0/16 \
+  --next-hop-type VirtualAppliance \
+  --next-hop-ip-address <leader-internal-ip>
+
+# Associate route table with worker subnet
+az network vnet subnet update \
+  --resource-group <resource-group> \
+  --vnet-name cozystack-vnet \
+  --name workers \
+  --route-table kilo-routes
+```
+
+Add a route for each remote location's subnet (repeat the `route create` command for every on-premises or other cloud subnet that must be reachable through the WireGuard mesh).
+
+{{% alert title="Important" color="warning" %}}
+- The `<leader-internal-ip>` is the internal IP of the Kilo location leader in this subnet. In a VMSS-based setup, this is typically the first instance that joins the cluster. You can find it by checking `kilo.squat.ai/leader: "true"` annotation on the nodes.
+- IP forwarding must be enabled on the leader's NIC (see Step 4).
+- If the leader node changes, the route table must be updated with the new leader's IP.
+{{% /alert %}}
+
 ## Step 2: Create Talos Image
 
 ### 2.1 Generate Schematic ID
@@ -227,11 +275,18 @@ az vmss create \
   --authentication-type ssh \
   --generate-ssh-keys \
   --upgrade-policy-mode Manual
+
+# Enable IP forwarding on VMSS NICs (required for Kilo leader to forward traffic)
+az vmss update \
+  --resource-group <resource-group> \
+  --name workers \
+  --set virtualMachineProfile.networkProfile.networkInterfaceConfigurations[0].enableIPForwarding=true
 ```
 
 {{% alert title="Important" color="warning" %}}
 - Must use `--orchestration-mode Uniform` (cluster-autoscaler requires Uniform mode)
 - Must use `--public-ip-per-vm` for WireGuard connectivity
+- IP forwarding must be enabled on VMSS NICs so the Kilo leader can forward traffic between the WireGuard mesh and non-leader nodes in the same subnet
 - Check VM quota in your region: `az vm list-usage --location <location>`
 - `--custom-data` passes the Talos machine config to new instances
 {{% /alert %}}
@@ -343,6 +398,33 @@ spec:
 - Check NSG allows inbound UDP 51820
 - Inspect kilo logs: `kubectl logs -n cozy-kilo <kilo-pod>`
 - Check for "WireGuard configurations are different" messages repeating every 30 seconds -- this indicates `persistent-keepalive` annotation is missing
+
+### Non-leader nodes unreachable (kubectl logs/exec timeout)
+
+If `kubectl logs` or `kubectl exec` works for the Kilo leader node but times out for all other nodes in the same Azure subnet:
+
+1. **Verify IP forwarding** is enabled on the VMSS:
+   ```bash
+   az vmss show --resource-group <resource-group> --name workers \
+     --query "virtualMachineProfile.networkProfile.networkInterfaceConfigurations[0].enableIPForwarding"
+   ```
+   If `false`, enable it and apply to existing instances:
+   ```bash
+   az vmss update --resource-group <resource-group> --name workers \
+     --set virtualMachineProfile.networkProfile.networkInterfaceConfigurations[0].enableIPForwarding=true
+   az vmss update-instances --resource-group <resource-group> --name workers --instance-ids "*"
+   ```
+
+2. **Verify route table** is associated with the subnet and contains routes for all remote subnets pointing to the leader's IP as a Virtual Appliance (see Step 1.5).
+
+3. **Test the return path** from the leader node:
+   ```bash
+   # This should work (same subnet, direct)
+   kubectl exec -n cozy-kilo <leader-kilo-pod> -- ping -c 2 <non-leader-ip>
+   # This tests the return path through the route table
+   kubectl exec -n cozy-kilo <leader-kilo-pod> -- ping -c 2 -I <leader-wireguard-ip> <non-leader-ip>
+   ```
+   If the first ping works but the second fails, the route table is missing or misconfigured.
 
 ### VM quota errors
 - Check quota: `az vm list-usage --location <location>`
