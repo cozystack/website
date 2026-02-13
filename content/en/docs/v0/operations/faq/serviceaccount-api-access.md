@@ -38,13 +38,13 @@ The Secret has the same name as the tenant and is located in the tenant's namesp
 Retrieve the token for a tenant named `<name>`:
 
 ```bash
-kubectl -n tenant-<name> get secret tenant-<name> -o json | jq -r '.data.token | @base64d'
+kubectl -n tenant-<name> get tenantsecret tenant-<name> -o json | jq -r '.data.token | @base64d'
 ```
 
 To store the token in a variable for subsequent commands:
 
 ```bash
-export TOKEN=$(kubectl -n tenant-<name> get secret tenant-<name> -o json | jq -r '.data.token | @base64d')
+export TOKEN=$(kubectl -n tenant-<name> get tenantsecret tenant-<name> -o json | jq -r '.data.token | @base64d')
 ```
 
 {{% /tab %}}
