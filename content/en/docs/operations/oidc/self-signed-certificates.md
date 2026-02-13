@@ -7,7 +7,7 @@ aliases:
   - /docs/oidc/self-signed-certificates
 ---
 
-This guide explains how to configure Kubernetes API server for OIDC authentication with Keycloak when using self-signed certificates (default in Cozystack).
+This guide explains how to configure Kubernetes API server for OIDC authentication with Keycloak when using self-signed certificates. By default, Cozystack issues certificates via LetsEncrypt, but some environments (e.g., air-gapped or private enterprise networks) may use a custom CA instead.
 
 ## Prerequisites
 
@@ -87,13 +87,24 @@ kubectl krew install oidc-login
 choco install kubelogin
 ```
 
+Save the CA certificate from Step 1 to a file on your local machine:
+
+```bash
+# Save the certificate to a file (e.g., ~/.kube/oidc-ca.pem)
+cat > ~/.kube/oidc-ca.pem <<EOF
+-----BEGIN CERTIFICATE-----
+<YOUR_CERTIFICATE_CONTENT>
+-----END CERTIFICATE-----
+EOF
+```
+
 Set up OIDC login (this will open a browser for authentication):
 
 ```bash
 kubectl oidc-login setup \
   --oidc-issuer-url=https://keycloak.example.org/realms/cozy \
   --oidc-client-id=kubernetes \
-  --insecure-skip-tls-verify
+  --certificate-authority=~/.kube/oidc-ca.pem
 ```
 
 Configure kubectl credentials:
@@ -101,13 +112,13 @@ Configure kubectl credentials:
 ```bash
 kubectl config set-credentials oidc \
   --exec-api-version=client.authentication.k8s.io/v1 \
-  --exec-interactive-mode=Never \
+  --exec-interactive-mode=IfAvailable \
   --exec-command=kubectl \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
   --exec-arg="--oidc-issuer-url=https://keycloak.example.org/realms/cozy" \
   --exec-arg="--oidc-client-id=kubernetes" \
-  --exec-arg="--insecure-skip-tls-verify=true"
+  --exec-arg="--certificate-authority=~/.kube/oidc-ca.pem"
 ```
 
 Switch to the OIDC user and verify:
@@ -117,8 +128,12 @@ kubectl config set-context --current --user=oidc
 kubectl get nodes
 ```
 
+{{% alert color="info" %}}
+If your organization's CA is already installed in the system trust store (common in enterprise environments), you can omit the `--certificate-authority` flag entirely — kubelogin will use the system CA bundle automatically.
+{{% /alert %}}
+
 {{% alert color="warning" %}}
-The `--insecure-skip-tls-verify` flag is used because kubelogin runs on your local machine, which doesn't have the self-signed certificate in its trust store. The API server itself uses the certificate file mounted in Step 2 for secure communication with Keycloak.
+Avoid using `--insecure-skip-tls-verify`. If you cannot install the CA certificate on your machine or pass it via `--certificate-authority`, you can use `--insecure-skip-tls-verify` as a temporary workaround, but this disables TLS verification and is not recommended for production use.
 {{% /alert %}}
 
 ## Troubleshooting
