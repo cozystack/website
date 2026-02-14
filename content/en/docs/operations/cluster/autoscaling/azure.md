@@ -14,6 +14,12 @@ This guide explains how to configure cluster-autoscaler for automatic node scali
 - Existing Talos Kubernetes cluster with Kilo WireGuard mesh
 - Talos worker machine config
 
+Install required Cozystack packages before configuring autoscaling:
+
+```bash
+cozypkg add cozystack.kilo cozystack.local-ccm
+```
+
 ## Step 1: Create Azure Infrastructure
 
 ### 1.1 Login with Service Principal
@@ -83,53 +89,38 @@ az network vnet subnet update \
   --network-security-group cozystack-nsg
 ```
 
-### 1.5 Create Route Table for Kilo Routing
+### 1.5 Configure Route Table for Kilo Routing
 
-Azure SDN routes packets based on destination IP, not the Linux next-hop set by Kilo. Without a custom route table, reply traffic from non-leader nodes to remote subnets (e.g. on-premises networks) is sent to the Internet route and dropped, making non-leader nodes unreachable from outside Azure.
+Azure SDN routes packets based on destination IP, not the Linux next-hop set by Kilo.  
+For traffic that reaches Azure through the Kilo location leader, non-leader nodes need a correct return path back to remote subnets.
 
-Create a route table that directs remote subnet traffic through the Kilo location leader:
+Create and attach a route table for the workers subnet:
 
 ```bash
 # Create route table
 az network route-table create \
   --resource-group <resource-group> \
-  --name kilo-routes \
+  --name kilo-routes-workers-serverscom \
   --location <location>
 
-# Add routes for each remote subnet reachable via Kilo WireGuard mesh
-# Replace <leader-internal-ip> with the internal IP of the Kilo leader node in this subnet
-az network route-table route create \
-  --resource-group <resource-group> \
-  --route-table-name kilo-routes \
-  --name to-onprem \
-  --address-prefix <on-premises-subnet-cidr> \
-  --next-hop-type VirtualAppliance \
-  --next-hop-ip-address <leader-internal-ip>
-
-# Add route for WireGuard overlay IPs
-az network route-table route create \
-  --resource-group <resource-group> \
-  --route-table-name kilo-routes \
-  --name to-wireguard-ips \
-  --address-prefix 100.66.0.0/16 \
-  --next-hop-type VirtualAppliance \
-  --next-hop-ip-address <leader-internal-ip>
-
-# Associate route table with worker subnet
+# Associate it with workers subnet
 az network vnet subnet update \
   --resource-group <resource-group> \
   --vnet-name cozystack-vnet \
-  --name workers \
-  --route-table kilo-routes
+  --name workers-serverscom \
+  --route-table kilo-routes-workers-serverscom
 ```
 
-Add a route for each remote location's subnet (repeat the `route create` command for every on-premises or other cloud subnet that must be reachable through the WireGuard mesh).
-
 {{% alert title="Important" color="warning" %}}
-- The `<leader-internal-ip>` is the internal IP of the Kilo location leader in this subnet. In a VMSS-based setup, this is typically the first instance that joins the cluster. You can find it by checking `kilo.squat.ai/leader: "true"` annotation on the nodes.
-- IP forwarding must be enabled on the leader's NIC (see Step 4).
-- If the leader node changes, the route table must be updated with the new leader's IP.
+- `nextHopIpAddress` in UDR routes must point to the current Azure Kilo leader internal IP.
+- If leader changes, routes must be updated to the new leader.
 {{% /alert %}}
+
+Automate route updates with the route-sync controller (watches Azure-location nodes and updates UDR routes when `kilo.squat.ai/leader=true` changes):
+
+```bash
+kubectl apply -f manifests/kilo-azure-route-sync-deployment.yaml
+```
 
 ## Step 2: Create Talos Image
 
@@ -219,11 +210,41 @@ az image create \
 
 ## Step 3: Create Talos Machine Config for Azure
 
-Create a machine config similar to the Hetzner one, with these Azure-specific changes:
+From your cluster repository, generate a worker config file:
+
+```bash
+talm template -t templates/worker.yaml --offline --full > nodes/azure.yaml
+```
+
+Then edit `nodes/azure.yaml` for Azure workers:
+
+1. Add Azure location metadata:
+   ```yaml
+   machine:
+     nodeAnnotations:
+       kilo.squat.ai/location: azure
+       kilo.squat.ai/persistent-keepalive: "20"
+     nodeLabels:
+       topology.kubernetes.io/zone: azure
+   ```
+2. Set public Kubernetes API endpoint:
+   Change `cluster.controlPlane.endpoint` to the **public** API server address (for example `https://<public-api-ip>:6443`).
+3. Remove discovered installer/network sections:
+   Delete `machine.install` and `machine.network` sections from this file.
+4. Set external cloud provider for kubelet:
+   ```yaml
+   machine:
+     kubelet:
+       extraArgs:
+         cloud-provider: external
+   ```
+5. Fix node IP subnet detection:
+   Set `machine.kubelet.nodeIP.validSubnets` to the actual Azure subnet where autoscaled nodes run (for example `192.168.102.0/23`).
+
+Result should include at least:
 
 ```yaml
 machine:
-  # Kilo annotations for WireGuard mesh (applied automatically on join)
   nodeAnnotations:
     kilo.squat.ai/location: azure
     kilo.squat.ai/persistent-keepalive: "20"
@@ -232,10 +253,12 @@ machine:
   kubelet:
     nodeIP:
       validSubnets:
-        - 10.2.0.0/24                  # Azure VNet subnet
-    # Required for external cloud provider (ProviderID assignment)
+        - 192.168.102.0/23             # replace with your Azure workers subnet
     extraArgs:
       cloud-provider: external
+cluster:
+  controlPlane:
+    endpoint: https://<public-api-ip>:6443
 ```
 
 {{% alert title="Note" color="info" %}}
@@ -248,7 +271,7 @@ Without it, the cluster-autoscaler cannot match Kubernetes nodes to Azure VMSS i
 This setting must be present on **all** nodes in the cluster, including control plane nodes.
 {{% /alert %}}
 
-All other settings (cluster tokens, control plane endpoint, extensions, etc.) remain the same as the Hetzner config.
+All other settings (cluster tokens, CA, extensions, etc.) remain the same as the generated template.
 
 ## Step 4: Create VMSS (Virtual Machine Scale Set)
 
@@ -269,7 +292,7 @@ az vmss create \
   --vnet-name cozystack-vnet \
   --subnet workers \
   --public-ip-per-vm \
-  --custom-data machineconfig-azure.yaml \
+  --custom-data nodes/azure.yaml \
   --security-type Standard \
   --admin-username talos \
   --authentication-type ssh \
@@ -415,16 +438,24 @@ If `kubectl logs` or `kubectl exec` works for the Kilo leader node but times out
    az vmss update-instances --resource-group <resource-group> --name workers --instance-ids "*"
    ```
 
-2. **Verify route table** is associated with the subnet and contains routes for all remote subnets pointing to the leader's IP as a Virtual Appliance (see Step 1.5).
+2. **Verify UDR configuration** (Step 1.5):
+   - `workers-serverscom` subnet is associated with `kilo-routes-workers-serverscom`.
+   - Route entries exist for required remote prefixes.
+   - `nextHopIpAddress` points to current Azure leader internal IP.
+   - Route-sync controller is running and has no errors:
+     ```bash
+     kubectl -n cozy-cluster-autoscaler-azure get deploy kilo-azure-route-sync
+     kubectl -n cozy-cluster-autoscaler-azure logs deploy/kilo-azure-route-sync
+     ```
 
 3. **Test the return path** from the leader node:
    ```bash
    # This should work (same subnet, direct)
    kubectl exec -n cozy-kilo <leader-kilo-pod> -- ping -c 2 <non-leader-ip>
-   # This tests the return path through the route table
+   # This tests the return path through UDR + leader forwarding
    kubectl exec -n cozy-kilo <leader-kilo-pod> -- ping -c 2 -I <leader-wireguard-ip> <non-leader-ip>
    ```
-   If the first ping works but the second fails, the route table is missing or misconfigured.
+   If the first ping works but the second fails, UDR/return-path configuration is missing or misconfigured.
 
 ### VM quota errors
 - Check quota: `az vm list-usage --location <location>`
