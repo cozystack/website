@@ -111,7 +111,8 @@ Your Kubernetes distribution must be configured to **not** install these compone
 | kube-proxy | **Disabled** — Cilium replaces it |
 | Cluster Domain | Must be `cozy.local` |
 
-### k3s Configuration
+{{< tabs name="kubernetes_distributions" >}}
+{{% tab name="k3s" %}}
 
 When installing k3s, use the following flags:
 
@@ -131,7 +132,8 @@ curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
 
 Replace `<YOUR_NODE_IP>` with your node's IP address.
 
-### kubeadm Configuration
+{{% /tab %}}
+{{% tab name="kubeadm" %}}
 
 Create a kubeadm configuration file:
 
@@ -154,9 +156,10 @@ Initialize the cluster without the default CNI:
 kubeadm init --config kubeadm-config.yaml --skip-phases=addon/kube-proxy
 ```
 
-Do not install a CNI plugin after `kubeadm init` — Cozystack will deploy Cilium automatically.
+Do not install a CNI plugin after `kubeadm init` — Cozystack will deploy Kube-OVN and Cilium automatically.
 
-### RKE2 Configuration
+{{% /tab %}}
+{{% tab name="RKE2" %}}
 
 Create `/etc/rancher/rke2/config.yaml`:
 
@@ -168,6 +171,9 @@ disable:
 cluster-domain: cozy.local
 disable-kube-proxy: true
 ```
+
+{{% /tab %}}
+{{< /tabs >}}
 
 ## Installing Cozystack
 
