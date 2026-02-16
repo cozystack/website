@@ -4,7 +4,6 @@ linkTitle: "Generate tenant kubeconfig"
 description: "A guide on how to generate a kubeconfig file for tenant users in Cozystack."
 weight: 30
 aliases:
-  - /docs/v0/operations/faq/generate-kubeconfig
   - /docs/operations/faq/generate-kubeconfig
 ---
 

@@ -10,12 +10,13 @@ aliases:
 
 ## Prerequisites
 
-Before you begin:
-
--   A tenant must already exist in Cozystack.
+Before you begin, make sure that:
+-   A tenant already exists in Cozystack.
     See [Create a User Tenant]({{% ref "/docs/v0/getting-started/create-tenant" %}}) if you haven't created one yet.
--   Access to the tenant namespace — either via OIDC credentials or an administrative kubeconfig.
--   `kubectl` and `jq` installed and configured.
+-   You have access to the tenant namespace — either via OIDC credentials or an administrative kubeconfig.
+-   `kubectl` is installed and configured.
+-   (Optional) `jq` is installed.
+
 
 ## Retrieving the ServiceAccount Token
 
@@ -62,16 +63,23 @@ ServiceAccount tokens in Cozystack **do not expire** by default. Handle them wit
 
 ### Test the Connection
 
-First, get the API server address:
+First, verify your kubectl context points to the correct Cozystack cluster:
+
+```bash
+kubectl config current-context
+kubectl cluster-info
+```
+
+Next, get the API server address:
 
 ```bash
 export API_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
 ```
 
-Next, extract the CA certificate to a file:
+Then, extract the CA certificate from the tenant secret:
 
 ```bash
-kubectl config view --minify --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 -d > ca.crt
+kubectl -n tenant-<name> get secret tenant-<name> -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
 ```
 
 Now, test the connection:
