@@ -23,7 +23,7 @@ Requirements depend on both cluster size (number of nodes) and number of tenants
 |--------------|-------|-----------------|---------------|---------------|-------------|
 | **Small** | 3-5 | CPU: 2 cores<br>RAM: 6 GB | CPU: 2 cores<br>RAM: 6 GB | CPU: 3 cores<br>RAM: 10 GB | CPU: 3 cores<br>RAM: 15 GB |
 | **Medium** | 6-10 | CPU: 3 cores<br>RAM: 7 GB | CPU: 3 cores<br>RAM: 7 GB | CPU: 3 cores<br>RAM: 12 GB | CPU: 4 cores<br>RAM: 18 GB |
-| **Large** | 10+ | CPU: 3 cores<br>RAM: 9 GB | CPU: 3 cores<br>RAM: 10 GB | CPU: 4 cores<br>RAM: 15 GB | CPU: 4 cores<br>RAM: 22 GB |
+| **Large** | 11+ | CPU: 3 cores<br>RAM: 9 GB | CPU: 3 cores<br>RAM: 10 GB | CPU: 4 cores<br>RAM: 15 GB | CPU: 4 cores<br>RAM: 22 GB |
 
 **Planning tips:**
 - Monitor actual resource consumption and adjust as needed
