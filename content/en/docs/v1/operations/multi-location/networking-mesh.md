@@ -54,7 +54,7 @@ WireGuard NAT traversal, allowing Kilo to discover the real public endpoint auto
 
 ## Allowed location IPs
 
-By default, Kilo only routes pod and service CIDRs through the WireGuard mesh. If nodes in a
+By default, Kilo only routes pod CIDRs and individual node internal IPs through the WireGuard mesh. If nodes in a
 location use a private subnet that other locations need to reach (e.g. for kubelet communication
 or NodePort access), annotate the nodes **in that location** with `kilo.squat.ai/allowed-location-ips`:
 
