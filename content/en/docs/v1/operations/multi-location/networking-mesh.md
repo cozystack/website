@@ -56,21 +56,27 @@ WireGuard NAT traversal, allowing Kilo to discover the real public endpoint auto
 
 By default, Kilo only routes pod and service CIDRs through the WireGuard mesh. If nodes in a
 location use a private subnet that other locations need to reach (e.g. for kubelet communication
-or NodePort access), annotate the location leader node with `kilo.squat.ai/allowed-location-ips`:
+or NodePort access), annotate the nodes **in that location** with `kilo.squat.ai/allowed-location-ips`:
 
 ```yaml
 machine:
   nodeAnnotations:
-    kilo.squat.ai/allowed-location-ips: 192.168.102.0/24,192.168.103.0/24
+    kilo.squat.ai/allowed-location-ips: 10.2.0.0/24
 ```
 
 This tells Kilo to include the specified CIDRs in the WireGuard allowed IPs for that location,
 making those subnets routable through the tunnel from all other locations.
 
-{{% alert title="Note" color="info" %}}
-Set this annotation on the **location leader** node (the node elected by Kilo to terminate
-the WireGuard tunnel for a given location). The annotation accepts a comma-separated list of
-CIDRs. Typically you would list all node subnets used in that cloud location.
+{{% alert title="Warning" color="warning" %}}
+Set this annotation on nodes **that own the subnet you want to expose** (i.e. nodes in the
+location where that network exists), **not** on remote nodes that want to reach it. If you
+set it on the wrong location, Kilo will create a route that sends traffic for that CIDR
+through the WireGuard tunnel on all other nodes -- including nodes that are directly connected
+to that subnet via L2. This breaks local connectivity between co-located nodes.
+
+For example, if your cloud nodes use `10.2.0.0/24`, add the annotation to the **cloud** nodes.
+Do **not** add the on-premise subnet (e.g. `192.168.100.0/23`) to cloud nodes -- this would
+hijack all local traffic between on-premise nodes through the WireGuard tunnel.
 {{% /alert %}}
 
 ## Troubleshooting
