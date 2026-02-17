@@ -9,40 +9,10 @@ Kilo creates a WireGuard mesh between cluster locations. When running with Ciliu
 IPIP encapsulation routed through Cilium's VxLAN overlay so that traffic between locations
 works even when the cloud network blocks raw IPIP (protocol 4) packets.
 
-{{% alert title="Compatibility" color="warning" %}}
-Multi-location support has been tested with the **Cilium** networking variant only.
-The **KubeOVN+Cilium** variant has not been tested yet.
-{{% /alert %}}
+## Select the cilium-kilo networking variant
 
-## Install Kilo
-
-```bash
-cozypkg add cozystack.kilo
-```
-
-When prompted, select the **cilium** variant. This deploys kilo with `--compatibility=cilium`,
-enabling Cilium-aware IPIP encapsulation.
-
-## Configure Cilium
-
-### Disable host firewall
-
-Cilium host firewall drops IPIP (protocol 4) traffic because the protocol is not in
-Cilium's network policy API
-(see [cilium#44386](https://github.com/cilium/cilium/issues/44386)).
-Disable it:
-
-```bash
-kubectl patch package cozystack.networking --type merge -p '
-spec:
-  components:
-    cilium:
-      values:
-        cilium:
-          hostFirewall:
-            enabled: false
-'
-```
+During platform setup, select the **cilium-kilo** networking variant. This deploys both Cilium
+and Kilo as an integrated stack with the required configuration:
 
 ## How it works
 
@@ -50,6 +20,7 @@ spec:
 2. Kilo creates a WireGuard tunnel (`kilo0`) between location leaders
 3. Non-leader nodes in each location reach remote locations through IPIP encapsulation to their location leader, routed via Cilium's VxLAN overlay
 4. The leader decapsulates IPIP and forwards traffic through the WireGuard tunnel
+5. Cilium's `enable-ipip-termination` option creates the `cilium_tunl` interface (kernel's `tunl0` renamed) that Kilo uses for IPIP TX/RX -- without it, the kernel detects TX recursion on the tunnel device
 
 ## Talos machine config for cloud nodes
 
@@ -72,23 +43,29 @@ WireGuard NAT traversal, allowing Kilo to discover the real public endpoint auto
 
 ## Allowed location IPs
 
-By default, Kilo only routes pod and service CIDRs through the WireGuard mesh. If nodes in a
+By default, Kilo only routes pod CIDRs and individual node internal IPs through the WireGuard mesh. If nodes in a
 location use a private subnet that other locations need to reach (e.g. for kubelet communication
-or NodePort access), annotate the location leader node with `kilo.squat.ai/allowed-location-ips`:
+or NodePort access), annotate the nodes **in that location** with `kilo.squat.ai/allowed-location-ips`:
 
 ```yaml
 machine:
   nodeAnnotations:
-    kilo.squat.ai/allowed-location-ips: 192.168.102.0/24,192.168.103.0/24
+    kilo.squat.ai/allowed-location-ips: 10.2.0.0/24
 ```
 
 This tells Kilo to include the specified CIDRs in the WireGuard allowed IPs for that location,
 making those subnets routable through the tunnel from all other locations.
 
-{{% alert title="Note" color="info" %}}
-Set this annotation on the **location leader** node (the node elected by Kilo to terminate
-the WireGuard tunnel for a given location). The annotation accepts a comma-separated list of
-CIDRs. Typically you would list all node subnets used in that cloud location.
+{{% alert title="Warning" color="warning" %}}
+Set this annotation on nodes **that own the subnet you want to expose** (i.e. nodes in the
+location where that network exists), **not** on remote nodes that want to reach it. If you
+set it on the wrong location, Kilo will create a route that sends traffic for that CIDR
+through the WireGuard tunnel on all other nodes -- including nodes that are directly connected
+to that subnet via L2. This breaks local connectivity between co-located nodes.
+
+For example, if your cloud nodes use `10.2.0.0/24`, add the annotation to the **cloud** nodes.
+Do **not** add the on-premise subnet (e.g. `192.168.100.0/23`) to cloud nodes -- this would
+hijack all local traffic between on-premise nodes through the WireGuard tunnel.
 {{% /alert %}}
 
 ## Troubleshooting
@@ -102,4 +79,4 @@ CIDRs. Typically you would list all node subnets used in that cloud location.
 
 ### Non-leader nodes unreachable (kubectl logs/exec timeout)
 - Verify IP forwarding is enabled on the cloud network interfaces (required for the Kilo leader to forward traffic)
-- Check kilo pod logs for `failed to create tunnel interface` errors
+- Check kilo pod logs for `cilium_tunl interface not found` errors -- this means Cilium is not running with `enable-ipip-termination=true` (the cilium-kilo variant configures this automatically)
