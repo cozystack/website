@@ -10,39 +10,20 @@ IPIP encapsulation routed through Cilium's VxLAN overlay so that traffic between
 works even when the cloud network blocks raw IPIP (protocol 4) packets.
 
 {{% alert title="Compatibility" color="warning" %}}
-Multi-location support has been tested with the **Cilium** networking variant only.
+Multi-location support has been tested with the **cilium-kilo** networking variant only.
 The **KubeOVN+Cilium** variant has not been tested yet.
 {{% /alert %}}
 
-## Install Kilo
+## Select the cilium-kilo networking variant
 
-```bash
-cozypkg add cozystack.kilo
-```
+During platform setup, select the **cilium-kilo** networking variant. This deploys both Cilium
+and Kilo as an integrated stack with the required configuration:
 
-When prompted, select the **cilium** variant. This deploys kilo with `--compatibility=cilium`,
-enabling Cilium-aware IPIP encapsulation.
-
-## Configure Cilium
-
-### Disable host firewall
-
-Cilium host firewall drops IPIP (protocol 4) traffic because the protocol is not in
-Cilium's network policy API
-(see [cilium#44386](https://github.com/cilium/cilium/issues/44386)).
-Disable it:
-
-```bash
-kubectl patch package cozystack.networking --type merge -p '
-spec:
-  components:
-    cilium:
-      values:
-        cilium:
-          hostFirewall:
-            enabled: false
-'
-```
+- Cilium host firewall is disabled (IPIP protocol 4 is not in Cilium's network policy API,
+  see [cilium#44386](https://github.com/cilium/cilium/issues/44386))
+- Cilium `enable-ipip-termination` is enabled, which creates the `cilium_tunl` interface
+  required by Kilo for IPIP encapsulation
+- Kilo runs with `--compatibility=cilium` for Cilium-aware IPIP routing
 
 ## How it works
 
@@ -50,6 +31,7 @@ spec:
 2. Kilo creates a WireGuard tunnel (`kilo0`) between location leaders
 3. Non-leader nodes in each location reach remote locations through IPIP encapsulation to their location leader, routed via Cilium's VxLAN overlay
 4. The leader decapsulates IPIP and forwards traffic through the WireGuard tunnel
+5. Cilium's `enable-ipip-termination` option creates the `cilium_tunl` interface (kernel's `tunl0` renamed) that Kilo uses for IPIP TX/RX -- without it, the kernel detects TX recursion on the tunnel device
 
 ## Talos machine config for cloud nodes
 
@@ -102,4 +84,4 @@ CIDRs. Typically you would list all node subnets used in that cloud location.
 
 ### Non-leader nodes unreachable (kubectl logs/exec timeout)
 - Verify IP forwarding is enabled on the cloud network interfaces (required for the Kilo leader to forward traffic)
-- Check kilo pod logs for `failed to create tunnel interface` errors
+- Check kilo pod logs for `cilium_tunl interface not found` errors -- this means Cilium is not running with `enable-ipip-termination=true` (the cilium-kilo variant configures this automatically)
