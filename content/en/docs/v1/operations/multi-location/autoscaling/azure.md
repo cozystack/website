@@ -377,8 +377,11 @@ spec:
 
 ### Connecting to remote workers for diagnostics
 
-Talos does not allow opening a dashboard directly to worker nodes. Use `talm dashboard`
-to connect through the control plane:
+You can debug Azure worker nodes using the **Serial console** in the Azure portal:
+navigate to your VMSS instance → **Support + troubleshooting** → **Serial console**.
+This gives you direct access to the node's console output without requiring network connectivity.
+
+Alternatively, use `talm dashboard` to connect through the control plane:
 
 ```bash
 talm dashboard -f nodes/<control-plane>.yaml -n <worker-node-ip>
@@ -387,9 +390,56 @@ talm dashboard -f nodes/<control-plane>.yaml -n <worker-node-ip>
 Where `<control-plane>.yaml` is your control plane node config and `<worker-node-ip>` is
 the Kubernetes internal IP of the remote worker.
 
+### Node stuck in maintenance mode
+
+If you see the following messages in the serial console:
+
+```
+[talos]  talosctl apply-config --insecure --nodes 10.2.0.5 --file <config.yaml>
+[talos] or apply configuration using talosctl interactive installer:
+[talos]  talosctl apply-config --insecure --nodes 10.2.0.5 --mode=interactive
+```
+
+This means the machine config was not picked up or is invalid. Common causes:
+
+- **Unsupported Kubernetes version**: the `kubelet` image version in the config is not compatible with the current Talos version
+- **Malformed config**: YAML syntax errors or invalid field values
+- **customData not applied**: the VMSS instance was created before the config was updated
+
+To debug, apply the config manually via Talos API (port 50000 must be open in the NSG):
+
+```bash
+talosctl apply-config --insecure --nodes <node-public-ip> --file nodes/azure.yaml
+```
+
+If the config is rejected, the error message will indicate what needs to be fixed.
+
+To update the machine config for new VMSS instances:
+
+```bash
+az vmss update \
+  --resource-group <resource-group> \
+  --name workers \
+  --custom-data @nodes/azure.yaml
+```
+
+After updating, delete existing instances so they are recreated with the new config:
+
+```bash
+az vmss delete-instances \
+  --resource-group <resource-group> \
+  --name workers \
+  --instance-ids "*"
+```
+
+{{% alert title="Warning" color="warning" %}}
+Azure does not provide a way to read back the `customData` from a VMSS — you can only set it. Always keep your machine config file (`nodes/azure.yaml`) in version control as the single source of truth.
+{{% /alert %}}
+
 ### Node doesn't join cluster
 - Check that the Talos machine config control plane endpoint is reachable from Azure
 - Verify NSG rules allow outbound traffic to port 6443
+- Verify NSG rules allow inbound traffic to port 50000 (Talos API) for debugging
 - Check VMSS instance provisioning state: `az vmss list-instances --resource-group <resource-group> --name workers`
 
 ### Non-leader nodes unreachable (kubectl logs/exec timeout)

@@ -9,21 +9,10 @@ Kilo creates a WireGuard mesh between cluster locations. When running with Ciliu
 IPIP encapsulation routed through Cilium's VxLAN overlay so that traffic between locations
 works even when the cloud network blocks raw IPIP (protocol 4) packets.
 
-{{% alert title="Compatibility" color="warning" %}}
-Multi-location support has been tested with the **cilium-kilo** networking variant only.
-The **KubeOVN+Cilium** variant has not been tested yet.
-{{% /alert %}}
-
 ## Select the cilium-kilo networking variant
 
 During platform setup, select the **cilium-kilo** networking variant. This deploys both Cilium
 and Kilo as an integrated stack with the required configuration:
-
-- Cilium host firewall is disabled (IPIP protocol 4 is not in Cilium's network policy API,
-  see [cilium#44386](https://github.com/cilium/cilium/issues/44386))
-- Cilium `enable-ipip-termination` is enabled, which creates the `cilium_tunl` interface
-  required by Kilo for IPIP encapsulation
-- Kilo runs with `--compatibility=cilium` for Cilium-aware IPIP routing
 
 ## How it works
 
