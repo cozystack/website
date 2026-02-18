@@ -15,42 +15,51 @@ It mirrors the tutorial in structure, but gives much more details and explains v
 
 ## 1. Define Cluster Configuration
 
-Installing Cozystack starts with a single [ConfigMap]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
-This ConfigMap includes [Cozystack bundle]({{% ref "/docs/v1/operations/configuration/bundles" %}}) and [components setup]({{% ref "/docs/v1/operations/configuration/components" %}}),
+Installing Cozystack starts with a Platform Package resource.
+This Package defines the [Cozystack variant]({{% ref "/docs/v1/operations/configuration/bundles" %}}), [component settings]({{% ref "/docs/v1/operations/configuration/components" %}}),
 key network settings, exposed services, and other options.
 
 Cozystack configuration can be updated after installing it.
 However, some values, as shown below, are required for installation.
 
-Here's a minimal example of  **cozystack.yaml**:
+Here's a minimal example of **cozystack-platform.yaml**:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
-  namespace: cozy-system
-data:
-  bundle-name: "paas-full"
-  root-host: "example.org"
-  api-server-endpoint: "https://api.example.org:443"
-  expose-services: "dashboard,api"
-  ipv4-pod-cidr: "10.244.0.0/16"
-  ipv4-pod-gateway: "10.244.0.1"
-  ipv4-svc-cidr: "10.96.0.0/16"
-  ipv4-join-cidr: "100.64.0.0/16"
+  name: cozystack.cozystack-platform
+spec:
+  variant: isp-full
+  components:
+    platform:
+      values:
+        publishing:
+          host: "example.org"
+          apiServerEndpoint: "https://api.example.org:443"
+          exposedServices:
+            - dashboard
+            - api
+        networking:
+          podCIDR: "10.244.0.0/16"
+          podGateway: "10.244.0.1"
+          serviceCIDR: "10.96.0.0/16"
+          joinCIDR: "100.64.0.0/16"
 ```
 
-For the explanation of each configuration parameter, see the [ConfigMap reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
+{{% alert color="info" %}}
+The Package name **must** be `cozystack.cozystack-platform` to match the PackageSource created by the installer.
+After installing operator you can verify available PackageSources with `kubectl get packagesource`.
+{{% /alert %}}
 
 
-### 1.1. Choose a Bundle
+### 1.1. Choose a Variant
 
-The composition of Cozystack is defined by a bundle.
-Bundle `paas-full` is the most complete one, as it covers all layers from hardware to managed applications.
+The composition of Cozystack is defined by a variant.
+Variant `isp-full` is the most complete one, as it covers all layers from hardware to managed applications.
 Choose it if you deploy Cozystack on bare metal or VMs and if you want to use its full power.
 
-If you deploy Cozystack on a provided Kubernetes cluster, or if you only want to deploy a Kubernetes cluster without services, 
+If you deploy Cozystack on a provided Kubernetes cluster, or if you only want to deploy a Kubernetes cluster without services,
 refer to the [bundles overview and comparison]({{% ref "/docs/v1/operations/configuration/bundles" %}}).
 
 ### 1.2. Fine-tune the Components
@@ -65,7 +74,7 @@ It may include a complete guide for your provider that you can use to deploy a p
 
 ### 1.3. Define Network Configuration
 
-Replace `example.org` in `data.root-host` and `data.api-server-endpoint` with a routable fully-qualified domain name (FQDN) that you control.
+Replace `example.org` in `publishing.host` and `publishing.apiServerEndpoint` with a routable fully-qualified domain name (FQDN) that you control.
 If you only have a public IP, but no routable FQDN, use [nip.io](https://nip.io/) with dash notation.
 
 The following section contains sane defaults.
@@ -73,10 +82,11 @@ Check that they match Talos node settings that you used in the previous steps.
 If you were using Talm to install Kubernetes, they should be the same.
 
 ```yaml
-ipv4-pod-cidr: "10.244.0.0/16"
-ipv4-pod-gateway: "10.244.0.1"
-ipv4-svc-cidr: "10.96.0.0/16"
-ipv4-join-cidr: "100.64.0.0/16"
+networking:
+  podCIDR: "10.244.0.0/16"
+  podGateway: "10.244.0.1"
+  serviceCIDR: "10.96.0.0/16"
+  joinCIDR: "100.64.0.0/16"
 ```
 
 {{% alert color="info" %}}
@@ -84,28 +94,43 @@ Cozystack gathers anonymous usage statistics by default. Learn more about what d
 {{% /alert %}}
 
 
-## 2. Install Cozystack by Applying Configuration
+## 2. Install Cozystack
 
-Create a namespace `cozy-system` and install Cozystack system components:
+### 2.1. Install Cozystack Operator
+
+Install the Cozystack operator using Helm from the OCI registry:
 
 ```bash
-kubectl create ns cozy-system
-kubectl apply -f cozystack.yaml
-kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
+helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+  --version 1.0.0-beta.6 \
+  --namespace cozy-system \
+  --create-namespace
 ```
 
-As the installation goes on, you can track the logs of installer:
+This installs the operator, CRDs, and creates the `PackageSource` resource.
+
+### 2.2. Apply Platform Package
+
+Once the operator is running, apply the Platform Package prepared in step 1:
 
 ```bash
-kubectl logs -n cozy-system deploy/cozystack -f
+kubectl apply -f cozystack-platform.yaml
+```
+
+As the installation goes on, you can track the logs of the operator:
+
+```bash
+kubectl logs -n cozy-system deploy/cozystack-operator -f
 ```
 
 Wait for a while, then check the status of installation:
+
 ```bash
 kubectl get hr -A
 ```
 
 Wait until all releases become to `Ready` state:
+
 ```console
 NAMESPACE                        NAME                        AGE    READY   STATUS
 cozy-cert-manager                cert-manager                4m1s   True    Release reconciliation succeeded
@@ -136,10 +161,24 @@ tenant-root                      tenant-root                 4m1s   True    Rele
 
 ### Installing on non-Talos OS
 
-By default, Cozystack is configured to use the [KubePrism](https://www.talos.dev/latest/kubernetes-guides/configuration/kubeprism/) 
+By default, the Cozystack operator is configured to use the [KubePrism](https://www.talos.dev/latest/kubernetes-guides/configuration/kubeprism/)
 feature of Talos Linux, which allows access to the Kubernetes API via a local address on the node.
-If you're installing Cozystack on a system other than Talos Linux, you must update the `KUBERNETES_SERVICE_HOST` and `KUBERNETES_SERVICE_PORT`
-environment variables in the `cozystack-installer.yaml` manifest.
+
+If you're installing Cozystack on a system other than Talos Linux, set the operator variant during installation:
+
+```bash
+helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+  --version 1.0.0-beta.6 \
+  --namespace cozy-system \
+  --create-namespace \
+  --set cozystackOperator.variant=generic \
+  --set cozystack.apiServerHost=<YOUR_API_SERVER_IP> \
+  --set cozystack.apiServerPort=6443
+```
+
+Replace `<YOUR_API_SERVER_IP>` with the internal IP address of your Kubernetes API server (IP only, without protocol or port).
+
+For a complete guide on deploying Cozystack on generic Kubernetes distributions, see [Deploying Cozystack on Generic Kubernetes]({{% ref "/docs/v1/install/kubernetes/generic" %}}).
 
 ### Dividing Control Plane and Worker Nodes
 
@@ -173,13 +212,13 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     ```
 
 1.  List your nodes and check their readiness:
-    
+
     ```bash
     linstor node list
     ```
 
     Example output shows node names and state:
-    
+
     ```console
     +-------------------------------------------------------+
     | Node | NodeType  | Addresses                 | State  |
@@ -263,7 +302,7 @@ done
     ```
 
     Example output:
-    
+
     ```console
     +-------------------------------------------------------------------------------------------------------------------------------------+
     | StoragePool          | Node | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State | SharedName                |
@@ -285,9 +324,9 @@ Create storage classes, one of which should be the default class.
 
 1.  Create a file with storage class definitions.
     Below is a sane default example providing two classes: `local` (default) and `replicated`.
-    
+
     **storageclasses.yaml:**
-    
+
     ```yaml
     ---
     apiVersion: storage.k8s.io/v1
@@ -335,7 +374,7 @@ Create storage classes, one of which should be the default class.
     ```
 
     Example output:
-    
+
     ```console
     NAME              PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
     local (default)   linstor.csi.linbit.com   Delete          WaitForFirstConsumer   true                   11m
@@ -399,7 +438,7 @@ Create and apply resources needed for an L2 or a BGP advertisement.
 
 {{< tabs name="metallb_announce" >}}
 {{% tab name="L2 mode" %}}
-L2Advertisement uses the name of the IPAddressPool resource we created previously. 
+L2Advertisement uses the name of the IPAddressPool resource we created previously.
 
 **metallb-l2-advertisement.yml**
 ```yaml
@@ -434,7 +473,7 @@ spec:
   myASN: 65000
   peerASN: 65001
   peerAddress: 192.168.20.254
-```  
+```
 <br/>
 
 Next, create a single BGPAdvertisement resource.
@@ -505,12 +544,24 @@ If public IPs are provided with a 1:1 NAT, as some clouds do, use IP addresses o
 
 Here we will use `192.168.100.11`, `192.168.100.12`, and `192.168.100.13`.
 
-First, patch the ConfigMap with IPs to expose:
+First, patch the Platform Package with IPs to expose:
 
 ```bash
-kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
-  "data": {
-    "expose-external-ips": "192.168.100.11,192.168.100.12,192.168.100.13"
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "publishing": {
+            "externalIPs": [
+              "192.168.100.11",
+              "192.168.100.12",
+              "192.168.100.13"
+            ]
+          }
+        }
+      }
+    }
   }
 }'
 ```
@@ -632,19 +683,24 @@ root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:316
 
 ### 5.3 Access the Cozystack Dashboard
 
-If you left this line in the ConfigMap, Cozystack Dashboard must be already available at this moment:
+If you included `dashboard` in `publishing.exposedServices` of your Platform Package, the Cozystack Dashboard should already be available.
 
-```yaml
-data:
-  expose-services: "dashboard,api"
-```
-
-If the initial configmap did not have this line, patch it with the following command:
+If the initial Package did not include it, patch the Platform Package:
 
 ```bash
-kubectl patch -n cozy-system cm cozystack --type=merge -p '{"data":{
-    "expose-services": "dashboard"
-    }}'
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "publishing": {
+            "exposedServices": ["dashboard"]
+          }
+        }
+      }
+    }
+  }
+}'
 ```
 
 Open `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
