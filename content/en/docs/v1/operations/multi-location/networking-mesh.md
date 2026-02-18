@@ -48,8 +48,8 @@ location use a private subnet that other locations need to reach (e.g. for kubel
 or NodePort access), annotate the nodes **in that location** with `kilo.squat.ai/allowed-location-ips`:
 
 ```bash
-# On on-premise nodes — expose the on-premise subnet to cloud nodes
-kubectl annotate node <on-premise-node> kilo.squat.ai/allowed-location-ips=192.168.100.0/24
+# On all on-premise nodes (using a label selector) — expose the on-premise subnet to cloud nodes
+kubectl annotate nodes -l topology.kubernetes.io/zone=on-prem kilo.squat.ai/allowed-location-ips=192.168.100.0/24
 ```
 
 This tells Kilo to include the specified CIDRs in the WireGuard allowed IPs for that location,
