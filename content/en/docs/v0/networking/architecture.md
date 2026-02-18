@@ -4,7 +4,8 @@ linkTitle: "Architecture"
 description: "Overview of Cozystack cluster network architecture: MetalLB load balancing, Cilium eBPF networking, and tenant isolation with Kube-OVN."
 weight: 5
 aliases:
-  - /docs/v1/reference/applications/architecture
+  - /docs/v0/reference/applications/architecture
+  - /docs/reference/applications/architecture
 ---
 
 ## Overview
