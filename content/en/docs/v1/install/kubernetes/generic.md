@@ -1,0 +1,485 @@
+---
+title: "Deploying Cozystack on Generic Kubernetes"
+linkTitle: "Generic Kubernetes"
+description: "How to deploy Cozystack on k3s, kubeadm, RKE2, or other Kubernetes distributions without Talos Linux"
+weight: 50
+---
+
+This guide explains how to deploy Cozystack on generic Kubernetes distributions such as k3s, kubeadm, or RKE2.
+While Talos Linux remains the recommended platform for production deployments, Cozystack supports deployment on other Kubernetes distributions using the `isp-full-generic` bundle.
+
+## When to Use Generic Kubernetes
+
+Consider using generic Kubernetes instead of Talos Linux when:
+
+- You have an existing Kubernetes cluster you want to enhance with Cozystack
+- Your infrastructure doesn't support Talos Linux (certain cloud providers, embedded systems)
+- You need specific Linux features or packages not available in Talos
+
+For new production deployments, [Talos Linux]({{% ref "/docs/v1/guides/talos" %}}) is recommended due to its security and operational benefits.
+
+## Prerequisites
+
+### Supported Distributions
+
+Cozystack has been tested on:
+
+- **k3s** v1.32+ (recommended for single-node and edge deployments)
+- **kubeadm** v1.28+
+- **RKE2** v1.28+
+
+### Host Requirements
+
+- **Operating System**: Ubuntu 22.04+ or Debian 12+ (kernel 5.x+ with systemd)
+- **Architecture**: amd64 or arm64
+- **Hardware**: See [hardware requirements]({{% ref "/docs/v1/install/hardware-requirements" %}})
+
+### Required Packages
+
+Install the following packages on all nodes:
+
+```bash
+apt-get update
+apt-get install -y nfs-common open-iscsi multipath-tools
+```
+
+### Required Kernel Modules
+
+Load the `br_netfilter` module (required for bridge netfilter sysctl settings):
+
+```bash
+modprobe br_netfilter
+echo "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
+```
+
+### Required Services
+
+Enable and start required services:
+
+```bash
+systemctl enable --now iscsid
+systemctl enable --now multipathd
+```
+
+## Sysctl Configuration
+
+{{% alert color="warning" %}}
+:warning: **Critical**: The sysctl settings below are mandatory for Cozystack to function properly.
+Without these settings, Kubernetes components will fail due to insufficient inotify watches.
+{{% /alert %}}
+
+Create `/etc/sysctl.d/99-cozystack.conf` with the following content:
+
+```ini
+# Inotify limits (critical for Cozystack)
+fs.inotify.max_user_watches = 524288
+fs.inotify.max_user_instances = 8192
+fs.inotify.max_queued_events = 65536
+
+# Filesystem limits
+fs.file-max = 2097152
+fs.aio-max-nr = 1048576
+
+# Network forwarding (required for Kubernetes)
+net.ipv4.ip_forward = 1
+net.ipv4.conf.all.forwarding = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+
+# VM tuning
+vm.swappiness = 1
+```
+
+Apply the settings:
+
+```bash
+sysctl --system
+```
+
+## Kubernetes Configuration
+
+Cozystack manages its own networking (Cilium/KubeOVN), storage (LINSTOR), and ingress (NGINX).
+Your Kubernetes distribution must be configured to **not** install these components.
+
+### Required Configuration
+
+| Component | Requirement |
+| ----------- | ------------- |
+| CNI | **Disabled** — Cozystack deploys Cilium or KubeOVN |
+| Ingress Controller | **Disabled** — Cozystack deploys NGINX |
+| Storage Provisioner | **Disabled** — Cozystack deploys LINSTOR |
+| kube-proxy | **Disabled** — Cilium replaces it |
+| Cluster Domain | Must be `cozy.local` |
+
+{{< tabs name="kubernetes_distributions" >}}
+{{% tab name="k3s" %}}
+
+When installing k3s, use the following flags:
+
+```bash
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server \
+  --disable=traefik \
+  --disable=servicelb \
+  --disable=local-storage \
+  --disable=metrics-server \
+  --disable-network-policy \
+  --disable-kube-proxy \
+  --flannel-backend=none \
+  --cluster-domain=cozy.local \
+  --tls-san=<YOUR_NODE_IP> \
+  --kubelet-arg=max-pods=220" sh -
+```
+
+Replace `<YOUR_NODE_IP>` with your node's IP address.
+
+{{% /tab %}}
+{{% tab name="kubeadm" %}}
+
+Create a kubeadm configuration file:
+
+```yaml
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+networking:
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/16"
+  dnsDomain: "cozy.local"
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: "none"  # Cilium will replace kube-proxy
+```
+
+Initialize the cluster without the default CNI:
+
+```bash
+kubeadm init --config kubeadm-config.yaml --skip-phases=addon/kube-proxy
+```
+
+Do not install a CNI plugin after `kubeadm init` — Cozystack will deploy Kube-OVN and Cilium automatically.
+
+{{% /tab %}}
+{{% tab name="RKE2" %}}
+
+Create `/etc/rancher/rke2/config.yaml`:
+
+```yaml
+cni: none
+disable:
+  - rke2-ingress-nginx
+  - rke2-metrics-server
+cluster-domain: cozy.local
+disable-kube-proxy: true
+```
+
+{{% /tab %}}
+{{< /tabs >}}
+
+## Installing Cozystack
+
+### 1. Apply CRDs
+
+Download and apply Custom Resource Definitions:
+
+```bash
+kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-crds.yaml
+```
+
+### 2. Deploy Cozystack Operator
+
+Download the generic operator manifest, replace the API server address placeholder, and apply:
+
+```bash
+curl -fsSL https://github.com/cozystack/cozystack/releases/latest/download/cozystack-operator-generic.yaml \
+  | sed 's/REPLACE_ME/<YOUR_NODE_IP>/' \
+  | kubectl apply -f -
+```
+
+Replace `<YOUR_NODE_IP>` with the IP address of your Kubernetes API server (IP only, without protocol or port).
+
+The manifest includes the operator deployment, the `cozystack-operator-config` ConfigMap with the API server address, and the `PackageSource` resource.
+
+### 3. Create Platform Package
+
+After the operator starts and reconciles the `PackageSource`, create a `Package` resource to trigger the platform installation.
+
+{{% alert color="warning" %}}
+:warning: **Important**: The `podCIDR` and `serviceCIDR` values **must match** your Kubernetes cluster configuration.
+Different distributions use different defaults:
+
+- **k3s**: `10.42.0.0/16` (pods), `10.43.0.0/16` (services)
+- **kubeadm**: `10.244.0.0/16` (pods), `10.96.0.0/16` (services)
+- **RKE2**: `10.42.0.0/16` (pods), `10.43.0.0/16` (services)
+{{% /alert %}}
+
+Example for **k3s** (adjust CIDRs for other distributions):
+
+```yaml
+apiVersion: cozystack.io/v1alpha1
+kind: Package
+metadata:
+  name: cozystack.cozystack-platform
+  # Package is cluster-scoped — no namespace needed
+spec:
+  variant: isp-full-generic
+  components:
+    platform:
+      values:
+        publishing:
+          host: "example.com"
+          apiServerEndpoint: "https://<YOUR_NODE_IP>:6443"
+        networking:
+          podCIDR: "10.42.0.0/16"
+          podGateway: "10.42.0.1"
+          serviceCIDR: "10.43.0.0/16"
+          joinCIDR: "100.64.0.0/16"
+```
+
+Adjust the values:
+
+| Field | Description |
+| ------- | ------------- |
+| `publishing.host` | Your domain for Cozystack services |
+| `publishing.apiServerEndpoint` | Kubernetes API endpoint URL |
+| `networking.podCIDR` | Pod network CIDR (must match your k8s config) |
+| `networking.podGateway` | First IP in pod CIDR (e.g., `10.42.0.1` for `10.42.0.0/16`) |
+| `networking.serviceCIDR` | Service network CIDR (must match your k8s config) |
+| `networking.joinCIDR` | Network for nested cluster communication |
+
+Apply it:
+
+```bash
+kubectl apply -f cozystack-platform-package.yaml
+```
+
+{{% alert color="info" %}}
+The Package name **must** match the PackageSource name (`cozystack.cozystack-platform`).
+You can verify available PackageSources with `kubectl get packagesource`.
+{{% /alert %}}
+
+### 4. Monitor Installation
+
+Watch the installation progress:
+
+```bash
+kubectl logs -n cozy-system deploy/cozystack-operator -f
+```
+
+Check HelmRelease status:
+
+```bash
+kubectl get hr -A
+```
+
+{{% alert color="info" %}}
+During initial deployment, HelmReleases may show errors such as `ExternalArtifact not found` or `dependency is not ready` for the first few minutes while Cilium and other core components are being reconciled. This is expected — wait a few minutes and check again.
+{{% /alert %}}
+
+You can verify that Cilium has been deployed and nodes are networked by waiting for them to become Ready:
+
+```bash
+kubectl wait --for=condition=Ready nodes --all --timeout=300s
+```
+
+## Example: Ansible Playbook
+
+Below is a minimal Ansible playbook for preparing nodes and deploying Cozystack.
+
+Install the required Ansible collections first:
+
+```bash
+ansible-galaxy collection install ansible.posix community.general kubernetes.core ansible.utils
+```
+
+### Node Preparation Playbook
+
+```yaml
+---
+- name: Prepare nodes for Cozystack
+  hosts: all
+  become: true
+  tasks:
+    - name: Load br_netfilter module
+      community.general.modprobe:
+        name: br_netfilter
+        persistent: present
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - nfs-common
+          - open-iscsi
+          - multipath-tools
+        state: present
+        update_cache: true
+
+    - name: Configure sysctl for Cozystack
+      ansible.posix.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        sysctl_set: true
+        state: present
+        reload: true
+      loop:
+        - { name: fs.inotify.max_user_watches, value: "524288" }
+        - { name: fs.inotify.max_user_instances, value: "8192" }
+        - { name: fs.inotify.max_queued_events, value: "65536" }
+        - { name: fs.file-max, value: "2097152" }
+        - { name: fs.aio-max-nr, value: "1048576" }
+        - { name: net.ipv4.ip_forward, value: "1" }
+        - { name: net.ipv4.conf.all.forwarding, value: "1" }
+        - { name: net.bridge.bridge-nf-call-iptables, value: "1" }
+        - { name: net.bridge.bridge-nf-call-ip6tables, value: "1" }
+        - { name: vm.swappiness, value: "1" }
+
+    - name: Enable iscsid service
+      ansible.builtin.systemd:
+        name: iscsid
+        enabled: true
+        state: started
+
+    - name: Enable multipathd service
+      ansible.builtin.systemd:
+        name: multipathd
+        enabled: true
+        state: started
+```
+
+### Cozystack Deployment Playbook
+
+This example uses k3s default CIDRs. Adjust for kubeadm (`10.244.0.0/16`, `10.96.0.0/16`) or your custom configuration.
+
+```yaml
+---
+- name: Deploy Cozystack
+  hosts: localhost
+  connection: local
+  vars:
+    cozystack_root_host: "example.com"
+    cozystack_api_host: "10.0.0.1"
+    cozystack_api_port: "6443"
+    # k3s defaults - adjust for kubeadm (10.244.0.0/16, 10.96.0.0/16)
+    cozystack_pod_cidr: "10.42.0.0/16"
+    cozystack_svc_cidr: "10.43.0.0/16"
+  tasks:
+    - name: Apply Cozystack CRDs
+      ansible.builtin.command:
+        cmd: kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-crds.yaml
+      changed_when: true
+
+    - name: Download and apply Cozystack operator manifest
+      ansible.builtin.shell:
+        cmd: >
+          curl -fsSL https://github.com/cozystack/cozystack/releases/latest/download/cozystack-operator-generic.yaml
+          | sed 's/REPLACE_ME/{{ cozystack_api_host }}/'
+          | kubectl apply -f -
+      changed_when: true
+
+    - name: Wait for PackageSource to be ready
+      kubernetes.core.k8s_info:
+        api_version: cozystack.io/v1alpha1
+        kind: PackageSource
+        name: cozystack.cozystack-platform
+      register: pkg_source
+      until: >
+        pkg_source.resources | length > 0 and
+        (
+          pkg_source.resources[0].status.conditions
+          | selectattr('type', 'equalto', 'Ready')
+          | map(attribute='status')
+          | first
+          | default('False')
+        ) == "True"
+      retries: 30
+      delay: 10
+
+    - name: Create Platform Package
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: cozystack.io/v1alpha1
+          kind: Package
+          metadata:
+            name: cozystack.cozystack-platform
+          spec:
+            variant: isp-full-generic
+            components:
+              platform:
+                values:
+                  publishing:
+                    host: "{{ cozystack_root_host }}"
+                    apiServerEndpoint: "https://{{ cozystack_api_host }}:{{ cozystack_api_port }}"
+                  networking:
+                    podCIDR: "{{ cozystack_pod_cidr }}"
+                    podGateway: "{{ cozystack_pod_cidr | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
+                    serviceCIDR: "{{ cozystack_svc_cidr }}"
+                    joinCIDR: "100.64.0.0/16"
+```
+
+## Troubleshooting
+
+### linstor-scheduler Image Tag Invalid
+
+**Symptom**: `InvalidImageName` error for linstor-scheduler pod.
+
+**Cause**: k3s version format (e.g., `v1.35.0+k3s1`) contains `+` which is invalid in Docker image tags.
+
+**Solution**: This is fixed in Cozystack v1.0.0+. Ensure you're using the latest release.
+
+### KubeOVN Not Scheduling
+
+**Symptom**: ovn-central pods stuck in Pending state.
+
+**Cause**: KubeOVN uses Helm `lookup` to find control-plane nodes, which may fail on fresh clusters.
+
+**Solution**: Ensure your Platform Package includes explicit `MASTER_NODES` configuration:
+
+```yaml
+spec:
+  components:
+    networking:
+      values:
+        kube-ovn:
+          MASTER_NODES: "<YOUR_CONTROL_PLANE_IP>"
+```
+
+### Cilium Cannot Reach API Server
+
+**Symptom**: Cilium pods in CrashLoopBackOff with API connection errors.
+
+**Cause**: Single-node clusters or non-standard API endpoints require explicit configuration.
+
+**Solution**: Verify your Platform Package includes correct API server settings:
+
+```yaml
+spec:
+  components:
+    networking:
+      values:
+        cilium:
+          k8sServiceHost: "<YOUR_API_HOST>"
+          k8sServicePort: "6443"
+```
+
+### Inotify Limit Errors
+
+**Symptom**: Pods failing with "too many open files" or inotify errors.
+
+**Cause**: Default Linux inotify limits are too low for Kubernetes.
+
+**Solution**: Apply sysctl settings from the [Sysctl Configuration](#sysctl-configuration) section and reboot the node.
+
+## Further Steps
+
+After Cozystack installation completes:
+
+1. [Configure storage with LINSTOR]({{% ref "/docs/v1/getting-started/install-cozystack#3-configure-storage" %}})
+2. [Set up the root tenant]({{% ref "/docs/v1/getting-started/install-cozystack#51-setup-root-tenant-services" %}})
+3. [Deploy your first application]({{% ref "/docs/v1/applications" %}})
+
+## References
+
+- [PR #1939: Non-Talos Kubernetes Support](https://github.com/cozystack/cozystack/pull/1939)
+- [Issue #1950: Complete non-Talos Support](https://github.com/cozystack/cozystack/issues/1950)
+- [k3s Documentation](https://docs.k3s.io/)
+- [kubeadm Documentation](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/)
