@@ -47,10 +47,9 @@ By default, Kilo only routes pod CIDRs and individual node internal IPs through 
 location use a private subnet that other locations need to reach (e.g. for kubelet communication
 or NodePort access), annotate the nodes **in that location** with `kilo.squat.ai/allowed-location-ips`:
 
-```yaml
-machine:
-  nodeAnnotations:
-    kilo.squat.ai/allowed-location-ips: 10.2.0.0/24
+```bash
+# On all on-premise nodes (using a label selector) — expose the on-premise subnet to cloud nodes
+kubectl annotate nodes -l topology.kubernetes.io/zone=on-prem kilo.squat.ai/allowed-location-ips=192.168.100.0/24
 ```
 
 This tells Kilo to include the specified CIDRs in the WireGuard allowed IPs for that location,
