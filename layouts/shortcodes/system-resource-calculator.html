@@ -1,0 +1,204 @@
+{{ $_hugo_config := `{ "version": 1 }` }}
+<div class="resource-calculator">
+  <div class="calculator-card">
+    <div class="calculator-inputs">
+      <div class="input-group">
+        <label for="nodes-slider">
+          <span class="label-text">Nodes:</span>
+          <span class="label-value" id="nodes-value">5</span>
+        </label>
+        <input type="range" id="nodes-slider" min="3" max="15" value="5" step="1">
+      </div>
+
+      <div class="input-group">
+        <label for="tenants-slider">
+          <span class="label-text">Tenants:</span>
+          <span class="label-value" id="tenants-value">5</span>
+        </label>
+        <input type="range" id="tenants-slider" min="1" max="40" value="5" step="1">
+      </div>
+    </div>
+
+    <div class="calculator-results">
+      <div class="result-item">
+        <div class="result-label">CPU per Node</div>
+        <div class="result-value" id="cpu-result">2 cores</div>
+      </div>
+      <div class="result-item">
+        <div class="result-label">RAM per Node</div>
+        <div class="result-value" id="ram-result">6 GB</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.resource-calculator {
+  margin: 2rem 0;
+}
+
+.calculator-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.calculator-inputs {
+  margin-bottom: 1.5rem;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-group label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.label-text {
+  color: #495057;
+}
+
+.label-value {
+  background: #007bff;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  min-width: 3rem;
+  text-align: center;
+  margin-left: 1rem;
+}
+
+.input-group input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: #dee2e6;
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.input-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #007bff;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.input-group input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #007bff;
+  cursor: pointer;
+  border-radius: 50%;
+  border: none;
+}
+
+.calculator-results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.result-item {
+  background: white;
+  border: 2px solid #28a745;
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.result-label {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.result-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #28a745;
+}
+
+@media (max-width: 576px) {
+  .calculator-results {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+(function() {
+  // Resource requirements table data
+  const resourceTable = {
+    small: {  // 3-5 nodes
+      '0-5': { cpu: 2, ram: 6 },
+      '6-14': { cpu: 2, ram: 6 },
+      '15-30': { cpu: 3, ram: 10 },
+      '30+': { cpu: 3, ram: 15 }
+    },
+    medium: {  // 6-10 nodes
+      '0-5': { cpu: 3, ram: 7 },
+      '6-14': { cpu: 3, ram: 7 },
+      '15-30': { cpu: 3, ram: 12 },
+      '30+': { cpu: 4, ram: 18 }
+    },
+    large: {  // 10+ nodes
+      '0-5': { cpu: 3, ram: 9 },
+      '6-14': { cpu: 3, ram: 10 },
+      '15-30': { cpu: 4, ram: 15 },
+      '30+': { cpu: 4, ram: 22 }
+    }
+  };
+
+  function getClusterSize(nodes) {
+    if (nodes >= 3 && nodes <= 5) return 'small';
+    if (nodes >= 6 && nodes <= 10) return 'medium';
+    return 'large';
+  }
+
+  function getTenantRange(tenants) {
+    if (tenants <= 5) return '0-5';
+    if (tenants <= 14) return '6-14';
+    if (tenants <= 30) return '15-30';
+    return '30+';
+  }
+
+  function calculateResources(nodes, tenants) {
+    const clusterSize = getClusterSize(nodes);
+    const tenantRange = getTenantRange(tenants);
+    return resourceTable[clusterSize][tenantRange];
+  }
+
+  function updateResults() {
+    const nodes = parseInt(document.getElementById('nodes-slider').value);
+    const tenants = parseInt(document.getElementById('tenants-slider').value);
+
+    document.getElementById('nodes-value').textContent = nodes;
+    document.getElementById('tenants-value').textContent = tenants;
+
+    const resources = calculateResources(nodes, tenants);
+
+    document.getElementById('cpu-result').textContent = resources.cpu + ' cores';
+    document.getElementById('ram-result').textContent = resources.ram + ' GB';
+  }
+
+  // Initialize
+  document.getElementById('nodes-slider').addEventListener('input', updateResults);
+  document.getElementById('tenants-slider').addEventListener('input', updateResults);
+
+  // Initial calculation
+  updateResults();
+})();
+</script>
