@@ -3,6 +3,8 @@ title: "Network Architecture"
 linkTitle: "Architecture"
 description: "Overview of Cozystack cluster network architecture: MetalLB load balancing, Cilium eBPF networking, and tenant isolation with Kube-OVN."
 weight: 5
+aliases:
+  - /docs/v1/reference/applications/architecture
 ---
 
 ## Overview
@@ -15,7 +17,7 @@ Cozystack uses a multi-layered networking stack designed for bare-metal Kubernet
 | Service load balancing | Cilium eBPF | kube-proxy replacement, in-kernel DNAT |
 | Network policies | Cilium eBPF | Tenant isolation and security enforcement |
 | Pod networking (CNI) | Kube-OVN | Centralized IPAM, overlay networking |
-| Observability | Hubble | Network traffic visibility |
+| Observability | Hubble (optional) | Network traffic visibility (disabled by default) |
 
 ```mermaid
 flowchart TD
@@ -39,7 +41,36 @@ flowchart TD
 | --- | --- |
 | Pod CIDR | 10.244.0.0/16 |
 | Service CIDR | 10.96.0.0/16 |
-| CNI | Kube-OVN + Cilium (kube-proxy replacement) |
+| Join CIDR | 100.64.0.0/16 |
+| Cluster domain | cozy.local |
+| Overlay type | GENEVE |
+| CNI | Kube-OVN |
+| kube-proxy replacement | Cilium eBPF |
+
+### Networking Stack Variants
+
+Cozystack supports several networking stack variants to accommodate different
+cluster types. The variant is selected via `bundles.system.variant` in the
+platform configuration.
+
+| Variant | Components | Target Platform |
+| --- | --- | --- |
+| `kubeovn-cilium` | Kube-OVN + Cilium (default) | Talos Linux |
+| `kubeovn-cilium-generic` | Kube-OVN + Cilium | kubeadm, k3s, RKE2 |
+| `cilium` | Cilium only | Talos Linux |
+| `cilium-generic` | Cilium only | kubeadm, k3s, RKE2 |
+| `noop` | None (bring your own CNI) | Any |
+
+In Kube-OVN variants, Cilium operates as a chained CNI (`generic-veth` mode):
+Kube-OVN handles pod networking and IPAM, while Cilium provides service load
+balancing, network policy enforcement, and optional observability via Hubble.
+
+In Cilium-only variants, Cilium serves as both the CNI and the service load
+balancer.
+
+{{% alert color="info" %}}
+The rest of this document describes the default `kubeovn-cilium` variant.
+{{% /alert %}}
 
 ### Pod CIDR Allocation (Kube-OVN)
 
@@ -48,7 +79,8 @@ Kube-OVN uses a **shared Pod CIDR** model:
 - All pods draw from a single shared IP pool (10.244.0.0/16)
 - IP addresses are allocated centrally through Kube-OVN's IPAM
 - There is no per-node CIDR splitting (unlike Calico or Flannel)
-- This enables live migration of pods between nodes without changing their IP addresses
+- Because IPs are not tied to node-specific CIDR blocks, pods can be rescheduled to different nodes while retaining their addresses
+- Inter-node pod communication uses GENEVE tunnels (Join CIDR: 100.64.0.0/16)
 
 ## External Traffic Ingress with MetalLB
 
@@ -220,7 +252,7 @@ flowchart TD
 
 ## Tenant Isolation with Kube-OVN and Cilium
 
-In a multi-tenant Cozystack cluster, all tenants share the same Pod CIDR. Kube-OVN manages a single shared IP pool (no per-node splitting), and Cilium enforces strong isolation using eBPF-based network policies.
+In a multi-tenant Cozystack cluster, all tenants share the same Pod CIDR. This is secure because isolation is enforced by Cilium eBPF policies at the kernel level, not by network segmentation. Tenants cannot communicate even though they share the same IP pool. Kube-OVN manages a single shared IP pool (no per-node splitting), and Cilium enforces strong isolation using eBPF-based network policies.
 
 ### CNI Architecture
 
@@ -228,7 +260,7 @@ In a multi-tenant Cozystack cluster, all tenants share the same Pod CIDR. Kube-O
 flowchart TD
     subgraph KO["Kube-OVN"]
         IPAM["Centralized IPAM — Shared pool 10.244.0.0/16"]
-        OVN["OVN/OVS Overlay Network"]
+        OVN["OVN/OVS Overlay Network (GENEVE)"]
         SUBNET["Subnet management per namespace/tenant"]
     end
 
@@ -241,6 +273,12 @@ flowchart TD
 
     KO --> CIL
 ```
+
+Kube-OVN provides the primary CNI plugin for pod networking and IPAM. Kube-OVN's
+own network policy engine is disabled (`ENABLE_NP: false`), and all policy
+enforcement is delegated to Cilium. Cilium operates as a chained CNI component
+(`generic-veth` mode) that enforces network policies via eBPF and replaces
+kube-proxy for service load balancing.
 
 ### Tenant Isolation Model
 
@@ -320,28 +358,66 @@ flowchart TD
 
 ### Default Deny with Namespace Isolation
 
-Example `CiliumNetworkPolicy` for tenant isolation:
+
+{{% alert color="warning" %}}
+By default, Kubernetes allows all pod-to-pod traffic. Cozystack applies
+CiliumNetworkPolicy and CiliumClusterwideNetworkPolicy resources automatically
+when a tenant is created. These policies enforce namespace-level isolation and
+restrict access to system ports (etcd, kubelet, controllers).
+{{% /alert %}}
+
+Cozystack uses hierarchical tenant labels for isolation. Policies match on
+`tenant.cozystack.io/*` namespace labels, which allows parent tenants to
+include sub-tenant namespaces. Example:
 
 ```yaml
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: isolate-tenant
-  namespace: tenant-a
+  name: allow-internal-communication
+  namespace: tenant-example
 spec:
-  endpointSelector: {}    # Apply to all pods in namespace
+  endpointSelector: {}
   ingress:
     - fromEndpoints:
         - matchLabels:
-            io.kubernetes.pod.namespace: tenant-a  # Only from same namespace
+            k8s:io.cilium.k8s.namespace.labels.tenant.cozystack.io/tenant-example: ""
   egress:
     - toEndpoints:
         - matchLabels:
-            io.kubernetes.pod.namespace: tenant-a  # Only to same namespace
+            k8s:io.cilium.k8s.namespace.labels.tenant.cozystack.io/tenant-example: ""
     - toEntities:
-        - kube-apiserver  # Allow API server access
-        - cluster         # Allow cluster DNS
+        - kube-apiserver
+        - cluster
 ```
+
+## Observability with Hubble
+
+Hubble provides network traffic visibility for the Cilium data plane. It is
+included in the Cozystack networking stack but **disabled by default** to
+minimize resource usage.
+
+When enabled, Hubble provides:
+
+- Real-time flow logs for all pod-to-pod and external traffic
+- DNS query visibility
+- HTTP/gRPC request-level metrics
+- Prometheus metrics integration
+- Web UI for traffic visualization
+
+To enable Hubble, set the following in the Cilium configuration:
+
+```yaml
+cilium:
+  hubble:
+    enabled: true
+    relay:
+      enabled: true
+    ui:
+      enabled: true
+```
+
+See Enabling Hubble for full configuration details.
 
 ## Traffic Flow Summary
 
