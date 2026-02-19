@@ -33,44 +33,32 @@ Before upgrading, check the current status of your Cozystack cluster by followin
 
 - [Troubleshooting Checklist]({{% ref "/docs/v1/operations/troubleshooting/#troubleshooting-checklist" %}})
 
-Make sure that the Cozystack ConfigMap contains all the necessary variables:
-If there are missing keys in `data.*`, add them.
+Make sure that the Platform Package is healthy and contains the expected configuration:
 
 ```bash
-kubectl get configmap -n cozy-system cozystack -oyaml
-```
-Example output:
-```yaml
-apiVersion: v1
-kind: ConfigMap
-data:
-  api-server-endpoint: https://33.44.55.66:6443
-  bundle-name: paas-full
-  ipv4-join-cidr: 100.64.0.0/16
-  ipv4-pod-cidr: 10.244.0.0/16
-  ipv4-pod-gateway: 10.244.0.1
-  ipv4-svc-cidr: 10.96.0.0/16
-  root-host: example.org
-  ...
+kubectl get packages.cozystack.io cozystack.cozystack-platform -o yaml
 ```
 
-Learn more about this file and its contents from the [Cozystack ConfigMap reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
+### 2. Upgrade the Cozystack Operator
 
-### 2. Apply the new manifest file
+Upgrade the Cozystack operator Helm release to the target version:
 
-Each Cozystack release includes a manifest file `cozystack-installer.yml`.
-Download and apply it, or apply directly from GitHub:
+{{% alert color="warning" %}}
+Do not use `--reuse-values` when upgrading the Cozystack operator. The Helm chart values contain hardcoded references to the platform OCI repository. Reusing old values would result in the new operator pointing to old package versions.
+
+If you have custom values (e.g., `disableTelemetry`), pass them explicitly with `--set`.
+{{% /alert %}}
 
 ```bash
-# note the 'v' before version numbers
-version=vX.Y.Z
-kubectl apply -f  https://github.com/cozystack/cozystack/releases/download/$version/cozystack-installer.yaml
+helm upgrade cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+  --version X.Y.Z \
+  --namespace cozy-system
 ```
 
-You can read the logs of the main installer:
+You can read the logs of the operator:
 
 ```bash
-kubectl logs -n cozy-system deploy/cozystack -f
+kubectl logs -n cozy-system deploy/cozystack-operator -f
 ```
 
 ### 3. Check the cluster status after upgrading
@@ -83,10 +71,10 @@ kubectl get hr -A | grep -v "True"
 If pod status shows a failure, check the logs:
 
 ```bash
-kubectl logs -n cozy-system deploy/cozystack --previous
+kubectl logs -n cozy-system deploy/cozystack-operator --previous
 ```
 
 To make sure everything works as expected, repeat the steps from
 
-  - [Troubleshooting Checklist]({{% ref "/docs/v1/operations/troubleshooting/#troubleshooting-checklist" %}})
+- [Troubleshooting Checklist]({{% ref "/docs/v1/operations/troubleshooting/#troubleshooting-checklist" %}})
 

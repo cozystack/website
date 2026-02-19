@@ -32,17 +32,24 @@ Follow these steps:
     kubectl label node <node-name> --overwrite nvidia.com/gpu.workload.config=vm-passthrough
     ```
 
-2.  Enable the GPU Operator bundle in your Cozystack configuration:
+2.  Enable the GPU Operator in your Platform Package by adding it to the enabled packages list:
 
     ```bash
-    kubectl edit -n cozy-system configmap cozystack
+    kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+      "spec": {
+        "components": {
+          "platform": {
+            "values": {
+              "bundles": {
+                "enabledPackages": ["gpu-operator"]
+              }
+            }
+          }
+        }
+      }
+    }'
     ```
 
-3.  Add `gpu-operator` to the list of bundle-enabled packages:
-
-    ```yaml
-    bundle-enable: gpu-operator
-    ```
     This will deploy the components (operands).
 
 4.  Ensure all pods are in a running state and all validations succeed with the sandbox-validator component:

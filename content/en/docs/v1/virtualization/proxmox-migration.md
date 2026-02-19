@@ -20,16 +20,40 @@ Before starting the migration, ensure you have:
    - Installation guide: [KubeVirt User Guide - Virtctl Client Tool](https://kubevirt.io/user-guide/user_workloads/virtctl_client_tool/)
 
 2. **Upload proxy access configured** in your Cozystack cluster:
-   - Modify your Cozystack ConfigMap to enable `cdi-uploadproxy`:
+   - Patch the Platform Package to expose `cdi-uploadproxy`:
+
      ```bash
-     kubectl patch cm -n cozy-system cozystack --type merge -p='{"data":{
-       "expose-services": "dashboard,cdi-uploadproxy"
-     }}'
+     kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+       "spec": {
+         "components": {
+           "platform": {
+             "values": {
+               "publishing": {
+                 "exposedServices": ["dashboard", "cdi-uploadproxy"]
+               }
+             }
+           }
+         }
+       }
+     }'
      ```
-   - Configure the CDI upload proxy endpoint in your Cozystack values:
-     ```yaml
-     values-cdi: |
-       uploadProxyURL: https://cdi-uploadproxy.example.org
+
+   - Configure the CDI upload proxy endpoint in the Platform Package:
+
+     ```bash
+     kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+       "spec": {
+         "components": {
+           "platform": {
+             "values": {
+               "cdi": {
+                 "uploadProxyURL": "https://cdi-uploadproxy.example.org"
+               }
+             }
+           }
+         }
+       }
+     }'
      ```
 
 3. **DNS or hosts file configuration** for upload proxy access:

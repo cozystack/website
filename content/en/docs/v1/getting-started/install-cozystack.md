@@ -21,45 +21,50 @@ The tutorial will guide you through the following stages:
 ## 1. Prepare a Configuration File
 
 We will start installing Cozystack by making a configuration file.
-Take the example below and write it in a file **cozystack.yaml**:
+Take the example below and write it in a file **cozystack-platform.yaml**:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
-  namespace: cozy-system
-data:
-  bundle-name: "paas-full"
-  root-host: "example.org"
-  api-server-endpoint: "https://api.example.org:443"
-  expose-services: "dashboard,api"
-  ipv4-pod-cidr: "10.244.0.0/16"
-  ipv4-pod-gateway: "10.244.0.1"
-  ipv4-svc-cidr: "10.96.0.0/16"
-  ipv4-join-cidr: "100.64.0.0/16"
+  name: cozystack.cozystack-platform
+spec:
+  variant: isp-full
+  components:
+    platform:
+      values:
+        publishing:
+          host: "example.org"
+          apiServerEndpoint: "https://api.example.org:443"
+          exposedServices:
+            - dashboard
+            - api
+        networking:
+          podCIDR: "10.244.0.0/16"
+          podGateway: "10.244.0.1"
+          serviceCIDR: "10.96.0.0/16"
+          joinCIDR: "100.64.0.0/16"
 ```
 
 Action points:
 
-1.  Replace `example.org` in `data.root-host` and `data.api-server-endpoint` with a routable fully-qualified domain name (FQDN) that you control.
+1.  Replace `example.org` in `publishing.host` and `publishing.apiServerEndpoint` with a routable fully-qualified domain name (FQDN) that you control.
     If you only have a public IP, but no FQDN, use [nip.io](https://nip.io/) with dash notation.
-2.  Use the same values for `data.ipv4*` as on the previous step, where you bootstrapped a Kubernetes cluster with Talm or `talosctl`.
+2.  Use the same values for `networking.*` as on the previous step, where you bootstrapped a Kubernetes cluster with Talm or `talosctl`.
     Settings provided in the example are sane defaults that can be used in most cases.
 
 There are other values in this config that you don't need to change in the course of the tutorial.
 However, let's overview and explain each value:
 
--   `metadata.name` and `metadata.namespace` define that this is the main
-    [ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/) of Cozystack.
--   `root-host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
--   `api-server-endpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
--   `data.bundle-name: "paas-full"` means that we're using the Cozystack bundle `paas-full`, the most complete set of components.
-    Learn more about bundles in the [Cozystack Bundles reference]({{% ref "/docs/v1/operations/configuration/bundles" %}}).
--   `data.expose-services: "dashboard,api"` means that we want to make Cozystack dashboard (UI) and API accessible by users.
--   `ipv4-*` are internal networking configurations for the underlying Kubernetes cluster.
+-   `metadata.name` must be `cozystack.cozystack-platform` to match the PackageSource created by the installer.
+-   `publishing.host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
+-   `publishing.apiServerEndpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
+-   `spec.variant: "isp-full"` means that we're using the most complete set of Cozystack components.
+    Learn more about variants in the [Cozystack Bundles reference]({{% ref "/docs/v1/operations/configuration/bundles" %}}).
+-   `publishing.exposedServices` lists services to make accessible by users — here the dashboard (UI) and API.
+-   `networking.*` are internal networking configurations for the underlying Kubernetes cluster.
 
-You can learn more about this configuration file in the [Cozystack ConfigMap reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
+You can learn more about this configuration file in the [Platform Package reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
 
 {{% alert color="info" %}}
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/v1/operations/configuration/telemetry" %}}).
@@ -71,30 +76,34 @@ Cozystack gathers anonymous usage statistics by default. Learn more about what d
 Next, we will install Cozystack and check that the installation is complete and successful.
 
 
-### 2.1. Create Namespace and Apply Configuration
+### 2.1. Install the Cozystack Operator
 
-Create a namespace `cozy-system`, then apply the ConfigMap created in the previous step and the installer configuration:
-
-  ```bash
-  kubectl create ns cozy-system
-  kubectl apply -f cozystack.yaml
-  ```
-
-
-### 2.2. Apply Installer
-
-Apply the installer configuration.
-This file defines the Cozystack version.
-For tutorial, just take the latest stable version available on GitHub:
+Install the Cozystack operator using the Helm chart from the OCI registry.
+The operator manages all Cozystack components and handles the Platform Package lifecycle.
 
 ```bash
-kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
+helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+  --version v1.0.0 \
+  --namespace cozy-system \
+  --create-namespace
 ```
 
-As the installation goes on, you can track the logs of installer:
+Replace `v1.0.0` with the desired Cozystack version.
+You can find available versions on the [Cozystack releases page](https://github.com/cozystack/cozystack/releases).
+
+
+### 2.2. Apply the Platform Package
+
+Apply the configuration file created in the previous step:
 
 ```bash
-kubectl logs -n cozy-system deploy/cozystack -f
+kubectl apply -f cozystack-platform.yaml
+```
+
+As the installation goes on, you can track the logs of the operator:
+
+```bash
+kubectl logs -n cozy-system deploy/cozystack-operator -f
 ```
 
 
@@ -460,12 +469,24 @@ If public IPs are provided with a 1:1 NAT, as some clouds do, use IP addresses o
 
 Here we will use `192.168.100.11`, `192.168.100.12`, and `192.168.100.13`.
 
-First, patch the ConfigMap with IPs to expose:
+First, patch the Platform Package with the external IPs:
 
 ```bash
-kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
-  "data": {
-    "expose-external-ips": "192.168.100.11,192.168.100.12,192.168.100.13"
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "publishing": {
+            "externalIPs": [
+              "192.168.100.11",
+              "192.168.100.12",
+              "192.168.100.13"
+            ]
+          }
+        }
+      }
+    }
   }
 }'
 ```
@@ -600,19 +621,24 @@ root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:316
 
 ### 5.3 Access the Cozystack Dashboard
 
-If you left this line in the ConfigMap, Cozystack Dashboard must be already available at this moment:
+If you included `dashboard` in the `publishing.exposedServices` list of your Platform Package (as shown in step 1), the Cozystack Dashboard is already available.
 
-```yaml
-data:
-  expose-services: "dashboard,api"
-```
-
-If the initial configmap did not have this line, patch it with the following command:
+If the initial configuration did not include it, patch the Platform Package:
 
 ```bash
-kubectl patch -n cozy-system cm cozystack --type=merge -p '{"data":{
-    "expose-services": "dashboard"
-    }}'
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "publishing": {
+            "exposedServices": ["dashboard"]
+          }
+        }
+      }
+    }
+  }
+}'
 ```
 
 Open `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
