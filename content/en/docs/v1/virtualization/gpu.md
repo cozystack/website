@@ -34,6 +34,10 @@ Follow these steps:
 
 2.  Enable the GPU Operator in your Platform Package by adding it to the enabled packages list:
 
+    {{% alert color="info" %}}
+This patch replaces the entire `enabledPackages` array. If you already have other packages enabled, include them in the list as well.
+    {{% /alert %}}
+
     ```bash
     kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
       "spec": {
@@ -52,7 +56,7 @@ Follow these steps:
 
     This will deploy the components (operands).
 
-4.  Ensure all pods are in a running state and all validations succeed with the sandbox-validator component:
+3.  Ensure all pods are in a running state and all validations succeed with the sandbox-validator component:
 
     ```bash
     kubectl get pods -n cozy-gpu-operator

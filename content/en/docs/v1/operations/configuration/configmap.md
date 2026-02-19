@@ -5,7 +5,6 @@ description: "Reference for the Cozystack Platform Package, which defines key co
 weight: 10
 aliases:
   - /docs/v1/install/cozystack/configmap
-  - /docs/v1/operations/configuration/configmap
 ---
 
 This page explains the role of the Cozystack Platform Package and provides a full reference for its values.

@@ -22,6 +22,8 @@ Before starting the migration, ensure you have:
 2. **Upload proxy access configured** in your Cozystack cluster:
    - Patch the Platform Package to expose `cdi-uploadproxy`:
 
+     > **Note:** This patch replaces the entire `exposedServices` array. Include all services you want exposed.
+
      ```bash
      kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
        "spec": {
@@ -204,7 +206,7 @@ Use this checklist to track your migration progress:
 **Solution:**
 - Verify upload proxy is accessible: `curl -k https://cdi-uploadproxy.example.org`
 - Check `/etc/hosts` entry matches the upload proxy IP
-- Ensure Cozystack ConfigMap has `expose-services: "dashboard,cdi-uploadproxy"`
+- Ensure the Platform Package includes `cdi-uploadproxy` in `publishing.exposedServices`
 
 ### Upload Stuck at 0%
 

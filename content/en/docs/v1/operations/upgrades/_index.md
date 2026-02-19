@@ -79,7 +79,7 @@ helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
   --take-ownership
 ```
 
-Replace `<TARGET_VERSION>` with the desired v1.0.x release version (e.g., `1.0.0`).
+Replace `<TARGET_VERSION>` with the desired release version (e.g., `1.0.0`).
 
 Verify the operator is running:
 

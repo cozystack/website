@@ -317,10 +317,12 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
 
     ```bash
     helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
-      --version 1.0.0-beta.6 \
+      --version X.Y.Z \
       --namespace cozy-system \
       --create-namespace
     ```
+
+    Replace `X.Y.Z` with the desired Cozystack version from the [releases page](https://github.com/cozystack/cozystack/releases).
 
 1.  Create a Platform Package file, **cozystack-platform.yaml**.
 

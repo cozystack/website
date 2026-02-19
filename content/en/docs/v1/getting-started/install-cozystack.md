@@ -83,12 +83,12 @@ The operator manages all Cozystack components and handles the Platform Package l
 
 ```bash
 helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
-  --version v1.0.0 \
+  --version X.Y.Z \
   --namespace cozy-system \
   --create-namespace
 ```
 
-Replace `v1.0.0` with the desired Cozystack version.
+Replace `X.Y.Z` with the desired Cozystack version.
 You can find available versions on the [Cozystack releases page](https://github.com/cozystack/cozystack/releases).
 
 

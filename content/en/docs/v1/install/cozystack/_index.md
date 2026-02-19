@@ -102,10 +102,13 @@ Install the Cozystack operator using Helm from the OCI registry:
 
 ```bash
 helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
-  --version 1.0.0-beta.6 \
+  --version X.Y.Z \
   --namespace cozy-system \
   --create-namespace
 ```
+
+Replace `X.Y.Z` with the desired Cozystack version.
+You can find available versions on the [Cozystack releases page](https://github.com/cozystack/cozystack/releases).
 
 This installs the operator, CRDs, and creates the `PackageSource` resource.
 
@@ -168,7 +171,7 @@ If you're installing Cozystack on a system other than Talos Linux, set the opera
 
 ```bash
 helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
-  --version 1.0.0-beta.6 \
+  --version X.Y.Z \
   --namespace cozy-system \
   --create-namespace \
   --set cozystackOperator.variant=generic \
