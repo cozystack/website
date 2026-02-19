@@ -17,7 +17,7 @@ This guide explains how to configure one‑off and scheduled backups and how to 
 
 The Velero add‑on is disabled by default. To enable it:
 
-- For the **management cluster**, add `velero` to the `bundle-enable` option in the `cozystack` ConfigMap in the `cozy-system` namespace.
+- For the **management cluster**, add `velero` to `bundles.enabledPackages` in the [Platform Package]({{% ref "/docs/v1/operations/configuration/platform-package" %}}).
 - For **tenant clusters**, set `spec.addons.velero.enabled` to `true` in the `Kubernetes` resource.
 
 ## Prerequisites

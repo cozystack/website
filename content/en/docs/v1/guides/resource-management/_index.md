@@ -96,24 +96,27 @@ For this reason, it's usually best to set memory requests at a level that guaran
 
 ## CPU Allocation Ratio
 
-Cozystack has a single-point-of-truth configuration variable `cpu-allocation-ratio`.
+Cozystack has a single-point-of-truth configuration variable `cpuAllocationRatio`.
 It defines the ratio between CPU requests and limits for all services.
 
-CPU allocation ratio is defined in the main Cozystack config:
+CPU allocation ratio is defined in the Platform Package:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
-  namespace: cozy-system
-data:
-  bundle-name: "paas-full"
-  # ...
-  cpu-allocation-ratio: 4
+  name: cozystack.cozystack-platform
+spec:
+  variant: isp-full
+  components:
+    platform:
+      values:
+        # ...
+        resources:
+          cpuAllocationRatio: 4
 ```
 
-By default, `cpu-allocation-ratio` equals 10, which means that CPU requests will be 1/10th of CPU limits.
+By default, `cpuAllocationRatio` equals 10, which means that CPU requests will be 1/10th of CPU limits.
 Cozystack borrows this default value from [KubeVirt](https://kubevirt.io/user-guide/compute/resources_requests_and_limits/#cpu).
 
 ### How Cozystack Derives CPU Requests and Limits

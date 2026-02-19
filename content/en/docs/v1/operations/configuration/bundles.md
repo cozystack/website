@@ -6,6 +6,8 @@ weight: 20
 aliases:
   - /docs/v1/guides/bundles
   - /docs/v1/operations/bundles/
+  - /docs/v1/operations/bundles/isp-full
+  - /docs/v1/operations/bundles/isp-hosted
   - /docs/v1/operations/bundles/paas-full
   - /docs/v1/operations/bundles/paas-hosted
   - /docs/v1/operations/bundles/distro-full
@@ -26,7 +28,7 @@ or just need a minimal Kubernetes cluster.
 
 ## Bundles Overview
 
-| Component                     | [paas-full]            | [iaas-full]<sup>*</sup> | [paas-hosted]  | [distro-full]         | [distro-hosted]       |
+| Component                     | [isp-full]             | [iaas-full]<sup>*</sup> | [isp-hosted]   | [distro-full]         | [distro-hosted]       |
 |:------------------------------|:-----------------------|:------------------------|:---------------|:----------------------|:----------------------|
 | [Managed Kubernetes][k8s]     | ✔                      | ✔                       |                |                       |                       |
 | [Managed Applications][apps]  | ✔                      |                         | ✔              |                       |                       |
@@ -53,17 +55,17 @@ or just need a minimal Kubernetes cluster.
 [kubevirt]: {{% ref "/docs/v1/guides/platform-stack#kubevirt" %}}
 [talos linux]: {{% ref "/docs/v1/guides/platform-stack#talos-linux" %}}
 [kubernetes]: {{% ref "/docs/v1/guides/platform-stack#kubernetes" %}}
-[kubernetes operators]: https://github.com/cozystack/cozystack/blob/c0f742595f1e942a9bf4921e9655142cc9040551/packages/core/platform/bundles/paas-full.yaml#L185-L243
+[kubernetes operators]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/templates/bundles/paas.yaml
 
-[paas-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/paas-full.yaml
+[isp-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/isp-full.yaml
 [iaas-full-gh]: https://github.com/cozystack/cozystack/issues/730
-[paas-hosted-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/paas-hosted.yaml
+[isp-hosted-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/isp-hosted.yaml
 [distro-full-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/distro-full.yaml
 [distro-hosted-gh]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/bundles/distro-hosted.yaml
 
-[paas-full]: {{% ref "/docs/v1/operations/configuration/bundles#paas-full" %}}
+[isp-full]: {{% ref "/docs/v1/operations/configuration/bundles#isp-full" %}}
 [iaas-full]: https://github.com/cozystack/cozystack/issues/730
-[paas-hosted]: {{% ref "/docs/v1/operations/configuration/bundles#paas-hosted" %}}
+[isp-hosted]: {{% ref "/docs/v1/operations/configuration/bundles#isp-hosted" %}}
 [distro-full]: {{% ref "/docs/v1/operations/configuration/bundles#distro-full" %}}
 [distro-hosted]: {{% ref "/docs/v1/operations/configuration/bundles#distro-hosted" %}}
 
@@ -73,43 +75,51 @@ or just need a minimal Kubernetes cluster.
 Bundles combine components from different layers to match particular needs.
 Some are designed for full platform scenarios, others for cloud-hosted workloads or Kubernetes distributions.
 
-### `paas-full`
+### `isp-full`
 
-`paas-full` is a full-featured PaaS and IaaS bundle, designed for installation on Talos Linux.
+`isp-full` is a full-featured PaaS and IaaS bundle, designed for installation on Talos Linux.
 It includes all four layers and provides the full set of Cozystack components, enabling a comprehensive PaaS experience.
 Some higher-layer components are optional and can be excluded during installation.
 
-`paas-full` is intended for installation on bare-metal servers or VMs.
+`isp-full` is intended for installation on bare-metal servers or VMs.
 
-Bundle source: [paas-full.yaml][paas-full-gh].
+Bundle source: [isp-full.yaml][isp-full-gh].
 
 Example configuration:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
-  namespace: cozy-system
-data:
-  bundle-name: "paas-full"
-  ipv4-pod-cidr: "10.244.0.0/16"
-  ipv4-pod-gateway: "10.244.0.1"
-  ipv4-svc-cidr: "10.96.0.0/16"
-  ipv4-join-cidr: "100.64.0.0/16"
-  root-host: "example.org"
-  api-server-endpoint: "https://192.168.100.10:6443"
-  expose-services: "api,dashboard,cdi-uploadproxy,vm-exportproxy"
+  name: cozystack.cozystack-platform
+spec:
+  variant: isp-full
+  components:
+    platform:
+      values:
+        networking:
+          podCIDR: "10.244.0.0/16"
+          podGateway: "10.244.0.1"
+          serviceCIDR: "10.96.0.0/16"
+          joinCIDR: "100.64.0.0/16"
+        publishing:
+          host: "example.org"
+          apiServerEndpoint: "https://192.168.100.10:6443"
+          exposedServices:
+            - api
+            - dashboard
+            - cdi-uploadproxy
+            - vm-exportproxy
 ```
 
-### `paas-hosted`
+### `isp-hosted`
 
 Cozystack can be installed as platform-as-a-service (PaaS) on top of an existing managed Kubernetes cluster,
 typically provisioned from a cloud provider.
-Bundle `paas-hosted` is made for this use case.
+Bundle `isp-hosted` is made for this use case.
 It can be used with [kind](https://kind.sigs.k8s.io/) and any cloud-based Kubernetes clusters.
 
-Bundle `paas-hosted` includes layers 3 and 4, providing Cozystack API and UI, managed applications, and tenant Kubernetes clusters.
+Bundle `isp-hosted` includes layers 3 and 4, providing Cozystack API and UI, managed applications, and tenant Kubernetes clusters.
 It does not include CNI plugins, virtualization, or storage.
 
 The Kubernetes cluster used to deploy Cozystack must conform to the following requirements:
@@ -117,21 +127,26 @@ The Kubernetes cluster used to deploy Cozystack must conform to the following re
 -   Listening address of some Kubernetes components must be changed from `localhost` to a routable address.
 -   Kubernetes API server must be reachable on `localhost`.
 
-Bundle source: [paas-hosted.yaml][paas-hosted-gh].
+Bundle source: [isp-hosted.yaml][isp-hosted-gh].
 
 Example configuration:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
-  namespace: cozy-system
-data:
-  bundle-name: "paas-hosted"
-  root-host: "example.org"
-  api-server-endpoint: "https://192.168.100.10:6443"
-  expose-services: "api,dashboard"
+  name: cozystack.cozystack-platform
+spec:
+  variant: isp-hosted
+  components:
+    platform:
+      values:
+        publishing:
+          host: "example.org"
+          apiServerEndpoint: "https://192.168.100.10:6443"
+          exposedServices:
+            - api
+            - dashboard
 ```
 
 ### `distro-full`
@@ -149,17 +164,21 @@ Bundle source: [distro-full.yaml][distro-full-gh].
 Example configuration:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
-  namespace: cozy-system
-data:
-  bundle-name: "distro-full"
-  ipv4-pod-cidr: "10.244.0.0/16"
-  ipv4-svc-cidr: "10.96.0.0/16"
-  root-host: "example.org"
-  api-server-endpoint: "https://192.168.100.10:6443"
+  name: cozystack.cozystack-platform
+spec:
+  variant: distro-full
+  components:
+    platform:
+      values:
+        networking:
+          podCIDR: "10.244.0.0/16"
+          serviceCIDR: "10.96.0.0/16"
+        publishing:
+          host: "example.org"
+          apiServerEndpoint: "https://192.168.100.10:6443"
 ```
 
 ### `distro-hosted`
@@ -194,12 +213,12 @@ See [cozystack/cozystack#730][iaas-full-gh].
 ## Learn More
 
 For a full list of configuration options for each bundle, refer to the
-[ConfigMap reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
+[configuration reference]({{% ref "/docs/v1/operations/configuration" %}}).
 
 To see the full list of components, how to enable and disable them, refer to the
 [Components reference]({{% ref "/docs/v1/operations/configuration/components" %}}).
 
 To deploy a selected bundle, follow the [Cozystack installation guide]({{% ref "/docs/v1/install/cozystack" %}}) 
 or [provider-specific guides]({{% ref "/docs/v1/install/providers" %}}).
-However, if this your first time installing Cozystack, it's best to use the complete bundle `paas-full` and
+However, if this your first time installing Cozystack, it's best to use the complete bundle `isp-full` and
 go through the [Cozystack tutorial]({{% ref "/docs/v1/getting-started" %}}).

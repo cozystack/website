@@ -1,0 +1,6 @@
+{{ $_hugo_config := `{ "version": 1 }` }}
+<div class="alert alert-warning" role="alert">
+Do not use <code>--reuse-values</code> when upgrading the Cozystack operator. The Helm chart values contain hardcoded references to the platform OCI repository. Reusing old values would result in the operator pointing to old package versions.
+<br/><br/>
+If you have custom values (e.g., <code>disableTelemetry</code>), pass them explicitly with <code>--set</code>.
+</div>

@@ -62,9 +62,9 @@ Provides everything needed for the initial bootstrap of cozystack: the installer
 Reads the configuration from the cluster, templates the manifests, and applies them
 back to the cluster.
 
-It primarily reads the `cozystack` ConfigMap from `cozy-system` namespace, and templates
-manifests according to the specified options. This ConfigMap
-specifies the [bundle](/docs/bundles/) name and options, detailing which system components should be
+It reads the configuration from the `cozystack.cozystack-platform` [Package]({{% ref "/docs/v1/operations/configuration/platform-package" %}}) resource, and templates
+manifests according to the specified options. The Package resource
+specifies the [variant]({{% ref "/docs/v1/operations/configuration/bundles" %}}) and component settings, detailing which system components should be
 installed in the cluster.
 
 {{% alert color="info" %}}

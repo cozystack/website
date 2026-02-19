@@ -21,16 +21,18 @@ cluster:
 
 Since KubeSpan encapsulates traffic into a WireGuard tunnel, Kube-OVN should also be configured with a lower MTU value.
 
-To achieve this, add the following to the Cozystack ConfigMap:
+To achieve this, add the following to the `networking` component of your Platform Package:
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: cozystack.io/v1alpha1
+kind: Package
 metadata:
-  name: cozystack
-  namespace: cozy-system
-data:
-  values-kubeovn: |
-    kube-ovn:
-      mtu: 1222
+  name: cozystack.cozystack-platform
+spec:
+  # ...
+  components:
+    networking:
+      values:
+        kube-ovn:
+          mtu: 1222
 ```
