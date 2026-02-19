@@ -38,17 +38,15 @@ Before starting the migration, ensure you have:
      }'
      ```
 
-   - Configure the CDI upload proxy endpoint in the Platform Package:
+   - Configure the CDI upload proxy endpoint by patching the `kubevirt-cdi` Package:
 
      ```bash
-     kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+     kubectl patch packages.cozystack.io cozystack.kubevirt-cdi --type=merge -p '{
        "spec": {
          "components": {
-           "platform": {
+           "kubevirt-cdi": {
              "values": {
-               "cdi": {
-                 "uploadProxyURL": "https://cdi-uploadproxy.example.org"
-               }
+               "uploadProxyURL": "https://cdi-uploadproxy.example.org"
              }
            }
          }
