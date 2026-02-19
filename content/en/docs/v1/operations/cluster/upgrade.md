@@ -43,11 +43,7 @@ kubectl get packages.cozystack.io cozystack.cozystack-platform -o yaml
 
 Upgrade the Cozystack operator Helm release to the target version:
 
-{{% alert color="warning" %}}
-Do not use `--reuse-values` when upgrading the Cozystack operator. The Helm chart values contain hardcoded references to the platform OCI repository. Reusing old values would result in the new operator pointing to old package versions.
-
-If you have custom values (e.g., `disableTelemetry`), pass them explicitly with `--set`.
-{{% /alert %}}
+{{< reuse-values-warning >}}
 
 ```bash
 helm upgrade cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \

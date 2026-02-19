@@ -64,7 +64,7 @@ However, let's overview and explain each value:
 -   `publishing.exposedServices` lists services to make accessible by users — here the dashboard (UI) and API.
 -   `networking.*` are internal networking configurations for the underlying Kubernetes cluster.
 
-You can learn more about this configuration file in the [Platform Package reference]({{% ref "/docs/v1/operations/configuration/configmap" %}}).
+You can learn more about this configuration file in the [Platform Package reference]({{% ref "/docs/v1/operations/configuration/platform-package" %}}).
 
 {{% alert color="info" %}}
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/v1/operations/configuration/telemetry" %}}).
@@ -640,6 +640,10 @@ kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p
   }
 }'
 ```
+
+{{% alert color="warning" %}}
+JSON Merge Patch (`--type=merge`) replaces arrays wholesale. The patch above sets `exposedServices` to `["dashboard"]` only. To keep other services (e.g., `api`), include all of them: `["dashboard", "api"]`.
+{{% /alert %}}
 
 Open `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
 There you will see a login window which expects an authentication token.

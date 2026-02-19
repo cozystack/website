@@ -77,9 +77,7 @@ helm upgrade cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
 
 Replace `X.Y.Z` with your currently installed Cozystack version.
 
-{{% alert color="warning" %}}
-Do not use `--reuse-values` when upgrading the Cozystack operator. The Helm chart values contain hardcoded references to the platform OCI repository. Reusing old values would result in the operator pointing to old package versions.
-{{% /alert %}}
+{{< reuse-values-warning >}}
 
 This command updates the operator to disable telemetry data collection. If you wish to re-enable telemetry in the future, run the same command with `disableTelemetry=false`.
 
