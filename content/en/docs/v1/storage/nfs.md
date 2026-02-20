@@ -12,24 +12,9 @@ aliases:
 Add `nfs-driver` to `bundles.enabledPackages` in the [Platform Package]({{% ref "/docs/v1/operations/configuration/platform-package" %}}):
 
 ```bash
-kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
-  "spec": {
-    "components": {
-      "platform": {
-        "values": {
-          "bundles": {
-            "enabledPackages": ["nfs-driver"]
-          }
-        }
-      }
-    }
-  }
-}'
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
+  -p '[{"op": "add", "path": "/spec/components/platform/values/bundles/enabledPackages/-", "value": "nfs-driver"}]'
 ```
-
-{{% alert color="warning" %}}
-JSON Merge Patch (`--type=merge`) replaces arrays wholesale. If you already have entries in `enabledPackages`, include all of them in the patch to avoid losing existing values.
-{{% /alert %}}
 
 Wait a minute for the platform chart to reconcile, then verify the HelmRelease has been created:
 
