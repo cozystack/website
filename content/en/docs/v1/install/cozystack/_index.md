@@ -691,19 +691,8 @@ If you included `dashboard` in `publishing.exposedServices` of your Platform Pac
 If the initial Package did not include it, patch the Platform Package:
 
 ```bash
-kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
-  "spec": {
-    "components": {
-      "platform": {
-        "values": {
-          "publishing": {
-            "exposedServices": ["dashboard"]
-          }
-        }
-      }
-    }
-  }
-}'
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
+  -p '[{"op": "add", "path": "/spec/components/platform/values/publishing/exposedServices/-", "value": "dashboard"}]'
 ```
 
 Open `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
