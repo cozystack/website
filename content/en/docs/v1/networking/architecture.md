@@ -5,6 +5,7 @@ description: "Overview of Cozystack cluster network architecture: MetalLB load b
 weight: 5
 aliases:
   - /docs/v1/reference/applications/architecture
+  - /docs/reference/applications/architecture
 ---
 
 ## Overview
@@ -17,6 +18,8 @@ Cozystack uses a multi-layered networking stack designed for bare-metal Kubernet
 | Service load balancing | Cilium eBPF | kube-proxy replacement, in-kernel DNAT |
 | Network policies | Cilium eBPF | Tenant isolation and security enforcement |
 | Pod networking (CNI) | Kube-OVN | Centralized IPAM, overlay networking |
+| VM IP passthrough | [cozy-proxy](https://github.com/cozystack/cozy-proxy/) | Passing through external IPs into virtual machines |
+| VM secondary interfaces | [Multus CNI](https://github.com/k8snetworkplumbingwg/multus-cni) | Attaching secondary L2 interfaces to virtual machines |
 | Observability | Hubble (optional) | Network traffic visibility (disabled by default) |
 
 ```mermaid
@@ -59,6 +62,7 @@ platform configuration.
 | `kubeovn-cilium-generic` | Kube-OVN + Cilium | kubeadm, k3s, RKE2 |
 | `cilium` | Cilium only | Talos Linux |
 | `cilium-generic` | Cilium only | kubeadm, k3s, RKE2 |
+| `cilium-kilo` | Cilium + Kilo | Talos Linux |
 | `noop` | None (bring your own CNI) | Any |
 
 In Kube-OVN variants, Cilium operates as a chained CNI (`generic-veth` mode):
