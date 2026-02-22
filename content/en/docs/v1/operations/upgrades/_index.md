@@ -19,6 +19,137 @@ Key changes:
 
 The underlying entities are still Helm releases, so during the upgrade no workloads are recreated or affected.
 
+## Breaking Changes
+
+This section lists all user-facing breaking changes introduced in v1.0.
+Most changes are handled automatically by platform migrations that run during the upgrade.
+Review this list before upgrading to understand the impact on your workloads.
+
+{{% alert color="warning" %}}
+**FerretDB users**: The FerretDB application has been removed without automatic migration.
+You must back up your data **before** upgrading. See [FerretDB removed](#ferretdb-removed) below.
+{{% /alert %}}
+
+### MySQL renamed to MariaDB
+
+The `mysql` application has been renamed to `mariadb` to accurately reflect the underlying database engine.
+
+All Kubernetes resources are renamed automatically during the upgrade:
+
+| Resource | Before | After |
+|----------|--------|-------|
+| Application Kind | `MySQL` | `MariaDB` |
+| HelmRelease prefix | `mysql-` | `mariadb-` |
+| Service names | `mysql-<name>-primary` | `mariadb-<name>-primary` |
+| Secret names | `mysql-<name>-credentials` | `mariadb-<name>-credentials` |
+| PVC names | `storage-mysql-<name>-*` | `storage-mariadb-<name>-*` |
+
+{{% alert color="info" %}}
+If your applications connect to MySQL services by their Kubernetes DNS name
+(e.g. `mysql-mydb-primary.<namespace>.svc`), you will need to update the connection
+strings to use the new `mariadb-` prefix after the migration.
+{{% /alert %}}
+
+### FerretDB removed
+
+The FerretDB application has been completely removed from the platform. There is no automatic migration.
+
+If you have running FerretDB instances, you must **back up all data before upgrading**.
+After the upgrade, FerretDB will no longer be available as a managed application.
+
+### Virtual Machine split into VM Disk and VM Instance
+
+The monolithic `virtual-machine` application has been replaced by two separate applications:
+
+- **vm-disk** — manages virtual machine disk images.
+- **vm-instance** — manages virtual machine instances and references disks created by `vm-disk`.
+
+The migration is automatic and preserves:
+- Disk data (PersistentVolumes are retained and rebound).
+- Kube-OVN IP and MAC addresses.
+- LoadBalancer IPs for externally exposed VMs.
+
+Additionally, the `running` boolean field has been replaced by `runStrategy`:
+
+| Old value | New value |
+|-----------|-----------|
+| `running: true` | `runStrategy: Always` |
+| `running: false` | `runStrategy: Halted` |
+
+The `runStrategy` field also accepts `Manual`, `RerunOnFailure`, and `Once` values.
+
+### Monitoring moved to new deployment scheme
+
+The monitoring stack has been restructured. The HelmRelease named `monitoring` in each
+tenant namespace is migrated to a new release named `monitoring-system`.
+
+The migration is automatic — all monitoring resources (VictoriaMetrics, Grafana, Alerta,
+VLogs) are re-labeled and adopted by the new HelmRelease.
+
+### VPC subnets format changed from map to array
+
+The `subnets` field in VPC (VirtualPrivateCloud) configuration has changed from a map to an array.
+
+**Before:**
+```yaml
+subnets:
+  my-subnet:
+    cidr: 10.0.0.0/24
+```
+
+**After:**
+```yaml
+subnets:
+  - name: my-subnet
+    cidr: 10.0.0.0/24
+```
+
+The migration is automatic for existing VPC resources.
+
+### MongoDB users and databases configuration unified
+
+The MongoDB user configuration format has been restructured. Users and databases
+are now defined in separate sections.
+
+**Before:**
+```yaml
+users:
+  myuser:
+    db: mydb
+    roles:
+      - name: readWrite
+        db: mydb
+```
+
+**After:**
+```yaml
+users:
+  myuser: {}
+databases:
+  mydb:
+    roles:
+      admin:
+        - myuser
+```
+
+The migration is automatic for existing MongoDB instances.
+
+### Tenant `isolated` flag removed
+
+The `isolated` field has been removed from Tenant configuration. Network isolation via
+NetworkPolicy is now always enforced for all tenants. If you previously relied on
+`isolated: false` to allow unrestricted traffic between tenants, this is no longer possible.
+
+### Internal architecture changes
+
+The following internal changes do not affect application workloads directly but are
+relevant for automation scripts or custom tooling that interacts with Cozystack internals:
+
+- **Flux AIO** is now installed and managed by the `cozystack-operator` instead of being a standalone component.
+- **CozystackResourceDefinition** CRD has been renamed to **ApplicationDefinition**.
+- **Legacy installer** components (the `cozystack` Deployment and `cozystack-assets` StatefulSet) have been removed.
+- **tenant-root** namespace and HelmRelease are now managed by Helm via the `cozystack-basics` release.
+
 ## Prerequisites
 
 ### 1. Install required tools
@@ -29,7 +160,7 @@ The following tools are required for the migration:
 - **helm** — required for installing the new operator.
 - **cozypkg** — new CLI for managing Package and PackageSource resources.
   Download from the [Cozystack Releases page](https://github.com/cozystack/cozystack/releases).
-- **cozyhr** — tool for managing HelmRelease values.
+- **cozyhr** — optional tool for managing HelmRelease values.
   Download from the [cozyhr repository](https://github.com/cozystack/cozyhr/releases).
 
 ### 2. Verify kubectl context
