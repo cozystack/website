@@ -626,24 +626,9 @@ If you included `dashboard` in the `publishing.exposedServices` list of your Pla
 If the initial configuration did not include it, patch the Platform Package:
 
 ```bash
-kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
-  "spec": {
-    "components": {
-      "platform": {
-        "values": {
-          "publishing": {
-            "exposedServices": ["dashboard"]
-          }
-        }
-      }
-    }
-  }
-}'
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
+  -p '[{"op": "add", "path": "/spec/components/platform/values/publishing/exposedServices/-", "value": "dashboard"}]'
 ```
-
-{{% alert color="warning" %}}
-JSON Merge Patch (`--type=merge`) replaces arrays wholesale. The patch above sets `exposedServices` to `["dashboard"]` only. To keep other services (e.g., `api`), include all of them: `["dashboard", "api"]`.
-{{% /alert %}}
 
 Open `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
 There you will see a login window which expects an authentication token.

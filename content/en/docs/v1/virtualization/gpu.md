@@ -34,24 +34,9 @@ Follow these steps:
 
 2.  Enable the GPU Operator in your Platform Package by adding it to the enabled packages list:
 
-    {{% alert color="info" %}}
-This patch replaces the entire `enabledPackages` array. If you already have other packages enabled, include them in the list as well.
-    {{% /alert %}}
-
     ```bash
-    kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
-      "spec": {
-        "components": {
-          "platform": {
-            "values": {
-              "bundles": {
-                "enabledPackages": ["gpu-operator"]
-              }
-            }
-          }
-        }
-      }
-    }'
+    kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
+      -p '[{"op": "add", "path": "/spec/components/platform/values/bundles/enabledPackages/-", "value": "gpu-operator"}]'
     ```
 
     This will deploy the components (operands).

@@ -66,22 +66,9 @@ You can also create an empty image.
 
    1. Patch the Platform Package to expose `cdi-uploadproxy` along with the dashboard:
 
-      > **Note:** This patch replaces the entire `exposedServices` array. Include all services you want exposed.
-
       ```bash
-      kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
-        "spec": {
-          "components": {
-            "platform": {
-              "values": {
-                "publishing": {
-                  "exposedServices": ["dashboard", "cdi-uploadproxy"]
-                }
-              }
-            }
-          }
-        }
-      }'
+      kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
+        -p '[{"op": "add", "path": "/spec/components/platform/values/publishing/exposedServices/-", "value": "cdi-uploadproxy"}]'
       ```
 
    <!-- TODO: automate this -->
