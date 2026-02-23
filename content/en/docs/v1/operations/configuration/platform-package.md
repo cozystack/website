@@ -63,7 +63,8 @@ spec:
 | `publishing.exposedServices` | `[api, dashboard, vm-exportproxy, cdi-uploadproxy]` | List of services to expose. Possible values: `api`, `dashboard`, `cdi-uploadproxy`, `vm-exportproxy`. |
 | `publishing.ingressName` | `"tenant-root"` | Ingress controller to use for exposing services. |
 | `publishing.externalIPs` | `[]` | List of external IPs used for the specified ingress controller. If not specified, a LoadBalancer service is used by default. |
-| `publishing.certificates.issuerType` | `"http01"` | Certificate issuer type for TLS certificates. Possible values: `http01`, `cloudflare`. |
+| `publishing.certificates.solver` | `"http01"` | ACME challenge solver type for default letsencrypt issuer. Possible values: `http01`, `dns01`. |
+| `publishing.certificates.issuerName` | `"letsencrypt-prod"` | `ClusterIssuer` name for TLS certificates used in system Helm releases. |
 
 #### Networking
 
