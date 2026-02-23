@@ -83,15 +83,16 @@ VictoriaLogs (VLogs) provides powerful querying capabilities for stored logs. Ac
 
 To search for error logs from a specific pod:
 
-```
-_level:ERROR pod_name:my-app-pod
+```text
+_level:ERROR AND kubernetes_pod_name: "my-app-pod"
 ```
 
 ### Filters and Metadata
 
 Logs in Cozystack include rich metadata for effective filtering:
 
-- **Pod Metadata**: `pod_name`, `namespace`, `container_name`
+- **Pod Metadata**: `kubernetes_pod_name`, `kubernetes_namespace_name`, `kubernetes_container_name`
+- **Tenant**: `tenant` — identifies which tenant the logs belong to
 - **Log Levels**: `_level` (INFO, WARN, ERROR, etc.)
 - **Timestamps**: Automatic timestamp parsing
 - **Custom Labels**: Application-specific labels added during collection
@@ -100,11 +101,65 @@ Logs in Cozystack include rich metadata for effective filtering:
 
 Use complex queries to correlate logs:
 
-```
-namespace:kube-system AND _level:WARN AND message:*timeout*
+```text
+kubernetes_namespace_name: "kube-system" AND _level: "WARN" AND _msg: *timeout*
 ```
 
-For more on VLogs querying, refer to the [VictoriaLogs documentation](https://docs.victoriametrics.com/VictoriaLogs/).
+For more on VLogs querying, refer to the [VictoriaLogs documentation](https://docs.victoriametrics.com/victorialogs/).
+
+## Viewing Tenant Kubernetes Cluster Logs
+
+When running workloads in a [tenant Kubernetes cluster]({{% ref "docs/v1/kubernetes" %}}), their logs are collected and forwarded to the parent tenant's VictoriaLogs instance. You can then query these logs in Grafana using specific label filters.
+
+### Prerequisites
+
+Enable the `monitoringAgents` addon on the tenant Kubernetes cluster. This deploys agents inside the cluster that collect logs and forward them to VictoriaLogs.
+
+Via the Cozystack dashboard, set `addons.monitoringAgents.enabled: true` in the Kubernetes application parameters, or apply it programmatically:
+
+```yaml
+addons:
+  monitoringAgents:
+    enabled: true
+```
+
+See [Managed Kubernetes parameters]({{% ref "docs/v1/kubernetes#cluster-addons" %}}) for details.
+
+### Log Labels
+
+Logs from tenant Kubernetes clusters are enriched with the following labels:
+
+| Label | Description | Example |
+| --- | --- | --- |
+| `tenant` | Tenant identifier (format: `tenant-<name>`) | `tenant-workload` |
+| `kubernetes_namespace_name` | Namespace within the tenant Kubernetes cluster | `default` |
+| `kubernetes_pod_name` | Pod name | `my-app-6b7b8c9b89-ccqgf` |
+| `kubernetes_container_name` | Container name within the pod | `my-app` |
+
+### Querying Logs in Grafana
+
+1. Open Grafana at `https://grafana.<tenant-host>`
+2. Navigate to **Explore**
+3. Select the **VictoriaLogs** datasource
+4. Use the query builder or write a query directly
+
+#### Filter all logs from a tenant
+
+```text
+tenant: "tenant-workload"
+```
+
+#### Filter by tenant and namespace
+
+```text
+tenant: "tenant-workload" AND kubernetes_namespace_name: "default"
+```
+
+#### Filter logs for a specific pod
+
+```text
+tenant: "tenant-workload" AND kubernetes_namespace_name: "default" AND kubernetes_pod_name: "my-app-6b7b8c9b89-ccqgf"
+```
 
 ## Integrating with Applications
 
