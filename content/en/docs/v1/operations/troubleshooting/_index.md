@@ -63,10 +63,10 @@ kubectl get pod -A | grep -v 'Running\|Completed'
 
 ## Getting basic information
 
-You can see the logs of main installer by executing:
+You can see the logs of the Cozystack operator by executing:
 
 ```bash
-kubectl logs -n cozy-system deploy/cozystack -f
+kubectl logs -n cozy-system deploy/cozystack-operator -f
 ```
 
 All the platform components are installed using Flux CD HelmReleases.

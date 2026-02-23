@@ -313,47 +313,65 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
 
 ### 3.1. Start Cozystack Installer
 
-1.  Start by making a Cozystack configuration file, **cozystack-config.yaml**.
-    
+1.  Install the Cozystack operator:
+
+    ```bash
+    helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+      --version X.Y.Z \
+      --namespace cozy-system \
+      --create-namespace
+    ```
+
+    Replace `X.Y.Z` with the desired Cozystack version from the [releases page](https://github.com/cozystack/cozystack/releases).
+
+1.  Create a Platform Package file, **cozystack-platform.yaml**.
+
     Note that this file is reusing the subnets for pods and services which were used in `values.yaml` before producing Talos configuration with Talm.
-    Also note how Cozystack's default load balancer MetalLB is replaced with RobotLB using `bundle-disable` and `bundle-enable`.
+    Also note how Cozystack's default load balancer MetalLB is replaced with RobotLB using `disabledPackages` and `enabledPackages`.
 
     Replace `example.org` with a routable fully-qualified domain name (FQDN) that you're going to use for your Cozystack-based platform.
     If you don't have one ready, you can use [nip.io](https://nip.io/) with dash notation.
 
     ```yaml
-    apiVersion: v1
-    kind: ConfigMap
+    apiVersion: cozystack.io/v1alpha1
+    kind: Package
     metadata:
-      name: cozystack
-      namespace: cozy-system
-    data:
-      bundle-name: "paas-full"
-      bundle-disable: "metallb"
-      bundle-enable: "hetzner-robotlb"
-      root-host: "example.org"
-      api-server-endpoint: "https://api.example.org:443"
-      expose-services: "dashboard,api"
-      ## podSubnets from the node config
-      ipv4-pod-cidr: "10.244.0.0/16"
-      ipv4-pod-gateway: "10.244.0.1"
-      ## serviceSubnets from the node config
-      ipv4-svc-cidr: "10.96.0.0/16"
+      name: cozystack.cozystack-platform
+    spec:
+      variant: isp-full
+      components:
+        platform:
+          values:
+            bundles:
+              disabledPackages:
+                - metallb
+              enabledPackages:
+                - hetzner-robotlb
+            publishing:
+              host: "example.org"
+              apiServerEndpoint: "https://api.example.org:443"
+              exposedServices:
+                - dashboard
+                - api
+            networking:
+              ## podSubnets from the node config
+              podCIDR: "10.244.0.0/16"
+              podGateway: "10.244.0.1"
+              ## serviceSubnets from the node config
+              serviceCIDR: "10.96.0.0/16"
     ```
 
-1.  Next, create a namespace `cozy-system` and install Cozystack system components:
+1.  Apply the Platform Package:
 
     ```bash
-    kubectl create ns cozy-system
-    kubectl apply -f cozystack-config.yaml
-    kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
+    kubectl apply -f cozystack-platform.yaml
     ```
-    
-    The last command starts Cozystack installation, which will last for some time.
-    You can track the logs of installer, if you wish:
+
+    The operator starts the installation, which will last for some time.
+    You can track the logs of the operator, if you wish:
 
     ```bash
-    kubectl logs -n cozy-system deploy/cozystack -f
+    kubectl logs -n cozy-system deploy/cozystack-operator -f
     ```
 
 1.  Check the status of installation:

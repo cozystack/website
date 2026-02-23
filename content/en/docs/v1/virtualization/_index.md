@@ -62,20 +62,45 @@ You can also create an empty image.
    After the disk is created, it will generate a command for uploading using the virtctl tool.
 
    {{< note >}}
-   If you want to let virtctl know about right endpoint for uploading images, you need to configure a cluster to specify an endpoint for it:
-   1. Modify your cozystack config map, to enable cdi-uploadproxy along with the dashboard:
+   If you want to let virtctl know about the right endpoint for uploading images, you need to configure a cluster to specify an endpoint for it:
+
+   1. Patch the Platform Package to expose `cdi-uploadproxy` along with the dashboard:
+
+      > **Note:** This patch replaces the entire `exposedServices` array. Include all services you want exposed.
+
       ```bash
-      kubectl patch cm -n cozy-system cozystack --type merge -p='{"data":{
-        "expose-services": "dashboard,cdi-uploadproxy"
-      }}'
+      kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+        "spec": {
+          "components": {
+            "platform": {
+              "values": {
+                "publishing": {
+                  "exposedServices": ["dashboard", "cdi-uploadproxy"]
+                }
+              }
+            }
+          }
+        }
+      }'
       ```
 
    <!-- TODO: automate this -->
-   2. Modify your cozystack config to provide a valid CDI uploadproxy endpoint:
-   ```yaml
-   values-cdi: |
-     uploadProxyURL: https://cdi-uploadproxy.example.org
-   ```
+   2. Provide a valid CDI uploadproxy endpoint by patching the `kubevirt-cdi` Package:
+
+      ```bash
+      kubectl patch packages.cozystack.io cozystack.kubevirt-cdi --type=merge -p '{
+        "spec": {
+          "components": {
+            "kubevirt-cdi": {
+              "values": {
+                "uploadProxyURL": "https://cdi-uploadproxy.example.org"
+              }
+            }
+          }
+        }
+      }'
+      ```
+
    {{< /note >}}
 
 4. **Empty:**

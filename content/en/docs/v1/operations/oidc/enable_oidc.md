@@ -40,24 +40,48 @@ If all prerequisites are met, you can proceed with the configuration steps.
 
 ### Step 1: Enable OIDC in Cozystack
 
-Edit your Cozystack ConfigMap to enable OIDC, this also will expose keycloak service automatically:
+Patch the Platform Package to enable OIDC. This also exposes the Keycloak service automatically:
 
 ```bash
-kubectl patch -n cozy-system configmap cozystack --type=merge -p '{
-  "data": {
-    "oidc-enabled": "true"
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "authentication": {
+            "oidc": {
+              "enabled": true
+            }
+          }
+        }
+      }
+    }
   }
 }'
 ```
 
-If you need to add extra redirect URLs for the dashboard client (for example, when accessing the dashboard via port-forwarding), edit your Cozystack ConfigMap.
-Multiple redirect URLs should be separated by commas.
+If you need to add extra redirect URLs for the dashboard client (for example, when accessing the dashboard via port-forwarding),
+patch the Platform Package. Multiple redirect URLs should be separated by commas.
 
 ```bash
-kubectl patch -n cozy-system configmap cozystack --type=merge -p '{"data":{"extra-keycloak-redirect-uri-for-dashboard": "http://127.0.0.1:8080/oauth2/callback/*,http://localhost:8080/oauth2/callback/*"}}'
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "authentication": {
+            "oidc": {
+              "keycloakExtraRedirectUri": "http://127.0.0.1:8080/oauth2/callback/*,http://localhost:8080/oauth2/callback/*"
+            }
+          }
+        }
+      }
+    }
+  }
+}'
 ```
 
-Within one minute, CozyStack will reconcile the ConfigMap and create three new `HelmRelease` resources:
+Within one minute, CozyStack will reconcile and create three new `HelmRelease` resources:
 
 ```bash
 # kubectl get hr -n cozy-keycloak
