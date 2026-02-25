@@ -203,7 +203,7 @@ This deploys the `cozystack-operator`, installs two new CRDs (`Package` and `Pac
 and creates the `PackageSource` resource for the platform.
 
 ```bash
-helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
   --version <TARGET_VERSION> \
   --namespace cozy-system \
   --create-namespace \

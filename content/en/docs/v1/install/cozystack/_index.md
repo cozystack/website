@@ -101,7 +101,7 @@ Cozystack gathers anonymous usage statistics by default. Learn more about what d
 Install the Cozystack operator using Helm from the OCI registry:
 
 ```bash
-helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
   --version X.Y.Z \
   --namespace cozy-system \
   --create-namespace
@@ -170,7 +170,7 @@ feature of Talos Linux, which allows access to the Kubernetes API via a local ad
 If you're installing Cozystack on a system other than Talos Linux, set the operator variant during installation:
 
 ```bash
-helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
   --version X.Y.Z \
   --namespace cozy-system \
   --create-namespace \
@@ -367,7 +367,7 @@ Create storage classes, one of which should be the default class.
 1.  Apply the storage class configuration
 
     ```bash
-    kubectl create -f storageclasses.yaml
+    kubectl apply -f storageclasses.yaml
     ```
 
 1.  Check that the storage classes were successfully created:
@@ -434,7 +434,7 @@ spec:
 ```
 
 ```bash
-kubectl create -f metallb-ip-address-pool.yml
+kubectl apply -f metallb-ip-address-pool.yml
 ```
 
 Create and apply resources needed for an L2 or a BGP advertisement.
@@ -459,7 +459,7 @@ spec:
 Apply changes.
 
 ```bash
-kubectl create -f metallb-l2-advertisement.yml
+kubectl apply -f metallb-l2-advertisement.yml
 ```
 {{% /tab %}}
 {{% tab name="BGP mode" %}}
@@ -496,8 +496,8 @@ spec:
 Apply changes.
 
 ```bash
-kubectl create -f metallb-bgp-peer.yml
-kubectl create -f metallb-bgp-advertisement.yml
+kubectl apply -f metallb-bgp-peer.yml
+kubectl apply -f metallb-bgp-advertisement.yml
 ```
 {{% /tab %}}
 {{< /tabs >}}

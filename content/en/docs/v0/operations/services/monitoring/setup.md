@@ -25,7 +25,7 @@ System monitoring is installed automatically during platform deployment through 
 To install manually via local chart:
 
 ```bash
-helm install monitoring-agents ./packages/system/monitoring-agents -n cozy-monitoring --create-namespace
+helm upgrade --install monitoring-agents ./packages/system/monitoring-agents -n cozy-monitoring --create-namespace
 ```
 
 ### Tenant Monitoring

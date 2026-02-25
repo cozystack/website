@@ -78,7 +78,7 @@ Next, we will install Cozystack and check that the installation is complete and 
 Create a namespace `cozy-system`, then apply the ConfigMap created in the previous step and the installer configuration:
 
   ```bash
-  kubectl create ns cozy-system
+  kubectl create ns cozy-system --dry-run=client --output yaml | kubectl apply -f -
   kubectl apply -f cozystack.yaml
   ```
 
@@ -283,7 +283,7 @@ Finally, we can create a couple of storage classes, one of which will be the def
 1.  Apply the storage class configuration
 
     ```bash
-    kubectl create -f storageclasses.yaml
+    kubectl apply -f storageclasses.yaml
     ```
 
 1.  Check that the storage classes were successfully created:
@@ -349,7 +349,7 @@ spec:
 ```
 
 ```bash
-kubectl create -f metallb-ip-address-pool.yml
+kubectl apply -f metallb-ip-address-pool.yml
 ```
 
 Create and apply resources needed for an L2 or a BGP advertisement.
@@ -374,7 +374,7 @@ spec:
 Apply changes.
 
 ```bash
-kubectl create -f metallb-l2-advertisement.yml
+kubectl apply -f metallb-l2-advertisement.yml
 ```
 {{% /tab %}}
 {{% tab name="BGP mode" %}}
@@ -411,8 +411,8 @@ spec:
 Apply changes.
 
 ```bash
-kubectl create -f metallb-bgp-peer.yml
-kubectl create -f metallb-bgp-advertisement.yml
+kubectl apply -f metallb-bgp-peer.yml
+kubectl apply -f metallb-bgp-advertisement.yml
 ```
 {{% /tab %}}
 {{< /tabs >}}

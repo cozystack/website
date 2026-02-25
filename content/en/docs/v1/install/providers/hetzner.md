@@ -316,7 +316,7 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
 1.  Install the Cozystack operator:
 
     ```bash
-    helm install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+    helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
       --version X.Y.Z \
       --namespace cozy-system \
       --create-namespace
