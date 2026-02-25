@@ -184,7 +184,7 @@ Specific characteristics of this series are:
 ## Development
 
 To get started with customizing or creating your own instancetypes and preferences
-see [DEVELOPMENT.md](./DEVELOPMENT.md).
+see the [Developer Guide](/docs/v1/development/).
 
 ## Resources
 
