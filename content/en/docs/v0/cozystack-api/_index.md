@@ -87,7 +87,7 @@ status:
 You can use this resource as an example to create a similar service via the API. Just save the output to a file, update the `name` and any parameters you need, then use `kubectl` to create a new Postgres instance:
 
 ```bash
-kubectl create -f postgres.yaml
+kubectl apply -f postgres.yaml
 ```
 
 #### Using Terraform with the Cozystack API

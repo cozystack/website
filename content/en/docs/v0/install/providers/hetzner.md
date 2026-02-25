@@ -348,7 +348,7 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
 1.  Next, create a namespace `cozy-system` and install Cozystack system components:
 
     ```bash
-    kubectl create ns cozy-system
+    kubectl create ns cozy-system --dry-run=client --output yaml | kubectl apply -f -
     kubectl apply -f cozystack-config.yaml
     kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
     ```

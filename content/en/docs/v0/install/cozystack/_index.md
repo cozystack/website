@@ -91,7 +91,7 @@ Cozystack gathers anonymous usage statistics by default. Learn more about what d
 Create a namespace `cozy-system` and install Cozystack system components:
 
 ```bash
-kubectl create ns cozy-system
+kubectl create ns cozy-system --dry-run=client --output yaml | kubectl apply -f -
 kubectl apply -f cozystack.yaml
 kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
 ```
@@ -327,7 +327,7 @@ Create storage classes, one of which should be the default class.
 1.  Apply the storage class configuration
 
     ```bash
-    kubectl create -f storageclasses.yaml
+    kubectl apply -f storageclasses.yaml
     ```
 
 1.  Check that the storage classes were successfully created:
@@ -394,7 +394,7 @@ spec:
 ```
 
 ```bash
-kubectl create -f metallb-ip-address-pool.yml
+kubectl apply -f metallb-ip-address-pool.yml
 ```
 
 Create and apply resources needed for an L2 or a BGP advertisement.
@@ -419,7 +419,7 @@ spec:
 Apply changes.
 
 ```bash
-kubectl create -f metallb-l2-advertisement.yml
+kubectl apply -f metallb-l2-advertisement.yml
 ```
 {{% /tab %}}
 {{% tab name="BGP mode" %}}
@@ -456,8 +456,8 @@ spec:
 Apply changes.
 
 ```bash
-kubectl create -f metallb-bgp-peer.yml
-kubectl create -f metallb-bgp-advertisement.yml
+kubectl apply -f metallb-bgp-peer.yml
+kubectl apply -f metallb-bgp-advertisement.yml
 ```
 {{% /tab %}}
 {{< /tabs >}}
