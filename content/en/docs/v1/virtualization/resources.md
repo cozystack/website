@@ -221,5 +221,4 @@ windows.2k25.virtio | Microsoft Windows Server 2025 (virtio)
 ## Developing Instance Types and Profiles
 
 To get started with customizing or creating your own instancetypes and preferences
-see [the development guide](/docs/development/development.md).
-
+see the [Developer Guide](/docs/v1/development/).
