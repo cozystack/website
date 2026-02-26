@@ -1,7 +1,7 @@
 ---
 title: Key Concepts
 linkTitle: Key Concepts
-description: "Learn about the key concepts of Cozystack, such as management cluster, tenants, and bundles."
+description: "Learn about the key concepts of Cozystack, such as management cluster, tenants, and variants."
 weight: 10
 aliases:
   - /docs/v1/concepts
@@ -14,7 +14,7 @@ At its core are a few foundational building blocks:
 - **tenants** that provide strict, hierarchical isolation;
 - **tenant clusters** that give users their own Kubernetes control planes;
 - rich catalog of **managed applications** and virtual machines;
-- **bundles** that assemble these components into a turnkey stack.
+- **variants** that assemble these components into a turnkey stack.
 
 Understanding how these concepts fit together will help you plan, deploy, and operate Cozystack effectively, 
 whether you are building an internal developer platform or a public cloud service.
@@ -72,10 +72,10 @@ but their kubeconfig will authorize them only to create custom resources in thei
 
 Read more: [Cozystack API]({{% ref "/docs/v1/cozystack-api" %}}).
 
-## Bundles
+## Variants
 
-Bundles are pre-defined combinations of Cozystack components.
-Each bundle is tested, versioned, and guaranteed to work as a unit.
+Variants are pre-defined configurations of Cozystack that determine which bundles and components are enabled.
+Each variant is tested, versioned, and guaranteed to work as a unit.
 They simplify installation, reduce the risk of misconfiguration, and make it easier to choose the right set of features for your deployment.
 
-Read more: [Bundles]({{% ref "/docs/v1/operations/configuration/bundles" %}}).
+Read more: [Variants]({{% ref "/docs/v1/operations/configuration/variants" %}}).

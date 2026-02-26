@@ -64,7 +64,7 @@ back to the cluster.
 
 It reads the configuration from the `cozystack.cozystack-platform` [Package]({{% ref "/docs/v1/operations/configuration/platform-package" %}}) resource, and templates
 manifests according to the specified options. The Package resource
-specifies the [variant]({{% ref "/docs/v1/operations/configuration/bundles" %}}) and component settings, detailing which system components should be
+specifies the [variant]({{% ref "/docs/v1/operations/configuration/variants" %}}) and component settings, detailing which system components should be
 installed in the cluster.
 
 {{% alert color="info" %}}

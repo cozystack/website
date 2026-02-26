@@ -1,7 +1,7 @@
 ---
 title: "Cozystack Cluster Configuration"
 linkTitle: "Configuration"
-description: "Learn how to configure your Cozystack cluster, including bundles, components, and other key settings"
+description: "Learn how to configure your Cozystack cluster, including variants, components, and other key settings"
 weight: 10
 ---
 

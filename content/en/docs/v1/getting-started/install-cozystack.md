@@ -60,7 +60,7 @@ However, let's overview and explain each value:
 -   `publishing.host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
 -   `publishing.apiServerEndpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
 -   `spec.variant: "isp-full"` means that we're using the most complete set of Cozystack components.
-    Learn more about variants in the [Cozystack Bundles reference]({{% ref "/docs/v1/operations/configuration/bundles" %}}).
+    Learn more about variants in the [Cozystack Variants reference]({{% ref "/docs/v1/operations/configuration/variants" %}}).
 -   `publishing.exposedServices` lists services to make accessible by users — here the dashboard (UI) and API.
 -   `networking.*` are internal networking configurations for the underlying Kubernetes cluster.
 
