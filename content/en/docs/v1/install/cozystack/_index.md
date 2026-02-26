@@ -16,7 +16,7 @@ It mirrors the tutorial in structure, but gives much more details and explains v
 ## 1. Define Cluster Configuration
 
 Installing Cozystack starts with a Platform Package resource.
-This Package defines the [Cozystack variant]({{% ref "/docs/v1/operations/configuration/bundles" %}}), [component settings]({{% ref "/docs/v1/operations/configuration/components" %}}),
+This Package defines the [Cozystack variant]({{% ref "/docs/v1/operations/configuration/variants" %}}), [component settings]({{% ref "/docs/v1/operations/configuration/components" %}}),
 key network settings, exposed services, and other options.
 
 Cozystack configuration can be updated after installing it.
@@ -60,7 +60,7 @@ Variant `isp-full` is the most complete one, as it covers all layers from hardwa
 Choose it if you deploy Cozystack on bare metal or VMs and if you want to use its full power.
 
 If you deploy Cozystack on a provided Kubernetes cluster, or if you only want to deploy a Kubernetes cluster without services,
-refer to the [bundles overview and comparison]({{% ref "/docs/v1/operations/configuration/bundles" %}}).
+refer to the [variants overview and comparison]({{% ref "/docs/v1/operations/configuration/variants" %}}).
 
 ### 1.2. Fine-tune the Components
 

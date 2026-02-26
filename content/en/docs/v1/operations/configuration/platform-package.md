@@ -11,7 +11,7 @@ aliases:
 This page explains the role of the Cozystack Platform Package and provides a full reference for its values.
 
 Cozystack's main configuration is defined by a `Package` custom resource.
-This Package includes the [Cozystack variant]({{% ref "/docs/v1/operations/configuration/bundles" %}}) and [component settings]({{% ref "/docs/v1/operations/configuration/components" %}}),
+This Package includes the [Cozystack variant]({{% ref "/docs/v1/operations/configuration/variants" %}}) and [component settings]({{% ref "/docs/v1/operations/configuration/components" %}}),
 key network settings, exposed services, and other options.
 
 
@@ -82,7 +82,7 @@ spec:
 | Value | Default | Description |
 | --- | --- | --- |
 | `bundles.system.enabled` | `false` | Enable the system bundle. Managed by the operator based on `spec.variant`. |
-| `bundles.system.variant` | `"isp-full"` | System bundle variant. Options: `isp-full`, `isp-full-generic`, `isp-hosted`, `distro-full`. Managed by the operator based on `spec.variant`. |
+| `bundles.system.variant` | `"isp-full"` | System bundle variant. Options: `isp-full`, `isp-full-generic`, `isp-hosted`. Managed by the operator based on `spec.variant`. |
 | `bundles.iaas.enabled` | `false` | Enable the IaaS bundle. Managed by the operator based on `spec.variant`. |
 | `bundles.paas.enabled` | `false` | Enable the PaaS bundle. Managed by the operator based on `spec.variant`. |
 | `bundles.naas.enabled` | `false` | Enable the NaaS bundle. Managed by the operator based on `spec.variant`. |
