@@ -196,7 +196,22 @@ If any releases are not `Ready`, resolve those issues before proceeding.
 
 ## Upgrade Steps
 
-### Step 1. Install the Cozystack Operator
+### Step 1. Protect critical resources
+
+Annotate the `cozy-system` namespace and the `cozystack-version` ConfigMap to prevent
+Helm from deleting them when the installer release is upgraded:
+
+```bash
+kubectl annotate namespace cozy-system helm.sh/resource-policy=keep --overwrite
+kubectl annotate configmap -n cozy-system cozystack-version helm.sh/resource-policy=keep --overwrite
+```
+
+{{% alert color="warning" %}}
+**This step is required.** Without these annotations, upgrading the Helm installer release
+could delete the `cozy-system` namespace and all resources within it.
+{{% /alert %}}
+
+### Step 2. Install the Cozystack Operator
 
 Install the new operator using Helm from the OCI registry.
 This deploys the `cozystack-operator`, installs two new CRDs (`Package` and `PackageSource`),
@@ -218,7 +233,7 @@ Verify the operator is running:
 kubectl get pods -n cozy-system -l app=cozystack-operator
 ```
 
-### Step 2. Generate the Platform Package
+### Step 3. Generate the Platform Package
 
 The migration script reads your existing ConfigMaps (`cozystack`, `cozystack-branding`, `cozystack-scheduling`)
 from the `cozy-system` namespace and converts them into a `Package` resource with the new values structure.
@@ -247,7 +262,7 @@ chmod +x migrate-to-version-1.0.sh
 ```
 {{% /alert %}}
 
-### Step 3. Monitor the Migration
+### Step 4. Monitor the Migration
 
 As soon as the Platform Package is applied, the operator starts the migration process.
 Migrations remove the old installer deployment and assets server, transform existing manifests
@@ -261,7 +276,7 @@ kubectl get hr -A
 
 Wait until all releases show `READY: True`.
 
-### Step 4. Clean Up Old ConfigMaps
+### Step 5. Clean Up Old ConfigMaps
 
 After verifying that all components are healthy, delete the old ConfigMaps
 that are no longer used:
@@ -270,7 +285,7 @@ that are no longer used:
 kubectl delete configmap -n cozy-system cozystack cozystack-branding cozystack-scheduling
 ```
 
-### Step 5. Verify the Migration
+### Step 6. Verify the Migration
 
 Check that the Platform Package is reconciled:
 

@@ -39,7 +39,22 @@ Make sure that the Platform Package is healthy and contains the expected configu
 kubectl get packages.cozystack.io cozystack.cozystack-platform -o yaml
 ```
 
-### 2. Upgrade the Cozystack Operator
+### 2. Protect critical resources
+
+Before upgrading, annotate the `cozy-system` namespace and the `cozystack-version` ConfigMap
+with `helm.sh/resource-policy=keep` to prevent Helm from deleting them during the upgrade:
+
+```bash
+kubectl annotate namespace cozy-system helm.sh/resource-policy=keep --overwrite
+kubectl annotate configmap -n cozy-system cozystack-version helm.sh/resource-policy=keep --overwrite
+```
+
+{{% alert color="warning" %}}
+**This step is required.** Without these annotations, removing or upgrading the Helm installer
+release could delete the `cozy-system` namespace and all resources within it.
+{{% /alert %}}
+
+### 3. Upgrade the Cozystack Operator
 
 Upgrade the Cozystack operator Helm release to the target version:
 
@@ -57,7 +72,7 @@ You can read the logs of the operator:
 kubectl logs -n cozy-system deploy/cozystack-operator -f
 ```
 
-### 3. Check the cluster status after upgrading
+### 4. Check the cluster status after upgrading
 
 ```bash
 kubectl get pods -n cozy-system
