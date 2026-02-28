@@ -1,33 +1,28 @@
 ---
-title: "3. Install and Configure Cozystack"
-linkTitle: "3. Install Cozystack"
-description: "Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard."
-weight: 20
+title: "Installing Cozystack as a Platform"
+linkTitle: "As a Platform"
+description: "Install Cozystack as a ready-to-use platform with all components managed automatically."
+weight: 10
 ---
 
-## Objectives
+**The third step** in deploying a Cozystack cluster is to install Cozystack on a Kubernetes cluster that has been previously installed and configured on Talos Linux nodes.
+A prerequisite to this step is having [installed a Kubernetes cluster]({{% ref "/docs/v1/install/kubernetes" %}}).
 
-{{% alert color="info" %}}
-This tutorial covers installing Cozystack as a **ready-to-use platform**.
-If you want to build your own platform by installing only specific components,
-see the [BYOP (Build Your Own Platform) guide]({{% ref "/docs/v1/install/cozystack/kubernetes-distribution" %}}).
-{{% /alert %}}
+If this is your first time installing Cozystack, consider starting with the [Cozystack tutorial]({{% ref "/docs/v1/getting-started" %}}).
 
-In this step of the tutorial, we'll install Cozystack on top of a [Kubernetes cluster, prepared in the previous step]({{% ref "./install-kubernetes" %}}).
+To plan a production-ready installation, follow the guide below.
+It mirrors the tutorial in structure, but gives much more details and explains various installation options.
 
-The tutorial will guide you through the following stages:
+## 1. Define Cluster Configuration
 
-1.  Prepare a Cozystack configuration file
-1.  Install Cozystack by applying configuration
-1.  Configure storage
-1.  Configure networking
-1.  Deploy etcd, ingress and monitoring stack in the root tenant
-1.  Finalize deployment and access Cozystack dashboard
+Installing Cozystack starts with a Platform Package resource.
+This Package defines the [Cozystack variant]({{% ref "/docs/v1/operations/configuration/variants" %}}), [component settings]({{% ref "/docs/v1/operations/configuration/components" %}}),
+key network settings, exposed services, and other options.
 
-## 1. Prepare a Configuration File
+Cozystack configuration can be updated after installing it.
+However, some values, as shown below, are required for installation.
 
-We will start installing Cozystack by making a configuration file.
-Take the example below and write it in a file **cozystack-platform.yaml**:
+Here's a minimal example of **cozystack-platform.yaml**:
 
 ```yaml
 apiVersion: cozystack.io/v1alpha1
@@ -52,25 +47,47 @@ spec:
           joinCIDR: "100.64.0.0/16"
 ```
 
-Action points:
+{{% alert color="info" %}}
+The Package name **must** be `cozystack.cozystack-platform` to match the PackageSource created by the installer.
+After installing operator you can verify available PackageSources with `kubectl get packagesource`.
+{{% /alert %}}
 
-1.  Replace `example.org` in `publishing.host` and `publishing.apiServerEndpoint` with a routable fully-qualified domain name (FQDN) that you control.
-    If you only have a public IP, but no FQDN, use [nip.io](https://nip.io/) with dash notation.
-2.  Use the same values for `networking.*` as on the previous step, where you bootstrapped a Kubernetes cluster with Talm or `talosctl`.
-    Settings provided in the example are sane defaults that can be used in most cases.
 
-There are other values in this config that you don't need to change in the course of the tutorial.
-However, let's overview and explain each value:
+### 1.1. Choose a Variant
 
--   `metadata.name` must be `cozystack.cozystack-platform` to match the PackageSource created by the installer.
--   `publishing.host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
--   `publishing.apiServerEndpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
--   `spec.variant: "isp-full"` means that we're using the most complete set of Cozystack components.
-    Learn more about variants in the [Cozystack Variants reference]({{% ref "/docs/v1/operations/configuration/variants" %}}).
--   `publishing.exposedServices` lists services to make accessible by users — here the dashboard (UI) and API.
--   `networking.*` are internal networking configurations for the underlying Kubernetes cluster.
+The composition of Cozystack is defined by a variant.
+Variant `isp-full` is the most complete one, as it covers all layers from hardware to managed applications.
+Choose it if you deploy Cozystack on bare metal or VMs and if you want to use its full power.
 
-You can learn more about this configuration file in the [Platform Package reference]({{% ref "/docs/v1/operations/configuration/platform-package" %}}).
+If you deploy Cozystack on a provided Kubernetes cluster, or if you only want to deploy a Kubernetes cluster without services,
+refer to the [variants overview and comparison]({{% ref "/docs/v1/operations/configuration/variants" %}}).
+
+### 1.2. Fine-tune the Components
+
+You can add some optional components or remove ones that are included by default.
+Refer to the [components reference]({{% ref "/docs/v1/operations/configuration/components" %}}).
+
+If you deploy on VMs or dedicated servers of a cloud provider, you'll likely need to disable MetalLB and
+enable a provider-specific load balancer, or use a different network setup.
+Check out the [provider-specific installation]({{% ref "/docs/v1/install/providers" %}}) section.
+It may include a complete guide for your provider that you can use to deploy a production-ready cluster.
+
+### 1.3. Define Network Configuration
+
+Replace `example.org` in `publishing.host` and `publishing.apiServerEndpoint` with a routable fully-qualified domain name (FQDN) that you control.
+If you only have a public IP, but no routable FQDN, use [nip.io](https://nip.io/) with dash notation.
+
+The following section contains sane defaults.
+Check that they match Talos node settings that you used in the previous steps.
+If you were using Talm to install Kubernetes, they should be the same.
+
+```yaml
+networking:
+  podCIDR: "10.244.0.0/16"
+  podGateway: "10.244.0.1"
+  serviceCIDR: "10.96.0.0/16"
+  joinCIDR: "100.64.0.0/16"
+```
 
 {{% alert color="info" %}}
 Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/v1/operations/configuration/telemetry" %}}).
@@ -79,13 +96,9 @@ Cozystack gathers anonymous usage statistics by default. Learn more about what d
 
 ## 2. Install Cozystack
 
-Next, we will install Cozystack and check that the installation is complete and successful.
+### 2.1. Install Cozystack Operator
 
-
-### 2.1. Install the Cozystack Operator
-
-Install the Cozystack operator using the Helm chart from the OCI registry.
-The operator manages all Cozystack components and handles the Platform Package lifecycle.
+Install the Cozystack operator using Helm from the OCI registry:
 
 ```bash
 helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
@@ -97,10 +110,11 @@ helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installe
 Replace `X.Y.Z` with the desired Cozystack version.
 You can find available versions on the [Cozystack releases page](https://github.com/cozystack/cozystack/releases).
 
+This installs the operator, CRDs, and creates the `PackageSource` resource.
 
-### 2.2. Apply the Platform Package
+### 2.2. Apply Platform Package
 
-Apply the configuration file created in the previous step:
+Once the operator is running, apply the Platform Package prepared in step 1:
 
 ```bash
 kubectl apply -f cozystack-platform.yaml
@@ -112,16 +126,13 @@ As the installation goes on, you can track the logs of the operator:
 kubectl logs -n cozy-system deploy/cozystack-operator -f
 ```
 
-
-### 2.3. Check Installation Status
-
 Wait for a while, then check the status of installation:
 
 ```bash
 kubectl get hr -A
 ```
 
-Wait and check again until you see `True` on each line, as in this example:
+Wait until all releases become to `Ready` state:
 
 ```console
 NAMESPACE                        NAME                        AGE    READY   STATUS
@@ -151,11 +162,41 @@ cozy-victoria-metrics-operator   victoria-metrics-operator   4m1s   True    Rele
 tenant-root                      tenant-root                 4m1s   True    Release reconciliation succeeded
 ```
 
-The list of components in your installation may be different from the example above,
-as it depends on your configuration and Cozystack version.
+### Installing on non-Talos OS
 
-Once every component shows `READY: True`, we're ready to proceed by configuring subsystems.
+By default, the Cozystack operator is configured to use the [KubePrism](https://www.talos.dev/latest/kubernetes-guides/configuration/kubeprism/)
+feature of Talos Linux, which allows access to the Kubernetes API via a local address on the node.
 
+If you're installing Cozystack on a system other than Talos Linux, set the operator variant during installation:
+
+```bash
+helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
+  --version X.Y.Z \
+  --namespace cozy-system \
+  --create-namespace \
+  --set cozystackOperator.variant=generic \
+  --set cozystack.apiServerHost=<YOUR_API_SERVER_IP> \
+  --set cozystack.apiServerPort=6443
+```
+
+Replace `<YOUR_API_SERVER_IP>` with the internal IP address of your Kubernetes API server (IP only, without protocol or port).
+
+For a complete guide on deploying Cozystack on generic Kubernetes distributions, see [Deploying Cozystack on Generic Kubernetes]({{% ref "/docs/v1/install/kubernetes/generic" %}}).
+
+### Dividing Control Plane and Worker Nodes
+
+Normally Cozystack requires at least three worker nodes to run workloads in HA mode. There are no tolerations in
+Cozystack components that will allow them to run on control-plane nodes.
+
+However, it's common to have only three nodes for testing purposes. Or you might only have big hardware nodes, and you
+want to use them for both control-plane and worker workloads. In this case, you have to remove the control-plane taint
+from the nodes.
+
+Example of removing control-plane taint from the nodes:
+
+```bash
+kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+```
 
 ## 3. Configure Storage
 
@@ -174,13 +215,13 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     ```
 
 1.  List your nodes and check their readiness:
-    
+
     ```bash
     linstor node list
     ```
 
     Example output shows node names and state:
-    
+
     ```console
     +-------------------------------------------------------+
     | Node | NodeType  | Addresses                 | State  |
@@ -209,24 +250,53 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     +--------------------------------------------+
     ```
 
+
+
 ### 3.2. Create Storage Pools
 
-1.  Create storage pools using ZFS:
+1.  Create storage pools using ZFS or LVM.
 
-    ```bash
-    linstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
-    linstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
-    linstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
-    ```
+    You can also restore previously created storage pools after a node reset.
 
-    It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020)
-    to set `failmode=continue` on ZFS storage pools to allow DRBD to handle disk failures instead of ZFS.
-    
-    ```bash
-    kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv1 -- zpool set failmode=continue data
-    kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv2 -- zpool set failmode=continue data
-    kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv3 -- zpool set failmode=continue data
-    ```
+    {{< tabs name="create_storage_pools" >}}
+    {{% tab name="ZFS" %}}
+
+```bash
+linstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
+linstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
+linstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
+```
+
+It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020)
+to set `failmode=continue` on ZFS storage pools to allow DRBD to handle disk failures instead of ZFS.
+
+```bash
+kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv1 -- zpool set failmode=continue data
+kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv2 -- zpool set failmode=continue data
+kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv3 -- zpool set failmode=continue data
+```
+
+    {{% /tab %}}
+    {{% tab name="LVM" %}}
+
+```bash
+linstor ps cdp lvm srv1 /dev/sdb --pool-name data --storage-pool data
+linstor ps cdp lvm srv2 /dev/sdb --pool-name data --storage-pool data
+linstor ps cdp lvm srv3 /dev/sdb --pool-name data --storage-pool data
+```
+
+    {{% /tab %}}
+    {{% tab name="Restore ZFS/LVM storage-pool on nodes after reset" %}}
+
+```bash
+for node in $(kubectl get nodes --no-headers -o custom-columns=":metadata.name"); do
+  echo "linstor storage-pool create zfs $node data data"
+done
+# linstor storage-pool create zfs <node> data data
+```
+
+    {{% /tab %}}
+    {{< /tabs >}}
 
 1.  Check the results by listing the storage pools:
 
@@ -235,7 +305,7 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     ```
 
     Example output:
-    
+
     ```console
     +-------------------------------------------------------------------------------------------------------------------------------------+
     | StoragePool          | Node | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State | SharedName                |
@@ -249,16 +319,17 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     +-------------------------------------------------------------------------------------------------------------------------------------+
     ```
 
+
 ### 3.3. Create Storage Classes
 
-Finally, we can create a couple of storage classes, one of which will be the default class.
+Create storage classes, one of which should be the default class.
 
 
 1.  Create a file with storage class definitions.
     Below is a sane default example providing two classes: `local` (default) and `replicated`.
-    
+
     **storageclasses.yaml:**
-    
+
     ```yaml
     ---
     apiVersion: storage.k8s.io/v1
@@ -306,12 +377,13 @@ Finally, we can create a couple of storage classes, one of which will be the def
     ```
 
     Example output:
-    
+
     ```console
     NAME              PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
     local (default)   linstor.csi.linbit.com   Delete          WaitForFirstConsumer   true                   11m
     replicated        linstor.csi.linbit.com   Delete          Immediate              true                   11m
     ```
+
 
 
 ## 4. Configure Networking
@@ -369,7 +441,7 @@ Create and apply resources needed for an L2 or a BGP advertisement.
 
 {{< tabs name="metallb_announce" >}}
 {{% tab name="L2 mode" %}}
-L2Advertisement uses the name of the IPAddressPool resource we created previously. 
+L2Advertisement uses the name of the IPAddressPool resource we created previously.
 
 **metallb-l2-advertisement.yml**
 ```yaml
@@ -404,7 +476,7 @@ spec:
   myASN: 65000
   peerASN: 65001
   peerAddress: 192.168.20.254
-```  
+```
 <br/>
 
 Next, create a single BGPAdvertisement resource.
@@ -475,7 +547,7 @@ If public IPs are provided with a 1:1 NAT, as some clouds do, use IP addresses o
 
 Here we will use `192.168.100.11`, `192.168.100.12`, and `192.168.100.13`.
 
-First, patch the Platform Package with the external IPs:
+First, patch the Platform Package with IPs to expose:
 
 ```bash
 kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
@@ -507,20 +579,6 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{
 }'
 ```
 
-Finally, add external IPs to the `externalIPs` list in the Ingress configuration:
-
-```bash
-kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{
-  "spec":{
-    "externalIPs": [
-      "192.168.100.11",
-      "192.168.100.12",
-      "192.168.100.13"
-    ]
-  }
-}'
-```
-
 After that, your Ingress will be available on the specified IPs.
 Check it in the following way:
 
@@ -544,12 +602,13 @@ Enable `etcd` and `monitoring` for the root tenant:
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 {"spec":{
+  "ingress": true,
   "monitoring": true,
   "etcd": true
 }}'
 ```
 
-### 5.2. Check the cluster state and composition
+### 5.2. Check the Cluster State and composition
 
 Check the provisioned persistent volumes:
 
@@ -557,8 +616,7 @@ Check the provisioned persistent volumes:
 kubectl get pvc -n tenant-root
 ```
 
-Example output:
-
+example output:
 ```console
 NAME                                     STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
 data-etcd-0                              Bound    pvc-4cbd29cc-a29f-453d-b412-451647cd04bf   10Gi       RWO            local          <unset>                 2m10s
@@ -578,11 +636,13 @@ vmstorage-db-vmstorage-shortterm-1       Bound    pvc-d55c235d-cada-4c4a-8299-e5
 
 Check that all pods are running:
 
+
 ```bash
 kubectl get pod -n tenant-root
 ```
 
-example output:
+Example output:
+
 ```console
 NAME                                           READY   STATUS    RESTARTS       AGE
 etcd-0                                         1/1     Running   0              2m1s
@@ -612,14 +672,13 @@ vmstorage-shortterm-0                          1/1     Running   0              
 vmstorage-shortterm-1                          1/1     Running   0              2m31s
 ```
 
-Get the public IP of ingress controller:
+Now you can get the public IP of ingress controller:
 
 ```bash
 kubectl get svc -n tenant-root root-ingress-controller
 ```
 
-Example output:
-
+example output:
 ```console
 NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S)                      AGE
 root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:31632/TCP,443:30113/TCP   3m33s
@@ -627,9 +686,9 @@ root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:316
 
 ### 5.3 Access the Cozystack Dashboard
 
-If you included `dashboard` in the `publishing.exposedServices` list of your Platform Package (as shown in step 1), the Cozystack Dashboard is already available.
+If you included `dashboard` in `publishing.exposedServices` of your Platform Package, the Cozystack Dashboard should already be available.
 
-If the initial configuration did not include it, patch the Platform Package:
+If the initial Package did not include it, patch the Platform Package:
 
 ```bash
 kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
@@ -658,13 +717,14 @@ Further on, you will be able to:
 Use `grafana.example.org` to access the system monitoring, where `example.org` is your domain specified for `tenant-root`.
 In this example, `grafana.example.org` is located at 192.168.100.200.
 
--   login: `admin`
--   request a password:
-    
-    ```bash
-    kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
-    ```
+- login: `admin`
+- request a password:
+  ```bash
+  kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
+  ```
 
-## Next Step
 
-Continue the Cozystack tutorial by [creating a user tenant]({{% ref "/docs/v1/getting-started/create-tenant" %}}).
+## Next Steps
+
+-   [Configure OIDC]({{% ref "/docs/v1/operations/oidc/" %}}).
+-   [Create a user tenant]({{% ref "/docs/v1/getting-started/create-tenant" %}}).
