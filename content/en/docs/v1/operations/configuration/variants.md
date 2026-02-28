@@ -72,6 +72,7 @@ Some are designed for full platform scenarios, others for cloud-hosted workloads
 `default` is a minimal variant that only provides the set of PackageSources (package registry references).
 No bundles or components are pre-configured—all packages are managed manually through [cozypkg](https://github.com/cozystack/cozystack/tree/main/cmd/cozypkg).
 Use this variant when you need full control over which packages are installed and configured.
+This is the variant used in the [Build Your Own Platform (BYOP)]({{% ref "/docs/v1/install/cozystack/kubernetes-distribution" %}}) workflow.
 
 Example configuration:
 

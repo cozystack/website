@@ -1,20 +1,30 @@
 ---
-title: Using Cozystack as Kubernetes distribution
-linkTitle: Kubernetes Distribution
-description: "How to use Cozystack as Kubernetes distribution"
+title: "Build Your Own Platform (BYOP)"
+linkTitle: "Build Your Own Platform"
+description: "How to build your own platform with Cozystack by installing only the components you need"
 weight: 30
 aliases:
   - /docs/v1/use-cases/kubernetes-distribution
 ---
 
-You can use Cozystack as Kubernetes distribution for Bare Metal
+Cozystack can be used in BYOP (Build Your Own Platform) mode — installing only the components you need from the Cozystack package repository,
+rather than deploying the full platform.
 
 ### Overview
 
-We created Cozystack primarily for our own needs, having vast experience in building reliable systems on bare metal infrastructure. This experience led to the formation of a separate boxed product, which is aimed at standardizing and providing a ready-to-use tool for managing your infrastructure.
+Cozystack provides a package management system inspired by Linux distribution package managers.
+The Cozystack Operator manages `PackageSource` and `Package` resources, while the `cozypkg` CLI tool
+provides an interactive interface for listing available packages, resolving dependencies, and installing them selectively.
 
-Currently, Cozystack already solves a huge scope of infrastructure tasks: starting from provisioning bare-metal servers, having a ready monitoring system, fast and reliable storage, a network fabric with the possibility of interconnect with your infrastructure, the ability to run virtual machines, databases, and much more right out of the box.
+This approach is useful when:
 
-All this makes Cozystack a convenient platform for delivering and launching your application on Bare Metal.
+-   You have an existing Kubernetes cluster and only need specific components.
+-   Your cluster already has networking and storage configured.
+-   You want full control over which components are installed.
 
-![Cozystack as Kubernetes Distribution](/img/case-distribution.png)
+The `default` variant of `cozystack-platform` installs no components — it only registers PackageSources.
+From there, you use `cozypkg` to install individual packages like networking, storage, ingress, database operators, and more.
+
+For a step-by-step guide, see the [BYOP installation guide]({{% ref "/docs/v1/install/cozystack/kubernetes-distribution" %}}).
+
+![Build Your Own Platform with Cozystack](/img/case-distribution.png)

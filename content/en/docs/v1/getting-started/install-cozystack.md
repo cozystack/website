@@ -7,6 +7,12 @@ weight: 20
 
 ## Objectives
 
+{{% alert color="info" %}}
+This tutorial covers installing Cozystack as a **ready-to-use platform**.
+If you want to build your own platform by installing only specific components,
+see the [BYOP (Build Your Own Platform) guide]({{% ref "/docs/v1/install/cozystack/kubernetes-distribution" %}}).
+{{% /alert %}}
+
 In this step of the tutorial, we'll install Cozystack on top of a [Kubernetes cluster, prepared in the previous step]({{% ref "./install-kubernetes" %}}).
 
 The tutorial will guide you through the following stages:
