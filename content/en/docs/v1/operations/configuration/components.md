@@ -10,31 +10,29 @@ aliases:
 ### Overwriting Component Parameters
 
 You might want to override specific options for the components.
-To achieve this, specify values in the `spec.components` section of the Platform Package.
+To achieve this, modify the corresponding Package resource and specify values
+in the `spec.components` section. The values structure follows the
+[values.yaml](https://github.com/cozystack/cozystack/tree/main/packages/system)
+of the respective system chart in the Cozystack repository.
 
-For example, if you want to overwrite `k8sServiceHost` and `k8sServicePort` for cilium,
-take a look at its [values.yaml](https://github.com/cozystack/cozystack/blob/238061efbc0da61d60068f5de31d6eaa35c4d994/packages/system/cilium/values.yaml#L18-L19) file.
-
-Then specify these options in the `networking` component of your Platform Package:
+For example, if you want to enable FRR-K8s mode for MetalLB, look at its
+[values.yaml](https://github.com/cozystack/cozystack/blob/main/packages/system/metallb/values.yaml)
+to understand the available parameters, then modify the `cozystack.metallb` Package:
 
 ```yaml
 apiVersion: cozystack.io/v1alpha1
 kind: Package
 metadata:
-  name: cozystack.cozystack-platform
+  name: cozystack.metallb
+  namespace: cozy-system
 spec:
-  variant: distro-full
+  variant: default
   components:
-    platform:
+    metallb:
       values:
-        networking:
-          podCIDR: "10.244.0.0/16"
-          serviceCIDR: "10.96.0.0/16"
-    networking:
-      values:
-        cilium:
-          k8sServiceHost: 11.22.33.44
-          k8sServicePort: 6443
+        metallb:
+          frrk8s:
+            enabled: true
 ```
 
 ### Enabling and Disabling Components
