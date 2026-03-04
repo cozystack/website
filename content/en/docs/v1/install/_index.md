@@ -31,6 +31,10 @@ The key difference of such installation is in using proxy registries for images:
 1.  [Configure Talos nodes for air-gap and bootstrap a Kubernetes cluster]({{% ref "./kubernetes/air-gapped" %}}).
 1.  [Install and configure Cozystack]({{% ref "./cozystack" %}}) on the Kubernetes cluster.
 
+## Automated Installation with Ansible
+
+For generic Linux deployments (Ubuntu, Debian, RHEL, Rocky, openSUSE), the [Ansible collection]({{% ref "/docs/v1/install/ansible" %}}) automates the full pipeline: OS preparation, k3s cluster bootstrap, and Cozystack installation.
+
 ## Provider-specific Installation
 
 There are specific guides for cloud providers, covering all the steps from preparing infrastructure to installing and configuring Cozystack.
