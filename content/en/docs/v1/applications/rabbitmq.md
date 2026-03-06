@@ -1,8 +1,9 @@
 ---
 title: "Managed RabbitMQ Service"
 linkTitle: "RabbitMQ"
-weight: 70
+weight: 50
 aliases:
+  - /docs/reference/applications/rabbitmq
   - /docs/v1/reference/applications/rabbitmq
 ---
 
@@ -36,6 +37,7 @@ The service utilizes official RabbitMQ operator. This ensures the reliability an
 | `size`             | Persistent Volume Claim size available for application data.                                                                       | `quantity` | `10Gi`  |
 | `storageClass`     | StorageClass used to store the data.                                                                                               | `string`   | `""`    |
 | `external`         | Enable external access from outside the cluster.                                                                                   | `bool`     | `false` |
+| `version`          | RabbitMQ major.minor version to deploy                                                                                             | `string`   | `v4.2`  |
 
 
 ### Application-specific parameters

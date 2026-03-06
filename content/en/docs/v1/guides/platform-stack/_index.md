@@ -179,7 +179,6 @@ This architecture ensures isolated, scalable, and efficient Kubernetes environme
 In Cozystack, virtualization features are powered by [KubeVirt]({{% ref "/docs/v1/guides/platform-stack#kubevirt" %}}).
 Cozystack has a number of applications providing virtualization functionality:
 
--   [Simple virtual machine]({{% ref "/docs/v1/virtualization/virtual-machine" %}}).
 -   [Virtual machine instance]({{% ref "/docs/v1/virtualization/vm-instance" %}}) with more advanced configuration.
 -   [Virtual machine disk]({{% ref "/docs/v1/virtualization/vm-disk" %}}), offering a choice of image sources.
 -   [VM image (Golden Disk)]({{% ref "/docs/v1/virtualization/vm-image" %}}), which makes OS images locally available, improving VM creation time and saving network traffic.
@@ -197,17 +196,6 @@ In the Cozystack platform, we use the Altinity operator to provide ClickHouse.
 -   Managed application reference: [ClickHouse]({{% ref "/docs/v1/applications/clickhouse" %}})
 
 
-### FerretDB
-
-FerretDB is an open source MongoDB alternative.
-It translates MongoDB wire protocol queries to SQL and can be used as a direct replacement for MongoDB 5.0+.
-In Cozystack, it is backed by PostgreSQL.
-
--   Supported version: FerretDB 1.24.0.
--   Website: [ferretdb.io](https://www.ferretdb.io/)
--   Managed application reference: [FerretDB]({{% ref "/docs/v1/applications/ferretdb" %}})
-
-
 ### Kafka
 
 Apache Kafka is an open-source distributed event streaming platform.
@@ -221,7 +209,7 @@ to run an Apache Kafka cluster on Kubernetes in various deployment configuration
 -   Managed application reference: [Kafka]({{% ref "/docs/v1/applications/kafka" %}})
 
 
-### MySQL (MariaDB)
+### MariaDB (MySQL fork)
 
 MySQL is a widely used and well-known relational database.
 The implementation in the platform provides the ability to create a replicated MariaDB cluster.
@@ -233,7 +221,7 @@ as well as schedules for creating backups using [Restic](https://restic.net/), o
 -   Supported version: MariaDB 11.4.3
 -   Kubernetes operator: [mariadb-operator/mariadb-operator](https://github.com/mariadb-operator/mariadb-operator) v0.18.0
 -   Website: [mariadb.com](https://mariadb.com/)
--   Managed application reference: [MySQL]({{% ref "/docs/v1/applications/mysql" %}})
+-   Managed application reference: [MySQL]({{% ref "/docs/v1/applications/mariadb" %}})
 
 
 ### NATS Messaging

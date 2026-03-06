@@ -218,6 +218,6 @@ Use this checklist to track your migration progress:
 
 After successful migration:
 
-- Configure [cloud-init]({{% ref "/docs/v1/virtualization/virtual-machine" %}}) for automated VM setup
+- Configure [cloud-init]({{% ref "/docs/v1/virtualization/vm-instance" %}}) for automated VM setup
 - Review [instance types and profiles]({{% ref "/docs/v1/virtualization/resources" %}}) for optimal resource allocation
 - Consider creating [golden images]({{% ref "/docs/v1/virtualization/vm-image" %}}) for future VM deployments

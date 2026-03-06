@@ -1,7 +1,7 @@
 ---
 title: "Managed PostgreSQL Service"
 linkTitle: "PostgreSQL"
-weight: 60
+weight: 50
 aliases:
   - /docs/reference/applications/postgres
   - /docs/v1/reference/applications/postgres

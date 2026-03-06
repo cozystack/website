@@ -73,11 +73,12 @@ for app in "${APPS[@]}"; do
   echo "Processing $app..."
 
   # Try to fetch the first line (title) of the README
-  if ! first_line=$(curl -fsSL "$readme_url" | head -n 1); then
+  readme_content=$(curl -fsSL "$readme_url") || true
+  if [[ -z "$readme_content" ]]; then
     echo "⚠️  Failed to fetch README for $app" >&2
     continue
   fi
-
+  first_line=$(echo "$readme_content" | head -n 1)
   if [[ -z "$first_line" ]]; then
     echo "⚠️  README for $app has no content" >&2
     continue

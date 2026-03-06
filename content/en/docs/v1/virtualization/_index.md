@@ -12,20 +12,10 @@ This guide explains how virtualization works within Cozystack.
 
 ## Virtualization Packages
 
-The Cozystack catalog includes three packages related to virtualization:
+The Cozystack catalog includes two packages related to virtualization:
 
-- `virtual-machine` - Virtual Machine (simple)
 - `vm-disk` - Virtual Machine disk
 - `vm-instance` - Virtual Machine instance
-
-### Virtual Machine (simple)
-
-This package provides a quick way to create a simple virtual machine.
-It allows you to specify the bare minimum parameters to run a VM, but it only supports a single-disk virtual machine.
-
-For production workloads, it is recommended to use `vm-disk` and `vm-instance` instead.
-
-See the application reference: [`virtual-machine`]({{% ref "/docs/v1/virtualization/virtual-machine" %}}).
 
 ### Virtual Machine Disk
 

@@ -2,7 +2,7 @@
 title: "Managed ClickHouse Service"
 linkTitle: "ClickHouse"
 description: ""
-weight: 10
+weight: 50
 aliases:
   - /docs/reference/applications/clickhouse
   - /docs/v1/reference/applications/clickhouse
