@@ -7,15 +7,11 @@ weight: 30
 
 This guide is for **cluster administrators** who configure the backup infrastructure in Cozystack: S3 storage, Velero locations, backup **strategies**, and **BackupClasses**. Tenant users then use existing BackupClasses to create [BackupJobs and Plans]({{% ref "/docs/v1/kubernetes/backup-and-recovery" %}}).
 
-Cozystack uses [Velero](https://velero.io/docs/v1.17/) for Kubernetes resource backups and restores, including volume snapshots. The Velero add-on is disabled by default:
-
-- For the **management cluster**, add `velero` to `bundles.enabledPackages` in the [Platform Package]({{% ref "/docs/v1/operations/configuration/platform-package" %}}).
-- For **tenant clusters**, set `spec.addons.velero.enabled` to `true` in the `Kubernetes` resource.
-
 ## Prerequisites
 
 - Administrator access to the Cozystack (management) cluster.
 - S3-compatible storage: if you want to store backups in Cozy you need enable SeaweedFS and create a Bucket or can use another external S3 service.
+- Enable disabled by default component `cozystack.velero` in `bundles.enabledPackages` of the [Platform Package]({{% ref "/docs/v1/operations/configuration/platform-package" %}}). And for **tenant clusters**, set `spec.addons.velero.enabled` to `true` in the `Kubernetes` resource.
 
 ## 1. Set up storage credentials and configuration
 
@@ -53,9 +49,9 @@ metadata:
   name: default
   namespace: cozy-velero
 spec:
-  provider: <PROVIDER NAME>
+  provider: aws
   objectStorage:
-    bucket: <BUCKET NAME>
+    bucket: <BUCKET_NAME>
   config:
     checksumAlgorithm: ''
     profile: "default"
@@ -66,7 +62,23 @@ spec:
     key: cloud
 ```
 
+`BUCKET_NAME` can be found with: 
+```bash
+kubectl get bucketclaim -A -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,BUCKET_NAME:.status.bucketName,READY:.status.bucketReady
+```
+
 See [BackupStorageLocation](https://velero.io/docs/v1.17/api-types/backupstoragelocation/) in the Velero docs.
+
+Check that creation was successful:
+```bash
+k get BackupStorageLocation -n cozy-velero    
+```
+
+Output should be similar to:
+```bash
+NAME      PHASE       LAST VALIDATED   AGE    DEFAULT
+default   Available   5s               3d9h   true
+```
 
 ### 1.3 Configure VolumeSnapshotLocation
 
@@ -92,7 +104,7 @@ See [VolumeSnapshotLocation](https://velero.io/docs/v1.17/api-types/volumesnapsh
 
 ## 2. Define a backup strategy
 
-A **strategy** describes *what* is backed up and with which Velero options. It is a reusable template referenced by BackupClasses.
+A **strategy** describes [Velero Backup](https://velero.io/docs/v1.17/api-types/backup/) template. It is a reusable template referenced by BackupClasses.
 
 In a strategy you define:
 
@@ -107,7 +119,7 @@ kubectl get crd | grep -i backup
 kubectl explain <strategy-kind> --recursive
 ```
 
-Example strategy (replace `<API_VERSION>` and `<KIND>` with the values from your cluster):
+Example strategy:
 
 ```yaml
 apiVersion: strategy.backups.cozystack.io/v1alpha1
@@ -120,10 +132,7 @@ spec:
       includedNamespaces:
       - '{{ .Application.metadata.namespace }}'
 
-      labelSelector:
-        matchLabels:
-          apps.cozystack.io/application.Kind: '{{ .Application.kind }}'
-
+      # Resources related VMInstance
       includedResources:
         - helmreleases.helm.toolkit.fluxcd.io
         - virtualmachines.kubevirt.io
@@ -195,13 +204,26 @@ Once strategies and BackupClasses are in place, **tenant users** can run backups
 - **One-off backup**: create a [BackupJob]({{% ref "/docs/v1/kubernetes/backup-and-recovery#create-a-one-off-backup-backupjob" %}}) that references a BackupClass.
 - **Scheduled backups**: create a [Plan]({{% ref "/docs/v1/kubernetes/backup-and-recovery#create-scheduled-backups-plan" %}}) with a cron schedule and a BackupClass reference.
 
-Direct use of Velero CRDs (`Backup`, `Schedule`, `Restore`) remains available for advanced or recovery scenarios.
+Direct use of Velero CRDs (`Backup`, `Schedule`, `Restore`) remains available for advanced or recovery scenarios:
+
+```bash
+kubectl get backup.velero.io -n cozy-velero
+kubectl get schedule.velero.io -n cozy-velero
+kubectl get restores.velero.io -n cozy-velero
+```
 
 If the [Velero CLI](https://velero.io/docs/v1.17/basic-install/#install-the-cli) is installed, you can also run:
 
 ```bash
 velero -n cozy-velero backup get
 velero -n cozy-velero schedule get
+velero -n cozy-velero restore get
+```
+
+To inspect the Velero logs, use the following command:
+
+```bash
+kubectl logs -n cozy-velero -l app.kubernetes.io/name=velero --tail=100
 ```
 
 ## 5. Restore from a backup
