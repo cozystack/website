@@ -43,20 +43,21 @@ as an example.
      name: sourcevm
      namespace: tenant-root
    spec:
+     external: true
      externalMethod: PortList
-     disks:
-       - name: ubuntu-source
      externalPorts:
        - 22
+     disks:
+       - name: ubuntu-source
      instanceProfile: ubuntu
      instanceType: ""
-     running: true
+     runStrategy: Once
      sshKeys:
        - <paste your ssh public key here>
-     external: true
      resources:
        cpu: "2"
        memory: 4Gi
+       sockets: "1"
    ```
 
    When VM is created, it will get load balancer external IP address. You can get it using:
@@ -140,14 +141,20 @@ as an example.
    spec:
      external: true
      externalMethod: PortList
-     cloudInit: "hostname: my-cloned-vm"
-     cloudInitSeed: "1"
-     disks:
-       - name: ubuntu-cloned-1
      externalPorts:
        - 22
+     cloudInit: "hostname: my-cloned-vm"
+     cloudInitSeed: "1"  # This must be unique!
+     disks:
+       - name: ubuntu-cloned-1
      instanceProfile: ubuntu
-     running: true
+     instanceType: ""
+     runStrategy: Once
+     resources:
+       cpu: "2"
+       memory: 4Gi
+       sockets: "1"
+
    ```
 
    To ensure the cloned VM's network functions correctly, you must override its `hostname` via `.spec.cloudInit` and
