@@ -171,6 +171,11 @@ The `--insecure` (`-i`) parameter is required because Talm must retrieve configu
 from Talos nodes that are not initialized yet, awaiting in maintenance mode, and therefore unable to accept an authenticated connection.
 The nodes will be initialized only on the next step, with `talm apply`.
 
+The generated files include a comment block with discovered network interfaces and disks.
+You can edit these files before applying to customize the network configuration.
+For example, if you need to configure network bonding (LACP), see
+[Configure bonding (LACP)]({{% ref "/docs/v1/install/how-to/bonding" %}}).
+
 
 ## 4. Apply Configuration and Bootstrap a Cluster
 
