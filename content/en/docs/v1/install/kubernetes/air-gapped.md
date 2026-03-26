@@ -150,8 +150,12 @@ Read the [`talosctl` configuration guide]({{% ref "/docs/v1/install/kubernetes/t
 
 ## 5. Configure Container Registry Mirrors for Tenant Kubernetes
 
-To use registry mirrors, tenant Kubernetes clusters need to be configured separately,
-although in the same way as the Talos nodes.
+Tenant Kubernetes clusters in Cozystack use [Kamaji](https://kamaji.clastix.io/) for the control plane.
+The control plane components run as pods on the management cluster nodes,
+so they automatically use the registry mirrors configured in [step 2](#2-configure-container-registry-mirrors) for Talos.
+
+However, tenant **worker nodes** run as separate virtual machines with their own containerd instance.
+These worker nodes need a separate registry mirror configuration.
 
 To perform this configuration, you first need to deploy a Cozystack cluster of
 (or upgrade your cluster to) version v0.32.0 or later.
@@ -161,7 +165,124 @@ Check your current cluster version with:
 kubectl get deploy -n cozy-system cozystack -oyaml | grep installer
 ```
 
-Generate a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/) named `patch-containerd` using the following example:
+### Option A: Configure via platform package
+
+The platform package can automatically generate the `patch-containerd` secret
+from the `registries` section in the platform values.
+
+Add the `registries` section to your **cozystack-platform.yaml**:
+
+```yaml
+apiVersion: cozystack.io/v1alpha1
+kind: Package
+metadata:
+  name: cozystack.cozystack-platform
+spec:
+  variant: isp-full
+  components:
+    platform:
+      values:
+        # ... your existing publishing, networking, etc. ...
+        registries:
+          mirrors:
+            docker.io:
+              endpoints:
+                - http://10.0.0.1:8082
+            ghcr.io:
+              endpoints:
+                - http://10.0.0.1:8083
+            gcr.io:
+              endpoints:
+                - http://10.0.0.1:8084
+            registry.k8s.io:
+              endpoints:
+                - http://10.0.0.1:8085
+            quay.io:
+              endpoints:
+                - http://10.0.0.1:8086
+            cr.fluentbit.io:
+              endpoints:
+                - http://10.0.0.1:8087
+            docker-registry3.mariadb.com:
+              endpoints:
+                - http://10.0.0.1:8088
+          config:
+            "10.0.0.1:8082":
+              tls:
+                insecureSkipVerify: true
+              auth:
+                username: myuser
+                password: mypass
+```
+
+Then apply it:
+
+```bash
+kubectl apply -f cozystack-platform.yaml
+```
+
+This will create a `patch-containerd` secret in the `cozy-system` namespace,
+which is automatically copied to every tenant Kubernetes cluster.
+
+<details class="alert alert-info p-3 mb-4">
+<summary><strong>Alternatively, patch an existing platform package</strong></summary>
+
+If the platform package is already deployed, you can add registry mirrors with a patch:
+
+```bash
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "registries": {
+            "mirrors": {
+              "docker.io": {
+                "endpoints": ["http://10.0.0.1:8082"]
+              },
+              "ghcr.io": {
+                "endpoints": ["http://10.0.0.1:8083"]
+              },
+              "gcr.io": {
+                "endpoints": ["http://10.0.0.1:8084"]
+              },
+              "registry.k8s.io": {
+                "endpoints": ["http://10.0.0.1:8085"]
+              },
+              "quay.io": {
+                "endpoints": ["http://10.0.0.1:8086"]
+              },
+              "cr.fluentbit.io": {
+                "endpoints": ["http://10.0.0.1:8087"]
+              },
+              "docker-registry3.mariadb.com": {
+                "endpoints": ["http://10.0.0.1:8088"]
+              }
+            },
+            "config": {
+              "10.0.0.1:8082": {
+                "tls": {
+                  "insecureSkipVerify": true
+                },
+                "auth": {
+                  "username": "myuser",
+                  "password": "mypass"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}'
+```
+
+</details>
+
+### Option B: Create the secret manually
+
+Alternatively, create a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/) named `patch-containerd` directly:
 
 ```yaml
 apiVersion: v1
@@ -208,12 +329,46 @@ stringData:
       skip_verify = true
 ```
 
-This secret will be copied for every tenant Kubernetes cluster deployed in Cozystack.
+If your registry mirrors require authentication, add a custom `Authorization` header
+with Base64-encoded credentials:
 
-It's possible to configure registry mirrors for a particular tenant Kubernetes cluster:
+```toml
+server = "https://registry-1.docker.io"
+[host."http://10.0.0.1:8082"]
+  capabilities = ["pull", "resolve"]
+  skip_verify = true
+  [host."http://10.0.0.1:8082".header]
+    Authorization = "Basic bXl1c2VyOm15cGFzcw=="
+```
 
--   The tenant cluster must be deployed with a Kubernetes package version 0.23.1 or later, which is available since Cozystack 0.32.1.
--   Before deploying the tenant cluster, create a Kubernetes Secret named `kubernetes-<cluster name>` with the same contents as shown above.
+To generate the Base64-encoded value, run:
+
+```bash
+echo -n 'myuser:mypass' | base64
+```
+
+For dynamic or token-based authentication (e.g., Docker Hub), use
+[Kubernetes image pull secrets](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
+instead of plaintext credentials.
+
+### How it works
+
+The `patch-containerd` secret from the `cozy-system` namespace is automatically copied
+to every tenant Kubernetes cluster namespace during deployment.
+The secret data is mounted into worker node VMs as containerd registry configuration files
+at `/etc/containerd/certs.d/<registry>/hosts.toml`.
+
+### Per-cluster configuration
+
+It is possible to configure registry mirrors for a particular tenant Kubernetes cluster
+instead of using the global `patch-containerd` secret:
+
+- The tenant cluster must be deployed with a Kubernetes package version 0.23.1 or later, which is available since Cozystack 0.32.1.
+- Before deploying the tenant cluster, create a Kubernetes Secret named `kubernetes-<cluster-name>-patch-containerd` in the tenant cluster namespace, using the same format as the examples above.
+
+{{% alert color="warning" %}}
+**Important:** If both the global `patch-containerd` secret and a per-cluster secret exist, the global secret takes precedence and the per-cluster secret is ignored. To use a per-cluster configuration, ensure that the global `patch-containerd` secret in the `cozy-system` namespace is not present.
+{{% /alert %}}
 
 To learn more about registry configuration values, read the [CRI Plugin configuration guide](
 https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration)
