@@ -198,25 +198,213 @@ We are now ready to create a VM.
             Kernel modules: nvidiafb, nvidia_drm, nvidia
     ```
 
-## GPU Sharing for Virtual Machines
+## GPU Sharing for Virtual Machines (vGPU)
 
-GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU between multiple VMs, you need **NVIDIA vGPU**.
-
-### vGPU (Virtual GPU)
-
-NVIDIA vGPU uses mediated devices (mdev) to create virtual GPUs assignable to VMs. This is the only production-ready solution for GPU sharing between VMs.
-
-**Requirements:**
-- NVIDIA vGPU license (commercial, purchased from NVIDIA)
-- NVIDIA vGPU Manager installed on host nodes
+GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU between multiple VMs, you can use **NVIDIA vGPU**, which creates virtual GPUs from a single physical GPU using mediated devices (mdev).
 
 {{% alert color="info" %}}
-**Why not MIG?** MIG (Multi-Instance GPU) partitions a GPU into isolated instances, but these are logical divisions within a single PCIe device. VFIO cannot pass them to VMs — MIG only works with containers. To use MIG with VMs, you need vGPU on top of MIG partitions (still requires a license).
+**Why not MIG?** MIG (Multi-Instance GPU) partitions a GPU into isolated instances, but these are logical divisions within a single PCIe device. VFIO cannot pass them to VMs — MIG only works with containers. To use MIG with VMs, you need vGPU on top of MIG partitions (still requires a vGPU license).
 {{% /alert %}}
+
+### Prerequisites
+
+- A GPU that supports vGPU (e.g., NVIDIA L40S, A100, A30, A16)
+- An NVIDIA vGPU Software license (NVIDIA AI Enterprise or vGPU subscription)
+- Access to the [NVIDIA Licensing Portal](https://ui.licensing.nvidia.com) to download the vGPU Manager driver
+
+{{% alert color="warning" %}}
+The vGPU Manager driver is proprietary software distributed by NVIDIA under a commercial license. Cozystack does not include or redistribute this driver. You must obtain it directly from NVIDIA and build the container image yourself.
+{{% /alert %}}
+
+### 1. Build the vGPU Manager Image
+
+Download the vGPU Manager driver from the [NVIDIA Licensing Portal](https://ui.licensing.nvidia.com) and build a container image:
+
+```bash
+# Example Containerfile
+FROM ubuntu:22.04
+ARG DRIVER_VERSION
+COPY NVIDIA-Linux-x86_64-${DRIVER_VERSION}-vgpu-kvm.run /opt/
+RUN chmod +x /opt/NVIDIA-Linux-x86_64-${DRIVER_VERSION}-vgpu-kvm.run
+```
+
+```bash
+docker build --build-arg DRIVER_VERSION=550.90.05 \
+  --tag registry.example.com/nvidia/vgpu-manager:550.90.05 .
+docker push registry.example.com/nvidia/vgpu-manager:550.90.05
+```
+
+Refer to the [NVIDIA GPU Operator documentation](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/install-gpu-operator-vgpu.html) for detailed instructions on building the vGPU Manager image.
+
+### 2. Install the GPU Operator with vGPU Variant
+
+The GPU Operator provides a `vgpu` variant that enables the vGPU Manager and vGPU Device Manager instead of the VFIO Manager used in passthrough mode.
+
+1. Label the worker node for vGPU workloads:
+
+    ```bash
+    kubectl label node <node-name> --overwrite nvidia.com/gpu.workload.config=vm-vgpu
+    ```
+
+2. Create the GPU Operator Package with the `vgpu` variant, providing your vGPU Manager image coordinates:
+
+    ```yaml
+    apiVersion: cozystack.io/v1alpha1
+    kind: Package
+    metadata:
+      name: cozystack.gpu-operator
+    spec:
+      variant: vgpu
+      components:
+        gpu-operator:
+          values:
+            gpu-operator:
+              vgpuManager:
+                repository: registry.example.com/nvidia
+                version: "550.90.05"
+    ```
+
+    If your registry requires authentication, create an `imagePullSecret` in the `cozy-gpu-operator` namespace first, then reference it:
+
+    ```yaml
+    gpu-operator:
+      vgpuManager:
+        repository: registry.example.com/nvidia
+        version: "550.90.05"
+        imagePullSecrets:
+        - name: nvidia-registry-secret
+    ```
+
+3. Verify all pods are running:
+
+    ```bash
+    kubectl get pods -n cozy-gpu-operator
+    ```
+
+    Example output:
+
+    ```console
+    NAME                                            READY   STATUS    RESTARTS   AGE
+    ...
+    nvidia-vgpu-manager-daemonset-xxxxx             1/1     Running   0          60s
+    nvidia-vgpu-device-manager-xxxxx                1/1     Running   0          45s
+    nvidia-sandbox-validator-xxxxx                  1/1     Running   0          30s
+    ```
+
+### 3. Configure NVIDIA License Server (NLS)
+
+vGPU requires a license to operate. Create a ConfigMap with the NLS client configuration:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: licensing-config
+  namespace: cozy-gpu-operator
+data:
+  gridd.conf: |
+    ServerAddress=nls.example.com
+    ServerPort=443
+    FeatureType=1
+```
+
+Then reference it in the Package values:
+
+```yaml
+gpu-operator:
+  vgpuManager:
+    repository: registry.example.com/nvidia
+    version: "550.90.05"
+  driver:
+    licensingConfig:
+      configMapName: licensing-config
+```
+
+### 4. Update the KubeVirt Custom Resource
+
+Configure KubeVirt to permit mediated devices. The `mediatedDeviceTypes` field specifies which vGPU profiles to use, and `permittedHostDevices` makes them available to VMs:
+
+```bash
+kubectl edit kubevirt -n cozy-kubevirt
+```
+
+```yaml
+spec:
+  configuration:
+    mediatedDevicesConfiguration:
+      mediatedDeviceTypes:
+      - nvidia-592    # Example: NVIDIA L40S-24Q
+    permittedHostDevices:
+      mediatedDevices:
+      - mdevNameSelector: NVIDIA L40S-24Q
+        resourceName: nvidia.com/NVIDIA_L40S-24Q
+```
+
+To find the correct type ID and profile name for your GPU, consult the [NVIDIA vGPU User Guide](https://docs.nvidia.com/grid/latest/grid-vgpu-user-guide/).
+
+### 5. Create a Virtual Machine with vGPU
+
+```yaml
+apiVersion: apps.cozystack.io/v1alpha1
+appVersion: '*'
+kind: VirtualMachine
+metadata:
+  name: gpu-vgpu
+  namespace: tenant-example
+spec:
+  running: true
+  instanceProfile: ubuntu
+  instanceType: u1.medium
+  systemDisk:
+    image: ubuntu
+    storage: 5Gi
+    storageClass: replicated
+  gpus:
+  - name: nvidia.com/NVIDIA_L40S-24Q
+  cloudInit: |
+    #cloud-config
+    password: ubuntu
+    chpasswd: { expire: False }
+```
+
+```bash
+kubectl apply -f vmi-vgpu.yaml
+```
+
+Once the VM is running, log in and verify the vGPU is available:
+
+```bash
+virtctl console virtual-machine-gpu-vgpu
+```
+
+```console
+ubuntu@gpu-vgpu:~$ nvidia-smi
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.90.05              Driver Version: 550.90.05    CUDA Version: 12.4       |
+|                                                                                         |
+| GPU  Name              ...   MIG M.                                                     |
+|  0   NVIDIA L40S-24Q   ...   N/A                                                        |
++-----------------------------------------------------------------------------------------+
+```
+
+### vGPU Profiles
+
+Each GPU model supports specific vGPU profiles that determine how the GPU is partitioned. Common profiles for NVIDIA L40S:
+
+| Profile | Frame Buffer | Max Instances | Use Case |
+| --- | --- | --- | --- |
+| NVIDIA L40S-1Q | 1 GB | 48 | Light 3D / VDI |
+| NVIDIA L40S-2Q | 2 GB | 24 | Medium 3D / VDI |
+| NVIDIA L40S-4Q | 4 GB | 12 | Heavy 3D / VDI |
+| NVIDIA L40S-6Q | 6 GB | 8 | Professional 3D |
+| NVIDIA L40S-8Q | 8 GB | 6 | AI/ML inference |
+| NVIDIA L40S-12Q | 12 GB | 4 | AI/ML training |
+| NVIDIA L40S-24Q | 24 GB | 2 | Large AI workloads |
+| NVIDIA L40S-48Q | 48 GB | 1 | Full GPU equivalent |
 
 ### Open-Source vGPU (Experimental)
 
-NVIDIA is developing open-source vGPU support for the Linux kernel. Once merged, this could enable GPU sharing without a license.
+NVIDIA is developing open-source vGPU support for the Linux kernel. Once merged, this could enable GPU sharing without a commercial license.
 
 - Status: RFC stage, not merged into mainline kernel
 - Supports Ada Lovelace and newer (L4, L40, etc.)
