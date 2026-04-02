@@ -218,23 +218,35 @@ The vGPU Manager driver is proprietary software distributed by NVIDIA under a co
 
 ### 1. Build the vGPU Manager Image
 
-Download the vGPU Manager driver from the [NVIDIA Licensing Portal](https://ui.licensing.nvidia.com) and build a container image:
+The GPU Operator expects a pre-built driver container image — it does not install the driver from a raw `.run` file at runtime.
+
+1. Download the vGPU Manager driver from the [NVIDIA Licensing Portal](https://ui.licensing.nvidia.com) (Software Downloads → NVIDIA AI Enterprise → Linux KVM)
+2. Build the driver container image using NVIDIA's Makefile-based build system:
 
 ```bash
-# Example Containerfile
-FROM ubuntu:22.04
-ARG DRIVER_VERSION
-COPY NVIDIA-Linux-x86_64-${DRIVER_VERSION}-vgpu-kvm.run /opt/
-RUN chmod +x /opt/NVIDIA-Linux-x86_64-${DRIVER_VERSION}-vgpu-kvm.run
-```
+# Clone the NVIDIA driver container repository
+git clone https://gitlab.com/nvidia/container-images/driver.git
+cd driver
 
-```bash
-docker build --build-arg DRIVER_VERSION=550.90.05 \
-  --tag registry.example.com/nvidia/vgpu-manager:550.90.05 .
+# Place the downloaded .run file in the appropriate directory
+cp NVIDIA-Linux-x86_64-550.90.05-vgpu-kvm.run vgpu/
+
+# Build using the provided Makefile
+make OS_TAG=ubuntu22.04 \
+  VGPU_DRIVER_VERSION=550.90.05 \
+  PRIVATE_REGISTRY=registry.example.com/nvidia
+
+# Push to your private registry
 docker push registry.example.com/nvidia/vgpu-manager:550.90.05
 ```
 
-Refer to the [NVIDIA GPU Operator documentation](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/install-gpu-operator-vgpu.html) for detailed instructions on building the vGPU Manager image.
+{{% alert color="info" %}}
+The build process compiles kernel modules against the host kernel version. Refer to the [NVIDIA GPU Operator vGPU documentation](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/install-gpu-operator-vgpu.html) for the complete build procedure and supported OS/kernel combinations.
+{{% /alert %}}
+
+{{% alert color="warning" %}}
+Uploading the vGPU driver to a publicly available registry is a violation of the NVIDIA vGPU EULA. Always use a private registry.
+{{% /alert %}}
 
 ### 2. Install the GPU Operator with vGPU Variant
 
@@ -306,6 +318,7 @@ data:
     ServerAddress=nls.example.com
     ServerPort=443
     FeatureType=1
+    # ServerPort depends on your NLS deployment (commonly 443 for DLS or 7070 for legacy NLS)
 ```
 
 Then reference it in the Package values:
