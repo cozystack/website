@@ -305,23 +305,23 @@ The GPU Operator provides a `vgpu` variant that enables the vGPU Manager and vGP
 
 ### 3. Configure NVIDIA License Server (NLS)
 
-vGPU requires a license to operate. Create a ConfigMap with the NLS client configuration:
+vGPU requires a license to operate. Create a Secret with the NLS client configuration:
 
 ```yaml
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
   name: licensing-config
   namespace: cozy-gpu-operator
-data:
+stringData:
   gridd.conf: |
     ServerAddress=nls.example.com
     ServerPort=443
-    FeatureType=1
+    FeatureType=1  # 1 for vGPU (vPC/vWS), 2 for Virtual Compute Server (vCS)
     # ServerPort depends on your NLS deployment (commonly 443 for DLS or 7070 for legacy NLS)
 ```
 
-Then reference it in the Package values:
+Then reference the Secret in the Package values:
 
 ```yaml
 gpu-operator:
@@ -330,7 +330,7 @@ gpu-operator:
     version: "550.90.05"
   driver:
     licensingConfig:
-      configMapName: licensing-config
+      secretName: licensing-config
 ```
 
 ### 4. Update the KubeVirt Custom Resource
@@ -391,7 +391,7 @@ virtctl console virtual-machine-gpu-vgpu
 ```
 
 ```console
-ubuntu@gpu-vgpu:~$ nvidia-smi
+ubuntu@virtual-machine-gpu-vgpu:~$ nvidia-smi
 +-----------------------------------------------------------------------------------------+
 | NVIDIA-SMI 550.90.05              Driver Version: 550.90.05    CUDA Version: 12.4       |
 |                                                                                         |
