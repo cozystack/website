@@ -178,6 +178,13 @@ params:
 
 menus:
   main:
+  - name: OSS Health
+    weight: 3
+    identifier: oss-health
+  - name: Security Summary
+    parent: oss-health
+    url: /oss-health/security/
+    weight: 1
   - name: Enterprise support
     url: /support
     weight: 5
