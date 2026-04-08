@@ -5,6 +5,7 @@ date: 2026-04-08
 author: "Timur Tukaev"
 description: "We have launched a new OSS health section on the Cozystack website, with project stats refreshed automatically every month."
 ---
+### Cozystack have launched a new OSS health section on a website
 
 ![OSS Insight snapshot](oss-insight.png)
 
