@@ -500,7 +500,13 @@ kubectl apply -f metallb-bgp-advertisement.yml
 {{< /tabs >}}
 <br/>
 
-Now that MetalLB is configured, enable `ingress` in the `tenant-root`:
+Now that MetalLB is configured, enable traffic routing for the `tenant-root`.
+You can use Ingress (nginx), Gateway API (Envoy Gateway), or both simultaneously.
+
+{{< tabs name="traffic_routing_metallb" >}}
+{{% tab name="Ingress (default)" %}}
+
+Enable `ingress` in the `tenant-root`:
 
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
@@ -535,6 +541,66 @@ NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP       PORT(
 root-ingress-controller   LoadBalancer   10.96.91.83     192.168.100.200   80/TCP,443/TCP   48m
 ```
 
+{{% /tab %}}
+{{% tab name="Gateway API" %}}
+
+First, enable Gateway API on the platform:
+
+```bash
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "gateway": {
+            "gatewayAPI": true,
+            "gatewayClass": "tenant-root"
+          }
+        }
+      }
+    }
+  }
+}'
+```
+
+Then enable `gateway` on the root tenant:
+
+```bash
+kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
+{"spec":{
+  "gateway": true
+}}'
+```
+
+Wait for the gateway HelmRelease to become ready:
+
+```bash
+kubectl -n tenant-root get hr gateway
+```
+
+Expected output:
+```console
+NAME      AGE   READY   STATUS
+gateway   1m    True    Helm upgrade succeeded for release tenant-root/gateway.v1 with chart gateway@...
+```
+
+Verify the GatewayClass is accepted:
+
+```bash
+kubectl get gatewayclass tenant-root
+```
+
+Expected output:
+```console
+NAME          CONTROLLER                                      ACCEPTED   AGE
+tenant-root   gateway.envoyproxy.io/gatewayclass-controller   True       1m
+```
+
+For more details on the Gateway API architecture and configuration, see [Gateway API]({{% ref "/docs/v1/networking/gateway-api" %}}).
+
+{{% /tab %}}
+{{< /tabs >}}
+
 ### 4.b. Node Public IP Setup
 
 If your cloud provider does not support MetalLB, you can expose ingress controller using external IPs on your nodes.
@@ -566,7 +632,13 @@ kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p
 }'
 ```
 
-Next, enable `ingress` for the root tenant:
+Next, enable traffic routing for the root tenant.
+You can use Ingress (nginx), Gateway API (Envoy Gateway), or both.
+
+{{< tabs name="traffic_routing_public_ip" >}}
+{{% tab name="Ingress (default)" %}}
+
+Enable `ingress` for the root tenant:
 
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{
@@ -590,11 +662,59 @@ NAME                     TYPE       CLUSTER-IP   EXTERNAL-IP                    
 root-ingress-controller  ClusterIP  10.96.91.83  192.168.100.11,192.168.100.12,192.168.100.13  80/TCP,443/TCP  48m
 ```
 
+{{% /tab %}}
+{{% tab name="Gateway API" %}}
+
+Enable Gateway API on the platform and `gateway` on the root tenant:
+
+```bash
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "gateway": {
+            "gatewayAPI": true,
+            "gatewayClass": "tenant-root"
+          }
+        }
+      }
+    }
+  }
+}'
+
+kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{
+  "spec":{
+    "gateway": true
+  }
+}'
+```
+
+The EnvoyProxy will automatically create a ClusterIP Service with the configured externalIPs. Verify:
+
+```bash
+kubectl get svc -n cozy-envoy-gateway
+```
+
+Expected output shows the merged Envoy service with externalIPs:
+```console
+NAME                         TYPE        CLUSTER-IP     EXTERNAL-IP                                   PORT(S)          AGE
+envoy-tenant-root-...       ClusterIP   10.96.83.194   192.168.100.11,192.168.100.12,192.168.100.13  80/TCP,443/TCP   1m
+```
+
+For more details, see [Gateway API]({{% ref "/docs/v1/networking/gateway-api" %}}).
+
+{{% /tab %}}
+{{< /tabs >}}
+
 ## 5. Finalize Installation
 
 ### 5.1. Setup Root Tenant Services
 
-Enable `etcd` and `monitoring` for the root tenant:
+Enable core services for the root tenant. Choose the tab matching the traffic routing you configured in step 4:
+
+{{< tabs name="root_tenant_services" >}}
+{{% tab name="Ingress" %}}
 
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
@@ -604,6 +724,34 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
   "etcd": true
 }}'
 ```
+
+{{% /tab %}}
+{{% tab name="Gateway API" %}}
+
+```bash
+kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
+{"spec":{
+  "gateway": true,
+  "monitoring": true,
+  "etcd": true
+}}'
+```
+
+{{% /tab %}}
+{{% tab name="Both" %}}
+
+```bash
+kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
+{"spec":{
+  "ingress": true,
+  "gateway": true,
+  "monitoring": true,
+  "etcd": true
+}}'
+```
+
+{{% /tab %}}
+{{< /tabs >}}
 
 ### 5.2. Check the Cluster State and composition
 
@@ -725,3 +873,4 @@ In this example, `grafana.example.org` is located at 192.168.100.200.
 
 -   [Configure OIDC]({{% ref "/docs/v1/operations/oidc/" %}}).
 -   [Create a user tenant]({{% ref "/docs/v1/getting-started/create-tenant" %}}).
+-   [Set up Gateway API]({{% ref "/docs/v1/networking/gateway-api" %}}) as an alternative to ingress-nginx.
