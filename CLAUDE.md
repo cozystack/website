@@ -30,11 +30,18 @@ make template-all                      # or template-apps / template-vms / templ
 # Initialize a new docs version
 make init-version DOC_VERSION=v1.3     # copies from latest existing version
 
+# Version lifecycle management (requires yq v4+)
+make add-draft DOC_VERSION=v1.3        # create hidden draft version (content dir + hugo.yaml entry)
+make release-version DOC_VERSION=v1.3  # publish a draft (unhide + set as latest)
+
+# When RELEASE_TAG is set, update-all also publishes DOC_VERSION and creates next minor as draft
+# e.g. RELEASE_TAG=v1.3.0 → publishes v1.3, creates v1.4 as hidden draft
+
 # Override the app list for any update-*/template-* target
 make update-apps APPS="tenant redis"
 ```
 
-Required tools: Hugo extended v0.151.1, Go 1.23+, Node 20+.
+Required tools: Hugo extended v0.151.1, Go 1.23+, Node 20+, yq v4+ (for version lifecycle targets).
 
 ## Architecture
 
@@ -59,6 +66,7 @@ Docs are versioned per Cozystack minor release. Each version is an independent c
 **Version registration (`hugo.yaml`)**
 - `params.latest_version_id` — id of the current/default version
 - `params.versions[]` — ordered list consumed by the version switcher (`layouts/partials/version-switcher.html`, `navbar-version-selector.html`). Newest goes first, `order` highest. **When adding a new version, update both fields.**
+- `hidden: true` on a version entry hides it from the dropdown selectors (both navbar and sidebar). Pages are still built and accessible by direct URL. Use for deprecated versions or unreleased drafts.
 
 **Where to add changes**
 - Bug fix or addition to the current release → edit only `content/en/docs/<latest_version_id>/` (currently `v1.2`)
@@ -76,10 +84,14 @@ Docs are versioned per Cozystack minor release. Each version is an independent c
 - `make update-all RELEASE_TAG=v0.30.0` → `DOC_VERSION=v0` (all 0.x flows into the single `v0` directory)
 - No `RELEASE_TAG` → defaults to `DOC_VERSION=v1.2`, `BRANCH=main` (uses current upstream `main`, non-reproducible)
 
+**Version lifecycle**
+- Each version in `hugo.yaml` `params.versions[]` can have `hidden: true` — hides from the dropdown selector but pages are still built and accessible by direct URL. Used for deprecated versions and unreleased drafts
+- The version banner (`layouts/partials/version-banner.html`) auto-detects unreleased versions (order > latest) and shows a "beta" banner; older versions get an "old version" banner
+
 **Creating a new version (e.g., `v1.3`)**
-1. `make init-version DOC_VERSION=v1.3` — `hack/init_version.sh` copies from the auto-detected latest existing version (or `--from vX.Y`), strips `api.json` (downloaded at build time), and rewrites internal `/docs/<old>/` and `"docs/<old>/` refs to the new version
-2. Add an entry for `v1.3` to `params.versions[]` in `hugo.yaml` and bump `params.latest_version_id` to `v1.3`
-3. `make update-all RELEASE_TAG=v1.3.0` to pull fresh upstream READMEs for that tag
+- Manual: `make add-draft DOC_VERSION=v1.3` — creates content dir (copies from latest) + registers as hidden in `hugo.yaml`
+- Automatic: `make update-all RELEASE_TAG=v1.3.0` publishes v1.3 (unhides, sets as latest) and creates v1.4 as hidden draft — all via `hack/register_version.sh` (requires `yq` v4+)
+- The old manual steps still work: `make init-version DOC_VERSION=v1.3` creates only the content dir, `hack/register_version.sh --release v1.3` or `--draft v1.3` manages only the `hugo.yaml` entry
 
 **OpenAPI per version**
 - `v0` and `v1.0` ship their `api.json` in git under `static/docs/<version>/cozystack-api/api.json`
