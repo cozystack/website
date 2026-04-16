@@ -6,6 +6,8 @@ ifdef RELEASE_TAG
   _major := $(word 1,$(subst ., ,$(_ver)))
   _minor := $(word 2,$(subst ., ,$(_ver)))
   DOC_VERSION := $(if $(filter 0,$(_major)),v0,v$(_major).$(_minor))
+  # Next minor version for draft creation (v1.2 → v1.3); not computed for v0
+  NEXT_DOC_VERSION := $(if $(filter 0,$(_major)),,v$(_major).$(shell echo $$(($(_minor)+1))))
   override BRANCH := $(RELEASE_TAG)
 else
   DOC_VERSION ?= v1.2
@@ -26,7 +28,7 @@ SERVICES_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/operations/services
 
 .PHONY: update-apps update-vms update-networking update-k8s update-services update-oss-health update-all \
         template-apps template-vms template-networking template-k8s template-services template-all \
-        init-version download-openapi download-openapi-all serve
+        init-version register-version release-version add-draft download-openapi download-openapi-all serve
 
 update-apps:
 	./hack/update_apps.sh --apps "$(APPS)" --dest "$(APPS_DEST_DIR)" --branch "$(BRANCH)"
@@ -66,7 +68,21 @@ download-openapi-all:
 init-version:
 	./hack/init_version.sh --version "$(DOC_VERSION)"
 
+# Register/update a version entry in hugo.yaml (used by other targets)
+register-version:
+	./hack/register_version.sh --release "$(DOC_VERSION)"
+
+# Manually publish a hidden draft version (unhide + set as latest)
+release-version:
+	./hack/register_version.sh --release "$(DOC_VERSION)"
+
+# Manually add a hidden draft version (content dir + hugo.yaml entry)
+add-draft:
+	./hack/init_version.sh --version "$(DOC_VERSION)"
+	./hack/register_version.sh --draft "$(DOC_VERSION)"
+
 # doesn't include download-openapi (handled separately at build time)
+# When RELEASE_TAG is set: publishes DOC_VERSION and creates NEXT_DOC_VERSION as hidden draft
 update-all:
 	$(MAKE) init-version
 	$(MAKE) update-apps
@@ -74,6 +90,12 @@ update-all:
 	$(MAKE) update-networking
 	$(MAKE) update-k8s
 	$(MAKE) update-services
+ifdef RELEASE_TAG
+	$(MAKE) register-version
+  ifneq ($(NEXT_DOC_VERSION),)
+	$(MAKE) add-draft DOC_VERSION=$(NEXT_DOC_VERSION)
+  endif
+endif
 
 template-apps:
 	./hack/fill_templates.sh --apps "$(APPS)" --dest "$(APPS_DEST_DIR)" --branch "$(BRANCH)"
