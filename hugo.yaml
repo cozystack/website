@@ -52,8 +52,9 @@ module:
     # Mount local content
     - source: content/en
       target: content
-      excludeFiles:
-        - '**/_include/*'
+      files:
+        - '! **/_include/*'
+        - '! docs/v1.3/**'
     # Mount npm dependencies for Docsy
     - source: node_modules/bootstrap
       target: assets/vendor/bootstrap
@@ -115,6 +116,11 @@ params:
   version_menu_pagelinks: true
   latest_version_id: "v1.2"
   versions:
+    - version: "v1.3"
+      url: "/docs/v1.3/"
+      id: "v1.3"
+      order: 5
+      hidden: true
     - version: "v1.2"
       url: "/docs/v1.2/"
       id: "v1.2"
