@@ -3,7 +3,7 @@
   command = "npm install && ./hack/download_openapi.sh && hugo --gc --minify"
 
 [build.environment]
-  HUGO_VERSION = "0.151.1"
+  HUGO_VERSION = "0.160.1"
   HUGO_EXTENDED = "true"
   NODE_VERSION = "20"
   GO_VERSION = "1.23"
