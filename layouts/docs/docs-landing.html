@@ -1,0 +1,52 @@
+{{ define "main" }}
+<div class="td-content">
+  <h1>{{ .Title }}</h1>
+  {{ with .Params.description }}<div class="lead">{{ . | markdownify }}</div>{{ end }}
+
+  {{- $latestID := .Site.Params.latest_version_id -}}
+  {{- $latestVersion := dict -}}
+  {{- $olderVersions := slice -}}
+  {{- range .Site.Params.versions -}}
+    {{- if eq .id $latestID -}}
+      {{- $latestVersion = . -}}
+    {{- else if not .hidden -}}
+      {{- $olderVersions = $olderVersions | append . -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{ with $latestVersion }}
+  <p><strong>New users:</strong> Start with <a href="{{ .url }}">{{ .version }} documentation</a> — the current stable release.</p>
+  {{ end }}
+
+  {{ .Content }}
+
+  <h3>Available Versions</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Version</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{- range .Site.Params.versions -}}
+        {{- if not .hidden -}}
+        {{- $isLatest := eq .id $latestID -}}
+        {{- $latestOrder := 0 -}}
+        {{- range $.Site.Params.versions }}{{ if eq .id $latestID }}{{ $latestOrder = .order }}{{ end }}{{ end -}}
+        {{- $status := "Previous release" -}}
+        {{- if $isLatest -}}
+          {{- $status = "Latest (stable)" -}}
+        {{- else if gt (.order | default 0) $latestOrder -}}
+          {{- $status = "Unreleased (beta)" -}}
+        {{- end -}}
+        <tr>
+          <td><a href="{{ .url }}">{{ .version }}</a></td>
+          <td>{{ $status }}</td>
+        </tr>
+        {{- end -}}
+      {{- end -}}
+    </tbody>
+  </table>
+</div>
+{{ end }}
