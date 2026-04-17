@@ -11,6 +11,12 @@
 [context.production.environment]
   HUGO_ENV = "production"
 
+# Deploy previews render content/en/docs/next/ so reviewers can see upcoming-release
+# docs. HUGO_ENV != "production" skips config/production/hugo.yaml, which is where
+# the `docs/next/**` content-mount exclusion lives.
+[context.deploy-preview.environment]
+  HUGO_ENV = "preview"
+
 [context.deploy-preview]
   command = "npm install && ./hack/download_openapi.sh && hugo --gc --minify --buildFuture -b $DEPLOY_PRIME_URL"
 

@@ -50,10 +50,13 @@ module:
       disable: false
   mounts:
     # Mount local content
+    # Note: `next/` is the permanent trunk for unreleased docs. It is mounted here
+    # (visible in local dev and Netlify deploy previews) and excluded from
+    # production builds via `config/production/hugo.yaml`.
     - source: content/en
       target: content
-      excludeFiles:
-        - '**/_include/*'
+      files:
+        - '! **/_include/*'
     # Mount npm dependencies for Docsy
     - source: node_modules/bootstrap
       target: assets/vendor/bootstrap
@@ -115,6 +118,12 @@ params:
   version_menu_pagelinks: true
   latest_version_id: "v1.2"
   versions:
+    - version: "next"
+      url: "/docs/next/"
+      id: "next"
+      order: 999
+      hidden: true
+      label: "Next (unreleased)"
     - version: "v1.2"
       url: "/docs/v1.2/"
       id: "v1.2"
