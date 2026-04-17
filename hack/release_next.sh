@@ -97,13 +97,13 @@ if [[ -f "$INDEX_FILE" ]]; then
   sed -i.bak '/^{{% warning %}}$/,/^{{% \/warning %}}$/d' "$INDEX_FILE"
   # Collapse any double blank lines left after the banner removal
   sed -i.bak '/./,/^$/!d' "$INDEX_FILE"
-  # Reset weight to the released-version default (10 — latest stable)
-  sed -i.bak 's|^weight: .*|weight: 10|' "$INDEX_FILE"
   rm -f "$INDEX_FILE.bak"
-  echo "✓ Updated $INDEX_FILE (title, removed draft banner, weight=10)"
+  echo "✓ Updated $INDEX_FILE (title, removed draft banner)"
 fi
 
-# 4. Register version in hugo.yaml as the new latest
+# 4. Register version in hugo.yaml as the new latest. register_version.sh also
+#    normalizes _index.md weights across all non-hidden versions so sidebar
+#    ordering stays deterministic (new latest → 10, older → 20, 30, …).
 ./hack/register_version.sh --release "$DOC_VERSION"
 
 echo ""

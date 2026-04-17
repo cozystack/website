@@ -80,5 +80,24 @@ else
   sed -i "/^  versions:$/a\\${BLOCK}" "$HUGO_YAML"
 fi
 
+# Normalize _index.md weights across non-hidden versions so sidebar ordering
+# stays deterministic. Latest (highest order) = 10, then 20, 30, 40, ….
+# The permanent `next` trunk keeps weight 5 (set by init_version.sh) and is
+# not touched here.
+echo "Normalizing _index.md weights..."
+mapfile -t sorted_ids < <(yq '[.params.versions[] | select(.hidden != true)] | sort_by(.order) | reverse | .[].id' "$HUGO_YAML")
+w=10
+for vid in "${sorted_ids[@]}"; do
+  idx="content/en/docs/${vid}/_index.md"
+  if [[ -f "$idx" ]]; then
+    sed -i.bak "s|^weight: .*|weight: ${w}|" "$idx"
+    rm -f "${idx}.bak"
+    echo "  ${vid}/_index.md → weight ${w}"
+  else
+    echo "  ${vid}: no _index.md on disk, skipping"
+  fi
+  w=$((w + 10))
+done
+
 echo "✓ Done. Current versions in hugo.yaml:"
 yq '.params.versions[] | [.id, "order=" + (.order | tostring), "hidden=" + (.hidden // false | tostring)] | join(" ")' "$HUGO_YAML"
