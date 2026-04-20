@@ -64,21 +64,22 @@ if [[ -n "$exists" ]]; then
   # Version entry exists — update it (unhide, set as latest)
   echo "Updating $VERSION: unhiding, setting as latest..."
   # Remove "hidden: true" and "label:" lines within this version's block
-  sed -i "/id: \"${V_ESC}\"/,/^    - version:\|^  [^ ]/{
+  sed -i.bak "/id: \"${V_ESC}\"/,/^    - version:\|^  [^ ]/{
     /^      hidden: true$/d
     /^      label: /d
   }" "$HUGO_YAML"
   # Update latest_version_id
-  sed -i "s/latest_version_id: \".*\"/latest_version_id: \"${VERSION}\"/" "$HUGO_YAML"
+  sed -i.bak "s/latest_version_id: \".*\"/latest_version_id: \"${VERSION}\"/" "$HUGO_YAML"
 else
   # Version entry doesn't exist — insert as first released entry
   new_order=$((max_order + 1))
   echo "Registering $VERSION (order=$new_order), setting as latest..."
   BLOCK="    - version: \"${VERSION}\"\n      url: \"/docs/${VERSION}/\"\n      id: \"${VERSION}\"\n      order: ${new_order}"
-  sed -i "s/latest_version_id: \".*\"/latest_version_id: \"${VERSION}\"/" "$HUGO_YAML"
+  sed -i.bak "s/latest_version_id: \".*\"/latest_version_id: \"${VERSION}\"/" "$HUGO_YAML"
   # Insert new version block before the first existing version entry
-  sed -i "/^  versions:$/a\\${BLOCK}" "$HUGO_YAML"
+  sed -i.bak "/^  versions:$/a\\${BLOCK}" "$HUGO_YAML"
 fi
+rm -f "${HUGO_YAML}.bak"
 
 # Normalize _index.md weights across non-hidden versions so sidebar ordering
 # stays deterministic. Latest (highest order) = 10, then 20, 30, 40, ….

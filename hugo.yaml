@@ -123,7 +123,6 @@ params:
       id: "next"
       order: 999
       hidden: true
-      label: "Next (unreleased)"
     - version: "v1.2"
       url: "/docs/v1.2/"
       id: "v1.2"

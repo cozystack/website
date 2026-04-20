@@ -152,17 +152,35 @@ make update-all  RELEASE_TAG=v1.3.0
 - `make update-all RELEASE_TAG=v1.3.0` then pulls fresh upstream READMEs pinned
   to the exact tag into the new `v1.3/` directory.
 
-After a release, `next/` still holds a copy of the content (the copy happened;
-it was not moved). Common practice is to then run:
+#### Pre-release audit
+
+`hack/release_next.sh` rewrites `/docs/next/` URL paths, but **version
+references in prose are promoted verbatim**. Before cutting a new minor, do a
+sweep over `content/en/docs/next/` for any `Cozystack v<prev>`, `@v<prev>.0`,
+pinned-image versions, or "since Cozystack v<prev>" phrasing that would be
+factually wrong once the trunk becomes the new version. Search patterns that
+typically catch the stragglers:
+
+```bash
+grep -rn 'Cozystack v[0-9]' content/en/docs/next/
+grep -rn '@v[0-9]'           content/en/docs/next/
+grep -rn 'talos:v[0-9]'      content/en/docs/next/
+```
+
+#### Resetting the trunk after release
+
+`release-next` **copies** `next/` → `vX.Y/`; it does not move. The trunk
+therefore still holds the now-released content and must be reset before any
+further work targeting the next cycle:
 
 ```bash
 make init-next
 ```
 
-which wipes `content/en/docs/next/` and re-initializes it from the new latest
-version, ready to receive the next cycle's upcoming-feature edits. This is
-what puts `next/` into a clean state for writing docs about features targeting
-the release *after* the one we just cut.
+`init-next` wipes `content/en/docs/next/` and re-initializes it from the new
+latest version. **Run this as the final step of every release** — skipping it
+leaves the trunk in a stale state where edits look like they're for an
+upcoming release but are actually landing on top of already-released content.
 
 ### Routing table
 

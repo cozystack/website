@@ -15,6 +15,13 @@ Given a release tag like v1.3.0, derives DOC_VERSION (v1.3) and:
      strips the draft banner shortcode block
   5. Registers $DOC_VERSION in hugo.yaml as the new latest version
 
+The /docs/v<major>/ short path is handled dynamically by layouts/404.html,
+which reads Site.Params.latest_version_id and redirects. No Hugo alias is
+emitted for that path, so no release-time alias shuffling is needed.
+
+Only accepts final release tags (vX.Y.Z); pre-release tags like vX.Y.Z-rc1
+are rejected — those should accumulate in next/ via update-all.
+
 next/ is never modified.
 
 Options:
@@ -43,9 +50,12 @@ if [[ -z "$RELEASE_TAG" ]]; then
   usage; exit 1
 fi
 
-# Derive DOC_VERSION from RELEASE_TAG (e.g., v1.3.0 → v1.3, v0.30.0 → v0)
-if [[ ! "$RELEASE_TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+).*$ ]]; then
-  echo "Error: RELEASE_TAG must match v<major>.<minor>.<patch>[...] (got: $RELEASE_TAG)" >&2
+# Derive DOC_VERSION from RELEASE_TAG (e.g., v1.3.0 → v1.3, v0.30.0 → v0).
+# Pre-release tags (v1.3.0-rc1, v1.3.0-beta, …) are rejected: release-next is
+# only invoked for final minor/major releases; pre-releases still accumulate
+# in next/ via update-all.
+if [[ ! "$RELEASE_TAG" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+  echo "Error: RELEASE_TAG must match v<major>.<minor>.<patch> with no suffix (got: $RELEASE_TAG)" >&2
   exit 1
 fi
 MAJOR="${BASH_REMATCH[1]}"
@@ -95,7 +105,10 @@ if [[ -f "$INDEX_FILE" ]]; then
   # Strip the draft banner block — lines from `{{% warning %}}` through `{{% /warning %}}`
   # including any immediately following blank line
   sed -i.bak '/^{{% warning %}}$/,/^{{% \/warning %}}$/d' "$INDEX_FILE"
-  # Collapse any double blank lines left after the banner removal
+  # Trim leading/trailing blank lines and collapse runs of blanks left by the
+  # banner removal. `/./,/^$/!d` keeps every range from a non-empty line up to
+  # the next blank, inclusive of one blank, which drops leading/trailing blanks
+  # and collapses consecutive blanks to a single separator.
   sed -i.bak '/./,/^$/!d' "$INDEX_FILE"
   rm -f "$INDEX_FILE.bak"
   echo "✓ Updated $INDEX_FILE (title, removed draft banner)"

@@ -2,8 +2,6 @@
 title: "Cozystack v1.2 Documentation"
 linkTitle: "Cozystack v1.2"
 description: "Free PaaS platform and framework for building clouds"
-aliases:
-  - /docs/v1/
 taxonomyCloud: []
 cascade:
   type: docs
