@@ -107,7 +107,7 @@
       }
     },
     "quarter": {
-      "label": "March 2026 — April 2026",
+      "label": "Quarter",
       "summary_cards": [
         {
           "label": "Clusters",
@@ -220,7 +220,7 @@
       }
     },
     "year": {
-      "label": "March 2026 — April 2026",
+      "label": "Year",
       "summary_cards": [
         {
           "label": "Clusters",
