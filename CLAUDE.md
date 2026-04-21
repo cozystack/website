@@ -106,7 +106,3 @@ Located in `layouts/shortcodes/`: `tabs`/`tab`, `note`, `warning`, `caution`, `i
 - Hugo frontmatter uses YAML
 - OSS health app pages use custom layout (`layouts/_default/oss-health-app.html`) with frontmatter keys: `oss_health_key`, `oss_health_kind`, `lede`, `source_url`
 - Goldmark rendering has `unsafe: true` enabled (raw HTML allowed in markdown)
-
-## Code Owners
-
-@kvaps, @lllamnyp, @nbykov0
