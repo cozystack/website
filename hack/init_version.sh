@@ -81,11 +81,42 @@ find "$TARGET_DIR" -name '*.bak' -delete
 
 # Update _index.md frontmatter
 if [[ -f "$TARGET_DIR/_index.md" ]]; then
-  sed -i.bak "s|Cozystack ${FROM_VERSION}|Cozystack ${VERSION}|g" "$TARGET_DIR/_index.md"
   # Remove aliases from previous version (they belong to that version only)
   sed -i.bak '/^aliases:/,/^[^ ]/{ /^aliases:/d; /^  - /d; }' "$TARGET_DIR/_index.md"
+
+  if [[ "$VERSION" == "next" ]]; then
+    # Rewrite title/linkTitle to the unreleased form and prepend a draft banner
+    sed -i.bak \
+      -e 's|^title: .*|title: "Cozystack Next (unreleased)"|' \
+      -e 's|^linkTitle: .*|linkTitle: "Cozystack Next"|' \
+      -e 's|^weight: .*|weight: 5|' \
+      "$TARGET_DIR/_index.md"
+    # Prepend a draft banner shortcode block right after the frontmatter, if missing
+    if ! grep -q '^{{% warning %}}$' "$TARGET_DIR/_index.md"; then
+      python3 - "$TARGET_DIR/_index.md" <<'PY'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1])
+src = p.read_text()
+head, sep, body = src.partition('\n---\n')
+banner = (
+    '\n\n{{% warning %}}\n'
+    '**This is documentation for an unreleased version of Cozystack.** '
+    'Content may change before release. For the current stable release, see '
+    '[the latest documentation](/docs/).\n'
+    '{{% /warning %}}\n'
+)
+p.write_text(head + sep + banner + body.lstrip('\n'))
+PY
+    fi
+  else
+    sed -i.bak "s|Cozystack ${FROM_VERSION}|Cozystack ${VERSION}|g" "$TARGET_DIR/_index.md"
+  fi
   rm -f "$TARGET_DIR/_index.md.bak"
 fi
 
 echo "✓ Initialized $TARGET_DIR from $SOURCE_DIR"
-echo "  Review _index.md frontmatter (title, weight, aliases)."
+if [[ "$VERSION" == "next" ]]; then
+  echo "  Trunk directory ready. Edit content/en/docs/next/ for upcoming release work."
+else
+  echo "  Review _index.md frontmatter (title, weight, aliases)."
+fi
