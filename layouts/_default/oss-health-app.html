@@ -80,6 +80,7 @@
         <article class="oss-health-stat">
           <span class="oss-health-stat__label">${escapeHtml(card.label)}</span>
           <strong class="oss-health-stat__value">${escapeHtml(card.value)}</strong>
+          ${card.hint ? `<span class="oss-health-stat__hint">${escapeHtml(card.hint)}</span>` : ""}
         </article>
       `).join("")}
     </div>
@@ -200,6 +201,72 @@
     renderActive();
   };
 
+  const renderTelemetry = (payload) => {
+    const order = ["month", "quarter", "year"];
+    const available = order.filter((name) => payload.periods[name]);
+    if (!available.length) {
+      root.innerHTML = `<p class="oss-health-empty">No telemetry data available yet.</p>`;
+      return;
+    }
+    let active = available[0];
+
+    const renderActive = () => {
+      const period = payload.periods[active];
+      const controls = `
+        <div class="oss-health-switcher" role="tablist" aria-label="Report period">
+          ${available.map((name) => `
+            <button class="oss-health-switcher__button${name === active ? " is-active" : ""}" data-period="${name}" role="tab" aria-selected="${name === active ? "true" : "false"}">
+              ${escapeHtml(payload.periods[name].label)}
+            </button>
+          `).join("")}
+        </div>
+      `;
+
+      const rangeStrip = period.range
+        ? `<div class="oss-health-mini">
+             <div class="oss-health-mini__item">
+               <span>Window</span>
+               <strong>${escapeHtml(period.label)}</strong>
+             </div>
+             <div class="oss-health-mini__item">
+               <span>Range</span>
+               <strong>${escapeHtml(period.range.from)} — ${escapeHtml(period.range.to)}</strong>
+             </div>
+           </div>`
+        : "";
+
+      const appsSection = period.apps && period.apps.length
+        ? renderTable("Applications in use", "Instances", period.apps)
+        : `<p class="oss-health-empty">No application instances reported for this period yet.</p>`;
+
+      root.innerHTML = `
+        <section class="oss-health-stage">
+          <div class="oss-health-stage__header">
+            <div>
+              <p class="oss-health-stage__kicker">${escapeHtml(payload.source.label)}</p>
+              <h2>${escapeHtml(payload.title)} snapshot</h2>
+            </div>
+            ${controls}
+          </div>
+          <div class="oss-health-period">
+            ${renderCards(period.summary_cards)}
+            ${rangeStrip}
+            ${appsSection}
+          </div>
+        </section>
+      `;
+
+      root.querySelectorAll("[data-period]").forEach((button) => {
+        button.addEventListener("click", () => {
+          active = button.dataset.period;
+          renderActive();
+        });
+      });
+    };
+
+    renderActive();
+  };
+
   const renderOpenSSF = (payload) => {
     const badgeUpdated = payload.badge_last_updated_at
       ? `<div class="oss-health-mini__item"><span>Badge updated</span><strong>${escapeHtml(formatDateTime(payload.badge_last_updated_at))}</strong></div>`
@@ -252,6 +319,8 @@
       updatedNode.textContent = `Updated ${formatDateTime(payload.updated_at)}`;
       if (kind === "state") {
         renderOpenSSF(payload);
+      } else if (kind === "telemetry") {
+        renderTelemetry(payload);
       } else {
         renderTimeseries(payload);
       }

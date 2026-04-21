@@ -4,6 +4,14 @@ slug: talm-v0-17-built-in-age-encryption-for-secrets
 date: 2025-12-17
 author: "Andrei Kvapil (Ænix)"
 description: "Talm v0.17 introduces built-in age encryption for secure secrets management, making it easier to store sensitive configuration files in Git repositories while maintaining security best practices."
+images:
+  - "https://cdn-images-1.medium.com/max/800/0*encryption.png"
+article_types:
+  - release
+topics:
+  - talos
+  - security
+
 ---
 
 ### Talm v0.17: Built-in Age Encryption for Secrets Management

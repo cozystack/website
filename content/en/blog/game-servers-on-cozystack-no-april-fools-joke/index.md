@@ -2,6 +2,14 @@
 title: "Game Servers on Cozystack: No April Fools' Joke"
 slug: game-servers-on-cozystack-no-april-fools-joke
 date: 2026-04-01T07:30:00+00:00
+images:
+  - "cozystack-dashboard-game-servers-marketplace.png"
+article_types:
+  - news
+topics:
+  - platform
+  - community
+
 ---
 
 **Author**: Timur Tukaev (Ænix)

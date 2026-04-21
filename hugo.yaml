@@ -3,6 +3,19 @@ title: Cozystack
 enableRobotsTXT: true
 enableEmoji: true
 
+# Blog taxonomies: two independent axes used by the blog filter UI.
+#   article_types: release, case, how-to, tech-article, news
+#   topics:        platform, postgresql, kubernetes, cilium, talos, opensearch,
+#                  kubevirt, networking, storage, security, events, community, gpu
+# Hugo will generate list pages at /article-types/<slug>/ and /topics/<slug>/.
+taxonomies:
+  # Hugo defaults (preserved so nothing breaks if anyone uses them later):
+  tag: tags
+  category: categories
+  # Blog-specific axes used by the filter UI:
+  article_type: article_types
+  topic: topics
+
 # Language configuration
 defaultContentLanguage: en
 defaultContentLanguageInSubdir: false
@@ -104,6 +117,7 @@ permalinks:
 params:
   description: Free Cloud Platform based on Kubernetes
   copyright: Cozystack a Series of LF Projects, LLC
+  ahrefsAnalytics: sEZ/gu88M21DndmPulYRFw
   github_repo: https://github.com/cozystack/website
   github_branch: main
   github_project_repo: https://github.com/cozystack/cozystack
@@ -201,18 +215,22 @@ menus:
   - name: OSS Health
     identifier: oss-health
     weight: 35
+  - name: Telemetry
+    url: /oss-health/telemetry/
+    parent: oss-health
+    weight: 1
   - name: DevStats
     url: /oss-health/devstats/
     parent: oss-health
-    weight: 1
+    weight: 2
   - name: OpenSSF
     url: /oss-health/openssf/
     parent: oss-health
-    weight: 2
+    weight: 3
   - name: OSS Insight
     url: /oss-health/oss-insight/
     parent: oss-health
-    weight: 3
+    weight: 4
   - name: Enterprise support
     url: /support
     weight: 5

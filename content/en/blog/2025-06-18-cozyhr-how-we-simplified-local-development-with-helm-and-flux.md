@@ -6,6 +6,13 @@ author: "Andrei Kvapil"
 description: "Hi! I'm Andrei Kvapil CEO of Ænix and developer of Cozystack, an open source platform and framework for building cloud infrastructure. In…"
 aliases:
   - /blog/2025/06/cozypkg-how-we-simplified-local-development-with-helm-and-flux/
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*St3iowqHrppmH_dV7mqDCQ.png"
+article_types:
+  - case
+topics:
+  - kubernetes
+
 ---
 
 ### Cozyhr: How We Simplified Local Development with Helm and Flux

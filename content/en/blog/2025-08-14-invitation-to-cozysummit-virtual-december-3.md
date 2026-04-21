@@ -4,6 +4,13 @@ slug: invitation-to-cozysummit-virtual--december-3
 date: 2025-08-14
 author: "Timur Tukaev"
 description: "Join us on December 3 for CozySummit Virtual, the first conference for CozyStack developers and users."
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*zEOKAq9jaDdY4Y9drKo9jw.jpeg"
+article_types:
+  - news
+topics:
+  - events
+
 ---
 
 ### Invitation to CozySummit Virtual — December 3

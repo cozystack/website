@@ -4,6 +4,14 @@ slug: cozystack-v0-20-release-terraform-keycloak-and-stability--security-improve
 date: 2024-12-12
 author: "Timur Tukaev"
 description: "This release focuses on enhancing stability while addressing a significant number of bugs and introducing new features."
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*26UVJiADy26X-QtmslpZqw.png"
+article_types:
+  - release
+topics:
+  - platform
+  - security
+
 ---
 
 ### Cozystack v0.20 Release: Terraform, Keycloak, and Stability & Security Improvements

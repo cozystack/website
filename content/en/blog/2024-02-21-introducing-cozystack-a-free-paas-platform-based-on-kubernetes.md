@@ -2,6 +2,13 @@
 title: "Introducing Cozystack: A Free PaaS Platform based on Kubernetes"
 slug: introducing-cozystack-a-free-paas-platform-based-on-kubernetes
 date: 2024-02-21
+images:
+  - "https://cozystack.io/img/screenshot.png"
+article_types:
+  - news
+topics:
+  - platform
+
 ---
 
 **Author**: Andrei Kvapil (Ænix)
