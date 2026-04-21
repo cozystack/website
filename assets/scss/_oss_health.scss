@@ -2,7 +2,7 @@
   background:
     radial-gradient(circle at top left, rgba(50, 103, 214, 0.14), transparent 30%),
     linear-gradient(180deg, #f7faff 0%, #eef3fb 100%);
-  margin: -2rem 0 0;
+  margin-top: 1.5rem;
   padding-bottom: 4.5rem;
 
   &__hero {
@@ -227,6 +227,13 @@
     display: block;
     font-size: clamp(2rem, 3vw, 2.8rem);
     line-height: 1;
+  }
+
+  &__hint {
+    color: #637595;
+    display: block;
+    font-size: 0.85rem;
+    margin-top: 0.6rem;
   }
 }
 

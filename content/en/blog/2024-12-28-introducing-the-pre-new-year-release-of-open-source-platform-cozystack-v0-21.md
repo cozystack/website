@@ -4,6 +4,13 @@ slug: introducing-the-pre-new-year-release-of-open-source-platform-cozystack-v0-
 date: 2024-12-28
 author: "Timur Tukaev"
 description: "The dashboard now works directly with the Cozystack API instead of relying on FluxCD resources. This enhancement enables the platform to…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*O0OQMDGX0oHS2AXm0zDg4g.png"
+article_types:
+  - release
+topics:
+  - platform
+
 ---
 
 ### Introducing the Pre-New Year Release of open source platform Cozystack v0.21: New User Dashboard, Talos Linux, etc.

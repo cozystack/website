@@ -19,7 +19,7 @@
 
 [[redirects]]
   from = "/docs/v1/*"
-  to = "/docs/v1.0/:splat"
+  to = "/docs/v1.2/:splat"
   status = 301
 
 [[redirects]]

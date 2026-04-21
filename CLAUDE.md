@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Hugo documentation website for Cozystack (Kubernetes-based cloud platform) using the Google Docsy theme. Deployed via Netlify and GitHub Pages.
+Hugo documentation website for Cozystack (Kubernetes-based cloud platform) using the Google Docsy theme. **Production is served by GitHub Pages** — Netlify is only used for deploy previews on PRs. Do not rely on Netlify-specific features (`netlify.toml` redirects, headers, edge functions) for production behavior; they only work in deploy previews. For redirects, use Hugo aliases (per-page) or the JS fallback in `layouts/404.html`.
 
 ## Build & Development Commands
 

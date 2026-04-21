@@ -2,6 +2,11 @@
 title: "Invitation to CozySummit Virtual – May 26"
 slug: invitation-to-cozysummit-virtual-may-26
 date: 2026-02-11
+article_types:
+  - news
+topics:
+  - events
+
 ---
 
 **Author**: Timur Tukaev (Ænix)

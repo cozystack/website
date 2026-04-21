@@ -4,6 +4,13 @@ slug: cozystack-has-officially-been-included-in-the-cncf-landscape
 date: 2024-09-25
 author: "Andrei Kvapil"
 description: "You can now find the Cozystack open source platform in the CNCF Landscape categories of Platform and Certified Kubernetes — Installed…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*SteyePbFZNEeTIh3JWgiOQ.png"
+article_types:
+  - news
+topics:
+  - community
+
 ---
 
 ### Cozystack has officially been included in the CNCF Landscape

@@ -4,6 +4,13 @@ slug: updates-to-the-open-source-platform-cozystack-0-24-0-29-
 date: 2025-04-10
 author: "Timur Tukaev"
 description: "We haven’t shared much about Cozystack’s new features lately, even though we’ve released six new versions over the past month and a half…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/0*XPWNsEtGmcIiY6zs"
+article_types:
+  - release
+topics:
+  - platform
+
 ---
 
 ### Updates to the Open-Source Platform Cozystack 0.24–0.29: PXE Machine Provisioning, Inter-Datacenter RTT Monitoring, and Dedicated IP Addresses for VMs

@@ -4,6 +4,14 @@ slug: cozystack-now-offers-gpu-passthrough-for-ai-ml-virtual-machines
 date: 2025-04-18
 author: "Timur Tukaev"
 description: "The open-source cloud platform has introduced direct GPU passthrough in its latest release, enabling users to accelerate AI, machine…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*Z4hqqFhepCzEwJn7WZpJQw.png"
+article_types:
+  - news
+topics:
+  - gpu
+  - kubevirt
+
 ---
 
 ### **Cozystack Now Offers GPU Passthrough for AI/ML Virtual Machines**

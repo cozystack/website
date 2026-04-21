@@ -1,4 +1,18 @@
 {{ define "main"}}
+<script>
+(function() {
+  var latest = {{ printf "%q" .Site.Params.latest_version_id | safeJS }};
+  var m = latest.match(/^(v\d+)\./);
+  if (m) {
+    var shortPrefix = '/docs/' + m[1] + '/';
+    var fullPrefix = '/docs/' + latest + '/';
+    if (window.location.pathname.indexOf(shortPrefix) === 0) {
+      window.location.replace(window.location.pathname.replace(shortPrefix, fullPrefix));
+      return;
+    }
+  }
+})();
+</script>
 <main id="main">
   <div class="d-flex justify-content-center">
     <div class="page404">

@@ -8,7 +8,6 @@ cascade:
 weight: 30
 aliases:
   - /docs/v1.0/reference
-  - /docs/v1/
 ---
 
 Cozystack is a free PaaS platform and framework for building clouds

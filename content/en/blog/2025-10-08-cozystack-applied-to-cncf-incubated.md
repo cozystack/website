@@ -4,6 +4,13 @@ slug: cozystack-applied-to-cncf-incubated
 date: 2025-10-08
 author: "Timur Tukaev"
 description: "We’ve just submitted our application to move from CNCF Sandbox to Incubated. We’d love your support — drop a like to cheer us on. It won’t…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*_xs_0yX9K8OK2BRzFEpj6g.png"
+article_types:
+  - news
+topics:
+  - community
+
 ---
 
 ### Cozystack applied to CNCF Incubated

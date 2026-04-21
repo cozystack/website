@@ -4,6 +4,14 @@ slug: the-evolution-of-virtualization-platforms-the-rise-of-managed-services-and
 date: 2025-06-04
 author: "Andrei Kvapil"
 description: "Hello everyone! I’m Andrey Kvapil, CEO of Ænix and developer of Cozystack, an open-source platform and framework for building cloud…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/0*4YRaynfuf5g_fiSY"
+article_types:
+  - tech-article
+topics:
+  - platform
+  - kubevirt
+
 ---
 
 ### The Evolution of Virtualization Platforms: The Rise of Managed Services and Local Providers’ Edge Against Hyperscalers
