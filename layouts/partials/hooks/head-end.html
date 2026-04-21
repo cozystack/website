@@ -4,3 +4,8 @@
 {{ end }}
 
 {{ template "_internal/google_analytics.html" . }}
+
+{{/* Ahrefs Analytics */}}
+{{ with .Site.Params.ahrefsAnalytics }}
+<script src="https://analytics.ahrefs.com/analytics.js" data-key="{{ . }}" async></script>
+{{ end }}
