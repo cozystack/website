@@ -1,7 +1,7 @@
 ---
-title: Use talos-bootstrap script to bootstrap a Cozystack cluster
+title: Использование скрипта talos-bootstrap для инициализации кластера Cozystack
 linkTitle: talos-bootstrap
-description: "`talos-bootstrap` is a CLI for step-by-step cluster bootstrapping, made by Cozystack devs.<br> Recommended for first deployments."
+description: "`talos-bootstrap` — CLI для пошаговой инициализации кластера, созданный разработчиками Cozystack.<br> Рекомендуется для первых развертываний."
 weight: 10
 aliases:
   - /docs/v1.2/talos/bootstrap/talos-bootstrap
@@ -9,19 +9,19 @@ aliases:
   - /docs/v1.2/operations/talos/configuration/talos-bootstrap
 ---
 
-[talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) is an interactive script for bootstrapping Kubernetes clusters on Talos OS.
+[talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) — интерактивный скрипт для инициализации кластеров Kubernetes на Talos OS.
 
-It was created by Cozystack developers to simplify the installation of Talos Linux on bare-metal nodes in a user-friendly manner.
+Он был создан разработчиками Cozystack, чтобы упростить установку Talos Linux на bare-metal узлы и сделать ее удобнее.
 
-## 1. Install Dependencies
+## 1. Установка зависимостей
 
-Install the following dependencies
+Установите следующие зависимости:
 
 - `talosctl`
 - `dialog`
 - `nmap`
 
-Download the latest version of `talos-bootstrap` from the [releases page](https://github.com/cozystack/talos-bootstrap/releases) or directly from the trunk:
+Скачайте последнюю версию `talos-bootstrap` со [страницы релизов](https://github.com/cozystack/talos-bootstrap/releases) или напрямую из trunk:
 
 ```bash
 curl -fsSL -o /usr/local/bin/talos-bootstrap \
@@ -30,16 +30,16 @@ chmod +x /usr/local/bin/talos-bootstrap
 talos-bootstrap --help
 ```
 
-## 2. Prepare Configuration Files
+## 2. Подготовка конфигурационных файлов
 
-1.  Start by making a configuration directory for the new cluster:
+1.  Начните с создания каталога конфигурации для нового кластера:
 
     ```bash
     mkdir -p cluster1
     cd cluster1
     ```
 
-1.  Make a configuration patch file `patch.yaml` with common node settings, using the following example:
+1.  Создайте файл конфигурационного patch `patch.yaml` с общими настройками узлов, используя следующий пример:
 
     ```yaml
     machine:
@@ -102,7 +102,7 @@ talos-bootstrap --help
         - 10.96.0.0/16
     ```
 
-1.  Make another configuration patch file `patch-controlplane.yaml` with settings exclusive to control plane nodes:
+1.  Создайте еще один файл конфигурационного patch `patch-controlplane.yaml` с настройками, которые относятся только к узлам control plane:
 
     ```yaml
     machine:
@@ -129,7 +129,7 @@ talos-bootstrap --help
         - 192.168.100.0/24
     ```
 
-1.  To configure Keycloak as an OIDC provider, add the following section to `patch-controlplane.yaml`, replacing `example.com` with your domain:
+1.  Чтобы настроить Keycloak как OIDC-провайдера, добавьте следующий раздел в `patch-controlplane.yaml`, заменив `example.com` на свой домен:
 
     ```yaml
     cluster:
@@ -141,52 +141,52 @@ talos-bootstrap --help
         oidc-groups-claim: "groups"
     ```
 
-## 3. Bootstrap and Access the Cluster
+## 3. Инициализация и доступ к кластеру
 
-Once you have the configuration files ready, run `talos-bootstrap` on each node of a cluster:
+Когда конфигурационные файлы будут готовы, запустите `talos-bootstrap` на каждом узле кластера:
 
 ```bash
-# in the cluster config directory
+# в каталоге конфигурации кластера
 talos-bootstrap install
 ```
 
 {{% alert color="warning" %}}
-:warning: If your nodes are running on an external network, you must specify each node explicitly in the argument:
+:warning: Если узлы работают во внешней сети, каждый узел нужно явно указать в аргументе:
 ```bash
 talos-bootstrap install -n 1.2.3.4
 ```
 
-Where `1.2.3.4` is the IP-address of your remote node.
+Где `1.2.3.4` — IP-адрес удаленного узла.
 {{% /alert %}}
 
 {{% alert color="info" %}}
-`talos-bootstrap` will enable bootstrap on the first configured node in a cluster.
-If you want to re-bootstrap the etcd cluster, remove the line `BOOTSTRAP_ETCD=false` from your `cluster.conf` file.
+`talos-bootstrap` включит bootstrap на первом настроенном узле кластера.
+Если нужно повторно выполнить bootstrap кластера etcd, удалите строку `BOOTSTRAP_ETCD=false` из файла `cluster.conf`.
 {{% /alert %}}
 
-Repeat this step for the other nodes in a cluster.
+Повторите этот шаг для остальных узлов кластера.
 
-After completing the `install` command, `talos-bootstrap` saves the cluster's config as `./kubeconfig`.
+После завершения команды `install` `talos-bootstrap` сохранит конфигурацию кластера как `./kubeconfig`.
 
-Set up `kubectl` to use this new config by exporting the `KUBECONFIG` variable:
+Настройте `kubectl` на использование новой конфигурации, экспортировав переменную `KUBECONFIG`:
 
 ```bash
 export KUBECONFIG=$PWD/kubeconfig
 ```
 
 {{% alert color="info" %}}
-To make this `kubeconfig` permanently available, you can make it the default one (`~/.kube/config`),
-use `kubectl config use-context`, or employ a variety of other methods.
-Check out the [Kubernetes documentation on cluster access](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/).
+Чтобы сделать этот `kubeconfig` постоянно доступным, можно сделать его конфигурацией по умолчанию (`~/.kube/config`),
+использовать `kubectl config use-context` или применить другие методы.
+См. [документацию Kubernetes о доступе к кластеру](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/).
 {{% /alert %}}
 
-Check that the cluster is available with this new `kubeconfig`:
+Проверьте, что кластер доступен с новым `kubeconfig`:
 
 ```bash
 kubectl get ns
 ```
 
-Example output:
+Пример вывода:
 
 ```console
 NAME              STATUS   AGE
@@ -197,13 +197,13 @@ kube-system       Active   7m56s
 ```
 
 {{% alert color="info" %}}
-:warning: All nodes will show as `READY: False`, which is normal at this step.
-This happens because the default CNI plugin was disabled in the previous step to enable Cozystack installing its own CNI plugin.
+:warning: Все узлы будут отображаться как `READY: False`, и на этом этапе это нормально.
+Так происходит потому, что на предыдущем шаге стандартный CNI-плагин был отключен, чтобы Cozystack мог установить собственный CNI-плагин.
 {{% /alert %}}
 
 
-## Further Steps
+## Следующие шаги
 
-Now you have a Kubernetes cluster bootstrapped and ready for installing Cozystack.
-To complete the installation, follow the deployment guide, starting with the
-[Install Cozystack]({{% ref "/docs/v1.2/getting-started/install-cozystack" %}}) section.
+Теперь у вас есть инициализированный кластер Kubernetes, готовый к установке Cozystack.
+Чтобы завершить установку, следуйте руководству по развертыванию, начиная с раздела
+[Установка Cozystack]({{% ref "/docs/v1.2/getting-started/install-cozystack" %}}).

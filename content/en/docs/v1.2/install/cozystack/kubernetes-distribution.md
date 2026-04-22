@@ -1,32 +1,32 @@
 ---
-title: "Build Your Own Platform (BYOP)"
-linkTitle: "Build Your Own Platform"
-description: "Build your own platform with Cozystack by installing only the components you need using the cozypkg CLI tool."
+title: "Собственная платформа (BYOP)"
+linkTitle: "Собственная платформа"
+description: "Соберите собственную платформу с Cozystack, устанавливая только нужные компоненты с помощью CLI-инструмента cozypkg."
 weight: 20
 ---
 
-## Overview
+## Обзор
 
-Cozystack can be used in BYOP (Build Your Own Platform) mode — similar to how Linux distributions let you install only the packages you need.
-Instead of deploying the full platform with all components, you selectively install only what you need from the Cozystack package repository.
+Cozystack можно использовать в режиме BYOP (Build Your Own Platform) — примерно так же, как дистрибутивы Linux позволяют устанавливать только нужные пакеты.
+Вместо развертывания полной платформы со всеми компонентами вы выборочно устанавливаете из package repository Cozystack только то, что вам нужно.
 
-This approach is useful when:
+Такой подход полезен, когда:
 
--   You have an existing Kubernetes cluster and only need specific components (e.g., a Postgres operator or monitoring).
--   Your cluster already has networking (CNI) and storage configured, and you don't want Cozystack to manage them.
--   You want full control over which components are installed and how they are configured.
+-   У вас уже есть кластер Kubernetes, и вам нужны только отдельные компоненты (например, Postgres operator или monitoring).
+-   В вашем кластере уже настроены networking (CNI) и storage, и вы не хотите, чтобы Cozystack управлял ими.
+-   Вам нужен полный контроль над тем, какие компоненты установлены и как они настроены.
 
-The workflow relies on two Kubernetes resources managed by the Cozystack Operator:
+Рабочий процесс опирается на два ресурса Kubernetes, управляемых Cozystack Operator:
 
--   **PackageSource** — describes a package repository and the available variants for each package.
--   **Package** — declares that a specific package should be installed in a chosen variant, optionally with custom values.
+-   **PackageSource** — описывает package repository и доступные variants для каждого package.
+-   **Package** — объявляет, что конкретный package должен быть установлен в выбранном variant, опционально с пользовательскими values.
 
-The `cozypkg` CLI tool provides a convenient interface for working with these resources: listing available packages, resolving dependencies, and installing packages interactively.
+CLI-инструмент `cozypkg` предоставляет удобный интерфейс для работы с этими ресурсами: просмотра доступных packages, разрешения зависимостей и интерактивной установки packages.
 
 
-## 1. Install the Cozystack Operator
+## 1. Установка Cozystack Operator
 
-Install the Cozystack operator using Helm from the OCI registry:
+Установите Cozystack operator с помощью Helm из OCI registry:
 
 ```bash
 helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
@@ -35,10 +35,10 @@ helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installe
   --create-namespace
 ```
 
-Replace `X.Y.Z` with the desired Cozystack version.
-You can find available versions on the [Cozystack releases page](https://github.com/cozystack/cozystack/releases).
+Замените `X.Y.Z` на нужную версию Cozystack.
+Доступные версии можно найти на [странице релизов Cozystack](https://github.com/cozystack/cozystack/releases).
 
-If you're installing on a non-Talos Kubernetes distribution (k3s, kubeadm, RKE2, etc.), set the operator variant:
+Если установка выполняется на Kubernetes-дистрибутив без Talos (k3s, kubeadm, RKE2 и т. д.), укажите variant operator:
 
 ```bash
 helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
@@ -50,9 +50,9 @@ helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installe
   --set cozystack.apiServerPort=6443
 ```
 
-The operator installs FluxCD (in all-in-one mode, working without CNI) and creates the initial `cozystack.cozystack-platform` PackageSource.
+Operator устанавливает FluxCD (в all-in-one mode, работающем без CNI) и создает начальный PackageSource `cozystack.cozystack-platform`.
 
-At this point, only one PackageSource exists:
+На этом этапе существует только один PackageSource:
 
 ```bash
 kubectl get packagesource
@@ -64,28 +64,28 @@ cozystack.cozystack-platform   default,isp-full,isp-full...  True    ...
 ```
 
 
-## 2. Install cozypkg
+## 2. Установка cozypkg
 
-Install the `cozypkg` CLI tool using Homebrew:
+Установите CLI-инструмент `cozypkg` с помощью Homebrew:
 
 ```bash
 brew tap cozystack/tap
 brew install cozypkg
 ```
 
-Pre-built binaries for other platforms are available on the [GitHub releases page](https://github.com/cozystack/cozystack/releases).
+Готовые бинарные файлы для других платформ доступны на [странице релизов GitHub](https://github.com/cozystack/cozystack/releases).
 
 
-## 3. Install the Platform Package
+## 3. Установка Platform Package
 
-The first step is to install the `cozystack-platform` package with the `default` variant.
-This variant does not install any components — it only registers PackageSources for all packages available in the Cozystack repository.
+Первый шаг — установить package `cozystack-platform` с variant `default`.
+Этот variant не устанавливает компоненты — он только регистрирует PackageSources для всех packages, доступных в репозитории Cozystack.
 
 ```bash
 cozypkg add cozystack.cozystack-platform
 ```
 
-The tool will prompt you to select a variant. Choose `default`:
+Инструмент предложит выбрать variant. Выберите `default`:
 
 ```console
 PackageSource: cozystack.cozystack-platform
@@ -97,7 +97,7 @@ Available variants:
 Select variant (1-4): 1
 ```
 
-After the platform package is installed, all other PackageSources become available:
+После установки platform package станут доступны все остальные PackageSources:
 
 ```bash
 cozypkg list
@@ -117,35 +117,35 @@ cozystack.postgres-operator         default                       True    ...
 ```
 
 
-## 4. Install Packages
+## 4. Установка packages
 
-Use `cozypkg add` to install any available package. The tool automatically resolves dependencies and prompts you to select a variant for each package that needs to be installed.
+Используйте `cozypkg add`, чтобы установить любой доступный package. Инструмент автоматически разрешает зависимости и предлагает выбрать variant для каждого package, который нужно установить.
 
 ```bash
 cozypkg add <package-name>
 ```
 
-For example, when installing a package that depends on networking, `cozypkg` will detect the dependency, show which packages are already installed, and ask you to choose a variant for each missing dependency.
+Например, при установке package, зависящего от networking, `cozypkg` обнаружит зависимость, покажет уже установленные packages и предложит выбрать variant для каждой отсутствующей зависимости.
 
-### Networking Variants
+### Variants networking
 
-The `cozystack.networking` package has several variants to accommodate different environments:
+Package `cozystack.networking` имеет несколько variants для разных окружений:
 
-| Variant | Description |
+| Variant | Описание |
 |:--------|:------------|
-| `noop` | Installs nothing. Use when networking is already configured in your cluster (e.g., existing CNI and kube-proxy). |
-| `cilium` | Cilium CNI for Talos Linux clusters. |
-| `cilium-generic` | Cilium CNI for generic Kubernetes distributions (k3s, kubeadm, RKE2). |
-| `kubeovn-cilium` | Cilium + KubeOVN for Talos Linux. Required for full virtualization features (live migration). |
-| `kubeovn-cilium-generic` | Cilium + KubeOVN for generic Kubernetes distributions. |
-| `cilium-kilo` | Cilium + Kilo for WireGuard-based cluster mesh. |
+| `noop` | Ничего не устанавливает. Используйте, если networking уже настроен в кластере (например, существующие CNI и kube-proxy). |
+| `cilium` | Cilium CNI для кластеров Talos Linux. |
+| `cilium-generic` | Cilium CNI для generic-дистрибутивов Kubernetes (k3s, kubeadm, RKE2). |
+| `kubeovn-cilium` | Cilium + KubeOVN для Talos Linux. Требуется для полноценной виртуализации (live migration). |
+| `kubeovn-cilium-generic` | Cilium + KubeOVN для generic-дистрибутивов Kubernetes. |
+| `cilium-kilo` | Cilium + Kilo для cluster mesh на базе WireGuard. |
 
-If your cluster already has a CNI plugin configured, choose `noop`.
-Since networking is a dependency of most other packages, the `noop` variant satisfies the dependency without installing anything.
+Если в вашем кластере уже настроен CNI-плагин, выберите `noop`.
+Поскольку networking является зависимостью большинства других packages, variant `noop` удовлетворяет зависимость, ничего не устанавливая.
 
-### Viewing Installed Packages
+### Просмотр установленных packages
 
-To see which packages are currently installed and their variants:
+Чтобы увидеть, какие packages сейчас установлены и какие у них variants:
 
 ```bash
 cozypkg list --installed
@@ -159,11 +159,11 @@ cozystack.cert-manager         default   True    ...
 ```
 
 
-## 5. Override Component Values
+## 5. Переопределение values компонентов
 
-Each package consists of one or more components (Helm charts). You can override values for specific components by editing the Package resource directly.
+Каждый package состоит из одного или нескольких компонентов (Helm charts). Values для конкретных компонентов можно переопределить, напрямую отредактировав ресурс Package.
 
-The Package spec supports a `components` map where you can specify values for each component:
+Spec Package поддерживает map `components`, где можно указать values для каждого компонента:
 
 ```yaml
 apiVersion: cozystack.io/v1alpha1
@@ -180,15 +180,15 @@ spec:
             enabled: true
 ```
 
-Apply the resource:
+Примените ресурс:
 
 ```bash
 kubectl apply -f metallb-package.yaml
 ```
 
-To find available values for a component, refer to the corresponding `values.yaml` in the [Cozystack repository](https://github.com/cozystack/cozystack/tree/main/packages/system).
+Доступные values для компонента смотрите в соответствующем `values.yaml` в [репозитории Cozystack](https://github.com/cozystack/cozystack/tree/main/packages/system).
 
-You can also enable or disable individual components within a package:
+Также можно включать или отключать отдельные компоненты внутри package:
 
 ```yaml
 spec:
@@ -198,19 +198,19 @@ spec:
 ```
 
 
-## 6. Remove Packages
+## 6. Удаление packages
 
-To remove an installed package:
+Чтобы удалить установленный package:
 
 ```bash
 cozypkg del <package-name>
 ```
 
-The tool checks for reverse dependencies — if other installed packages depend on the one you're removing, it will list them and ask for confirmation before deleting all affected packages.
+Инструмент проверяет обратные зависимости: если другие установленные packages зависят от удаляемого, он перечислит их и запросит подтверждение перед удалением всех затронутых packages.
 
 
-## Next Steps
+## Следующие шаги
 
--   Learn about [Cozystack variants]({{% ref "/docs/v1.2/operations/configuration/variants" %}}) and how they define package composition.
--   See the [Components reference]({{% ref "/docs/v1.2/operations/configuration/components" %}}) for details on overriding component parameters.
--   For a full platform installation, see the [Platform installation guide]({{% ref "./platform" %}}).
+-   Узнайте о [variants Cozystack]({{% ref "/docs/v1.2/operations/configuration/variants" %}}) и о том, как они определяют состав packages.
+-   Подробности о переопределении параметров компонентов см. в [справочнике Components]({{% ref "/docs/v1.2/operations/configuration/components" %}}).
+-   Для установки полной платформы см. [руководство по установке Platform]({{% ref "./platform" %}}).

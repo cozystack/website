@@ -1,7 +1,7 @@
 ---
-title: Install Talos Linux using PXE
+title: Установка Talos Linux с помощью PXE
 linkTitle: PXE
-description: "How to install Talos Linux using temporary DHCP and PXE servers running in Docker containers."
+description: "Как установить Talos Linux с помощью временных DHCP- и PXE-серверов, запущенных в Docker-контейнерах."
 weight: 15
 aliases:
   - /docs/v1.2/talos/installation/pxe
@@ -9,26 +9,26 @@ aliases:
   - /docs/v1.2/operations/talos/installation/pxe
 ---
 
-This guide explains how to install Talos Linux on bare metal servers or virtual machines
-using temporary DHCP and PXE servers running in Docker containers.
-This method requires an extra management machine, but allows for installing on multiple hosts at once.
+В этом руководстве описано, как установить Talos Linux на bare-metal серверы или виртуальные машины
+с помощью временных DHCP- и PXE-серверов, запущенных в Docker-контейнерах.
+Этот метод требует дополнительной управляющей машины, но позволяет устанавливать систему сразу на несколько хостов.
 
-Note that Cozystack provides its own Talos builds, which are tested and optimized for running a Cozystack cluster.
+Обратите внимание, что Cozystack предоставляет собственные сборки Talos, протестированные и оптимизированные для запуска кластера Cozystack.
 
-## Dependencies
+## Зависимости
 
-To install Talos using this method, you will need the following dependencies on the management host:
+Для установки Talos этим способом на управляющем хосте потребуются следующие зависимости:
 
 - `docker`
 - `kubectl`
 
-## Infrastructure Overview
+## Обзор инфраструктуры
 
 ![Cozystack deployment](/img/cozystack-deployment.png)
 
-## Installation
+## Установка
 
-Start matchbox with prebuilt Talos image for Cozystack:
+Запустите matchbox с готовым образом Talos для Cozystack:
 
 ```bash
 sudo docker run --name=matchbox -d --net=host ghcr.io/cozystack/cozystack/matchbox:v0.30.0 \
@@ -36,7 +36,7 @@ sudo docker run --name=matchbox -d --net=host ghcr.io/cozystack/cozystack/matchb
   -log-level=debug
 ```
 
-Start DHCP-Server:
+Запустите DHCP-сервер:
 ```bash
 sudo docker run --name=dnsmasq -d --cap-add=NET_ADMIN --net=host quay.io/poseidon/dnsmasq:v0.5.0-32-g4327d60-amd64 \
   -d -q -p0 \
@@ -58,24 +58,24 @@ sudo docker run --name=dnsmasq -d --cap-add=NET_ADMIN --net=host quay.io/poseido
   --log-dhcp
 ```
 
-For an air-gapped installation, add NTP and DNS servers:
+Для установки в изолированной среде добавьте NTP- и DNS-серверы:
 ```bash
   --dhcp-option=option:ntp-server,10.100.1.1 \
   --dhcp-option=option:dns-server,10.100.25.253,10.100.25.254 \
 ```
 
-Where:
-- `192.168.100.3,192.168.100.199` range to allocate IPs from
-- `192.168.100.1` your gateway
-- `192.168.100.254` is address of your management server
+Где:
+- `192.168.100.3,192.168.100.199` — диапазон для выделения IP-адресов
+- `192.168.100.1` — ваш gateway
+- `192.168.100.254` — адрес вашего управляющего сервера
 
-Check status of containers:
+Проверьте состояние контейнеров:
 
 ```
 docker ps
 ```
 
-example output:
+пример вывода:
 
 ```console
 CONTAINER ID   IMAGE                                               COMMAND                  CREATED          STATUS          PORTS     NAMES
@@ -83,9 +83,9 @@ CONTAINER ID   IMAGE                                               COMMAND      
 6bf638f0808e   ghcr.io/cozystack/cozystack/matchbox:v0.30.0        "/matchbox -address=…"   3 minutes ago    Up 3 minutes              matchbox
 ```
 
-Start your servers.
-Now they should automatically boot from your PXE server.
+Запустите серверы.
+Теперь они должны автоматически загрузиться с вашего PXE-сервера.
 
-## Next Steps
+## Следующие шаги
 
-Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/v1.2/install/kubernetes" %}}).
+После установки Talos перейдите к [установке и инициализации кластера Kubernetes]({{% ref "/docs/v1.2/install/kubernetes" %}}).

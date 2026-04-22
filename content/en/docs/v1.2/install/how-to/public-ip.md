@@ -1,19 +1,19 @@
 ---
-title: "Public-network Kubernetes deployment"
-linkTitle: "Deploy with public networks"
+title: "Развертывание Kubernetes в публичной сети"
+linkTitle: "Развертывание в публичных сетях"
 description: ""
 weight: 110
 ---
 
-A Kubernetes cluster for Cozystack can be deployed using only public networks:
+Кластер Kubernetes для Cozystack можно развернуть, используя только публичные сети:
 
--   Both management and worker nodes have public IP addresses.
--   Worker nodes connect to the management nodes over the public Internet, without a private internal network or VPN.
+-   И управляющие, и worker-узлы имеют публичные IP-адреса.
+-   Worker-узлы подключаются к управляющим узлам через публичный Интернет, без частной внутренней сети или VPN.
 
-Such a setup is not recommended for production, but can be used for research and testing,
-when hosting limitations prevent provisioning a private network.
+Такая конфигурация не рекомендуется для production, но может использоваться для исследований и тестирования,
+когда ограничения хостинга не позволяют создать частную сеть.
 
-To enable this setup when deploying with `talosctl`, add the following data in the node configuration files:
+Чтобы включить такую конфигурацию при развертывании с `talosctl`, добавьте следующие данные в конфигурационные файлы узлов:
 
 ```yaml
 cluster:
@@ -21,4 +21,4 @@ cluster:
     endpoint: https://<MANAGEMENT_NODE_IP>:6443
 ```
 
-For `talm`, append the same lines at end of the first node's configuration file, such as `nodes/node1.yaml`.
+Для `talm` добавьте те же строки в конец конфигурационного файла первого узла, например `nodes/node1.yaml`.

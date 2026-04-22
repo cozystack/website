@@ -1,67 +1,66 @@
 {{< tabs name="hardware_config" >}}
-{{% tab name="Minimal" %}}
+{{% tab name="Минимальная" %}}
 
-Here are the baseline requirements for running a small installation.
-The minimum recommended configuration for each node is as follows:
+Ниже приведены базовые требования для запуска небольшой инсталляции.
+Минимальная рекомендуемая конфигурация для каждого узла:
 
-| Component        | Requirement  |
+| Компонент        | Требование  |
 |------------------|--------------|
-| Hosts            | 3x Physical hosts (or VMs with host CPU passthrough) |
+| Хосты            | 3x физических хоста (или ВМ с host CPU passthrough) |
 | Architecture     | x86_64        |
-| CPU              | 8 cores      |
-| RAM              | 24 GB        |
-| Primary Disk     | 50 GB SSD (or RAW for VMs) |
-| Secondary Disk   | 256 GB SSD (raw) |
+| CPU              | 8 ядер      |
+| RAM              | 24 ГБ        |
+| Основной диск     | 50 ГБ SSD (или RAW для ВМ) |
+| Дополнительный диск   | 256 ГБ SSD (raw) |
 
-**Suitable for:**
-- Dev/Test environments
-- Small demonstration setups
-- 1-2 Tenants
-- Up to 3 Kubernetes clusters
-- Few VMs or Databases
+**Подходит для:**
+- Dev/Test-сред
+- Небольших демонстрационных конфигураций
+- 1-2 tenants
+- До 3 кластеров Kubernetes
+- Небольшого числа ВМ или баз данных
 
 {{% /tab %}}
-{{% tab name="Recommended" %}}
+{{% tab name="Рекомендуемая" %}}
 
-For small production environments, the recommended configuration for each node is as follows:
+Для небольших production-сред рекомендуемая конфигурация каждого узла выглядит так:
 
-| Component        | Requirement  |
+| Компонент        | Требование  |
 |------------------|--------------|
-| Hosts            | 3x Physical hosts |
+| Хосты            | 3x физических хоста |
 | Architecture     | x86_64        |
-| CPU              | 16-32 cores  |
-| RAM              | 64 GB        |
-| Primary Disk     | 100 GB SSD or NVMe |
-| Secondary Disk   | 1-2 TB SSD or NVMe |
+| CPU              | 16-32 ядра  |
+| RAM              | 64 ГБ        |
+| Основной диск     | 100 ГБ SSD или NVMe |
+| Дополнительный диск   | 1-2 ТБ SSD или NVMe |
 
-**Suitable for:**
-- Small to medium production environments
-- 5-10 Tenants
-- 5+ Kubernetes clusters
-- Dozens Virtual Machines or Databases
-- S3-compatible storage
+**Подходит для:**
+- Небольших и средних production-сред
+- 5-10 tenants
+- 5+ кластеров Kubernetes
+- Десятков виртуальных машин или баз данных
+- S3-совместимого хранилища
 
 {{% /tab %}}
-{{% tab name="Optimal" %}}
+{{% tab name="Оптимальная" %}}
 
-For medium to large production environments, the optimal configuration for each node is as follows:
+Для средних и крупных production-сред оптимальная конфигурация каждого узла выглядит так:
 
-| Component        | Requirement  |
+| Компонент        | Требование  |
 |------------------|--------------|
-| Hosts            | 6x+ Physical hosts |
+| Хосты            | 6x+ физических хостов |
 | Architecture     | x86_64        |
-| CPU              | 32-64 cores  |
-| RAM              | 128-256 GB   |
-| Primary Disk     | 200 GB SSD or NVMe |
-| Secondary Disk   | 4-10 TB NVMe |
+| CPU              | 32-64 ядра  |
+| RAM              | 128-256 ГБ   |
+| Основной диск     | 200 ГБ SSD или NVMe |
+| Дополнительный диск   | 4-10 ТБ NVMe |
 
-**Suitable for:**
-- Large production environments
-- 20+ Tenants
-- Dozens Kubernetes clusters
-- Hundreds of Virtual Machines and Databases
-- S3-compatible storage
+**Подходит для:**
+- Крупных production-сред
+- 20+ tenants
+- Десятков кластеров Kubernetes
+- Сотен виртуальных машин и баз данных
+- S3-совместимого хранилища
 
 {{% /tab %}}
 {{< /tabs >}}
-

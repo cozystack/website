@@ -1,41 +1,41 @@
 ---
-title: "System Resource Planning Recommendations"
-linkTitle: "Resource Planning"
-description: "How much system resources to allocate per node depending on cluster scale."
+title: "Рекомендации по планированию системных ресурсов"
+linkTitle: "Планирование ресурсов"
+description: "Сколько системных ресурсов выделять на узел в зависимости от масштаба кластера."
 weight: 6
 ---
 
-This guide helps you plan system resource allocation per node based on cluster size and tenant count. Recommendations are based on production deployments and provide reasonably accurate estimates for planning purposes.
+Это руководство помогает спланировать выделение системных ресурсов на узел с учетом размера кластера и количества tenants. Рекомендации основаны на production-развертываниях и дают достаточно точные оценки для планирования.
 
 {{% alert color="warning" %}}
-**Important:** Values shown are only for system components. Add your tenant workload requirements (applications, databases, Kubernetes clusters, VMs, etc.) on top of these.
+**Важно:** указанные значения относятся только к системным компонентам. К ним нужно добавить требования tenant workload'ов (приложений, баз данных, кластеров Kubernetes, виртуальных машин и т. д.).
 {{% /alert %}}
 
-**Quick start**: Allocate at least **2 CPU cores** and **6 GB RAM** per node for system components. For precise requirements based on your cluster size and tenant count, use the table or calculator below.
+**Быстрый старт**: выделите как минимум **2 ядра CPU** и **6 ГБ RAM** на узел для системных компонентов. Для точного расчета требований с учетом размера кластера и количества tenants используйте таблицу или калькулятор ниже.
 
-**Note on allocation**: These values represent expected consumption during normal operation, not hard resource reservations. Kubernetes dynamically schedules workloads, and system components will consume approximately these amounts while remaining capacity stays available for tenant workloads.
+**Примечание о выделении ресурсов**: эти значения отражают ожидаемое потребление при нормальной работе, а не жесткое резервирование ресурсов. Kubernetes динамически планирует workload'ы, а системные компоненты будут потреблять примерно эти объемы, при этом оставшаяся емкость останется доступной для tenant workload'ов.
 
-## Resource Requirements
+## Требования к ресурсам
 
-Requirements depend on both cluster size (number of nodes) and number of tenants. With many active services per tenant (5+), consider using values from the next tenant category.
+Требования зависят как от размера кластера (количества узлов), так и от количества tenants. Если у каждого tenant много активных сервисов (5+), ориентируйтесь на значения из следующей категории tenants.
 
-| Cluster Size | Nodes | Up to 5 tenants | 6-14 tenants | 15-30 tenants | 31+ tenants |
+| Размер кластера | Узлы | До 5 tenants | 6-14 tenants | 15-30 tenants | 31+ tenants |
 |--------------|-------|-----------------|---------------|---------------|-------------|
-| **Small** | 3-5 | CPU: 2 cores<br>RAM: 6 GB | CPU: 2 cores<br>RAM: 6 GB | CPU: 3 cores<br>RAM: 10 GB | CPU: 3 cores<br>RAM: 15 GB |
-| **Medium** | 6-10 | CPU: 3 cores<br>RAM: 7 GB | CPU: 3 cores<br>RAM: 7 GB | CPU: 3 cores<br>RAM: 12 GB | CPU: 4 cores<br>RAM: 18 GB |
-| **Large** | 11+ | CPU: 3 cores<br>RAM: 9 GB | CPU: 3 cores<br>RAM: 10 GB | CPU: 4 cores<br>RAM: 15 GB | CPU: 4 cores<br>RAM: 22 GB |
+| **Малый** | 3-5 | CPU: 2 ядра<br>RAM: 6 ГБ | CPU: 2 ядра<br>RAM: 6 ГБ | CPU: 3 ядра<br>RAM: 10 ГБ | CPU: 3 ядра<br>RAM: 15 ГБ |
+| **Средний** | 6-10 | CPU: 3 ядра<br>RAM: 7 ГБ | CPU: 3 ядра<br>RAM: 7 ГБ | CPU: 3 ядра<br>RAM: 12 ГБ | CPU: 4 ядра<br>RAM: 18 ГБ |
+| **Крупный** | 11+ | CPU: 3 ядра<br>RAM: 9 ГБ | CPU: 3 ядра<br>RAM: 10 ГБ | CPU: 4 ядра<br>RAM: 15 ГБ | CPU: 4 ядра<br>RAM: 22 ГБ |
 
-**Planning tips:**
-- Monitor actual resource consumption and adjust as needed
-- Plan for 20-30% growth buffer
-- With high tenant activity, consider increasing CPU by 50-100% and memory by 100-300%
+**Советы по планированию:**
+- Отслеживайте фактическое потребление ресурсов и корректируйте значения при необходимости
+- Закладывайте запас на рост 20-30%
+- При высокой активности tenants рассмотрите увеличение CPU на 50-100%, а памяти — на 100-300%
 
-### Calculate Your Requirements
+### Рассчитайте свои требования
 
-Use the calculator below to find requirements for your specific configuration:
+Используйте калькулятор ниже, чтобы определить требования для вашей конкретной конфигурации:
 
 {{< system-resource-calculator >}}
 
-### Why Resource Requirements Scale
+### Почему требования к ресурсам масштабируются
 
-System resource consumption increases with cluster size and tenant count because system components must handle more Kubernetes objects to monitor, more network policies to enforce, and more logs to collect and process.
+Потребление системных ресурсов растет вместе с размером кластера и количеством tenants, потому что системным компонентам нужно обрабатывать больше объектов Kubernetes для мониторинга, применять больше сетевых политик и собирать и обрабатывать больше логов.

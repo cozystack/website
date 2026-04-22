@@ -1,7 +1,7 @@
 ---
-title: Install Cozystack in Servers.com
+title: Установка Cozystack в Servers.com
 linkTitle: Servers.com
-description: "Install Cozystack in the Servers.com infrastructure."
+description: "Установка Cozystack в инфраструктуре Servers.com."
 weight: 40
 aliases:
   - /docs/v1.2/operations/talos/installation/servers_com
@@ -9,13 +9,13 @@ aliases:
   - /docs/v1.2/talos/install/servers_com
 ---
 
-## Before Installation
+## Перед установкой
 
-### 1. Network
+### 1. Сеть
 
-1.  **Set Up L2 Network**
+1.  **Настройте L2 Network**
 
-    1.  Navigate to **Networks > L2 Segment** and click **Add Segment**.
+    1.  Перейдите в **Networks > L2 Segment** и нажмите **Add Segment**.
 
         ![L2 Segments](img/l2_segments1.png)
 
@@ -23,48 +23,48 @@ aliases:
 
         ![L2 Segments](img/l2_segments3.png)
 
-        First, select **Private**, choose the region, add the servers, assign a name, and save it.
+        Сначала выберите **Private**, выберите регион, добавьте серверы, задайте имя и сохраните.
 
-    1.  Set the type to **Native**.
-        Do the same for **Public**.
+    1.  Установите тип **Native**.
+        Сделайте то же самое для **Public**.
 
         ![Type](img/type_native.png)
 
-### 2. Access
+### 2. Доступ
 
-1.  Create SSH keys for server access.
+1.  Создайте SSH-ключи для доступа к серверу.
 
-1.  Go to **Identity and Access > SSH and Keys**.
+1.  Перейдите в **Identity and Access > SSH and Keys**.
 
     ![SSH](img/ssh_gpg_keys1.png)
 
-1.  Create new keys or add your own.
+1.  Создайте новые ключи или добавьте свои.
 
     ![SSH](img/ssh_gpg_keys2.png)
     ![SSH](img/ssh_gpg_keys3.png)
 
-## Setup OS
+## Настройка ОС
 
-### 1. Operating System and Access
+### 1. Операционная система и доступ
 
 {{% alert color="warning" %}}
-:warning: In rescue mode only the public network is available; the private L2 network is not reachable.
-For Talos installation use a regular OS (for example Ubuntu) instead of rescue mode.
+:warning: В rescue mode доступна только публичная сеть; частная L2 network недоступна.
+Для установки Talos используйте обычную ОС (например, Ubuntu), а не rescue mode.
 {{% /alert %}}
 
-1.  In the Servers.com control panel, install Ubuntu on the server (for example via **Dedicated Servers > Server Details > OS install**) and make sure your SSH key is selected.
+1.  В панели управления Servers.com установите Ubuntu на сервер (например, через **Dedicated Servers > Server Details > OS install**) и убедитесь, что выбран ваш SSH-ключ.
 
-1.  After the installation is complete, connect via SSH using the external IP of the server (**Details** > **Public IP**).
+1.  После завершения установки подключитесь по SSH, используя внешний IP сервера (**Details** > **Public IP**).
 
     ![Public IP](img/public_ip.png)
 
-### 2. Install Talos with boot-to-talos
+### 2. Установка Talos с boot-to-talos
 
-Talos will be booted from the installed Ubuntu using the [`boot-to-talos`](https://github.com/cozystack/boot-to-talos) utility.
-Later, when you apply Talm configuration, Talos will be installed to disk.
-Run these steps on each server.
+Talos будет загружен из установленной Ubuntu с помощью утилиты [`boot-to-talos`](https://github.com/cozystack/boot-to-talos).
+Позже, при применении конфигурации Talm, Talos будет установлен на диск.
+Выполните эти шаги на каждом сервере.
 
-1.  Check the information on block devices to find the disk that will be used for Talos later (for example, `/dev/sda`).
+1.  Проверьте информацию о блочных устройствах, чтобы найти диск, который позже будет использоваться для Talos (например, `/dev/sda`).
 
     ```console
     # lsblk
@@ -73,86 +73,86 @@ Run these steps on each server.
     sdb     259:0     0    476.9G   0    disk
     ```
 
-1.  Download and install `boot-to-talos`:
+1.  Скачайте и установите `boot-to-talos`:
 
     ```bash
     curl -sSL https://github.com/cozystack/boot-to-talos/raw/refs/heads/main/hack/install.sh | sudo sh -s
     ```
 
-    After installation, verify that the binary is available:
+    После установки проверьте, что бинарный файл доступен:
 
     ```bash
     boot-to-talos -h
     ```
 
-1.  Run the installer:
+1.  Запустите installer:
 
     ```bash
     sudo boot-to-talos
     ```
 
-    When prompted:
+    При запросе:
 
-    -   Select mode `1. boot`.
-    -   Confirm or change the Talos installer image (the default Cozystack image is suitable).
-    -   Provide network settings matching the public interface (`bond0`) and default gateway.
+-   Выберите режим `1. boot`.
+-   Подтвердите или измените образ Talos installer (стандартный образ Cozystack подходит).
+-   Укажите сетевые настройки, соответствующие публичному интерфейсу (`bond0`) и default gateway.
 
-    The utility will download the Talos installer image and boot the node into Talos Linux (using the kexec mechanism) without modifying the disks.
+    Утилита скачает образ Talos installer и загрузит узел в Talos Linux (с помощью механизма kexec), не изменяя диски.
 
-    For fully automated installations you can use non-interactive mode:
+    Для полностью автоматизированной установки можно использовать non-interactive mode:
 
     ```bash
     sudo boot-to-talos -yes
     ```
 
-### 3. Boot into Talos
+### 3. Загрузка в Talos
 
-After `boot-to-talos` finishes, the server reboots automatically into Talos Linux in maintenance mode.
-Repeat the same procedure for all servers, then proceed to configure them with Talm.
+После завершения `boot-to-talos` сервер автоматически перезагрузится в Talos Linux в maintenance mode.
+Повторите ту же процедуру для всех серверов, затем переходите к их настройке с Talm.
 
-## Talos Configuration
+## Конфигурация Talos
 
-Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos Linux on the drive.
+Используйте [Talm](https://github.com/cozystack/talm), чтобы применить config и установить Talos Linux на диск.
 
-1. [Download the latest Talm binary](https://github.com/cozystack/talm/releases/latest) and save it to `/usr/local/bin/talm`
+1. [Скачайте последний binary Talm](https://github.com/cozystack/talm/releases/latest) и сохраните его в `/usr/local/bin/talm`
 
-1. Make it executable:
+1. Сделайте его исполняемым:
 
    ```bash
    chmod +x /usr/local/bin/talm
    ```
 
-### Installation with Talm
+### Установка с Talm
 
-1. Create directory for the new cluster:
+1. Создайте каталог для нового кластера:
 
    ```bash
    mkdir -p cozystack-cluster
    cd cozystack-cluster
    ```
 
-1. Run the following command to initialize Talm for Cozystack:
+1. Выполните следующую команду, чтобы инициализировать Talm для Cozystack:
 
    ```bash
    talm init --preset cozystack --name mycluster
    ```
 
-   After initializing, generate a configuration template with the command:
+   После инициализации сгенерируйте шаблон конфигурации командой:
 
    ```bash
    talm -n 1.2.3.4 -e 1.2.3.4 template -t templates/controlplane.yaml -i > nodes/nodeN.yaml
    ```
 
-1. Edit the node configuration file as needed:
+1. При необходимости отредактируйте конфигурационный файл узла:
 
-   1.  Update `hostname` to the desired name.
+   1.  Обновите `hostname` на нужное имя.
        ```yaml
        machine:
          network:
            hostname: node1
        ```
 
-   1.  Update `nameservers` to the public ones, because internal servers.com DNS is not reachable from the private network.
+   1.  Обновите `nameservers`, указав публичные серверы, потому что внутренний DNS servers.com недоступен из частной сети.
        ```yaml
        machine:
          network:
@@ -161,10 +161,10 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
              - 1.1.1.1
        ```
 
-   1.  Add private interface configuration, and move `vip` to this section. This section isn’t generated automatically:
-       -   `interface` - Obtained from the "Discovered interfaces" by matching the MAC address of the private interface specified in the provider's email.
-           (Out of the two interfaces, select the one with the uplink).
-       -   `addresses` - Use the address specified for Layer 2 (L2).
+   1.  Добавьте конфигурацию private interface и перенесите `vip` в этот раздел. Этот раздел не генерируется автоматически:
+       -   `interface` - берется из "Discovered interfaces" путем сопоставления MAC-адреса private interface, указанного в письме провайдера.
+           (Из двух интерфейсов выберите тот, у которого есть uplink).
+       -   `addresses` - используйте адрес, указанный для Layer 2 (L2).
 
        ```yaml
        machine:
@@ -199,36 +199,36 @@ Use [Talm](https://github.com/cozystack/talm) to apply config and install Talos 
                  ip: 192.168.102.10
        ```
 
-**Execution steps:**
+**Шаги выполнения:**
 
-1.   Run `talm apply -f nodeN.yml` for all nodes to apply the configurations. The nodes will be rebooted and Talos will be installed on the disk.
+1.   Выполните `talm apply -f nodeN.yml` для всех узлов, чтобы применить конфигурации. Узлы будут перезагружены, и Talos будет установлен на диск.
 
-1.   Make sure that talos get installed into disk by executing `talm get systemdisk -f nodeN.yml` for each node. The output should be similar to:
+1.   Убедитесь, что Talos установлен на диск, выполнив `talm get systemdisk -f nodeN.yml` для каждого узла. Вывод должен быть похож на:
      ```yaml
      NODE      NAMESPACE   TYPE         ID            VERSION   DISK
      1.2.3.4   runtime     SystemDisk   system-disk   1         sda
      ```
 
-     If the output is empty, it means that Talos still runs in RAM and hasn't been installed on the disk yet.
-1.   Execute bootstrap command for the first node in the cluster, example:
+     Если вывод пустой, значит Talos все еще работает из RAM и еще не установлен на диск.
+1.   Выполните bootstrap-команду для первого узла кластера, например:
      ```bash
      talm bootstrap -f nodes/node1.yml
      ```
 
-1.   Get `kubeconfig` from the first node, example:
+1.   Получите `kubeconfig` с первого узла, например:
      ```bash
      talm kubeconfig -f nodes/node1.yml
      ```
 
-1.   Edit `kubeconfig` to set the IP address to one of control-plane node, example:
+1.   Отредактируйте `kubeconfig`, указав IP-адрес одного из узлов control plane, например:
      ```yaml
      server: https://1.2.3.4:6443
      ```
 
-1.   Export variable to use the kubeconfig, and check the connection to the Kubernetes:
+1.   Экспортируйте переменную для использования kubeconfig и проверьте подключение к Kubernetes:
      ```bash
      export KUBECONFIG=${PWD}/kubeconfig
      kubectl get nodes
      ```
 
-Now follow **Get Started** guide starting from the [**Install Cozystack**]({{% ref "/docs/v1.2/getting-started/install-cozystack" %}}) section, to continue the installation.
+Теперь для продолжения установки следуйте руководству **Get Started**, начиная с раздела [**Установка Cozystack**]({{% ref "/docs/v1.2/getting-started/install-cozystack" %}}).

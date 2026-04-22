@@ -1,7 +1,7 @@
 ---
-title: How to install Cozystack in Hetzner
+title: Как установить Cozystack в Hetzner
 linkTitle: Hetzner.com
-description: "How to install Cozystack in Hetzner"
+description: "Как установить Cozystack в Hetzner"
 weight: 30
 aliases:
   - /docs/v1.2/operations/talos/installation/hetzner
@@ -9,54 +9,54 @@ aliases:
   - /docs/v1.2/talos/install/hetzner
 ---
 
-This guide will help you to install Cozystack on a dedicated server from [Hetzner](https://www.hetzner.com/).
-There are several steps to follow, including preparing the infrastructure, installing Talos Linux, configuring cloud-init, and bootstrapping the cluster.
+Это руководство поможет установить Cozystack на выделенные серверы [Hetzner](https://www.hetzner.com/).
+Процесс состоит из нескольких шагов: подготовки инфраструктуры, установки Talos Linux, настройки cloud-init и инициализации кластера.
 
 
-## Prepare Infrastructure and Networking
+## Подготовка инфраструктуры и сети
 
-Installation on Hetzner includes the common [hardware requirements]({{% ref "/docs/v1.2/install/hardware-requirements" %}}) with several additions.
+Установка в Hetzner включает общие [требования к оборудованию]({{% ref "/docs/v1.2/install/hardware-requirements" %}}) с несколькими дополнениями.
 
-### Networking Options
+### Варианты сети
 
-There are two options for network connectivity between Cozystack nodes in the cluster:
+Есть два варианта сетевой связности между узлами Cozystack в кластере:
 
--   **Creating a subnet using vSwitch.**
-    This option is recommended for production environments.
+-   **Создание подсети с помощью vSwitch.**
+    Этот вариант рекомендуется для production-сред.
 
-    For this option, dedicated servers must be deployed on [Hetzner robot](https://robot.hetzner.com/).
-    Hetzner also requires using its own load balancer, RobotLB, in place of Cozystack's default MetalLB.
-    Cozystack includes RobotLB as an optional component since release v0.35.0.
+    Для этого варианта выделенные серверы должны быть развернуты через [Hetzner robot](https://robot.hetzner.com/).
+    Также Hetzner требует использовать собственный load balancer RobotLB вместо стандартного для Cozystack MetalLB.
+    Cozystack включает RobotLB как optional component начиная с релиза v0.35.0.
     
--   **Using only dedicated servers' public IPs.**
-    This option is valid for a proof-of-concept installation, but not recommended for production.
+-   **Использование только public IP выделенных серверов.**
+    Этот вариант подходит для proof-of-concept установки, но не рекомендуется для production.
 
 
-### Configure Subnet with vSwitch
+### Настройка подсети с vSwitch
 
-Complete the following steps to prepare your servers for installing Cozystack:
+Выполните следующие шаги, чтобы подготовить серверы к установке Cozystack:
 
-1.  Make network configuration settings in Hetzner (only for the **vSwitch subnet** option).
+1.  Выполните сетевые настройки в Hetzner (только для варианта **vSwitch subnet**).
 
-    Complete the steps from the [Prerequisites section](https://github.com/Intreecom/robotlb/blob/master/README.md#prerequisites)
-    of RobotLB's README:
+    Выполните шаги из [раздела Prerequisites](https://github.com/Intreecom/robotlb/blob/master/README.md#prerequisites)
+    в README RobotLB:
 
-    1.  Create a [vSwitch](https://docs.hetzner.com/cloud/networks/connect-dedi-vswitch/).
-    2.  Use it to assign IPs to your dedicated servers on Hetzner.
-    3.  Create a subnet to [connect your dedicated servers](https://docs.hetzner.com/cloud/networks/connect-dedi-vswitch/). 
+    1.  Создайте [vSwitch](https://docs.hetzner.com/cloud/networks/connect-dedi-vswitch/).
+    2.  Используйте его, чтобы назначить IP вашим выделенным серверам в Hetzner.
+    3.  Создайте подсеть, чтобы [подключить выделенные серверы](https://docs.hetzner.com/cloud/networks/connect-dedi-vswitch/).
 
-    Note that you don't need to deploy RobotLB manually.
-    Instead, you will configure Cozystack to install it as an optional component on the step "Installing Cozystack" of this guide.
+    Обратите внимание, что RobotLB не нужно развертывать вручную.
+    Вместо этого вы настроите Cozystack на установку RobotLB как optional component на шаге "Установка Cozystack" в этом руководстве.
 
-### Disable Secure Boot
+### Отключение Secure Boot
 
-1.  Make sure that Secure Boot is disabled.
+1.  Убедитесь, что Secure Boot отключен.
 
-    Secure Boot is currently not supported in Talos Linux.
-    If your server is configured to use Secure Boot, you need to disable this feature in your BIOS.
-    Otherwise, it will block the server from booting after Talos Linux installation.
+    Secure Boot сейчас не поддерживается в Talos Linux.
+    Если сервер настроен на использование Secure Boot, отключите эту функцию в BIOS.
+    Иначе она заблокирует загрузку сервера после установки Talos Linux.
 
-    Check it with the following command:
+    Проверьте это следующей командой:
 
     ```console
     # mokutil --sb-state
@@ -64,94 +64,94 @@ Complete the following steps to prepare your servers for installing Cozystack:
     Platform is in Setup Mode
     ```
 
-For the rest of the guide let's assume that we have the following network configuration:
+В остальной части руководства будем считать, что используется следующая сетевая конфигурация:
 
-- Hetzner cloud network is `10.0.0.0/16`, named `network-1`. 
-- vSwitch subnet with dedicated servers is `10.0.1.0/24` 
-- vSwitch VLAN ID is `4000`
+- Облачная сеть Hetzner — `10.0.0.0/16`, имя `network-1`.
+- vSwitch subnet с выделенными серверами — `10.0.1.0/24`
+- VLAN ID vSwitch — `4000`
 
-- There are three dedicated servers with the following public and private IPs:
-  - `node1`, public IP `12.34.56.101`, vSwitch subnet IP `10.0.1.101`
-  - `node2`, public IP `12.34.56.102`, vSwitch subnet IP `10.0.1.102`
-  - `node3`, public IP `12.34.56.103`, vSwitch subnet IP `10.0.1.103`
+- Есть три выделенных сервера со следующими public и private IP:
+  - `node1`, public IP `12.34.56.101`, IP в vSwitch subnet `10.0.1.101`
+  - `node2`, public IP `12.34.56.102`, IP в vSwitch subnet `10.0.1.102`
+  - `node3`, public IP `12.34.56.103`, IP в vSwitch subnet `10.0.1.103`
 
-## 1. Install Talos Linux
+## 1. Установка Talos Linux
 
-The first stage of deploying Cozystack is to install Talos Linux on the dedicated servers.
+Первый этап развертывания Cozystack — установка Talos Linux на выделенные серверы.
 
-Talos is a Linux distribution made for running Kubernetes in the most secure and efficient way.
-To learn why Cozystack adopted Talos as the foundation of the cluster,
-read [Talos Linux in Cozystack]({{% ref "/docs/v1.2/guides/talos" %}}).
+Talos — дистрибутив Linux, созданный для максимально безопасного и эффективного запуска Kubernetes.
+Чтобы узнать, почему Cozystack использует Talos как основу кластера,
+прочитайте [Talos Linux в Cozystack]({{% ref "/docs/v1.2/guides/talos" %}}).
 
-### 1.1 Install boot-to-talos in Rescue Mode
+### 1.1 Установка boot-to-talos в Rescue Mode
 
-Talos will be booted from the Hetzner rescue system using the [`boot-to-talos`](https://github.com/cozystack/boot-to-talos) utility.
-Later, when you apply Talm configuration, Talos will be installed to disk.
-Run these steps on each dedicated server.
+Talos будет загружен из rescue system Hetzner с помощью утилиты [`boot-to-talos`](https://github.com/cozystack/boot-to-talos).
+Позже, при применении конфигурации Talm, Talos будет установлен на диск.
+Выполните эти шаги на каждом выделенном сервере.
 
-1.  Switch your server into rescue mode and log in to the server using SSH.
+1.  Переведите сервер в rescue mode и войдите на него по SSH.
 
-1.  Identify the disk that will be used for Talos later (for example, `/dev/nvme0n1`).
+1.  Определите диск, который позже будет использоваться для Talos (например, `/dev/nvme0n1`).
 
-1.  Download and install `boot-to-talos`:
+1.  Скачайте и установите `boot-to-talos`:
 
     ```bash
     curl -sSL https://github.com/cozystack/boot-to-talos/raw/refs/heads/main/hack/install.sh | sh -s
     ```
 
-    After this, the `boot-to-talos` binary should be available in your `PATH`:
+    После этого бинарный файл `boot-to-talos` должен быть доступен в `PATH`:
 
     ```bash
     boot-to-talos -h
     ```
 
-### 1.2. Install Talos Linux with boot-to-talos
+### 1.2. Установка Talos Linux с boot-to-talos
 
-1.  Start the installer:
+1.  Запустите installer:
 
     ```bash
     boot-to-talos
     ```
 
-    When prompted:
+    При запросе:
 
-    -   Select mode `1. boot`.
-    -   Confirm or change the Talos installer image.
-        The default value points to the Cozystack Talos image (the default Cozystack image is suitable),
-    -   Provide network settings (interface name, IP address, netmask, gateway) matching the configuration you prepared earlier
-        (vSwitch subnet or public IPs).
-    -   Optionally configure a serial console if you use it for remote access.
+-   Выберите режим `1. boot`.
+-   Подтвердите или измените образ Talos installer.
+        Значение по умолчанию указывает на образ Talos от Cozystack (стандартный образ Cozystack подходит).
+-   Укажите сетевые настройки (имя интерфейса, IP-адрес, netmask, gateway), соответствующие подготовленной ранее конфигурации
+        (vSwitch subnet или public IP).
+-   При необходимости настройте serial console, если используете ее для удаленного доступа.
 
-    The utility will download the Talos installer image, extract the kernel and initramfs, and boot the node into Talos Linux
-    (using the kexec mechanism) without modifying the disks.
+    Утилита скачает образ Talos installer, извлечет kernel и initramfs и загрузит узел в Talos Linux
+    (с помощью механизма kexec), не изменяя диски.
 
-### 1.3. Boot into Talos Linux
+### 1.3. Загрузка в Talos Linux
 
-After `boot-to-talos` finishes, the server reboots automatically into Talos Linux in maintenance mode.
+После завершения `boot-to-talos` сервер автоматически перезагрузится в Talos Linux в maintenance mode.
 
-Repeat the same procedure for all dedicated servers in the cluster.
-Once all nodes are booted into Talos, proceed to the next section and configure them using Talm.
+Повторите ту же процедуру для всех выделенных серверов в кластере.
+Когда все узлы загрузятся в Talos, переходите к следующему разделу и настройте их с помощью Talm.
 
-## 2. Install Kubernetes Cluster
+## 2. Установка кластера Kubernetes
 
-Now, when Talos is booted in the maintenance mode, it should receive configuration and set up a Kubernetes cluster.
-There are [several options]({{% ref "/docs/v1.2/install/kubernetes" %}}) to write and apply Talos configuration.
-This guide will focus on [Talm](https://github.com/cozystack/talm), Cozystack's own Talos configuration management tool.
+Теперь, когда Talos загружен в maintenance mode, он должен получить конфигурацию и настроить кластер Kubernetes.
+Есть [несколько вариантов]({{% ref "/docs/v1.2/install/kubernetes" %}}) создания и применения конфигурации Talos.
+В этом руководстве используется [Talm](https://github.com/cozystack/talm) — собственный инструмент Cozystack для управления конфигурацией Talos.
 
-This part of the guide is based on the generic [Talm guide]({{% ref "/docs/v1.2/install/kubernetes/talm" %}}),
-but has instructions and examples specific to Hetzner.
+Эта часть руководства основана на общем [руководстве по Talm]({{% ref "/docs/v1.2/install/kubernetes/talm" %}}),
+но содержит инструкции и примеры, специфичные для Hetzner.
 
-### 2.1. Prepare Node Configuration with Talm
+### 2.1. Подготовка конфигурации узлов с Talm
 
-1.  Start by installing the latest version of Talm for your OS, if you don't have it yet:
+1.  Если Talm еще не установлен, начните с установки последней версии для вашей ОС:
 
     ```bash
     curl -sSL https://github.com/cozystack/talm/raw/refs/heads/main/hack/install.sh | sh -s
     ```
 
-1.  Make a directory for cluster configuration and initialize a Talm project in it.
+1.  Создайте каталог для конфигурации кластера и инициализируйте в нем проект Talm.
 
-    Note that Talm has a built-in preset for Cozystack, which we use with `--preset cozystack`:
+    Обратите внимание, что в Talm есть встроенный preset для Cozystack, который используется через `--preset cozystack`:
 
     ```bash
     mkdir -p hetzner-cluster
@@ -159,22 +159,22 @@ but has instructions and examples specific to Hetzner.
     talm init --preset cozystack --name hetzner
     ```
 
-    A bunch of files is now created in the `hetzner-cluster` directory.
-    To learn more about the role of each file, refer to the
-    [Talm guide]({{% ref "/docs/v1.2/install/kubernetes/talm#2-initialize-cluster-configuration" %}}).
+    Теперь в каталоге `hetzner-cluster` создан набор файлов.
+    Подробнее о роли каждого файла см. в
+    [руководстве по Talm]({{% ref "/docs/v1.2/install/kubernetes/talm#2-initialize-cluster-configuration" %}}).
 
-1.  Edit `values.yaml`, modifying the following values:
+1.  Отредактируйте `values.yaml`, изменив следующие значения:
 
-    -   `advertisedSubnets` list should have the vSwitch subnet as an item.
-    -   `endpoint` and `floatingIP` should use an unassigned IP from this subnet.
-        This IP will be used to access the cluster API with `talosctl` and `kubectl`.
-    -   `podSubnets` and `serviceSubnets` should have other subnets from the Hetzner cloud network,
-        which don't overlap each other and the vSwitch subnet.
+-   В списке `advertisedSubnets` должна быть vSwitch subnet.
+-   `endpoint` и `floatingIP` должны использовать неназначенный IP из этой подсети.
+        Этот IP будет использоваться для доступа к cluster API через `talosctl` и `kubectl`.
+-   `podSubnets` и `serviceSubnets` должны использовать другие подсети из облачной сети Hetzner,
+        которые не пересекаются друг с другом и с vSwitch subnet.
 
     ```yaml
     endpoint: "https://10.0.1.100:6443"
     clusterDomain: cozy.local
-    # floatingIP points to the primary etcd node
+    # floatingIP указывает на primary etcd node
     floatingIP: 10.0.1.100
     image: "ghcr.io/cozystack/cozystack/talos:v1.9.5"
     podSubnets:
@@ -188,7 +188,7 @@ but has instructions and examples specific to Hetzner.
     certSANs: []
     ```
 
-1.  Create node configuration files from templates and values:
+1.  Создайте конфигурационные файлы узлов из шаблонов и values:
     
     ```bash
     mkdir -p nodes
@@ -197,16 +197,16 @@ but has instructions and examples specific to Hetzner.
     talm template -e 12.34.56.103 -n 12.34.56.103 -t templates/controlplane.yaml -i > nodes/node3.yaml
     ```
 
-    This guide assumes that you have only three dedicated servers, so they all must be control plane nodes.
-    If you have more and want to separate control plane and worker nodes, use `templates/worker.yaml` to produce worker configs:
+    В этом руководстве предполагается, что у вас только три выделенных сервера, поэтому все они должны быть узлами control plane.
+    Если серверов больше и вы хотите разделить control plane и worker-узлы, используйте `templates/worker.yaml` для создания worker configs:
 
     ```bash
     taml template -e 12.34.56.104 -n 12.34.56.104 -t templates/worker.yaml -i > nodes/worker1.yaml
     ```
 
-1.  Edit each node's configuration file, adding the VLAN configuration.
+1.  Отредактируйте конфигурационный файл каждого узла, добавив VLAN configuration.
 
-    Use the following diff as an example and note that for each node its subnet IP should be used:
+    Используйте следующий diff как пример и учитывайте, что для каждого узла должен использоваться его IP в subnet:
 
     ```diff
     machine:
@@ -218,7 +218,7 @@ but has instructions and examples specific to Hetzner.
     -         ip: 10.0.1.100
     +       vlans:
     +         - addresses:
-    +             # different for each node
+    +             # отличается для каждого узла
     +             - 10.0.1.101/24
     +           routes:
     +             - network: 10.0.0.0/16
@@ -228,9 +228,9 @@ but has instructions and examples specific to Hetzner.
     +             ip: 10.0.1.100
     ```
 
-### 2.2. Apply Node Configuration
+### 2.2. Применение конфигурации узлов
 
-1.  Once the configuration files are ready, apply configuration to each node:
+1.  Когда конфигурационные файлы будут готовы, примените конфигурацию к каждому узлу:
 
     ```bash
     talm apply -f nodes/node1.yaml -i
@@ -238,18 +238,18 @@ but has instructions and examples specific to Hetzner.
     talm apply -f nodes/node3.yaml -i
     ```
 
-    This command initializes nodes, setting up authenticated connection, so that `-i` (`--insecure`) won't be required further on.
-    If the command succeeded, it will return the node's IP:
+    Эта команда инициализирует узлы и настраивает аутентифицированное соединение, поэтому дальше `-i` (`--insecure`) не потребуется.
+    Если команда выполнена успешно, она вернет IP узла:
     
     ```console
     $ talm apply -f nodes/node1.yaml -i
     - talm: file=nodes/node1.yaml, nodes=[12.34.56.101], endpoints=[12.34.56.101]
     ```
 
-1.  Wait until all nodes have rebooted and proceed to the next step.
-    When nodes are ready, they will expose port `50000`, which is a sign that the node has completed Talos and rebooted.
+1.  Дождитесь, пока все узлы перезагрузятся, и переходите к следующему шагу.
+    Когда узлы будут готовы, они откроют порт `50000`; это признак того, что узел завершил настройку Talos и перезагрузился.
 
-    If you need to automate the node readiness check, consider this example:
+    Если нужно автоматизировать проверку готовности узлов, используйте такой пример:
 
     ```bash
     timeout 60 sh -c 'until \
@@ -259,19 +259,19 @@ but has instructions and examples specific to Hetzner.
       do sleep 1; done'
     ```
         
-1.  Bootstrap the Kubernetes cluster from one of the control plane nodes:
+1.  Инициализируйте кластер Kubernetes с одного из узлов control plane:
     
     ```bash
     talm bootstrap -f nodes/node1.yaml
     ```
 
-1.  Generate an administrative `kubeconfig` to access the cluster using the same control plane node:
+1.  Сгенерируйте административный `kubeconfig` для доступа к кластеру через тот же узел control plane:
 
     ```bash
     talm kubeconfig -f nodes/node1.yaml
     ```
 
-1.  Edit the server URL in the `kubeconfig` to a public IP
+1.  Измените URL server в `kubeconfig` на public IP
 
     ```diff
       apiVersion: v1                                                                                                          
@@ -281,20 +281,20 @@ but has instructions and examples specific to Hetzner.
     +     server: https://12.34.56.101:6443   
     ```
     
-1.  Finally, set up the `KUBECONFIG` variable or other tools making this config
-    accessible to your `kubectl` client:
+1.  Затем настройте переменную `KUBECONFIG` или другие инструменты, чтобы сделать эту конфигурацию
+    доступной клиенту `kubectl`:
 
     ```bash
     export KUBECONFIG=$PWD/kubeconfig
     ```        
 
-1.  Check that the cluster is available with this new `kubeconfig`:
+1.  Проверьте, что кластер доступен с новым `kubeconfig`:
 
     ```bash
     kubectl get ns
     ```
 
-    Example output:
+    Пример вывода:
     
     ```console
     NAME              STATUS   AGE
@@ -304,16 +304,16 @@ but has instructions and examples specific to Hetzner.
     kube-system       Active   7m56s
     ```
 
-At this point you have dedicated servers with Talos Linux and a Kubernetes cluster deployed on them.
-You also have a `kubeconfig` which you will use to access the cluster using `kubectl` and install Cozystack.
+На этом этапе у вас есть выделенные серверы с Talos Linux и развернутый на них кластер Kubernetes.
+Также у вас есть `kubeconfig`, который будет использоваться для доступа к кластеру через `kubectl` и установки Cozystack.
 
-## 3. Install Cozystack
+## 3. Установка Cozystack
 
-The final stage of deploying a Cozystack cluster on Hetzner is to install Cozystack on a prepared Kubernetes cluster.
+Финальный этап развертывания кластера Cozystack в Hetzner — установка Cozystack в подготовленный кластер Kubernetes.
 
-### 3.1. Start Cozystack Installer
+### 3.1. Запуск Cozystack Installer
 
-1.  Install the Cozystack operator:
+1.  Установите Cozystack operator:
 
     ```bash
     helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
@@ -322,15 +322,15 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
       --create-namespace
     ```
 
-    Replace `X.Y.Z` with the desired Cozystack version from the [releases page](https://github.com/cozystack/cozystack/releases).
+    Замените `X.Y.Z` на нужную версию Cozystack со [страницы релизов](https://github.com/cozystack/cozystack/releases).
 
-1.  Create a Platform Package file, **cozystack-platform.yaml**.
+1.  Создайте файл Platform Package, **cozystack-platform.yaml**.
 
-    Note that this file is reusing the subnets for pods and services which were used in `values.yaml` before producing Talos configuration with Talm.
-    Also note how Cozystack's default load balancer MetalLB is replaced with RobotLB using `disabledPackages` and `enabledPackages`.
+    Обратите внимание, что этот файл повторно использует подсети для pods и services, которые использовались в `values.yaml` перед созданием конфигурации Talos с Talm.
+    Также обратите внимание, как стандартный load balancer Cozystack MetalLB заменяется на RobotLB с помощью `disabledPackages` и `enabledPackages`.
 
-    Replace `example.org` with a routable fully-qualified domain name (FQDN) that you're going to use for your Cozystack-based platform.
-    If you don't have one ready, you can use [nip.io](https://nip.io/) with dash notation.
+    Замените `example.org` на маршрутизируемое fully-qualified domain name (FQDN), которое вы будете использовать для платформы на базе Cozystack.
+    Если такого домена нет, можно использовать [nip.io](https://nip.io/) с записью через дефис.
 
     ```yaml
     apiVersion: cozystack.io/v1alpha1
@@ -354,33 +354,33 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
                 - dashboard
                 - api
             networking:
-              ## podSubnets from the node config
+              ## podSubnets из конфигурации узлов
               podCIDR: "10.244.0.0/16"
               podGateway: "10.244.0.1"
-              ## serviceSubnets from the node config
+              ## serviceSubnets из конфигурации узлов
               serviceCIDR: "10.96.0.0/16"
     ```
 
-1.  Apply the Platform Package:
+1.  Примените Platform Package:
 
     ```bash
     kubectl apply -f cozystack-platform.yaml
     ```
 
-    The operator starts the installation, which will last for some time.
-    You can track the logs of the operator, if you wish:
+    Operator запустит установку, которая займет некоторое время.
+    При необходимости можно отслеживать логи operator:
 
     ```bash
     kubectl logs -n cozy-system deploy/cozystack-operator -f
     ```
 
-1.  Check the status of installation:
+1.  Проверьте состояние установки:
     
     ```bash
     kubectl get hr -A
     ```
 
-    When installation is complete, all services will switch their state to `READY: True`:
+    Когда установка завершится, все сервисы перейдут в состояние `READY: True`:
     ```console
     NAMESPACE                        NAME                        AGE    READY   STATUS
     cozy-cert-manager                cert-manager                4m1s   True    Release reconciliation succeeded
@@ -389,21 +389,21 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
     ...
     ```
 
-### 3.2 Create a Load Balancer with RobotLB
+### 3.2 Создание Load Balancer с RobotLB
 
-Hetzner requires using its own RobotLB instead of Cozysatck's default MetalLB.
-RobotLB is already installed as a component of Cozystack and running as a service in it.
-Now it needs a token to create a load balancer resource in Hetzner.
+Hetzner требует использовать собственный RobotLB вместо стандартного MetalLB в Cozystack.
+RobotLB уже установлен как компонент Cozystack и работает как сервис внутри него.
+Теперь ему нужен token для создания ресурса load balancer в Hetzner.
 
-1.  Create a Hetzner API token for RobotLB.
+1.  Создайте Hetzner API token для RobotLB.
 
-    Navigate to the Hetzner console, open Security, and create a token with `Read` and `Write` permissions.
+    Перейдите в консоль Hetzner, откройте Security и создайте token с разрешениями `Read` и `Write`.
 
-1.  Pass the token to RobotLB to create a load balancer in Hetzner.
+1.  Передайте token в RobotLB, чтобы создать load balancer в Hetzner.
 
-    Use the Hetzner API token to create a Kubernetes secret in Cozystack.
+    Используйте Hetzner API token, чтобы создать Kubernetes secret в Cozystack.
 
-    -   If you're using a **private network** (vSwitch), specify the network name:
+-   Если используется **private network** (vSwitch), укажите имя сети:
 
         ```bash
         export ROBOTLB_HCLOUD_TOKEN="<token>"
@@ -415,7 +415,7 @@ Now it needs a token to create a load balancer resource in Hetzner.
           --from-literal=ROBOTLB_DEFAULT_NETWORK="$ROBOTLB_DEFAULT_NETWORK"
         ```
 
-    -   If you're using **public IPs only** (no vSwitch), omit `ROBOTLB_DEFAULT_NETWORK`:
+-   Если используются **только public IP** (без vSwitch), не указывайте `ROBOTLB_DEFAULT_NETWORK`:
 
         ```bash
         export ROBOTLB_HCLOUD_TOKEN="<token>"
@@ -425,21 +425,21 @@ Now it needs a token to create a load balancer resource in Hetzner.
           --from-literal=ROBOTLB_HCLOUD_TOKEN="$ROBOTLB_HCLOUD_TOKEN"
         ```
 
-        In this case, RobotLB will use nodes' public IPs (ExternalIP) as load balancer targets.
-        For this to work, the nodes must have ExternalIP addresses configured.
-        The simplest way to achieve this is by installing [local-ccm](https://github.com/cozystack/local-ccm),
-        which automatically assigns public IPs to nodes' `.status.addresses` field.
+        В этом случае RobotLB будет использовать public IP узлов (ExternalIP) как targets load balancer.
+        Чтобы это работало, на узлах должны быть настроены адреса ExternalIP.
+        Самый простой способ добиться этого — установить [local-ccm](https://github.com/cozystack/local-ccm),
+        который автоматически назначает public IP в поле `.status.addresses` узлов.
 
-    Upon receiving the token, RobotLB service in Cozystack will create a load balancer in Hetzner.
+    После получения token сервис RobotLB в Cozystack создаст load balancer в Hetzner.
 
-### 3.3 Configure Storage with LINSTOR
+### 3.3 Настройка хранилища с LINSTOR
 
-Configuring LINSTOR in Hetzner has no difference from other infrastructure setups.
-Follow the [Storage configuration guide]({{% ref "/docs/v1.2/getting-started/install-cozystack#3-configure-storage" %}}) from the Cozystack tutorial.
+Настройка LINSTOR в Hetzner не отличается от других инфраструктурных конфигураций.
+Следуйте [руководству по настройке хранилища]({{% ref "/docs/v1.2/getting-started/install-cozystack#3-configure-storage" %}}) из tutorial по Cozystack.
 
-### 3.4. Start Services in the Root Tenant
+### 3.4. Запуск сервисов в Root Tenant
 
-Set up the basic services ( `etcd`, `monitoring`, and `ingress`) in the root tenant:
+Настройте базовые сервисы (`etcd`, `monitoring` и `ingress`) в root tenant:
 
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
@@ -450,10 +450,10 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 }}'
 ```
 
-## Notes and Troubleshooting
+## Примечания и troubleshooting
 
 {{% alert color="warning" %}}
-:warning: If you encounter issues booting Talos Linux on your node, it might be related to the serial console options in your GRUB configuration,
+:warning: Если возникают проблемы с загрузкой Talos Linux на узле, это может быть связано с параметрами serial console в конфигурации GRUB:
 `console=tty1 console=ttyS0`.
-Try rebooting into rescue mode and remove these options from the GRUB configuration on the third partition of your system's primary disk (`$DISK1`).
+Попробуйте перезагрузиться в rescue mode и удалить эти параметры из конфигурации GRUB на третьем разделе основного системного диска (`$DISK1`).
 {{% /alert %}}

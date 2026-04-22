@@ -1,16 +1,16 @@
 ---
-title: "Deploying Cozystack Cluster on Clouds and Hosting Providers"
-linkTitle: "Provider-Specific Guides"
-description: "Guides for deploying Cozystack clusters on specific cloud and hosting providers."
+title: "Развертывание кластера Cozystack в облаках и у хостинг-провайдеров"
+linkTitle: "Руководства для провайдеров"
+description: "Руководства по развертыванию кластеров Cozystack у конкретных облачных и хостинг-провайдеров."
 weight: 40
 aliases:
   - /docs/v1.2/talos/install
 ---
 
-This section has guides for deploying Cozystack clusters on specific cloud and hosting providers.
-They explain all steps and details of the deployment process, including:
+В этом разделе собраны руководства по развертыванию кластеров Cozystack у конкретных облачных и хостинг-провайдеров.
+Они объясняют все шаги и детали процесса развертывания, включая:
 
-- Specifics of the provider's infrastructure and networking
-- Installation of Talos Linux with a method that suits the provider
-- Configuration of the Kubernetes cluster including provider-specific settings for networking, storage, and other resources
-- Installation of Cozystack on the Kubernetes cluster with provider-specific components and configurations
+- Особенности инфраструктуры и сети провайдера
+- Установку Talos Linux способом, подходящим для провайдера
+- Настройку кластера Kubernetes, включая специфичные для провайдера параметры сети, хранилища и других ресурсов
+- Установку Cozystack в Kubernetes-кластер с компонентами и конфигурациями, специфичными для провайдера

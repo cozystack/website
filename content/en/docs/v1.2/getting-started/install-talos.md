@@ -1,39 +1,39 @@
 ---
-title: "1. Install Talos Linux"
-linkTitle: "1. Install Talos"
-description: "Install Talos Linux on any machine using cozystack/boot-to-talos."
+title: "1. Установка Talos Linux"
+linkTitle: "1. Установка Talos"
+description: "Установка Talos Linux на любую машину с помощью cozystack/boot-to-talos."
 weight: 10
 aliases:
   - /docs/v1.2/getting-started/first-deployment
   - /docs/v1.2/getting-started/deploy-cluster
 ---
 
-## Before you begin
+## Перед началом
 
-Make sure that you have nodes (bare-metal servers or VMs) that fit the
-[hardware requirements]({{% ref "/docs/v1.2/getting-started/requirements" %}}).
+Убедитесь, что у вас есть узлы (bare-metal серверы или виртуальные машины), соответствующие
+[требованиям к оборудованию]({{% ref "./requirements" %}}).
 
-## Objectives
+## Цели
 
-On this step of the tutorial you will install Talos Linux on bare-metal servers or VMs running some other Linux distribution.
+На этом шаге вы установите Talos Linux на bare-metal серверы или виртуальные машины, на которых сейчас работает другой дистрибутив Linux.
 
-The tutorial is using `boot-to-talos`, a simple-to-use CLI app made by Cozystack team for users and teams adopting Cozystack.
-There are multiple ways to [install Talos Linux for Cozystack]({{% ref "/docs/v1.2/install/talos" %}}), not used here and covered in separate guides.
+В этом руководстве используется `boot-to-talos` — простой CLI-инструмент, созданный командой Cozystack для пользователей и команд, внедряющих Cozystack.
+Существуют и другие способы [установки Talos Linux для Cozystack]({{% ref "/docs/v1.2/install/talos" %}}), но они здесь не рассматриваются и описаны в отдельных руководствах.
 
-## Installation
+## Установка
 
-### 1. Install `boot-to-talos`
+### 1. Установите `boot-to-talos`
 
-Install `boot-to-talos` using the installer script:
+Установите `boot-to-talos` с помощью установочного скрипта:
 
 ```bash
 curl -sSL https://github.com/cozystack/boot-to-talos/raw/refs/heads/main/hack/install.sh | sh -s
 ```
 
-### 2. Run to install Talos
+### 2. Запустите установку Talos
 
-Run `boot-to-talos` and provide the configuration values.
-Make sure to use Cozystack's own Talos build, found at [ghcr.io/cozystack/cozystack/talos](https://github.com/cozystack/cozystack/pkgs/container/cozystack%2Ftalos).
+Запустите `boot-to-talos` и укажите значения конфигурации.
+Убедитесь, что используете сборку Talos от Cozystack, опубликованную в [ghcr.io/cozystack/cozystack/talos](https://github.com/cozystack/cozystack/pkgs/container/cozystack%2Ftalos).
 
 ```console
 $ boot-to-talos
@@ -84,13 +84,13 @@ Continue? [yes]:
 2025/08/03 00:11:19 rebooting system
 ```
 
-## Next Step
+## Следующий шаг
 
-Continue the Cozystack tutorial by [installing and bootstrapping a Kubernetes cluster using Talm]({{% ref "/docs/v1.2/getting-started/install-kubernetes" %}}).
+Продолжите руководство по Cozystack и [установите Kubernetes-кластер с помощью Talm]({{% ref "./install-kubernetes" %}}).
 
-Extra tasks:
+Дополнительно:
 
--   Read the [Talos Linux overview]({{% ref "/docs/v1.2/guides/talos" %}}) to learn why Talos Linux is the optimal OS choice for Cozystack
-    and what it brings to the platform.
--   Learn more about [`boot-to-talos`]({{% ref "/docs/v1.2/install/talos/boot-to-talos#about-the-application" %}}).
--   Check out [github.com/cozystack/boot-to-talos](https://github.com/cozystack/boot-to-talos) and give it a star!
+-   Прочитайте [обзор Talos Linux]({{% ref "/docs/v1.2/guides/talos" %}}), чтобы понять, почему Talos Linux — оптимальный выбор ОС для Cozystack
+    и что он даёт платформе.
+-   Узнайте больше о [`boot-to-talos`]({{% ref "/docs/v1.2/install/talos/boot-to-talos#about-the-application" %}}).
+-   Загляните в [github.com/cozystack/boot-to-talos](https://github.com/cozystack/boot-to-talos) и поставьте проекту звезду.

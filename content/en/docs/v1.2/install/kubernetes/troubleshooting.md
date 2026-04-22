@@ -1,63 +1,63 @@
 ---
-title: Troubleshooting Kubernetes Installation
+title: Устранение неполадок при установке Kubernetes
 linkTitle: Troubleshooting
-description: "Instructions for resolving typical problems that can occur when installing Kubernetes with `talm`, `talos-bootstrap`, or `talosctl`."
+description: "Инструкции по решению типовых проблем, которые могут возникнуть при установке Kubernetes с помощью `talm`, `talos-bootstrap` или `talosctl`."
 weight: 40
 aliases:
 ---
 
-This page has instructions for resolving typical problems that can occur when installing Kubernetes with `talm`, `talos-bootstrap`, or `talosctl`.
+На этой странице приведены инструкции по решению типовых проблем, которые могут возникнуть при установке Kubernetes с помощью `talm`, `talos-bootstrap` или `talosctl`.
 
 ## No Talos nodes in maintenance mode found!
 
-If you encounter issues with the `talos-bootstrap` script not detecting any nodes, follow these steps to diagnose and resolve the issue:
+Если скрипт `talos-bootstrap` не обнаруживает узлы, выполните следующие шаги для диагностики и устранения проблемы:
 
-1.  Verify Network Segment
+1.  Проверьте сетевой сегмент
 
-    Ensure that you are running the script within the same network segment as the nodes. This is crucial for the script to be able to communicate with the nodes.
+    Убедитесь, что скрипт запускается в том же сетевом сегменте, что и узлы. Это критически важно, чтобы скрипт мог взаимодействовать с узлами.
 
-1.  Use Nmap to Discover Nodes
+1.  Используйте Nmap для обнаружения узлов
 
-    Check if `nmap` can discover your node by running the following command:
+    Проверьте, может ли `nmap` обнаружить узел, выполнив следующую команду:
 
     ```bash
     nmap -Pn -n -p 50000 192.168.0.0/24
     ```
     
-    This command scans for nodes in the network that are listening on port `50000`.
-    The output should list all the nodes in the network segment that are listening on this port, indicating that they are reachable.
+    Эта команда сканирует сеть на наличие узлов, которые слушают порт `50000`.
+    В выводе должны быть перечислены все узлы в сетевом сегменте, слушающие этот порт; это означает, что они доступны.
 
-1.  Verify talosctl Connectivity
+1.  Проверьте подключение talosctl
 
-    Next, verify that `talosctl` can connect to a specific node, especially if the node is in maintenance mode:
+    Затем убедитесь, что `talosctl` может подключиться к конкретному узлу, особенно если узел находится в maintenance mode:
     
     ```bash
     talosctl -e "${node}" -n "${node}" get machinestatus -i
     ```
     
-    Receiving an error like the following usually means your local `talosctl` binary is outdated:
+    Ошибка вида ниже обычно означает, что локальный бинарный файл `talosctl` устарел:
     
     ```console
     rpc error: code = Unimplemented desc = unknown service resource.ResourceService
     ```
     
-    Updating `talosctl` to the latest version should resolve this issue.
+    Обновление `talosctl` до последней версии должно решить проблему.
 
-1.  Run talos-bootstrap in debug mode
+1.  Запустите talos-bootstrap в debug mode
 
-    If the previous steps don’t help, run `talos-bootstrap` in debug mode to gain more insight.
+    Если предыдущие шаги не помогли, запустите `talos-bootstrap` в debug mode, чтобы получить больше диагностической информации.
     
-    Execute the script with the `-x` option to enable debug mode:
+    Выполните скрипт с опцией `-x`, чтобы включить debug mode:
     
     ```bash
     bash -x talos-bootstrap
     ```
     
-    Pay attention to the last command displayed before the error; it often indicates the command that failed and can provide clues for further troubleshooting.
+    Обратите внимание на последнюю команду, показанную перед ошибкой; часто она указывает на команду, которая завершилась неудачно, и помогает в дальнейшей диагностике.
 
-# fix ext-lldpd on talos nodes
-Waiting a runtime service in talos cause it to stay on booting in talos console, if you want to use lldpd you can patch the nodes,
-proceed if you have connectivity with `talosctl`
+# Исправление ext-lldpd на узлах Talos
+Ожидание runtime service в Talos может привести к тому, что узел останется в состоянии booting в консоли Talos. Если вы хотите использовать lldpd, можно применить patch к узлам.
+Продолжайте, если у вас есть подключение через `talosctl`.
 ```bash
 cat > lldpd.patch.yaml <<EOF
 apiVersion: v1alpha1
@@ -69,23 +69,23 @@ configFiles:
     mountPath: /usr/local/etc/lldp/lldpd.conf
 EOF
 ```
-To apply the patch to a specific node, run:
+Чтобы применить patch к конкретному узлу, выполните:
 ```bash
 talosctl patch mc -p @lldpd.patch.yaml -n <node> -e <node>
 ```
 
-Verify which nodes have lldpd installed
+Проверьте, на каких узлах установлен lldpd:
 ```bash
 node_net='192.168.100.0/24'
 nmap -Pn -n -T4 -p50000 --open -oG - $node_net  | awk '/50000\/open/ { system("talosctl get extensions -n "$2" -e "$2" | grep lldpd") }'
 ```
 
-If you want to patch all nodes:
+Если хотите применить patch ко всем узлам:
 ```bash
 nmap -Pn -n -T4 -p50000 --open -oG - $node_net  | awk '/50000\/open/ {print "talosctl patch mc -p @lldpd.patch.yaml -n "$2" -e "$2" "}'
 ```
 
-Verify state on talos console
+Проверьте состояние в консоли Talos:
 ```bash
 talosctl dashboard -n $(nmap -Pn -n -T4 -p50000 --open -oG - $node_net | awk '/50000\/open/ {print $2}' | paste -sd,)
 ```

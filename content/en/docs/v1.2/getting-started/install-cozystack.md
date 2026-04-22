@@ -1,33 +1,33 @@
 ---
-title: "3. Install and Configure Cozystack"
-linkTitle: "3. Install Cozystack"
-description: "Install Cozystack, get administrative access, perform basic configuration, and enable the UI dashboard."
+title: "3. Установка и настройка Cozystack"
+linkTitle: "3. Установка Cozystack"
+description: "Установите Cozystack, получите административный доступ, выполните базовую настройку и включите UI-дашборд."
 weight: 20
 ---
 
-## Objectives
+## Цели
 
 {{% alert color="info" %}}
-This tutorial covers installing Cozystack as a **ready-to-use platform**.
-If you want to build your own platform by installing only specific components,
-see the [BYOP (Build Your Own Platform) guide]({{% ref "/docs/v1.2/install/cozystack/kubernetes-distribution" %}}).
+Это руководство описывает установку Cozystack как **готовой к использованию платформы**.
+Если вы хотите собрать собственную платформу, устанавливая только нужные компоненты,
+см. [руководство BYOP (Build Your Own Platform)]({{% ref "/docs/v1.2/install/cozystack/kubernetes-distribution" %}}).
 {{% /alert %}}
 
-In this step of the tutorial, we'll install Cozystack on top of a [Kubernetes cluster, prepared in the previous step]({{% ref "./install-kubernetes" %}}).
+На этом шаге мы установим Cozystack поверх [Kubernetes-кластера, подготовленного на предыдущем шаге]({{% ref "./install-kubernetes" %}}).
 
-The tutorial will guide you through the following stages:
+Руководство проведёт вас через следующие этапы:
 
-1.  Install the Cozystack operator
-1.  Prepare a Cozystack configuration file and apply it
-1.  Configure storage
-1.  Configure networking
-1.  Deploy etcd, ingress and monitoring stack in the root tenant
-1.  Finalize deployment and access Cozystack dashboard
+1.  Установка оператора Cozystack
+1.  Подготовка файла конфигурации Cozystack и его применение
+1.  Настройка хранилища
+1.  Настройка сети
+1.  Развёртывание etcd, ingress и стека мониторинга в корневом tenant'е
+1.  Завершение развёртывания и вход в дашборд Cozystack
 
-## 1. Install the Cozystack Operator
+## 1. Установка оператора Cozystack
 
-Install the Cozystack operator using the Helm chart from the OCI registry.
-The operator manages all Cozystack components and handles the Platform Package lifecycle.
+Установите оператор Cozystack с помощью Helm chart из OCI-реестра.
+Оператор управляет всеми компонентами Cozystack и отвечает за жизненный цикл Platform Package.
 
 ```bash
 helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
@@ -36,19 +36,19 @@ helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installe
   --create-namespace
 ```
 
-Replace `X.Y.Z` with the desired Cozystack version.
-You can find available versions on the [Cozystack releases page](https://github.com/cozystack/cozystack/releases).
+Замените `X.Y.Z` на нужную версию Cozystack.
+Доступные версии перечислены на [странице релизов Cozystack](https://github.com/cozystack/cozystack/releases).
 
 {{% alert color="info" %}}
-**If the install aborts because `cozy-system` already exists.** Helm refuses
-to take over a namespace it did not create and prints an `invalid ownership
-metadata` error (or `namespaces "cozy-system" already exists`, depending on
-the Helm version) when `cozy-system` was left over from an earlier aborted
-install or was created manually for this purpose.
+**Если установка прерывается из-за того, что `cozy-system` уже существует.**
+Helm отказывается забирать себе namespace, который создал не он, и выводит
+ошибку `invalid ownership metadata` (или `namespaces "cozy-system" already exists`
+в зависимости от версии Helm), если `cozy-system` остался после ранее прерванной
+установки или был создан вручную для этой цели.
 
-If the namespace is **not** managed by another tool (Terraform, Argo CD, a
-different Helm release, etc.), rerun the command with `--take-ownership`
-(requires Helm 3.17+) to let Helm adopt it:
+Если namespace **не** управляется другим инструментом (Terraform, Argo CD,
+другим Helm release и т. д.), повторите команду с `--take-ownership`
+(требуется Helm 3.17+), чтобы Helm смог принять его под управление:
 
 ```bash
 helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
@@ -58,18 +58,18 @@ helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installe
   --take-ownership
 ```
 
-Do not use `--take-ownership` if `cozy-system` is owned by another system —
-Helm will silently become the new owner and subsequent upgrades or an
-uninstall of the Cozystack release may mutate or delete the namespace (and
-anything else the flag adopted) against the wishes of that other system.
+Не используйте `--take-ownership`, если `cozy-system` уже принадлежит другой системе —
+Helm незаметно станет новым владельцем, а последующие обновления или удаление
+релиза Cozystack могут изменить или удалить namespace (и всё, что было принято
+под управление этим флагом) вопреки ожиданиям этой системы.
 {{% /alert %}}
 
-## 2. Prepare and Apply the Platform Package
+## 2. Подготовка и применение Platform Package
 
-### 2.1. Prepare a Configuration File
+### 2.1. Подготовьте файл конфигурации
 
-Now that the operator is running, we will prepare a configuration file for it.
-Take the example below and write it in a file **cozystack-platform.yaml**:
+Теперь, когда оператор запущен, подготовим для него файл конфигурации.
+Возьмите пример ниже и сохраните его в файл **cozystack-platform.yaml**:
 
 ```yaml
 apiVersion: cozystack.io/v1alpha1
@@ -94,70 +94,69 @@ spec:
           joinCIDR: "100.64.0.0/16"
 ```
 
-Action points:
+Что нужно сделать:
 
-1.  Replace `example.org` in `publishing.host` and `publishing.apiServerEndpoint` with a routable fully-qualified domain name (FQDN) that you control.
-    If you only have a public IP, but no FQDN, use [nip.io](https://nip.io/) with dash notation.
-2.  Use the same values for `networking.*` as on the previous step, where you bootstrapped a Kubernetes cluster with Talm or `talosctl`.
-    Settings provided in the example are sane defaults that can be used in most cases.
+1.  Замените `example.org` в `publishing.host` и `publishing.apiServerEndpoint` на маршрутизируемое полное доменное имя (FQDN), которым вы управляете.
+    Если у вас есть только публичный IP, но нет FQDN, используйте [nip.io](https://nip.io/) с dash-нотацией.
+2.  Используйте для `networking.*` те же значения, что и на предыдущем шаге, где вы выполняли bootstrap Kubernetes-кластера через Talm или `talosctl`.
+    Значения из примера — это разумные значения по умолчанию, которые подходят для большинства случаев.
 
-There are other values in this config that you don't need to change in the course of the tutorial.
-However, let's overview and explain each value:
+В этой конфигурации есть и другие значения, которые в рамках руководства менять не требуется.
+Тем не менее, кратко разберём каждое из них:
 
--   `metadata.name` must be `cozystack.cozystack-platform` to match the PackageSource created by the installer.
--   `publishing.host` is used as the main domain for all services created under Cozystack, such as the dashboard, Grafana, Keycloak, etc.
--   `publishing.apiServerEndpoint` is the Cluster API endpoint. It's used for generating kubeconfig files for your users. It is recommended to use routable IP addresses instead of local ones.
--   `spec.variant: "isp-full"` means that we're using the most complete set of Cozystack components.
-    Learn more about variants in the [Cozystack Variants reference]({{% ref "/docs/v1.2/operations/configuration/variants" %}}).
--   `publishing.exposedServices` lists services to make accessible by users — here the dashboard (UI) and API.
--   `networking.*` are internal networking configurations for the underlying Kubernetes cluster:
-    -   `networking.podCIDR` — CIDR range from which Kube-OVN allocates pod IPs. Must not overlap with
-        any network your nodes already route.
-    -   `networking.podGateway` — gateway address Kube-OVN assigns to the default pod subnet. Use the
-        `.1` address of the `podCIDR` network (for example, `10.244.0.1` for `10.244.0.0/16`).
-    -   `networking.serviceCIDR` — CIDR range for `ClusterIP` Services. This **must** match the
-        `cluster.network.serviceSubnets` value you used when bootstrapping the Kubernetes cluster:
-        the value is baked into the kube-apiserver at bootstrap time and cannot be changed without
-        rebuilding the cluster, so a mismatch here silently breaks DNS and service routing.
-    -   `networking.joinCIDR` — CIDR range for the Kube-OVN *join* subnet, the internal network that carries
-        traffic between cluster nodes and pods. The default `100.64.0.0/16` is part of the
-        [RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598) shared address space (`100.64.0.0/10`)
-        that is reserved for this kind of internal-only use. Change it only if it overlaps with a network
-        your nodes already route; see the
-        [Kube-OVN join subnet reference](https://kubeovn.github.io/docs/stable/en/guide/subnet/#join-subnet)
-        for background on what this subnet does.
+-   `metadata.name` должен быть равен `cozystack.cozystack-platform`, чтобы совпасть с PackageSource, созданным установщиком.
+-   `publishing.host` используется как основной домен для всех сервисов, создаваемых в Cozystack, например дашборда, Grafana, Keycloak и т. д.
+-   `publishing.apiServerEndpoint` — это endpoint Cluster API. Он используется для генерации kubeconfig-файлов для пользователей. Рекомендуется использовать маршрутизируемые IP-адреса, а не локальные.
+-   `spec.variant: "isp-full"` означает, что используется наиболее полный набор компонентов Cozystack.
+    Подробнее о вариантах см. в [справочнике по вариантам Cozystack]({{% ref "/docs/v1.2/operations/configuration/variants" %}}).
+-   `publishing.exposedServices` перечисляет сервисы, которые должны быть доступны пользователям — здесь это дашборд (UI) и API.
+-   `networking.*` — это внутренняя сетевая конфигурация базового Kubernetes-кластера:
+    -   `networking.podCIDR` — диапазон CIDR, из которого Kube-OVN выделяет IP-адреса pod'ам. Он не должен пересекаться
+        ни с одной сетью, которую уже маршрутизируют ваши узлы.
+    -   `networking.podGateway` — адрес шлюза, который Kube-OVN назначает подсети pod'ов по умолчанию. Используйте
+        адрес `.1` сети `podCIDR` (например, `10.244.0.1` для `10.244.0.0/16`).
+    -   `networking.serviceCIDR` — диапазон CIDR для сервисов `ClusterIP`. Он **обязательно** должен совпадать со значением
+        `cluster.network.serviceSubnets`, которое вы использовали при bootstrap Kubernetes-кластера:
+        это значение вшивается в kube-apiserver во время bootstrap и не может быть изменено без
+        пересборки кластера, поэтому несоответствие здесь незаметно ломает DNS и маршрутизацию сервисов.
+    -   `networking.joinCIDR` — диапазон CIDR для *join* подсети Kube-OVN, внутренней сети, которая переносит
+        трафик между узлами кластера и pod'ами. Значение по умолчанию `100.64.0.0/16` входит в
+        общее адресное пространство [RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598) (`100.64.0.0/10`),
+        зарезервированное для такого внутреннего использования. Меняйте его только если оно пересекается с сетью,
+        которую уже маршрутизируют ваши узлы; подробности см. в
+        [справочнике по Kube-OVN join subnet](https://kubeovn.github.io/docs/stable/en/guide/subnet/#join-subnet).
 
-You can learn more about this configuration file in the [Platform Package reference]({{% ref "/docs/v1.2/operations/configuration/platform-package" %}}).
+Подробнее об этом файле конфигурации см. в [справочнике Platform Package]({{% ref "/docs/v1.2/operations/configuration/platform-package" %}}).
 
 {{% alert color="info" %}}
-Cozystack gathers anonymous usage statistics by default. Learn more about what data is collected and how to opt out in the [Telemetry Documentation]({{% ref "/docs/v1.2/operations/configuration/telemetry" %}}).
+По умолчанию Cozystack собирает анонимную статистику использования. Подробнее о том, какие данные собираются и как отказаться от этой функции, см. в [документации по телеметрии]({{% ref "/docs/v1.2/operations/configuration/telemetry" %}}).
 {{% /alert %}}
 
 
-### 2.2. Apply the Platform Package
+### 2.2. Примените Platform Package
 
-Apply the configuration file:
+Примените файл конфигурации:
 
 ```bash
 kubectl apply -f cozystack-platform.yaml
 ```
 
-As the installation goes on, you can track the logs of the operator:
+Во время установки можно следить за логами оператора:
 
 ```bash
 kubectl logs -n cozy-system deploy/cozystack-operator -f
 ```
 
 
-### 2.3. Check Installation Status
+### 2.3. Проверьте статус установки
 
-Wait for a while, then check the status of installation:
+Подождите немного, затем проверьте статус установки:
 
 ```bash
 kubectl get hr -A
 ```
 
-Wait and check again until you see `True` on each line, as in this example:
+Повторяйте проверку, пока во всех строках не появится `True`, как в этом примере:
 
 ```console
 NAMESPACE                        NAME                        AGE    READY   STATUS
@@ -187,35 +186,35 @@ cozy-victoria-metrics-operator   victoria-metrics-operator   4m1s   True    Rele
 tenant-root                      tenant-root                 4m1s   True    Release reconciliation succeeded
 ```
 
-The list of components in your installation may be different from the example above,
-as it depends on your configuration and Cozystack version.
+Список компонентов в вашей установке может отличаться от приведённого выше,
+так как он зависит от вашей конфигурации и версии Cozystack.
 
-Once every component shows `READY: True`, we're ready to proceed by configuring subsystems.
-
-
-## 3. Configure Storage
-
-Kubernetes needs a storage subsystem to provide persistent volumes to applications, but it doesn't include one of its own.
-Cozystack provides [LINSTOR](https://github.com/LINBIT/linstor-server) as a storage subsystem.
-
-In the following steps, we'll access LINSTOR interface, create storage pools, and define storage classes.
+Когда у всех компонентов появится `READY: True`, можно переходить к настройке подсистем.
 
 
-### 3.1. Check Storage Devices
+## 3. Настройка хранилища
 
-1.  Set up an alias to access LINSTOR:
+Kubernetes нужен слой хранилища для предоставления persistent volumes приложениям, но собственного такого механизма у него нет.
+В качестве подсистемы хранения Cozystack использует [LINSTOR](https://github.com/LINBIT/linstor-server).
+
+Далее мы получим доступ к интерфейсу LINSTOR, создадим storage pool'ы и определим storage class'ы.
+
+
+### 3.1. Проверьте устройства хранения
+
+1.  Настройте alias для доступа к LINSTOR:
 
     ```bash
     alias linstor='kubectl exec -n cozy-linstor deploy/linstor-controller -- linstor'
     ```
 
-1.  List your nodes and check their readiness:
+1.  Выведите список узлов и проверьте их готовность:
 
     ```bash
     linstor node list
     ```
 
-    Example output shows node names and state:
+    В примере ниже показаны имена узлов и их состояние:
 
     ```console
     +-------------------------------------------------------+
@@ -227,13 +226,13 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     +-------------------------------------------------------+
     ```
 
-1.  List available empty devices:
+1.  Выведите список доступных пустых устройств:
 
     ```bash
     linstor physical-storage list
     ```
 
-    Example output shows the same node names:
+    В примере ниже отображаются те же имена узлов:
 
     ```console
     +--------------------------------------------+
@@ -245,9 +244,9 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     +--------------------------------------------+
     ```
 
-### 3.2. Create Storage Pools
+### 3.2. Создайте storage pool'ы
 
-1.  Create storage pools using ZFS:
+1.  Создайте storage pool'ы на основе ZFS:
 
     ```bash
     linstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
@@ -255,8 +254,8 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     linstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
     ```
 
-    It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020)
-    to set `failmode=continue` on ZFS storage pools to allow DRBD to handle disk failures instead of ZFS.
+    [Рекомендуется](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020)
+    установить для ZFS storage pool'ов `failmode=continue`, чтобы обработкой отказов диска занимался DRBD, а не ZFS.
 
     ```bash
     kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv1 -- zpool set failmode=continue data
@@ -264,13 +263,13 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv3 -- zpool set failmode=continue data
     ```
 
-1.  Check the results by listing the storage pools:
+1.  Проверьте результат, выведя список storage pool'ов:
 
     ```bash
     linstor sp l
     ```
 
-    Example output:
+    Пример вывода:
 
     ```console
     +-------------------------------------------------------------------------------------------------------------------------------------+
@@ -285,13 +284,13 @@ In the following steps, we'll access LINSTOR interface, create storage pools, an
     +-------------------------------------------------------------------------------------------------------------------------------------+
     ```
 
-### 3.3. Create Storage Classes
+### 3.3. Создайте storage class'ы
 
-Finally, we can create a couple of storage classes, one of which will be the default class.
+Наконец, можно создать несколько storage class'ов, один из которых будет классом по умолчанию.
 
 
-1.  Create a file with storage class definitions.
-    Below is a sane default example providing two classes: `local` (default) and `replicated`.
+1.  Создайте файл с описанием storage class'ов.
+    Ниже приведён разумный пример по умолчанию с двумя классами: `local` (по умолчанию) и `replicated`.
 
     **storageclasses.yaml:**
 
@@ -329,19 +328,19 @@ Finally, we can create a couple of storage classes, one of which will be the def
     allowVolumeExpansion: true
     ```
 
-1.  Apply the storage class configuration
+1.  Примените конфигурацию storage class'ов
 
     ```bash
     kubectl apply -f storageclasses.yaml
     ```
 
-1.  Check that the storage classes were successfully created:
+1.  Убедитесь, что storage class'ы были успешно созданы:
 
     ```bash
     kubectl get storageclasses
     ```
 
-    Example output:
+    Пример вывода:
 
     ```console
     NAME              PROVISIONER              RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
@@ -350,37 +349,37 @@ Finally, we can create a couple of storage classes, one of which will be the def
     ```
 
 
-## 4. Configure Networking
+## 4. Настройка сети
 
-Next, we will configure how the Cozystack cluster can be accessed.
-This step has two options depending on your available infrastructure:
+Далее мы настроим способ доступа к кластеру Cozystack.
+На этом шаге есть два варианта в зависимости от доступной инфраструктуры:
 
--   For your own bare metal or self-hosted VMs, choose the MetalLB option.
-    MetalLB is Cozystack's default load balancer.
--   For VMs and dedicated servers from cloud providers, choose the public IP setup.
-    [Most cloud providers don't support MetalLB](https://metallb.universe.tf/installation/clouds/).
+-   Для собственного bare metal или self-hosted ВМ выбирайте вариант с MetalLB.
+    MetalLB — это балансировщик нагрузки по умолчанию в Cozystack.
+-   Для ВМ и выделенных серверов у облачных провайдеров выбирайте настройку через публичные IP.
+    [Большинство облачных провайдеров не поддерживают MetalLB](https://metallb.universe.tf/installation/clouds/).
 
-    Check out the [provider-specific installation]({{% ref "/docs/v1.2/install/providers" %}}) section.
-    It may have instructions for your provider, which you can use to deploy a production-ready cluster.
+    Загляните в раздел [provider-specific installation]({{% ref "/docs/v1.2/install/providers" %}}).
+    Возможно, там уже есть инструкции для вашего провайдера, подходящие для развёртывания production-ready кластера.
 
-### 4.a MetalLB Setup
+### 4.a Настройка MetalLB
 
-Cozystack has three types of IP addresses used:
+В Cozystack используются три типа IP-адресов:
 
--   Node IPs: persistent and valid only within the cluster.
--   Virtual floating IP: used to access one of the nodes in the cluster and valid only within the cluster.
--   External access IPs: used by LoadBalancers to expose services outside the cluster.
+-   IP-адреса узлов: постоянные и действуют только внутри кластера.
+-   Виртуальный floating IP: используется для доступа к одному из узлов кластера и также действует только внутри кластера.
+-   IP-адреса внешнего доступа: используются LoadBalancer'ами для публикации сервисов за пределами кластера.
 
-Services with external IPs may be exposed in two modes: L2 and BGP.
-L2 mode is a simple one, but requires that nodes belong to a single L2 domain, and does not load-balance well.
-BGP has more complicated setup -- you need BGP peers ready to accept announces, but gives the ability to make proper load-balancing, and provides more options for choosing IP address ranges.
+Сервисы с внешними IP могут публиковаться в двух режимах: L2 и BGP.
+Режим L2 проще, но требует, чтобы узлы находились в одном L2-домене, и хуже подходит для балансировки нагрузки.
+Режим BGP настраивается сложнее: нужны BGP peer'ы, готовые принимать анонсы, зато он позволяет организовать корректную балансировку и даёт больше гибкости при выборе диапазонов IP-адресов.
 
-Select a range of unused IPs for the services, here will use the `192.168.100.200-192.168.100.250` range.
-If you use L2 mode, these IPs should either be from the same network as the nodes, or have all necessary routes to them.
+Выберите диапазон неиспользуемых IP-адресов для сервисов; в примере используется диапазон `192.168.100.200-192.168.100.250`.
+Если вы используете режим L2, эти IP должны либо принадлежать той же сети, что и узлы, либо до них должны существовать все необходимые маршруты.
 
-For BGP mode, you will also need BGP peer IP addresses and local and remote AS numbers. Here we will use `192.168.20.254` as peer IP, and AS numbers 65000 and 65001 as local and remote.
+Для режима BGP также потребуются IP-адреса BGP peer'ов и локальные и удалённые номера AS. В примере используются `192.168.20.254` как IP peer'а и номера AS 65000 и 65001 как локальный и удалённый соответственно.
 
-Create and apply a file describing an address pool.
+Создайте и примените файл с описанием пула адресов.
 
 **metallb-ip-address-pool.yml**
 ```yaml
@@ -391,7 +390,7 @@ metadata:
   namespace: cozy-metallb
 spec:
   addresses:
-    # used to expose services outside the cluster
+    # используется для публикации сервисов за пределами кластера
     - 192.168.100.200-192.168.100.250
   autoAssign: true
   avoidBuggyIPs: false
@@ -401,11 +400,11 @@ spec:
 kubectl apply -f metallb-ip-address-pool.yml
 ```
 
-Create and apply resources needed for an L2 or a BGP advertisement.
+Создайте и примените ресурсы, необходимые для L2- или BGP-анонса.
 
 {{< tabs name="metallb_announce" >}}
 {{% tab name="L2 mode" %}}
-L2Advertisement uses the name of the IPAddressPool resource we created previously.
+L2Advertisement использует имя ресурса IPAddressPool, который мы создали на предыдущем шаге.
 
 **metallb-l2-advertisement.yml**
 ```yaml
@@ -420,14 +419,14 @@ spec:
 ```
 <br/>
 
-Apply changes.
+Примените изменения.
 
 ```bash
 kubectl apply -f metallb-l2-advertisement.yml
 ```
 {{% /tab %}}
 {{% tab name="BGP mode" %}}
-First, create a separate BGPPeer resource for **each** peer.
+Сначала создайте отдельный ресурс BGPPeer для **каждого** peer'а.
 
 **metallb-bgp-peer.yml**
 ```yaml
@@ -443,7 +442,7 @@ spec:
 ```
 <br/>
 
-Next, create a single BGPAdvertisement resource.
+Затем создайте один ресурс BGPAdvertisement.
 
 **metallb-bgp-advertisement.yml**
 ```yaml
@@ -457,7 +456,7 @@ spec:
   - cozystack
 ```
 <br/>
-Apply changes.
+Примените изменения.
 
 ```bash
 kubectl apply -f metallb-bgp-peer.yml
@@ -467,7 +466,7 @@ kubectl apply -f metallb-bgp-advertisement.yml
 {{< /tabs >}}
 <br/>
 
-Now that MetalLB is configured, enable `ingress` in the `tenant-root`:
+Теперь, когда MetalLB настроен, включите `ingress` в `tenant-root`:
 
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
@@ -476,42 +475,42 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 }}'
 ```
 
-To confirm successful configuration, check the HelmReleases `ingress` and `ingress-nginx-system`:
+Чтобы убедиться, что всё настроено корректно, проверьте HelmRelease'ы `ingress` и `ingress-nginx-system`:
 
 ```bash
 kubectl -n tenant-root get hr ingress ingress-nginx-system
 ```
 
-Example of correct output:
+Пример корректного вывода:
 ```console
 NAME                   AGE   READY   STATUS
 ingress                47m   True    Helm upgrade succeeded for release tenant-root/ingress.v3 with chart ingress@1.8.0
 ingress-nginx-system   47m   True    Helm upgrade succeeded for release tenant-root/ingress-nginx-system.v2 with chart cozy-ingress-nginx@0.35.1
 ```
 
-Next, check the state of service `root-ingress-controller`:
+Затем проверьте состояние сервиса `root-ingress-controller`:
 
 ```bash
 kubectl -n tenant-root get svc root-ingress-controller
 ```
 
-The service should be deployed as `TYPE: LoadBalancer` and have correct external IP:
+Сервис должен быть развёрнут как `TYPE: LoadBalancer` и иметь корректный внешний IP:
 
 ```console
 NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP       PORT(S)          AGE
 root-ingress-controller   LoadBalancer   10.96.91.83     192.168.100.200   80/TCP,443/TCP   48m
 ```
 
-### 4.b. Node Public IP Setup
+### 4.b. Настройка публичных IP узлов
 
-If your cloud provider does not support MetalLB, you can expose ingress controller using external IPs on your nodes.
+Если ваш облачный провайдер не поддерживает MetalLB, вы можете опубликовать ingress controller через внешние IP-адреса ваших узлов.
 
-If public IPs are attached directly to nodes, specify them.
-If public IPs are provided with a 1:1 NAT, as some clouds do, use IP addresses of **external** network interfaces.
+Если публичные IP привязаны непосредственно к узлам, укажите их.
+Если публичные IP предоставляются через 1:1 NAT, как у некоторых облачных провайдеров, используйте IP-адреса **внешних** сетевых интерфейсов.
 
-Here we will use `192.168.100.11`, `192.168.100.12`, and `192.168.100.13`.
+В примере используются `192.168.100.11`, `192.168.100.12` и `192.168.100.13`.
 
-First, patch the Platform Package with the external IPs:
+Сначала добавьте внешние IP в Platform Package:
 
 ```bash
 kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
@@ -533,7 +532,7 @@ kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p
 }'
 ```
 
-Next, enable `ingress` for the root tenant:
+Затем включите `ingress` для корневого tenant'а:
 
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{
@@ -543,7 +542,7 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '{
 }'
 ```
 
-Finally, add external IPs to the `externalIPs` list in the Ingress configuration:
+Наконец, добавьте внешние IP-адреса в список `externalIPs` в конфигурации Ingress:
 
 ```bash
 kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p '{
@@ -557,25 +556,25 @@ kubectl patch -n tenant-root ingresses.apps.cozystack.io ingress --type=merge -p
 }'
 ```
 
-After that, your Ingress will be available on the specified IPs.
-Check it in the following way:
+После этого ваш Ingress будет доступен по указанным IP-адресам.
+Проверьте это так:
 
 ```bash
 kubectl get svc -n tenant-root root-ingress-controller
 ```
 
-The service should be deployed as `TYPE: ClusterIP` and have the full range of external IPs:
+Сервис должен быть развёрнут как `TYPE: ClusterIP` и содержать полный список внешних IP:
 
 ```console
 NAME                     TYPE       CLUSTER-IP   EXTERNAL-IP                                   PORT(S)         AGE
 root-ingress-controller  ClusterIP  10.96.91.83  192.168.100.11,192.168.100.12,192.168.100.13  80/TCP,443/TCP  48m
 ```
 
-## 5. Finalize Installation
+## 5. Завершение установки
 
-### 5.1. Setup Root Tenant Services
+### 5.1. Настройте сервисы корневого tenant'а
 
-Enable `etcd` and `monitoring` for the root tenant:
+Включите `etcd` и `monitoring` для корневого tenant'а:
 
 ```bash
 kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
@@ -585,15 +584,15 @@ kubectl patch -n tenant-root tenants.apps.cozystack.io root --type=merge -p '
 }}'
 ```
 
-### 5.2. Check the cluster state and composition
+### 5.2. Проверьте состояние и состав кластера
 
-Check the provisioned persistent volumes:
+Проверьте созданные persistent volume'ы:
 
 ```bash
 kubectl get pvc -n tenant-root
 ```
 
-Example output:
+Пример вывода:
 
 ```console
 NAME                                     STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
@@ -612,13 +611,13 @@ vmstorage-db-vmstorage-shortterm-0       Bound    pvc-cee3a2a4-5680-4880-bc2a-85
 vmstorage-db-vmstorage-shortterm-1       Bound    pvc-d55c235d-cada-4c4a-8299-e5fc3f161789   10Gi       RWO            local          <unset>                 2m41s
 ```
 
-Check that all pods are running:
+Убедитесь, что все pod'ы запущены:
 
 ```bash
 kubectl get pod -n tenant-root
 ```
 
-example output:
+пример вывода:
 ```console
 NAME                                           READY   STATUS    RESTARTS       AGE
 etcd-0                                         1/1     Running   0              2m1s
@@ -648,59 +647,59 @@ vmstorage-shortterm-0                          1/1     Running   0              
 vmstorage-shortterm-1                          1/1     Running   0              2m31s
 ```
 
-Get the public IP of ingress controller:
+Получите публичный IP ingress controller:
 
 ```bash
 kubectl get svc -n tenant-root root-ingress-controller
 ```
 
-Example output:
+Пример вывода:
 
 ```console
 NAME                      TYPE           CLUSTER-IP     EXTERNAL-IP       PORT(S)                      AGE
 root-ingress-controller   LoadBalancer   10.96.16.141   192.168.100.200   80:31632/TCP,443:30113/TCP   3m33s
 ```
 
-### 5.3 Access the Cozystack Dashboard
+### 5.3 Доступ к дашборду Cozystack
 
-If you included `dashboard` in the `publishing.exposedServices` list of your Platform Package (as shown in step 2), the Cozystack Dashboard is already available.
+Если вы включили `dashboard` в список `publishing.exposedServices` вашего Platform Package (как показано на шаге 2), дашборд Cozystack уже доступен.
 
-If the initial configuration did not include it, patch the Platform Package:
+Если в исходной конфигурации его не было, обновите Platform Package:
 
 ```bash
 kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
   -p '[{"op": "add", "path": "/spec/components/platform/values/publishing/exposedServices/-", "value": "dashboard"}]'
 ```
 
-Open `dashboard.example.org` to access the system dashboard, where `example.org` is your domain specified for `tenant-root`.
-There you will see a login window which expects an authentication token.
+Откройте `dashboard.example.org`, чтобы перейти в системный дашборд, где `example.org` — домен, указанный вами для `tenant-root`.
+Там вы увидите окно входа, ожидающее токен аутентификации.
 
-Get the authentication token for `tenant-root`:
+Получите токен аутентификации для `tenant-root`:
 
 ```bash
 kubectl get secret -n tenant-root tenant-root -o go-template='{{ printf "%s\n" (index .data "token" | base64decode) }}'
 ```
 
-Log in using the token.
-Now you can use the dashboard as an administrator.
+Войдите с этим токеном.
+Теперь вы можете пользоваться дашбордом как администратор.
 
-Further on, you will be able to:
+Дальше вы сможете:
 
--   Set up OIDC to authenticate with it instead of tokens.
--   Create user tenants and grant users access to them via tokens or OIDC.
+-   Настроить OIDC и использовать его вместо токенов для аутентификации.
+-   Создавать пользовательские tenant'ы и выдавать пользователям доступ через токены или OIDC.
 
-### 5.4 Access metrics in Grafana
+### 5.4 Доступ к метрикам в Grafana
 
-Use `grafana.example.org` to access the system monitoring, where `example.org` is your domain specified for `tenant-root`.
-In this example, `grafana.example.org` is located at 192.168.100.200.
+Используйте `grafana.example.org` для доступа к системному мониторингу, где `example.org` — домен, указанный для `tenant-root`.
+В этом примере `grafana.example.org` доступен по адресу 192.168.100.200.
 
--   login: `admin`
--   request a password:
+-   логин: `admin`
+-   получите пароль:
 
     ```bash
     kubectl get secret -n tenant-root grafana-admin-password -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
     ```
 
-## Next Step
+## Следующий шаг
 
-Continue the Cozystack tutorial by [creating a user tenant]({{% ref "/docs/v1.2/getting-started/create-tenant" %}}).
+Продолжите руководство по Cozystack и [создайте пользовательский tenant]({{% ref "./create-tenant" %}}).
