@@ -1,11 +1,11 @@
 ---
-title: "Cozystack v1.2 Documentation"
-linkTitle: "Cozystack v1.2"
+title: "Cozystack v1.3 Documentation"
+linkTitle: "Cozystack v1.3"
 description: "Free PaaS platform and framework for building clouds"
 taxonomyCloud: []
 cascade:
   type: docs
-weight: 20
+weight: 10
 ---
 
 Cozystack is a free PaaS platform and framework for building clouds
