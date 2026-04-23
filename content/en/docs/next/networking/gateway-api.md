@@ -24,7 +24,7 @@ flowchart LR
     ENV["cilium-envoy DaemonSet<br/>(L7 termination / L4 passthrough)"]
     GW["Gateway 'cozystack'<br/>(per-tenant namespace)"]
     HTR["HTTPRoute<br/>dashboard, keycloak, harbor, bucket"]
-    TLR["TLSRoute<br/>cozystack-api, vm-exportproxy,<br/>cdi-uploadproxy"]
+    TLR["TLSRoute<br/>kubernetes-api, vm-exportproxy,<br/>cdi-uploadproxy"]
     CM["cert-manager Issuer<br/>(per-tenant ACME account)"]
     SVC["Service<br/>(backend)"]
 
@@ -262,7 +262,7 @@ Tenants then enable `spec.gateway: true` at creation time.
 
 ### For an existing cluster
 
-1. Flip `gateway.enabled: true` on the platform Package. This rerenders cert-manager ClusterIssuers and the exposed-service templates. Existing `Ingress` objects for dashboard / keycloak / cozystack-api / vm-exportproxy / cdi-uploadproxy are deleted by Flux as they are replaced by `HTTPRoute` / `TLSRoute`.
+1. Flip `gateway.enabled: true` on the platform Package. This rerenders cert-manager ClusterIssuers and the exposed-service templates. Existing `Ingress` objects for dashboard / keycloak / cozystack-api (Kubernetes API) / vm-exportproxy / cdi-uploadproxy are deleted by Flux as they are replaced by `HTTPRoute` / `TLSRoute`.
 2. For each tenant that should move to Gateway API, set `tenant.spec.gateway: true`. The tenant chart materialises the `Gateway`, `Certificate` and `Issuer`.
 3. Verify: `kubectl -n <tenant-ns> wait gateway/cozystack --for=condition=Programmed`, then `kubectl -n <tenant-ns> wait certificate/<tenant>-gateway-tls --for=condition=Ready`.
 4. Once every tenant has migrated, the `cozystack.ingress-application` package source can be removed from the system bundle — ingress-nginx deployment is no longer required.
