@@ -122,7 +122,7 @@ If you cannot access Grafana:
 - Check the service and ingress:
 
 ```bash
-kubectl get svc,ingress -n cozy-monitoring -l app.kubernetes.io/name=grafana
+kubectl get svc,ingress -n <tenant-namespace> -l app.kubernetes.io/name=grafana
 ```
 
 - Verify RBAC permissions for your user.

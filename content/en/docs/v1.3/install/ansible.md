@@ -95,7 +95,7 @@ cluster:
 **Always pin `cozystack_chart_version` explicitly.** The collection ships with a default version that may not match the release you intend to deploy. Set it in your inventory to avoid unexpected upgrades:
 
 ```yaml
-cozystack_chart_version: "1.0.0-rc.2"
+cozystack_chart_version: "{{< version-pin "cozystack_version" >}}"
 ```
 
 Check [Cozystack releases](https://github.com/cozystack/cozystack/releases) for available versions.
@@ -177,7 +177,7 @@ The playbook performs the following steps automatically:
 | Variable | Default | Description |
 | --- | --- | --- |
 | `cozystack_api_server_host` | *(required)* | Internal IP of the control-plane node. |
-| `cozystack_chart_version` | `1.0.0-rc.1` | Version of the Cozystack Helm chart. **Pin this explicitly.** |
+| `cozystack_chart_version` | `{{< version-pin "cozystack_version" >}}` | Version of the Cozystack Helm chart. **Pin this explicitly.** |
 | `cozystack_platform_variant` | `isp-full-generic` | Platform variant: `default`, `isp-full`, `isp-hosted`, `isp-full-generic`. |
 | `cozystack_root_host` | `""` | Domain for Cozystack services. Leave empty to skip publishing configuration. |
 

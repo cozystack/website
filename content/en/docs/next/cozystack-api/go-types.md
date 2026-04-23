@@ -13,7 +13,7 @@ Cozystack publishes its Kubernetes resource types as a Go module, enabling manag
 Add the dependency to your Go module:
 
 ```bash
-go get github.com/cozystack/cozystack/api/apps/v1alpha1@v1.2.0
+go get github.com/cozystack/cozystack/api/apps/v1alpha1@{{< version-pin "cozystack_tag" >}}
 ```
 
 ## Use Cases
