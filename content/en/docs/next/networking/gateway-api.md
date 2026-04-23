@@ -53,7 +53,7 @@ A tenant Gateway always materialises three base listeners:
 | 2 | `https` | `HTTPS` | 443 | `*.<tenant host>` | TLS termination for wildcard subdomain services (dashboard, keycloak, etc.) |
 | 3 | `https-apex` | `HTTPS` | 443 | `<tenant host>` | TLS termination for the apex domain itself |
 
-Plus one extra listener per TLS-passthrough service (see [TLS passthrough](#tls-passthrough) below).
+Plus one extra listener per TLS-passthrough service (see [TLS passthrough](#tlsroute-tls-passthrough) below).
 
 `<tenant host>` is read from `_namespace.host` which the tenant chart derives from the tenant's `spec.host` (or inherits from the parent). Listeners 2 and 3 both consume the wildcard `Certificate` that cert-manager issues against the per-tenant `Issuer`.
 
