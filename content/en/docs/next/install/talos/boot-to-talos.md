@@ -24,16 +24,16 @@ Three versions need to line up when you install Cozystack on Talos:
 | **`talosctl`** on your workstation | downloaded separately from [siderolabs/talos releases](https://github.com/siderolabs/talos/releases) | the major.minor of the Talos version you wrote to the node |
 | **Cozystack** | `--version` flag passed to `helm upgrade --install cozy-installer` | — (the anchor; everything else follows) |
 
-For **Cozystack v1.2.x** the pinned Talos version is **v1.12.6**
-([`packages/core/talos/images/talos/profiles/installer.yaml`](https://github.com/cozystack/cozystack/blob/release-1.2.1/packages/core/talos/images/talos/profiles/installer.yaml)).
-Use `ghcr.io/cozystack/cozystack/talos:v1.12.6` as the `boot-to-talos` image and download `talosctl` v1.12.x.
+For **Cozystack {{< version-pin "cozystack_version" >}}** the pinned Talos version is **{{< version-pin "talos" >}}**
+([`packages/core/talos/images/talos/profiles/installer.yaml`](https://github.com/cozystack/cozystack/blob/{{< version-pin "cozystack_tag" >}}/packages/core/talos/images/talos/profiles/installer.yaml)).
+Use `ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}` as the `boot-to-talos` image and download `talosctl` {{< version-pin "talos_minor" >}}.x.
 
 {{% alert color="warning" %}}
 `boot-to-talos` v0.7.x carries its own hardcoded default image
 (`ghcr.io/cozystack/cozystack/talos:v1.11.6` as of v0.7.1, see
 [`cmd/boot-to-talos/main.go`](https://github.com/cozystack/boot-to-talos/blob/v0.7.1/cmd/boot-to-talos/main.go)).
 If you let the interactive prompt fall through to that default on a cluster
-you intend to run Cozystack v1.2.x, you will end up with a Talos v1.11 node
+you intend to run Cozystack v1.3.0, you will end up with a Talos v1.11 node
 while the Cozystack installer and Talm templates target Talos v1.12 — you
 will hit a mismatch at bootstrap time. Always type in the image matching
 your target Cozystack release (or pass `-image` on the command line).
@@ -78,7 +78,7 @@ Mode:
   2. install – prepare the environment, run the Talos installer, and then overwrite the system disk with the installed image.
 Mode [1]: 2
 Target disk [/dev/sda]:
-Talos installer image [ghcr.io/cozystack/cozystack/talos:v1.11.6]: ghcr.io/cozystack/cozystack/talos:v1.12.6
+Talos installer image [ghcr.io/cozystack/cozystack/talos:v1.11.6]: ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}
 Add networking configuration? [yes]:
 Interface [eth0]:
 IP address [10.0.2.15]:
@@ -87,7 +87,7 @@ Gateway (or 'none') [10.0.2.2]:
 Configure serial console? (or 'no') [ttyS0]:
 
 Summary:
-  Image: ghcr.io/cozystack/cozystack/talos:v1.12.6
+  Image: ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}
   Disk:  /dev/sda
   Extra kernel args: ip=10.0.2.15::10.0.2.2:255.255.255.0::eth0::::: console=ttyS0
 
@@ -96,12 +96,12 @@ WARNING: ALL DATA ON /dev/sda WILL BE ERASED!
 Continue? [yes]:
 
 2025/08/03 00:11:03 created temporary directory /tmp/installer-3221603450
-2025/08/03 00:11:03 pulling image ghcr.io/cozystack/cozystack/talos:v1.12.6
+2025/08/03 00:11:03 pulling image ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}
 2025/08/03 00:11:03 extracting image layers
 2025/08/03 00:11:07 creating raw disk /tmp/installer-3221603450/image.raw (2 GiB)
 2025/08/03 00:11:07 attached /tmp/installer-3221603450/image.raw to /dev/loop0
 2025/08/03 00:11:07 starting Talos installer
-2025/08/03 00:11:07 running Talos installer v1.12.6
+2025/08/03 00:11:07 running Talos installer {{< version-pin "talos" >}}
 2025/08/03 00:11:07 WARNING: config validation:
 2025/08/03 00:11:07   use "worker" instead of "" for machine type
 2025/08/03 00:11:07 created EFI (C12A7328-F81F-11D2-BA4B-00A0C93EC93B) size 104857600 bytes
@@ -116,7 +116,7 @@ Continue? [yes]:
 2025/08/03 00:11:07 copying from io reader to /boot/A/initramfs.xz
 2025/08/03 00:11:08 writing /boot/grub/grub.cfg to disk
 2025/08/03 00:11:08 executing: grub-install --boot-directory=/boot --removable --efi-directory=/boot/EFI /dev/loop0
-2025/08/03 00:11:08 installation of v1.12.6 complete
+2025/08/03 00:11:08 installation of {{< version-pin "talos" >}} complete
 2025/08/03 00:11:08 Talos installer finished successfully
 2025/08/03 00:11:08 remounting all filesystems read-only
 2025/08/03 00:11:08 copy /tmp/installer-3221603450/image.raw → /dev/sda

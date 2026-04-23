@@ -84,7 +84,7 @@ Discovered open port 50000/tcp on 192.168.123.13
         - name: vfio_pci
         - name: vfio_iommu_type1
       install:
-        image: ghcr.io/cozystack/cozystack/talos:v1.10.3
+        image: ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}
       registries:
         mirrors:
           docker.io:
