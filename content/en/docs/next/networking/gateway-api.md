@@ -182,7 +182,7 @@ flowchart TD
 
 Every listener on a tenant Gateway pins `allowedRoutes.namespaces.from: Selector` to a `matchExpressions` whitelist against the built-in `kubernetes.io/metadata.name` label. That label is written by kube-apiserver on every namespace and cannot be spoofed.
 
-The whitelist is the publishing tenant's namespace (always, implicit) plus `publishing.gateway.attachedNamespaces`. A namespace outside the list literally cannot attach any `HTTPRoute` to the Gateway.
+The whitelist is the publishing tenant's namespace (always, implicit) plus `publishing.gateway.attachedNamespaces`. A namespace outside the list literally cannot attach any `HTTPRoute` or `TLSRoute` to the Gateway.
 
 ### Layer 2 — `cozystack-gateway-hostname-policy`
 
