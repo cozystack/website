@@ -119,7 +119,25 @@ fi
 #    ordering stays deterministic (new latest → 10, older → 20, 30, …).
 ./hack/register_version.sh --release "$DOC_VERSION"
 
+# 5. Snapshot data/versions/next.yaml → data/versions/$DOC_VERSION.yaml so the
+#    {{< version-pin >}} shortcode in the released docs keeps resolving to the
+#    values that were true at the cut. next.yaml is unchanged; update it
+#    separately for the next development cycle.
+VERSIONS_DIR="data/versions"
+NEXT_DATA="${VERSIONS_DIR}/next.yaml"
+TARGET_DATA="${VERSIONS_DIR}/${DOC_VERSION}.yaml"
+if [[ -f "$NEXT_DATA" ]]; then
+  if [[ -e "$TARGET_DATA" ]]; then
+    echo "! $TARGET_DATA already exists; leaving it as-is." >&2
+  else
+    cp "$NEXT_DATA" "$TARGET_DATA"
+    echo "✓ Snapshotted $NEXT_DATA → $TARGET_DATA"
+  fi
+else
+  echo "! $NEXT_DATA missing; skipped data/versions snapshot. Create $TARGET_DATA manually if the docs use {{< version-pin >}}." >&2
+fi
+
 echo ""
 echo "✓ Released $DOC_VERSION from next/."
 echo "  next/ is unchanged — continue using it for future unreleased work."
-echo "  Review: $TARGET_DIR/_index.md, hugo.yaml"
+echo "  Review: $TARGET_DIR/_index.md, hugo.yaml, $TARGET_DATA"

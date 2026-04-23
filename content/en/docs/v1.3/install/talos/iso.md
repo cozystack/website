@@ -14,10 +14,10 @@ Note that Cozystack provides its own Talos builds, which are tested and optimize
 
 ## Installation
 
-1.  Download Talos Linux asset from the Cozystack's [releases page](https://github.com/cozystack/cozystack/releases).
+1.  Download the Talos Linux ISO for Cozystack {{< version-pin "cozystack_tag" >}} from the [releases page](https://github.com/cozystack/cozystack/releases/tag/{{< version-pin "cozystack_tag" >}}).
 
     ```bash
-    wget https://github.com/cozystack/cozystack/releases/latest/download/metal-amd64.iso
+    wget https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/metal-amd64.iso
     ```
 
 1.  Boot your machine with ISO attached.

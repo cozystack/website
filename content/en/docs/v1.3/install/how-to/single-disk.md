@@ -37,7 +37,7 @@ provisioning:
 
 For `talm`, append the same lines at end of the first node's configuration file, such as `nodes/node1.yaml`.
 
-Read more in the Talos documentation: https://www.talos.dev/v1.10/talos-guides/configuration/disk-management/.
+Read more in the Talos documentation: https://www.talos.dev/{{< version-pin "talos_minor" >}}/talos-guides/configuration/disk-management/.
 
 After applying the configuration, wipe the `data-storage` partition:
 

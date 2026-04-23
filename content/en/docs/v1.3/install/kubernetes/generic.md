@@ -182,7 +182,7 @@ disable-kube-proxy: true
 Download and apply Custom Resource Definitions:
 
 ```bash
-kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-crds.yaml
+kubectl apply -f https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/cozystack-crds.yaml
 ```
 
 ### 2. Deploy Cozystack Operator
@@ -190,7 +190,7 @@ kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download
 Download the generic operator manifest, replace the API server address placeholder, and apply:
 
 ```bash
-curl -fsSL https://github.com/cozystack/cozystack/releases/latest/download/cozystack-operator-generic.yaml \
+curl -fsSL https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/cozystack-operator-generic.yaml \
   | sed 's/REPLACE_ME/<YOUR_NODE_IP>/' \
   | kubectl apply -f -
 ```
@@ -364,13 +364,13 @@ This example uses k3s default CIDRs. Adjust for kubeadm (`10.244.0.0/16`, `10.96
   tasks:
     - name: Apply Cozystack CRDs
       ansible.builtin.command:
-        cmd: kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-crds.yaml
+        cmd: kubectl apply -f https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/cozystack-crds.yaml
       changed_when: true
 
     - name: Download and apply Cozystack operator manifest
       ansible.builtin.shell:
         cmd: >
-          curl -fsSL https://github.com/cozystack/cozystack/releases/latest/download/cozystack-operator-generic.yaml
+          curl -fsSL https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/cozystack-operator-generic.yaml
           | sed 's/REPLACE_ME/{{ cozystack_api_host }}/'
           | kubectl apply -f -
       changed_when: true

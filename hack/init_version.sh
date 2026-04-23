@@ -115,8 +115,27 @@ PY
 fi
 
 echo "✓ Initialized $TARGET_DIR from $SOURCE_DIR"
+
+# Also seed data/versions/$VERSION.yaml from the source version, so the
+# {{< version-pin >}} shortcode resolves in the freshly-copied content.
+VERSIONS_DIR="data/versions"
+SOURCE_DATA="${VERSIONS_DIR}/${FROM_VERSION}.yaml"
+TARGET_DATA="${VERSIONS_DIR}/${VERSION}.yaml"
+if [[ -f "$SOURCE_DATA" ]]; then
+  mkdir -p "$VERSIONS_DIR"
+  if [[ -e "$TARGET_DATA" ]]; then
+    echo "  $TARGET_DATA already exists; leaving it as-is."
+  else
+    cp "$SOURCE_DATA" "$TARGET_DATA"
+    echo "✓ Seeded $TARGET_DATA from $SOURCE_DATA"
+  fi
+else
+  echo "  Note: $SOURCE_DATA not found; skipped version pins. Create $TARGET_DATA manually if the docs use {{< version-pin >}}."
+fi
+
 if [[ "$VERSION" == "next" ]]; then
   echo "  Trunk directory ready. Edit content/en/docs/next/ for upcoming release work."
+  echo "  Bump data/versions/next.yaml to the target release's pinned versions."
 else
-  echo "  Review _index.md frontmatter (title, weight, aliases)."
+  echo "  Review _index.md frontmatter (title, weight, aliases) and $TARGET_DATA."
 fi

@@ -64,7 +64,7 @@ talos-bootstrap --help
         - name: vfio_pci
         - name: vfio_iommu_type1
       install:
-        image: ghcr.io/cozystack/cozystack/talos:v1.10.3
+        image: ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}
       registries:
         mirrors:
           docker.io:

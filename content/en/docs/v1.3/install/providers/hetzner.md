@@ -176,7 +176,7 @@ but has instructions and examples specific to Hetzner.
     clusterDomain: cozy.local
     # floatingIP points to the primary etcd node
     floatingIP: 10.0.1.100
-    image: "ghcr.io/cozystack/cozystack/talos:v1.9.5"
+    image: "ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}"
     podSubnets:
     - 10.244.0.0/16
     serviceSubnets:
@@ -317,12 +317,12 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
 
     ```bash
     helm upgrade --install cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
-      --version X.Y.Z \
+      --version {{< version-pin "cozystack_version" >}} \
       --namespace cozy-system \
       --create-namespace
     ```
 
-    Replace `X.Y.Z` with the desired Cozystack version from the [releases page](https://github.com/cozystack/cozystack/releases).
+    The example pins the installer to Cozystack {{< version-pin "cozystack_tag" >}}. For a newer patch in the same minor series, pick the desired tag from the [releases page](https://github.com/cozystack/cozystack/releases).
 
 1.  Create a Platform Package file, **cozystack-platform.yaml**.
 

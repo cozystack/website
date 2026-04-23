@@ -34,10 +34,10 @@ This means if you create a VMInstance named `ubuntu`, the VirtualMachine in Kube
 Creating named VM images (golden images) requires an administrator account in Cozystack.
 
 The simplest way to create named VM images is by using the CLI script.  
-The [`cdi_golden_image_create.sh`](https://github.com/cozystack/cozystack/blob/main/hack/cdi_golden_image_create.sh) script can be downloaded from the Cozystack repository:
+The [`cdi_golden_image_create.sh`](https://github.com/cozystack/cozystack/blob/{{< version-pin "cozystack_tag" >}}/hack/cdi_golden_image_create.sh) script can be downloaded from the Cozystack {{< version-pin "cozystack_tag" >}} release tag:
 
 ```bash
-wget https://github.com/cozystack/cozystack/blob/main/hack/cdi_golden_image_create.sh
+wget https://raw.githubusercontent.com/cozystack/cozystack/{{< version-pin "cozystack_tag" >}}/hack/cdi_golden_image_create.sh
 chmod +x cdi_golden_image_create.sh
 ```
 

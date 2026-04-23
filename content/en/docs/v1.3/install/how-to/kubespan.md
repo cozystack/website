@@ -7,7 +7,7 @@ weight: 120
 
 Talos Linux provides a full mesh WireGuard network for your cluster.
 
-To enable this functionality, you need to configure [KubeSpan](https://www.talos.dev/v1.8/talos-guides/network/kubespan/) and [Cluster Discovery](https://www.talos.dev/v1.2/kubernetes-guides/configuration/discovery/) in your Talos Linux configuration:
+To enable this functionality, you need to configure [KubeSpan](https://www.talos.dev/{{< version-pin "talos_minor" >}}/talos-guides/network/kubespan/) and [Cluster Discovery](https://www.talos.dev/{{< version-pin "talos_minor" >}}/kubernetes-guides/configuration/discovery/) in your Talos Linux configuration:
 
 ```yaml
 machine:
