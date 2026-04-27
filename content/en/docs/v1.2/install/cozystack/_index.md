@@ -1,32 +1,32 @@
 ---
-title: "Installing and Configuring Cozystack"
-linkTitle: "3. Install Cozystack"
-description: "Step 3: Installing Cozystack on a Kubernetes Cluster — as a ready-to-use platform or in BYOP (Build Your Own Platform) mode."
+title: "Установка и настройка Cozystack"
+linkTitle: "3. Установка Cozystack"
+description: "Шаг 3: установка Cozystack в Kubernetes-кластер — как готовой к использованию платформы или в режиме BYOP (Build Your Own Platform)."
 weight: 30
 ---
 
-**The third step** in deploying a Cozystack cluster is to install Cozystack on a Kubernetes cluster that has been previously installed and configured.
-A prerequisite to this step is having [installed a Kubernetes cluster]({{% ref "/docs/v1.2/install/kubernetes" %}}).
+**Третий шаг** развертывания кластера Cozystack — установка Cozystack в ранее установленный и настроенный кластер Kubernetes.
+Предварительное условие для этого шага — [установленный кластер Kubernetes]({{% ref "/docs/v1.2/install/kubernetes" %}}).
 
-Cozystack can be installed in two modes, depending on how much control you need over the installed components:
+Cozystack можно установить в двух режимах, в зависимости от того, насколько детально вы хотите управлять устанавливаемыми компонентами:
 
-## As a Platform
+## Как платформа
 
-Install Cozystack as a ready-to-use platform with all components managed automatically.
-You choose a [variant]({{% ref "/docs/v1.2/operations/configuration/variants" %}}) (such as `isp-full`), and Cozystack installs and configures
-all necessary components — networking, storage, monitoring, dashboard, operators, and managed applications.
+Установите Cozystack как готовую к использованию платформу, где все компоненты управляются автоматически.
+Вы выбираете [variant]({{% ref "/docs/v1.2/operations/configuration/variants" %}}) (например, `isp-full`), а Cozystack устанавливает и настраивает
+все необходимые компоненты — сеть, хранилище, мониторинг, dashboard, operators и managed applications.
 
-This is the recommended approach for most users who want a fully functional platform out of the box.
+Это рекомендуемый подход для большинства пользователей, которым нужна полностью функциональная платформа из коробки.
 
-**[Install Cozystack as a Platform]({{% ref "./platform" %}})**
+**[Установить Cozystack как платформу]({{% ref "./platform" %}})**
 
 ## Build Your Own Platform (BYOP)
 
-Use Cozystack to build your own platform by installing only the components you need.
-You install the operator with the `default` variant, which only provides the package registry (PackageSources).
-Then you use the `cozypkg` CLI tool to selectively install individual packages — networking, storage, ingress, operators, and anything else available in the Cozystack repository.
+Используйте Cozystack, чтобы собрать собственную платформу, устанавливая только нужные компоненты.
+Вы устанавливаете operator с variant `default`, который предоставляет только package registry (PackageSources).
+Затем с помощью CLI-инструмента `cozypkg` выборочно устанавливаете отдельные packages — networking, storage, ingress, operators и любые другие компоненты, доступные в репозитории Cozystack.
 
-This approach is ideal when you already have an existing Kubernetes cluster with some infrastructure in place,
-or when you only need specific components from the Cozystack ecosystem.
+Этот подход подходит, если у вас уже есть существующий кластер Kubernetes с частью инфраструктуры
+или если вам нужны только отдельные компоненты из экосистемы Cozystack.
 
-**[Build Your Own Platform with Cozystack]({{% ref "./kubernetes-distribution" %}})**
+**[Собрать собственную платформу с Cozystack]({{% ref "./kubernetes-distribution" %}})**

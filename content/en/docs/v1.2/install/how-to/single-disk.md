@@ -1,21 +1,21 @@
 ---
-title: "How to install Talos on a single-disk machine"
-linkTitle: "Install on a single disk"
-description: "How to install Talos on a single-disk machine, allocating space on system disk for user storage"
+title: "Как установить Talos на машину с одним диском"
+linkTitle: "Установка на один диск"
+description: "Как установить Talos на машину с одним диском, выделив место на системном диске под пользовательское хранилище"
 weight: 100
 aliases:
   - /docs/v1.2/operations/faq/single-disk-installation
 ---
 
-Default Talos setup assumes that each node has a primary and secondary disks, used for system and user storage, respectively.
-However, it's possible to use a single disk, allocating space for user storage.
+Стандартная конфигурация Talos предполагает, что у каждого узла есть основной и дополнительный диски, используемые соответственно для системного и пользовательского хранилища.
+Однако можно использовать один диск, выделив на нем место для пользовательского хранилища.
 
-This configuration must be applied with the first [`talosctl apply`]({{% ref "/docs/v1.2/install/kubernetes/talosctl#3-apply-node-configuration" %}})
-or [`talm apply`]({{% ref "/docs/v1.2/install/kubernetes/talm#3-apply-node-configuration" %}})
-— the one with the `-i` (`--insecure`) flag.
-Applying changes after initialization will not have any effect.
+Эту конфигурацию нужно применить при первом [`talosctl apply`]({{% ref "/docs/v1.2/install/kubernetes/talosctl#3-apply-node-configuration" %}})
+или [`talm apply`]({{% ref "/docs/v1.2/install/kubernetes/talm#3-apply-node-configuration" %}})
+— том, который выполняется с флагом `-i` (`--insecure`).
+Применение изменений после инициализации не даст эффекта.
 
-For `talosctl`, append the following lines to `patch.yaml`:
+Для `talosctl` добавьте следующие строки в `patch.yaml`:
 
 ```yaml
 ---
@@ -35,34 +35,34 @@ provisioning:
   minSize: 400GiB
 ```
 
-For `talm`, append the same lines at end of the first node's configuration file, such as `nodes/node1.yaml`.
+Для `talm` добавьте те же строки в конец конфигурационного файла первого узла, например `nodes/node1.yaml`.
 
-Read more in the Talos documentation: https://www.talos.dev/v1.10/talos-guides/configuration/disk-management/.
+Подробнее см. в документации Talos: https://www.talos.dev/v1.10/talos-guides/configuration/disk-management/.
 
-After applying the configuration, wipe the `data-storage` partition:
+После применения конфигурации очистите раздел `data-storage`:
 
 ```bash
 kubectl -n kube-system debug -it --profile sysadmin --image=alpine node/node1
 
 apk add util-linux
 
-umount /dev/nvme0n1p6 ### The partition allocated for user storage
+umount /dev/nvme0n1p6 ### Раздел, выделенный под пользовательское хранилище
 rm -rf /host/var/mnt/data-storage
 wipefs -a /dev/nvme0n1p6
 exit
 ```
 
-When the storage is configured, add the new partition to LINSTOR:
+После настройки хранилища добавьте новый раздел в LINSTOR:
 ```bash
 linstor ps cdp zfs node1 nvme0n1p6 --pool-name data --storage-pool data1
 ```
 
-Check the result:
+Проверьте результат:
 ```bash
 linstor sp l
 ```
 
-Output will be similar to this example:
+Вывод будет похож на этот пример:
 
 ```text
 +---------------------------------------------------------------------------------------------------------------------------------------+

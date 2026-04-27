@@ -1,75 +1,75 @@
 ---
-title: "Install Talos Linux using boot-to-talos"
+title: "Установка Talos Linux с помощью boot-to-talos"
 linkTitle: boot-to-talos
-description: "Install Talos Linux using boot-to-talos, a convenient CLI application requiring nothing but a Talos image."
+description: "Установите Talos Linux с помощью boot-to-talos — удобного CLI-приложения, которому нужен только образ Talos."
 weight: 5
 aliases:
   - /docs/v1.2/talos/install/kexec
 ---
 
-This guide explains how to install Talos Linux on a host running any other Linux distribution using `boot-to-talos`.
+В этом руководстве описано, как установить Talos Linux на хост с любым другим дистрибутивом Linux с помощью `boot-to-talos`.
 
-`boot-to-talos` was made by Cozystack team to help users and teams adopting Cozystack with installing Talos, which is the most complex step in the process.
-It works entirely from userspace and has no external dependencies except the Talos installer image.
+`boot-to-talos` создан командой Cozystack, чтобы помочь пользователям и командам, внедряющим Cozystack, установить Talos — самый сложный шаг процесса.
+Он полностью работает из userspace и не имеет внешних зависимостей, кроме установочного образа Talos.
 
-Note that Cozystack provides its own Talos builds, which are tested and optimized for running a Cozystack cluster.
+Обратите внимание, что Cozystack предоставляет собственные сборки Talos, протестированные и оптимизированные для запуска кластера Cozystack.
 
-## Version Compatibility
+## Совместимость версий
 
-Three versions need to line up when you install Cozystack on Talos:
+При установке Cozystack на Talos должны совпасть три версии:
 
-| Component | Where it comes from | Must match |
+| Компонент | Откуда берется | Что должно совпадать |
 | --- | --- | --- |
-| **Talos** on the node | `-image` flag passed to `boot-to-talos` | the Talos version that ships with the Cozystack release you are installing |
-| **`talosctl`** on your workstation | downloaded separately from [siderolabs/talos releases](https://github.com/siderolabs/talos/releases) | the major.minor of the Talos version you wrote to the node |
-| **Cozystack** | `--version` flag passed to `helm upgrade --install cozy-installer` | — (the anchor; everything else follows) |
+| **Talos** на узле | флаг `-image`, переданный в `boot-to-talos` | версия Talos, поставляемая с релизом Cozystack, который вы устанавливаете |
+| **`talosctl`** на вашей рабочей станции | скачивается отдельно из [релизов siderolabs/talos](https://github.com/siderolabs/talos/releases) | major.minor версии Talos, записанной на узел |
+| **Cozystack** | флаг `--version`, переданный в `helm upgrade --install cozy-installer` | — (основа; все остальное следует за ней) |
 
-For **Cozystack v1.2.x** the pinned Talos version is **v1.12.6**
+Для **Cozystack v1.2.x** закрепленная версия Talos — **v1.12.6**
 ([`packages/core/talos/images/talos/profiles/installer.yaml`](https://github.com/cozystack/cozystack/blob/release-1.2.1/packages/core/talos/images/talos/profiles/installer.yaml)).
-Use `ghcr.io/cozystack/cozystack/talos:v1.12.6` as the `boot-to-talos` image and download `talosctl` v1.12.x.
+Используйте `ghcr.io/cozystack/cozystack/talos:v1.12.6` как образ для `boot-to-talos` и скачайте `talosctl` v1.12.x.
 
 {{% alert color="warning" %}}
-`boot-to-talos` v0.7.x carries its own hardcoded default image
-(`ghcr.io/cozystack/cozystack/talos:v1.11.6` as of v0.7.1, see
+`boot-to-talos` v0.7.x содержит собственный жестко заданный образ по умолчанию
+(`ghcr.io/cozystack/cozystack/talos:v1.11.6` в v0.7.1, см.
 [`cmd/boot-to-talos/main.go`](https://github.com/cozystack/boot-to-talos/blob/v0.7.1/cmd/boot-to-talos/main.go)).
-If you let the interactive prompt fall through to that default on a cluster
-you intend to run Cozystack v1.2.x, you will end up with a Talos v1.11 node
-while the Cozystack installer and Talm templates target Talos v1.12 — you
-will hit a mismatch at bootstrap time. Always type in the image matching
-your target Cozystack release (or pass `-image` on the command line).
+Если в интерактивном prompt оставить это значение по умолчанию для кластера,
+на котором вы планируете запускать Cozystack v1.2.x, в итоге вы получите узел Talos v1.11,
+тогда как installer Cozystack и шаблоны Talm рассчитаны на Talos v1.12 — вы
+столкнетесь с несовпадением на этапе bootstrap. Всегда вводите образ, соответствующий
+целевому релизу Cozystack (или передавайте `-image` в командной строке).
 {{% /alert %}}
 
-## Modes
+## Режимы
 
-`boot-to-talos` supports two installation modes:
+`boot-to-talos` поддерживает два режима установки:
 
-1. **boot** – Extract the kernel and initrd from the Talos installer and boot them directly using the kexec mechanism.
-2. **install** – Prepare the environment, run the Talos installer, and then overwrite the system disk with the installed image.
+1. **boot** – извлекает kernel и initrd из Talos installer и загружает их напрямую с помощью механизма kexec.
+2. **install** – подготавливает окружение, запускает Talos installer, а затем перезаписывает системный диск установленным образом.
 
 {{< note >}}
-If one mode doesn't work on your system, try the other. Different methods may work better on different operating systems.
+Если один режим не работает в вашей системе, попробуйте другой. Разные методы могут лучше работать на разных операционных системах.
 {{< /note >}}
 
-## Installation
+## Установка
 
-### 1. Install `boot-to-talos`
+### 1. Установка `boot-to-talos`
 
--   Use the installer script:
+-   Используйте установочный скрипт:
 
     ```bash
     curl -sSL https://github.com/cozystack/boot-to-talos/raw/refs/heads/main/hack/install.sh | sh -s
     ```
 
--   Download the binary from the [GitHub releases page](https://github.com/cozystack/boot-to-talos/releases/latest):
+-   Скачайте бинарный файл со [страницы релизов GitHub](https://github.com/cozystack/boot-to-talos/releases/latest):
 
     ```bash
     wget https://github.com/cozystack/boot-to-talos/releases/latest/download/boot-to-talos-linux-amd64.tar.gz
     ```
 
-### 2. Run to install Talos
+### 2. Запуск установки Talos
 
-Run `boot-to-talos` and provide configuration values.
-Make sure to use Cozystack's own Talos build, found at [ghcr.io/cozystack/cozystack/talos](https://github.com/cozystack/cozystack/pkgs/container/cozystack%2Ftalos).
+Запустите `boot-to-talos` и укажите значения конфигурации.
+Обязательно используйте собственную сборку Talos от Cozystack, доступную по адресу [ghcr.io/cozystack/cozystack/talos](https://github.com/cozystack/cozystack/pkgs/container/cozystack%2Ftalos).
 
 
 ```console
@@ -124,51 +124,51 @@ Continue? [yes]:
 2025/08/03 00:11:19 rebooting system
 ```
 
-## About the Application
+## О приложении
 
-`boot-to-talos` is opensource and hosted on [github.com/cozystack/boot-to-talos](https://github.com/cozystack/boot-to-talos).
-It includes a CLI written in Go and an installer script in Bash.
-There are builds for several architectures:
+`boot-to-talos` — это open source проект, размещенный на [github.com/cozystack/boot-to-talos](https://github.com/cozystack/boot-to-talos).
+Он включает CLI, написанный на Go, и установочный скрипт на Bash.
+Доступны сборки для нескольких архитектур:
 
 - `linux-amd64`
 - `linux-arm64`
 - `linux-i386`
 
-### How it Works
+### Как это работает
 
-Understanding these steps is not required to install Talos Linux.
+Понимать эти шаги для установки Talos Linux необязательно.
 
-The workflow depends on the selected mode:
+Рабочий процесс зависит от выбранного режима:
 
-#### Boot Mode
+#### Режим boot
 
-When using the **boot** mode, `boot-to-talos` performs the following steps:
+При использовании режима **boot** `boot-to-talos` выполняет следующие шаги:
 
-1.  **Unpacks Talos installer in RAM**<br>
-    Extracts layers from the Talos‑installer container into a throw‑away `tmpfs`.
-    Note that Docker is not needed during this step.
-2.  **Extracts kernel and initrd**<br>
-    Extracts the kernel (`vmlinuz`) and initial ramdisk (`initramfs.xz`) from the Talos installer image.
-3.  **Loads kernel via kexec**<br>
-    Uses the `kexec` system call to load the Talos kernel and initrd into memory with the provided kernel command line parameters.
-4.  **Reboots into Talos**<br>
-    Executes `kexec --exec` to switch to the Talos kernel without a physical reboot. After booting, you can apply Talos configuration to complete the installation.
+1.  **Распаковывает Talos installer в RAM**<br>
+    Извлекает слои из контейнера Talos installer во временный `tmpfs`.
+    Обратите внимание, что Docker на этом шаге не нужен.
+2.  **Извлекает kernel и initrd**<br>
+    Извлекает kernel (`vmlinuz`) и initial ramdisk (`initramfs.xz`) из образа Talos installer.
+3.  **Загружает kernel через kexec**<br>
+    Использует системный вызов `kexec`, чтобы загрузить kernel Talos и initrd в память с переданными параметрами командной строки kernel.
+4.  **Перезагружает в Talos**<br>
+    Выполняет `kexec --exec`, чтобы переключиться на kernel Talos без физической перезагрузки. После загрузки можно применить конфигурацию Talos и завершить установку.
 
-#### Install Mode
+#### Режим install
 
-When using the **install** mode, `boot-to-talos` performs the following steps:
+При использовании режима **install** `boot-to-talos` выполняет следующие шаги:
 
-1.  **Unpacks Talos installer in RAM**<br>
-    Extracts layers from the Talos‑installer container into a throw‑away `tmpfs`.
-    Note that Docker is not needed during this step.
-2.  **Builds system image**<br>
-    Creates a sparse `image.raw`, exposed via a loop device, and executes the Talos *installer* inside a chroot.
-    The installer then partitions, formats, and lays down GRUB and system files.
-3.  **Streams to disk**<br>
-    Copies `image.raw` to the chosen block device in chunks of 4 MiB and runs `fsync` after every write, so that data is fully committed before reboot.
-4.  **Reboots**<br>
-    Command `echo b > /proc/sysrq-trigger` performs an immediate reboot into the freshly installed Talos Linux.
+1.  **Распаковывает Talos installer в RAM**<br>
+    Извлекает слои из контейнера Talos installer во временный `tmpfs`.
+    Обратите внимание, что Docker на этом шаге не нужен.
+2.  **Собирает системный образ**<br>
+    Создает sparse-файл `image.raw`, подключенный через loop device, и выполняет Talos *installer* внутри chroot.
+    Затем installer размечает диск, форматирует разделы и размещает GRUB и системные файлы.
+3.  **Записывает поток на диск**<br>
+    Копирует `image.raw` на выбранное блочное устройство блоками по 4 MiB и выполняет `fsync` после каждой записи, чтобы данные были полностью сохранены до перезагрузки.
+4.  **Перезагружает систему**<br>
+    Команда `echo b > /proc/sysrq-trigger` выполняет немедленную перезагрузку в только что установленный Talos Linux.
 
-## Next Steps
+## Следующие шаги
 
-Once you have installed Talos, proceed by [installing and bootstrapping a Kubernetes cluster]({{% ref "/docs/v1.2/install/kubernetes" %}}).
+После установки Talos перейдите к [установке и инициализации кластера Kubernetes]({{% ref "/docs/v1.2/install/kubernetes" %}}).

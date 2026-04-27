@@ -1,7 +1,7 @@
 ---
-title: "Installing and Configuring Kubernetes Cluster"
-linkTitle: "2. Install Kubernetes"
-description: "Step 2: Installing and configuring a Kubernetes cluster ready for Cozystack installation."
+title: "Установка и настройка кластера Kubernetes"
+linkTitle: "2. Установка Kubernetes"
+description: "Шаг 2: установка и настройка кластера Kubernetes, готового к установке Cozystack."
 weight: 20
 aliases:
   - /docs/v1.2/operations/talos/configuration
@@ -10,34 +10,34 @@ aliases:
 ---
 
 
-**The second step** in deploying a Cozystack cluster is to install and configure a Kubernetes cluster.
-The result is a Kubernetes cluster installed, configured, and ready to install Cozystack.
+**Второй шаг** развертывания кластера Cozystack — установка и настройка кластера Kubernetes.
+В результате вы получите установленный и настроенный кластер Kubernetes, готовый к установке Cozystack.
 
-If this is your first time installing Cozystack, [start with the Cozystack tutorial]({{% ref "/docs/v1.2/getting-started" %}}).
+Если вы устанавливаете Cozystack впервые, [начните с руководства по Cozystack]({{% ref "/docs/v1.2/getting-started" %}}).
 
-## Installation Options
+## Варианты установки
 
-### Talos Linux (Recommended)
+### Talos Linux (рекомендуется)
 
-For production deployments, Cozystack recommends [Talos Linux]({{% ref "/docs/v1.2/guides/talos" %}}) as the underlying operating system.
-A prerequisite to using these methods is having [installed Talos Linux]({{% ref "/docs/v1.2/install/talos" %}}).
+Для production-развертываний Cozystack рекомендует использовать [Talos Linux]({{% ref "/docs/v1.2/guides/talos" %}}) в качестве базовой операционной системы.
+Предварительное условие для этих методов — [установленный Talos Linux]({{% ref "/docs/v1.2/install/talos" %}}).
 
-There are several methods to configure Talos nodes and bootstrap a Kubernetes cluster:
+Есть несколько способов настроить узлы Talos и инициализировать кластер Kubernetes:
 
--   **Recommended**: [using Talm]({{% ref "./talm" %}}), a declarative CLI tool, which has ready presets for Cozystack and uses the power of Talos API under the hood.
--   [Using `talos-bootstrap`]({{% ref "./talos-bootstrap" %}}), an interactive script for bootstrapping Kubernetes clusters on Talos OS.
--   [Using talosctl]({{% ref "./talosctl" %}}), a specialized command-line tool for managing Talos.
--   [Air-gapped installation]({{% ref "./air-gapped" %}}) is possible with Talm or talosctl.
+-   **Рекомендуется**: [использование Talm]({{% ref "./talm" %}}) — декларативного CLI-инструмента с готовыми пресетами для Cozystack, который использует возможности Talos API.
+-   [Использование `talos-bootstrap`]({{% ref "./talos-bootstrap" %}}) — интерактивного скрипта для инициализации кластеров Kubernetes на Talos OS.
+-   [Использование talosctl]({{% ref "./talosctl" %}}) — специализированного CLI-инструмента для управления Talos.
+-   [Установка в изолированной среде]({{% ref "./air-gapped" %}}) возможна с Talm или talosctl.
 
 ### Generic Kubernetes
 
-Cozystack can also be deployed on other Kubernetes distributions:
+Cozystack также можно развернуть на других дистрибутивах Kubernetes:
 
--   [Generic Kubernetes]({{% ref "./generic" %}}) — deploy Cozystack on k3s, kubeadm, RKE2, or other distributions.
+-   [Generic Kubernetes]({{% ref "./generic" %}}) — развертывание Cozystack на k3s, kubeadm, RKE2 или других дистрибутивах.
 
-If you encounter problems with installation, refer to the [Troubleshooting section]({{% ref "./troubleshooting" %}}).
+Если при установке возникнут проблемы, см. [раздел Troubleshooting]({{% ref "./troubleshooting" %}}).
 
-## Further Steps
+## Следующие шаги
 
--   After installing and configuring a Kubernetes cluster, you are ready to
-    [install and configure Cozystack]({{% ref "/docs/v1.2/install/cozystack" %}}).
+-   После установки и настройки кластера Kubernetes можно
+    [установить и настроить Cozystack]({{% ref "/docs/v1.2/install/cozystack" %}}).

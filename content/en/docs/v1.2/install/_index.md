@@ -1,55 +1,55 @@
 ---
-title: "Cozystack Deployment Guide: from Infrastructure to a Ready Cluster"
-linkTitle: "Deploying Cozystack"
-description: "Learn how to deploy a Cozystack cluster using Talos Linux and Kubernetes. This guide covers installation, configuration, and best practices for a reliable and secure Cozystack deployment."
+title: "Руководство по развертыванию Cozystack: от инфраструктуры до готового кластера"
+linkTitle: "Развертывание Cozystack"
+description: "Узнайте, как развернуть кластер Cozystack с помощью Talos Linux и Kubernetes. В этом руководстве описаны установка, настройка и лучшие практики надежного и безопасного развертывания Cozystack."
 weight: 30
 aliases:
   - /docs/v1.2/talos
   - /docs/v1.2/operations/talos
 ---
 
-## Cozystack Tutorial
+## Руководство по Cozystack
 
-If this is your first time installing Cozystack, consider [going through the Cozystack tutorial]({{% ref "/docs/v1.2/getting-started" %}}).
-It shows the shortest way to getting a proof-of-concept Cozystack cluster.
+Если вы устанавливаете Cozystack впервые, рекомендуем [пройти руководство по Cozystack]({{% ref "/docs/v1.2/getting-started" %}}).
+В нем показан самый короткий путь к созданию proof-of-concept кластера Cozystack.
 
-## Generic Installation Path
+## Общий путь установки
 
-Installing Cozystack on bare-metal servers or VMs involves three consecutive steps.
-Each of them has a variety of options, and while there is a recommended option, we provide alternatives to make the installation process flexible:
+Установка Cozystack на bare-metal серверы или виртуальные машины состоит из трех последовательных шагов.
+Для каждого шага есть несколько вариантов. Мы указываем рекомендуемый вариант, но также приводим альтернативы, чтобы процесс установки оставался гибким:
 
-1.  [Install Talos Linux]({{% ref "./talos" %}}) on bare metal or VMs running Linux or having no OS at all.
-1.  [Install and bootstrap a Kubernetes cluster]({{% ref "./kubernetes" %}}) on top of Talos Linux.
-1.  [Install and configure Cozystack]({{% ref "./cozystack" %}}) on the Kubernetes cluster.
+1.  [Установите Talos Linux]({{% ref "./talos" %}}) на bare-metal серверы или виртуальные машины с Linux либо без операционной системы.
+1.  [Установите и инициализируйте кластер Kubernetes]({{% ref "./kubernetes" %}}) поверх Talos Linux.
+1.  [Установите и настройте Cozystack]({{% ref "./cozystack" %}}) в кластере Kubernetes.
 
-## Air-gapped Environment
+## Изолированная среда
 
-Cozystack can be installed in an isolated environment without direct Internet access.
-The key difference of such installation is in using proxy registries for images:
+Cozystack можно установить в изолированной среде без прямого доступа к Интернету.
+Главное отличие такой установки — использование proxy registry для образов:
 
-1.  [Install Talos Linux]({{% ref "./talos" %}}) on bare metal or VMs running Linux or having no OS at all.
-1.  [Configure Talos nodes for air-gap and bootstrap a Kubernetes cluster]({{% ref "./kubernetes/air-gapped" %}}).
-1.  [Install and configure Cozystack]({{% ref "./cozystack" %}}) on the Kubernetes cluster.
+1.  [Установите Talos Linux]({{% ref "./talos" %}}) на bare-metal серверы или виртуальные машины с Linux либо без операционной системы.
+1.  [Настройте узлы Talos для изолированной среды и инициализируйте кластер Kubernetes]({{% ref "./kubernetes/air-gapped" %}}).
+1.  [Установите и настройте Cozystack]({{% ref "./cozystack" %}}) в кластере Kubernetes.
 
-## Automated Installation with Ansible
+## Автоматизированная установка с Ansible
 
-For generic Linux deployments (Ubuntu, Debian, RHEL, Rocky, openSUSE), the [Ansible collection]({{% ref "/docs/v1.2/install/ansible" %}}) automates the full pipeline: OS preparation, k3s cluster bootstrap, and Cozystack installation.
+Для типовых развертываний Linux (Ubuntu, Debian, RHEL, Rocky, openSUSE) [коллекция Ansible]({{% ref "/docs/v1.2/install/ansible" %}}) автоматизирует весь процесс: подготовку ОС, инициализацию кластера k3s и установку Cozystack.
 
-## Provider-specific Installation
+## Установка у конкретных провайдеров
 
-There are specific guides for cloud providers, covering all the steps from preparing infrastructure to installing and configuring Cozystack.
-If that's your case, we recommend using the guides below:
+Для облачных провайдеров есть отдельные руководства, которые охватывают все шаги: от подготовки инфраструктуры до установки и настройки Cozystack.
+Если это ваш случай, рекомендуем использовать руководства ниже:
 
 - [Hetzner]({{% ref "/docs/v1.2/install/providers/hetzner" %}})
 - [Oracle Cloud Infrastructure (OCI)]({{% ref "/docs/v1.2/install/providers/oracle-cloud" %}})
 - [Servers.com]({{% ref "/docs/v1.2/install/providers/servers-com" %}})
 
 
-## Upgrading and Post-deployment Configuration
+## Обновление и настройка после развертывания
 
-After you've deployed a cluster, proceed to the [Cluster Administration]({{% ref "/docs/v1.2/operations" %}}) section for
-the next actions:
+После развертывания кластера перейдите в раздел [Администрирование кластера]({{% ref "/docs/v1.2/operations" %}}), чтобы выполнить
+следующие действия:
 
-- [Configure OIDC]({{% ref "/docs/v1.2/operations/oidc" %}})
-- [Deploy Cozystack in a Multi-Datacenter Setup]({{% ref "/docs/v1.2/operations/stretched" %}})
-- [Upgrading Cozystack]({{% ref "/docs/v1.2/operations/cluster/upgrade" %}})
+- [Настройка OIDC]({{% ref "/docs/v1.2/operations/oidc" %}})
+- [Развертывание Cozystack в конфигурации с несколькими дата-центрами]({{% ref "/docs/v1.2/operations/stretched" %}})
+- [Обновление Cozystack]({{% ref "/docs/v1.2/operations/cluster/upgrade" %}})

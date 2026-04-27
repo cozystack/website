@@ -1,121 +1,121 @@
 ---
-title: "Hardware requirements"
-linkTitle: "Hardware Requirements"
-description: "Define the hardware requirements for your Cozystack use case."
+title: "Требования к оборудованию"
+linkTitle: "Требования к оборудованию"
+description: "Определите требования к оборудованию для вашего сценария использования Cozystack."
 weight: 5
 aliases:
   - /docs/v1.2/getting-started/hardware-requirements
   - /docs/v1.2/talos/hardware-requirements
 ---
 
-Cozystack utilizes [Talos Linux]({{% ref "/docs/v1.2/guides/talos" %}}), a minimalistic Linux distribution designed solely to run Kubernetes.
-Usually, this means you cannot share a server with any services other than those run by Cozystack.
-The good news is that whichever service you need, Cozystack will run it perfectly: securely, efficiently, and
-in a fully containerized or virtualized environment.
+Cozystack использует [Talos Linux]({{% ref "/docs/v1.2/guides/talos" %}}) — минималистичный дистрибутив Linux, предназначенный исключительно для запуска Kubernetes.
+Обычно это означает, что сервер нельзя совместно использовать с сервисами, которые не запущены Cozystack.
+Хорошая новость в том, что какой бы сервис вам ни понадобился, Cozystack сможет запустить его корректно: безопасно, эффективно и
+в полностью контейнеризованной или виртуализованной среде.
 
-Hardware requirements depend on your usage scenario.
-Below are several common deployment options; review them to determine which setup fits your needs best.
+Требования к оборудованию зависят от вашего сценария использования.
+Ниже приведены несколько распространенных вариантов развертывания; изучите их, чтобы определить, какая конфигурация лучше всего подходит под ваши задачи.
 
 {{< include "docs/v1.2/install/_include/hardware-config-tabs.md" >}}
 
-**Compute:**
+**Вычислительные ресурсы:**
 
-- Three or more physical or virtual servers with amd64/x86_64 architecture, with the specifications shown in the table above.
-- Virtualized servers need nested virtualization enabled and the CPU model set to `host` (without emulation).
-- PXE installation requires an extra management instance connected to the same network, with any Linux system able to run a Docker container.
-  It should also have `x86-64-v2` architecture, which most probably may be achieved by setting CPU model to `host` in case of a VM.
+- Три или более физических либо виртуальных сервера с архитектурой amd64/x86_64 и характеристиками, указанными в таблице выше.
+- Для виртуализированных серверов должна быть включена вложенная виртуализация, а модель CPU должна быть установлена в `host` (без эмуляции).
+- Для установки через PXE требуется дополнительный управляющий инстанс, подключенный к той же сети, с любой Linux-системой, способной запускать Docker-контейнер.
+  Он также должен иметь архитектуру `x86-64-v2`; в случае виртуальной машины этого, скорее всего, можно добиться, установив модель CPU в `host`.
 
-**Storage:**
+**Хранилище:**
 
-Storage in a Cozystack cluster is used both by the system and by the user workloads.
-There are two options: having a dedicated disk for each role or allocating space on system disk for user storage.
-Low latency is critical for control-plane nodes storage, local SSDs are recommended. 
+Хранилище в кластере Cozystack используется как системой, так и пользовательскими workload'ами.
+Есть два варианта: выделить отдельный диск для каждой роли или выделить место под пользовательское хранилище на системном диске.
+Для хранилища узлов control plane критически важна низкая задержка, поэтому рекомендуются локальные SSD.
 
-**Using two disks**
+**Использование двух дисков**
 
-Separating disks by role is the primary and more reliable option.
+Разделение дисков по ролям — основной и более надежный вариант.
 
-- **Primary Disk**: This disk contains the Talos Linux operating system, essential system kernel modules and
-  Cozystack system base pods, logs, and base container images. Also an etcd cluster will be running on top of it, so a low-latency volume should be used, preferably a local SSD.
+- **Основной диск**: на этом диске находятся операционная система Talos Linux, необходимые системные модули ядра,
+  базовые системные поды Cozystack, логи и базовые контейнерные образы. Также поверх него будет работать кластер etcd, поэтому следует использовать том с низкой задержкой, предпочтительно локальный SSD.
 
-  Minimum sizes vary by configuration (see table above). Talos installation expects `/dev/sda` as the system disk (virtio drives usually appear as `/dev/vda`).
+  Минимальные размеры зависят от конфигурации (см. таблицу выше). Установка Talos ожидает `/dev/sda` в качестве системного диска (диски virtio обычно отображаются как `/dev/vda`).
 
-- **Secondary Disk**: Dedicated to workload data and can be increased based on workload requirements.
-  Used for provisioning volumes via PersistentVolumeClaims (PVCs).
+- **Дополнительный диск**: предназначен для данных workload'ов, его размер можно увеличивать в зависимости от требований workload'ов.
+  Используется для выделения томов через PersistentVolumeClaims (PVC).
 
-  Minimum sizes vary by configuration (see table above). Disk path (usually `/dev/sdb`) will be defined in the storage configuration.
-  It does not affect the Talos installation.
+  Минимальные размеры зависят от конфигурации (см. таблицу выше). Путь к диску (обычно `/dev/sdb`) будет указан в конфигурации хранилища.
+  Он не влияет на установку Talos.
 
-  Learn more about configuring Linstor StorageClass from the
-  [Deploy Cozystack tutorial]({{% ref "/docs/v1.2/getting-started/install-cozystack#3-configure-storage" %}})
+  Подробнее о настройке Linstor StorageClass см. в
+  [руководстве по развертыванию Cozystack]({{% ref "/docs/v1.2/getting-started/install-cozystack#3-configure-storage" %}})
 
-**Using a single disk**
+**Использование одного диска**
 
-It's possible to use a single disk with space allocated for user storage.
-See [How to install Talos on a single-disk machine]({{% ref "/docs/v1.2/install/how-to/single-disk" %}})
-Using a local SSD disk is recommended.
+Можно использовать один диск с выделенным пространством для пользовательского хранилища.
+См. [Как установить Talos на машину с одним диском]({{% ref "/docs/v1.2/install/how-to/single-disk" %}})
+Рекомендуется использовать локальный SSD-диск.
 
-**Networking:**
+**Сеть:**
 
-- Machines must be allowed to use additional IPs, or an external load balancer must be available.
-  Using additional IPs is disabled by default and must be enabled explicitly in most public clouds.
-- Additional public IPs for ingress and virtual machines may be needed. Check if your public cloud provider supports floating IPs.
-- Routable FQDN domain (or use [nip.io](https://nip.io/) with dash notation)
-- Located in the same L2 network segment
-- Anti-spoofing disabled (required for MetalLB)
-- Minimum 1 Gbps (10 Gbps recommended for production)
-- Low latency between cluster nodes
+- Машинам должно быть разрешено использовать дополнительные IP-адреса, либо должен быть доступен внешний балансировщик нагрузки.
+  Использование дополнительных IP-адресов по умолчанию отключено и в большинстве публичных облаков должно включаться явно.
+- Могут потребоваться дополнительные публичные IP-адреса для ingress и виртуальных машин. Проверьте, поддерживает ли ваш облачный провайдер floating IP.
+- Маршрутизируемый FQDN-домен (или используйте [nip.io](https://nip.io/) с записью через дефис)
+- Размещение в одном L2-сегменте сети
+- Отключенный anti-spoofing (требуется для MetalLB)
+- Минимум 1 Гбит/с (для production рекомендуется 10 Гбит/с)
+- Низкая задержка между узлами кластера
 
-## Production Cluster
+## Production-кластер
 
-For a production environment, consider the following:
+Для production-среды учитывайте следующее:
 
-**Compute:**
+**Вычислительные ресурсы:**
 
-- Having at least **three worker nodes** is mandatory for running highly available applications.
-  If one of the three nodes becomes unavailable due to hardware failure or maintenance, you’ll be operating in a degraded state.
-  While database clusters and replicated storage will continue functioning, starting new database instances or creating replicated volumes won’t be possible.
-- Having separate servers for Kubernetes master nodes is highly recommended, although not required.
-  It’s much easier to take a pure worker node offline for maintenance or upgrades, than if it also serves as a management node.
+- Для запуска высокодоступных приложений обязательно иметь как минимум **три worker-узла**.
+  Если один из трех узлов станет недоступен из-за аппаратного сбоя или обслуживания, кластер будет работать в деградированном состоянии.
+  Кластеры баз данных и реплицированное хранилище продолжат работать, но запуск новых экземпляров баз данных или создание реплицированных томов будет невозможным.
+- Настоятельно рекомендуется, хотя и не обязательно, использовать отдельные серверы для master-узлов Kubernetes.
+  Чистый worker-узел гораздо проще выводить из эксплуатации для обслуживания или обновления, чем узел, который одновременно является управляющим.
 
-**Networking:**
+**Сеть:**
 
-- In a setup with multiple data centers, it’s ideal to have direct, dedicated optical links between them.
-- Servers must support out-of-band management (IPMI, iLO, iDRAC, etc.) to allow remote monitoring, recovery, and management.
+- В конфигурации с несколькими дата-центрами оптимально иметь прямые выделенные оптические каналы между ними.
+- Серверы должны поддерживать out-of-band management (IPMI, iLO, iDRAC и т. д.) для удаленного мониторинга, восстановления и управления.
 
-## Distributed Cluster
+## Распределенный кластер
 
-You can build a [distributed cluster]({{% ref "/docs/v1.2/operations/stretched/" %}}) with Cozystack.
+С помощью Cozystack можно построить [распределенный кластер]({{% ref "/docs/v1.2/operations/stretched/" %}}).
 
-**Networking:**
+**Сеть:**
 
-- Distributed cluster requires both a fast and reliable network, and it **must** have low RTT (Round Trip Time), as
-  Kubernetes is not designed to operate efficiently over high-latency networks.
+- Для распределенного кластера требуется быстрая и надежная сеть, и у нее **обязательно** должен быть низкий RTT (Round Trip Time), так как
+  Kubernetes не рассчитан на эффективную работу в сетях с высокой задержкой.
 
-  Data centers in the same city typically have less than 1 ms latency, which is ideal.
-  The *maximum acceptable* RTT is 10 ms.
-  Running Kubernetes or replicated storage over a network with RTT above 20 ms is strongly discouraged.
-  To measure actual RTT, you can use the `ping` command.
+  Дата-центры в пределах одного города обычно имеют задержку менее 1 мс, что является идеальным вариантом.
+  *Максимально допустимый* RTT — 10 мс.
+  Запуск Kubernetes или реплицированного хранилища в сети с RTT выше 20 мс настоятельно не рекомендуется.
+  Для измерения фактического RTT можно использовать команду `ping`.
 
-- It's also recommended to have at least 2–3 nodes per data center in a distributed cluster.
-  This ensures that the cluster would be able to survive one data center loss without major disruption.
+- Также рекомендуется иметь как минимум 2–3 узла на дата-центр в распределенном кластере.
+  Это гарантирует, что кластер сможет пережить потерю одного дата-центра без серьезных нарушений работы.
 
-- If it's hard to keep a single address space between data centers, instead of using some external VPN,
-  you can enable **KubeSpan**, a Talos Linux feature that creates a WireGuard-backed full-mesh VPN between nodes.
+- Если сложно поддерживать единое адресное пространство между дата-центрами, вместо внешнего VPN
+  можно включить **KubeSpan** — функцию Talos Linux, которая создает full-mesh VPN между узлами на базе WireGuard.
 
-## Highly Available Applications
+## Высокодоступные приложения
 
-Achieving high availability adds to the basic production environment requirements.
+Обеспечение высокой доступности добавляет требования к базовой production-среде.
 
-**Networking:**
+**Сеть:**
 
-- It is recommended to have multiple 10 Gbps (or faster) network cards.
-  You can separate storage and application traffic by assigning them to different network interfaces.
+- Рекомендуется иметь несколько сетевых карт 10 Гбит/с или быстрее.
+  Трафик хранилища и приложений можно разделить, назначив их разным сетевым интерфейсам.
 
-- Expect a significant amount of horizontal, inter-node traffic inside clusters.
-  It is usually caused by multiple replicas of services and databases deployed across different nodes exchanging data.
-  Also, virtual machines with live migration require replicated volumes, which further increases the amount of traffic.
+- Ожидайте значительный объем горизонтального межузлового трафика внутри кластеров.
+  Обычно он возникает из-за обмена данными между несколькими репликами сервисов и баз данных, развернутыми на разных узлах.
+  Кроме того, виртуальные машины с live migration требуют реплицированных томов, что дополнительно увеличивает объем трафика.
 
-## System Resource Planning
+## Планирование системных ресурсов
 
-For detailed recommendations on system resource allocation (CPU and memory) per node, based on cluster scale and number of tenants, refer to [System Resource Planning Recommendations]({{% ref "/docs/v1.2/install/resource-planning" %}}).
+Подробные рекомендации по выделению системных ресурсов (CPU и памяти) на узел с учетом масштаба кластера и количества tenants см. в разделе [Рекомендации по планированию системных ресурсов]({{% ref "/docs/v1.2/install/resource-planning" %}}).

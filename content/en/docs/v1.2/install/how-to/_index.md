@@ -1,6 +1,6 @@
 ---
-title: "Guides for Specific Cases in Cozystack Deployment"
-linkTitle: "How-Tos"
+title: "Руководства для особых случаев развертывания Cozystack"
+linkTitle: "Практические руководства"
 description: ""
 weight: 50
 ---

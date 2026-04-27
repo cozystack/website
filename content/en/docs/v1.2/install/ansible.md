@@ -1,23 +1,23 @@
 ---
-title: "Automated Installation with Ansible"
+title: "Автоматизированная установка с Ansible"
 linkTitle: "Ansible"
-description: "Deploy Cozystack on generic Kubernetes using the cozystack.installer Ansible collection"
+description: "Развертывание Cozystack на generic Kubernetes с помощью Ansible collection cozystack.installer"
 weight: 45
 ---
 
-The [`cozystack.installer`](https://github.com/cozystack/ansible-cozystack) Ansible collection automates the full deployment pipeline: OS preparation, k3s cluster bootstrap, and Cozystack installation. It is suited for deploying Cozystack on bare-metal servers or VMs running a standard Linux distribution.
+Ansible collection [`cozystack.installer`](https://github.com/cozystack/ansible-cozystack) автоматизирует весь pipeline развертывания: подготовку ОС, bootstrap кластера k3s и установку Cozystack. Она подходит для развертывания Cozystack на bare-metal серверах или ВМ со стандартным дистрибутивом Linux.
 
-## When to Use Ansible
+## Когда использовать Ansible
 
-Consider this approach when:
+Рассмотрите этот подход, если:
 
-- You want a fully automated, repeatable deployment from bare OS to a running Cozystack
-- You are deploying on generic Linux (Ubuntu, Debian, RHEL, Rocky, openSUSE) rather than Talos Linux
-- You want to manage multiple nodes with a single inventory file
+- Вам нужно полностью автоматизированное, повторяемое развертывание от чистой ОС до работающего Cozystack
+- Вы развертываете платформу на generic Linux (Ubuntu, Debian, RHEL, Rocky, openSUSE), а не на Talos Linux
+- Вы хотите управлять несколькими узлами через один inventory-файл
 
-For manual installation steps without Ansible, see the [Generic Kubernetes]({{% ref "/docs/v1.2/install/kubernetes/generic" %}}) guide.
+Шаги ручной установки без Ansible см. в руководстве [Generic Kubernetes]({{% ref "/docs/v1.2/install/kubernetes/generic" %}}).
 
-## Prerequisites
+## Предварительные требования
 
 ### Controller Machine
 
@@ -26,20 +26,20 @@ For manual installation steps without Ansible, see the [Generic Kubernetes]({{% 
 
 ### Target Nodes
 
-- **Operating System**: Ubuntu/Debian, RHEL 8+/CentOS Stream 8+/Rocky/Alma, or openSUSE/SLE
-- **Architecture**: amd64 or arm64
-- **SSH access** with passwordless sudo
-- See [hardware requirements]({{% ref "/docs/v1.2/install/hardware-requirements" %}}) for CPU, RAM, and disk sizing
+- **Операционная система**: Ubuntu/Debian, RHEL 8+/CentOS Stream 8+/Rocky/Alma или openSUSE/SLE
+- **Архитектура**: amd64 или arm64
+- **SSH-доступ** с passwordless sudo
+- Требования к CPU, RAM и дискам см. в [требованиях к оборудованию]({{% ref "/docs/v1.2/install/hardware-requirements" %}})
 
-## Installation
+## Установка
 
-### 1. Install the Ansible Collection
+### 1. Установка Ansible Collection
 
 ```bash
 ansible-galaxy collection install git+https://github.com/cozystack/ansible-cozystack.git
 ```
 
-Install required dependency collections. The `requirements.yml` file is not included in the packaged collection, so download it from the repository:
+Установите необходимые dependency collections. Файл `requirements.yml` не включен в packaged collection, поэтому скачайте его из репозитория:
 
 ```bash
 curl --silent --location --output /tmp/requirements.yml \
@@ -47,14 +47,14 @@ curl --silent --location --output /tmp/requirements.yml \
 ansible-galaxy collection install --requirements-file /tmp/requirements.yml
 ```
 
-This installs the following dependencies:
+Это установит следующие зависимости:
 
-- `ansible.posix`, `community.general`, `kubernetes.core` — from Ansible Galaxy
-- [`k3s.orchestration`](https://github.com/k3s-io/k3s-ansible) — k3s deployment collection, installed from Git
+- `ansible.posix`, `community.general`, `kubernetes.core` — из Ansible Galaxy
+- [`k3s.orchestration`](https://github.com/k3s-io/k3s-ansible) — collection для развертывания k3s, устанавливается из Git
 
-### 2. Create an Inventory
+### 2. Создание Inventory
 
-Create an `inventory.yml` file. The **internal (private) IP** of each node must be used as the host key, because KubeOVN validates host IPs through `NODE_IPS`. The public IP (if different) goes in `ansible_host`.
+Создайте файл `inventory.yml`. **Внутренний (private) IP** каждого узла должен использоваться как host key, потому что KubeOVN проверяет IP хостов через `NODE_IPS`. Public IP, если он отличается, указывается в `ansible_host`.
 
 ```yaml
 cluster:
@@ -74,43 +74,43 @@ cluster:
     ansible_port: 22
     ansible_user: ubuntu
 
-    # k3s settings — check https://github.com/k3s-io/k3s/releases for available versions
+    # настройки k3s — доступные версии см. на https://github.com/k3s-io/k3s/releases
     k3s_version: v1.35.0+k3s3
-    token: "CHANGE_ME"  # REPLACE with a strong random secret
+    token: "CHANGE_ME"  # ЗАМЕНИТЕ на надежный случайный secret
     api_endpoint: "10.0.0.10"
     cluster_context: my-cluster
 
-    # Cozystack settings
+    # настройки Cozystack
     cozystack_api_server_host: "10.0.0.10"
     cozystack_root_host: "cozy.example.com"
     cozystack_platform_variant: "isp-full-generic"
-    # cozystack_k3s_extra_args: "--tls-san=203.0.113.10"  # add public IP if nodes are behind NAT
+    # cozystack_k3s_extra_args: "--tls-san=203.0.113.10"  # добавьте public IP, если узлы находятся за NAT
 ```
 
 {{% alert color="warning" %}}
-**Replace `token` with a strong random secret.** This token is used for k3s node joining and grants full cluster access. Generate one with `openssl rand -hex 32`.
+**Замените `token` на надежный случайный secret.** Этот token используется для подключения узлов k3s и дает полный доступ к кластеру. Сгенерируйте его командой `openssl rand -hex 32`.
 {{% /alert %}}
 
 {{% alert color="warning" %}}
-**Always pin `cozystack_chart_version` explicitly.** The collection ships with a default version that may not match the release you intend to deploy. Set it in your inventory to avoid unexpected upgrades:
+**Всегда явно закрепляйте `cozystack_chart_version`.** Collection поставляется с версией по умолчанию, которая может не совпадать с релизом, который вы хотите развернуть. Укажите ее в inventory, чтобы избежать неожиданных обновлений:
 
 ```yaml
 cozystack_chart_version: "1.0.0-rc.2"
 ```
 
-Check [Cozystack releases](https://github.com/cozystack/cozystack/releases) for available versions.
+Доступные версии см. в [релизах Cozystack](https://github.com/cozystack/cozystack/releases).
 {{% /alert %}}
 
-### 3. Create a Playbook
+### 3. Создание Playbook
 
-Create a `site.yml` file that chains OS preparation, k3s deployment, and Cozystack installation.
+Создайте файл `site.yml`, который последовательно запускает подготовку ОС, развертывание k3s и установку Cozystack.
 
-The collection repository includes example prepare playbooks for each supported OS family in the [`examples/`](https://github.com/cozystack/ansible-cozystack/tree/main/examples) directory. Copy the one matching your target OS into your project directory, then reference it as a local file:
+Репозиторий collection содержит примеры prepare playbooks для каждого поддерживаемого семейства ОС в каталоге [`examples/`](https://github.com/cozystack/ansible-cozystack/tree/main/examples). Скопируйте подходящий для вашей целевой ОС файл в каталог проекта, затем подключите его как локальный файл:
 
 {{< tabs name="prepare_playbook" >}}
 {{% tab name="Ubuntu / Debian" %}}
 
-Copy `prepare-ubuntu.yml` from [examples/ubuntu/](https://github.com/cozystack/ansible-cozystack/tree/main/examples/ubuntu), then create `site.yml`:
+Скопируйте `prepare-ubuntu.yml` из [examples/ubuntu/](https://github.com/cozystack/ansible-cozystack/tree/main/examples/ubuntu), затем создайте `site.yml`:
 
 ```yaml
 - name: Prepare nodes
@@ -126,7 +126,7 @@ Copy `prepare-ubuntu.yml` from [examples/ubuntu/](https://github.com/cozystack/a
 {{% /tab %}}
 {{% tab name="RHEL / Rocky / Alma" %}}
 
-Copy `prepare-rhel.yml` from [examples/rhel/](https://github.com/cozystack/ansible-cozystack/tree/main/examples/rhel), then create `site.yml`:
+Скопируйте `prepare-rhel.yml` из [examples/rhel/](https://github.com/cozystack/ansible-cozystack/tree/main/examples/rhel), затем создайте `site.yml`:
 
 ```yaml
 - name: Prepare nodes
@@ -142,7 +142,7 @@ Copy `prepare-rhel.yml` from [examples/rhel/](https://github.com/cozystack/ansib
 {{% /tab %}}
 {{% tab name="openSUSE / SLE" %}}
 
-Copy `prepare-suse.yml` from [examples/suse/](https://github.com/cozystack/ansible-cozystack/tree/main/examples/suse), then create `site.yml`:
+Скопируйте `prepare-suse.yml` из [examples/suse/](https://github.com/cozystack/ansible-cozystack/tree/main/examples/suse), затем создайте `site.yml`:
 
 ```yaml
 - name: Prepare nodes
@@ -158,79 +158,79 @@ Copy `prepare-suse.yml` from [examples/suse/](https://github.com/cozystack/ansib
 {{% /tab %}}
 {{< /tabs >}}
 
-### 4. Run the Playbook
+### 4. Запуск Playbook
 
 ```bash
 ansible-playbook --inventory inventory.yml site.yml
 ```
 
-The playbook performs the following steps automatically:
+Playbook автоматически выполняет следующие шаги:
 
-1. **Prepare nodes** — installs required packages (`nfs-common`, `open-iscsi`, `multipath-tools`), configures sysctl, enables storage services
-2. **Deploy k3s** — bootstraps a k3s cluster with Cozystack-compatible settings (disables built-in Traefik, ServiceLB, kube-proxy, Flannel; sets `cluster-domain=cozy.local`)
-3. **Install Cozystack** — installs Helm and the helm-diff plugin (used for idempotent upgrades), deploys the `cozy-installer` chart, waits for the operator and CRDs, then creates the Platform Package
+1. **Prepare nodes** — устанавливает необходимые пакеты (`nfs-common`, `open-iscsi`, `multipath-tools`), настраивает sysctl, включает storage services
+2. **Deploy k3s** — выполняет bootstrap кластера k3s с настройками, совместимыми с Cozystack (отключает встроенные Traefik, ServiceLB, kube-proxy, Flannel; задает `cluster-domain=cozy.local`)
+3. **Install Cozystack** — устанавливает Helm и plugin helm-diff (используется для идемпотентных обновлений), развертывает chart `cozy-installer`, ожидает operator и CRD, затем создает Platform Package
 
-## Configuration Reference
+## Справочник конфигурации
 
-### Core Variables
+### Основные переменные
 
-| Variable | Default | Description |
+| Переменная | По умолчанию | Описание |
 | --- | --- | --- |
-| `cozystack_api_server_host` | *(required)* | Internal IP of the control-plane node. |
-| `cozystack_chart_version` | `1.0.0-rc.1` | Version of the Cozystack Helm chart. **Pin this explicitly.** |
+| `cozystack_api_server_host` | *(обязательно)* | Внутренний IP узла control plane. |
+| `cozystack_chart_version` | `1.0.0-rc.1` | Версия Helm chart Cozystack. **Закрепляйте явно.** |
 | `cozystack_platform_variant` | `isp-full-generic` | Platform variant: `default`, `isp-full`, `isp-hosted`, `isp-full-generic`. |
-| `cozystack_root_host` | `""` | Domain for Cozystack services. Leave empty to skip publishing configuration. |
+| `cozystack_root_host` | `""` | Домен для сервисов Cozystack. Оставьте пустым, чтобы пропустить publishing configuration. |
 
 ### Networking
 
-| Variable | Default | Description |
+| Переменная | По умолчанию | Описание |
 | --- | --- | --- |
-| `cozystack_pod_cidr` | `10.42.0.0/16` | Pod CIDR range. |
-| `cozystack_pod_gateway` | `10.42.0.1` | Pod network gateway. |
-| `cozystack_svc_cidr` | `10.43.0.0/16` | Service CIDR range. |
-| `cozystack_join_cidr` | `100.64.0.0/16` | Join CIDR for inter-node communication. |
-| `cozystack_api_server_port` | `6443` | Kubernetes API server port. |
+| `cozystack_pod_cidr` | `10.42.0.0/16` | Диапазон Pod CIDR. |
+| `cozystack_pod_gateway` | `10.42.0.1` | Gateway pod-сети. |
+| `cozystack_svc_cidr` | `10.43.0.0/16` | Диапазон Service CIDR. |
+| `cozystack_join_cidr` | `100.64.0.0/16` | Join CIDR для межузлового взаимодействия. |
+| `cozystack_api_server_port` | `6443` | Порт Kubernetes API server. |
 
 ### Advanced
 
-| Variable | Default | Description |
+| Переменная | По умолчанию | Описание |
 | --- | --- | --- |
-| `cozystack_chart_ref` | `oci://ghcr.io/cozystack/cozystack/cozy-installer` | OCI reference for the Helm chart. |
+| `cozystack_chart_ref` | `oci://ghcr.io/cozystack/cozystack/cozy-installer` | OCI reference для Helm chart. |
 | `cozystack_operator_variant` | `generic` | Operator variant: `generic`, `talos`, `hosted`. |
-| `cozystack_namespace` | `cozy-system` | Namespace for Cozystack operator and resources. |
-| `cozystack_release_name` | `cozy-installer` | Helm release name. |
-| `cozystack_release_namespace` | `kube-system` | Namespace where Helm release secret is stored (not the operator namespace). |
-| `cozystack_kubeconfig` | `/etc/rancher/k3s/k3s.yaml` | Path to kubeconfig on the target node. |
-| `cozystack_create_platform_package` | `true` | Whether to create the Platform Package after chart installation. |
-| `cozystack_helm_version` | `3.17.3` | Helm version to install on target nodes. |
-| `cozystack_helm_binary` | `/usr/local/bin/helm` | Path to the Helm binary on target nodes. |
-| `cozystack_helm_diff_version` | `3.12.5` | Version of the helm-diff plugin. |
-| `cozystack_operator_wait_timeout` | `300` | Timeout in seconds for operator readiness. |
+| `cozystack_namespace` | `cozy-system` | Namespace для Cozystack operator и ресурсов. |
+| `cozystack_release_name` | `cozy-installer` | Имя Helm release. |
+| `cozystack_release_namespace` | `kube-system` | Namespace, где хранится secret Helm release (не namespace operator). |
+| `cozystack_kubeconfig` | `/etc/rancher/k3s/k3s.yaml` | Путь к kubeconfig на целевом узле. |
+| `cozystack_create_platform_package` | `true` | Создавать ли Platform Package после установки chart. |
+| `cozystack_helm_version` | `3.17.3` | Версия Helm для установки на целевые узлы. |
+| `cozystack_helm_binary` | `/usr/local/bin/helm` | Путь к бинарному файлу Helm на целевых узлах. |
+| `cozystack_helm_diff_version` | `3.12.5` | Версия plugin helm-diff. |
+| `cozystack_operator_wait_timeout` | `300` | Timeout в секундах для готовности operator. |
 
-### Prepare Playbook Variables
+### Переменные Prepare Playbook
 
-The example prepare playbooks (copied from the `examples/` directory) support additional variables:
+Примерные prepare playbooks (скопированные из каталога `examples/`) поддерживают дополнительные переменные:
 
-| Variable | Default | Description |
+| Переменная | По умолчанию | Описание |
 | --- | --- | --- |
-| `cozystack_flush_iptables` | `false` | Flush iptables INPUT chain before installation. Useful on cloud providers with restrictive default rules. |
-| `cozystack_k3s_extra_args` | `""` | Extra arguments passed to k3s server (e.g., `--tls-san=<PUBLIC_IP>` for nodes behind NAT). |
+| `cozystack_flush_iptables` | `false` | Очистить chain INPUT в iptables перед установкой. Полезно у облачных провайдеров со строгими правилами по умолчанию. |
+| `cozystack_k3s_extra_args` | `""` | Дополнительные аргументы для k3s server (например, `--tls-san=<PUBLIC_IP>` для узлов за NAT). |
 
-## Verification
+## Проверка
 
-After the playbook completes, verify the deployment from the first server node:
+После завершения playbook проверьте развертывание с первого server-узла:
 
 ```bash
-# Check operator
+# Проверить operator
 kubectl get deployment cozystack-operator --namespace cozy-system
 
-# Check Platform Package
+# Проверить Platform Package
 kubectl get packages.cozystack.io cozystack.cozystack-platform
 
-# Check all pods
+# Проверить все pods
 kubectl get pods --all-namespaces
 ```
 
-## Idempotency
+## Идемпотентность
 
-The playbook is idempotent — running it again will not re-apply resources that haven't changed. The Platform Package is only applied when a diff is detected via `kubectl diff`.
+Playbook идемпотентен: повторный запуск не будет повторно применять ресурсы, которые не изменились. Platform Package применяется только при обнаружении diff через `kubectl diff`.

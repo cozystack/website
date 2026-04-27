@@ -1,25 +1,25 @@
 ---
-title: "How to configure network bonding (LACP)"
-linkTitle: "Configure bonding (LACP)"
-description: "How to configure LACP (802.3ad) network bonding for link aggregation and redundancy"
+title: "Как настроить network bonding (LACP)"
+linkTitle: "Настройка bonding (LACP)"
+description: "Как настроить network bonding LACP (802.3ad) для агрегации каналов и резервирования"
 weight: 120
 ---
 
-Network bonding allows you to combine multiple physical network interfaces into a single logical interface.
-This provides increased bandwidth and link redundancy.
+Network bonding позволяет объединить несколько физических сетевых интерфейсов в один логический интерфейс.
+Это увеличивает пропускную способность и обеспечивает резервирование каналов.
 
-LACP (Link Aggregation Control Protocol, IEEE 802.3ad) is the most common bonding mode,
-which dynamically negotiates link aggregation with the network switch.
+LACP (Link Aggregation Control Protocol, IEEE 802.3ad) — самый распространенный режим bonding,
+который динамически согласует агрегацию каналов с сетевым коммутатором.
 
 {{% alert color="warning" %}}
-LACP requires configuration on both the server and the network switch.
-Make sure your switch has a corresponding LACP port-channel configured for the server's ports.
+LACP требует настройки и на сервере, и на сетевом коммутаторе.
+Убедитесь, что на коммутаторе настроен соответствующий LACP port-channel для портов сервера.
 {{% /alert %}}
 
-## Identify network interfaces
+## Определение сетевых интерфейсов
 
-After running `talm template`, the generated node configuration file will contain
-a comment block with discovered network interfaces:
+После выполнения `talm template` сгенерированный конфигурационный файл узла будет содержать
+блок комментариев с обнаруженными сетевыми интерфейсами:
 
 ```yaml
 machine:
@@ -51,13 +51,13 @@ machine:
     #   product: NetXtreme II BCM57810 10 Gigabit Ethernet
 ```
 
-Choose the interfaces you want to bond. Typically these are ports of the same speed
-connected to the same switch or switch stack. Note the `busPath` values — you will need them.
+Выберите интерфейсы, которые хотите объединить в bond. Обычно это порты одной скорости,
+подключенные к одному коммутатору или стеку коммутаторов. Запишите значения `busPath` — они понадобятся далее.
 
-## Configure bonding
+## Настройка bonding
 
-Edit the generated node configuration file (e.g. `nodes/node1.yaml`) and replace the default
-`machine.network.interfaces` section with a bond configuration:
+Отредактируйте сгенерированный конфигурационный файл узла (например, `nodes/node1.yaml`) и замените стандартный
+раздел `machine.network.interfaces` на конфигурацию bond:
 
 ```yaml
 machine:
@@ -83,22 +83,22 @@ machine:
             gateway: 192.168.100.1
 ```
 
-### Bond parameters explained
+### Описание параметров bond
 
-| Parameter | Value | Description |
+| Параметр | Значение | Описание |
 | --- | --- | --- |
-| `mode` | `802.3ad` | LACP — dynamic link aggregation with switch negotiation |
-| `adSelect` | `bandwidth` | Selects the active aggregator by highest total bandwidth |
-| `miimon` | `100` | Link monitoring interval in milliseconds |
-| `updelay` | `200` | Delay (ms) before a recovered link becomes active |
-| `downdelay` | `200` | Delay (ms) before a failed link is declared down |
-| `minLinks` | `1` | Minimum number of active links to keep the bond up |
-| `xmitHashPolicy` | `encap3+4` | Hash by IP and TCP/UDP port for load distribution across links |
+| `mode` | `802.3ad` | LACP — динамическая агрегация каналов с согласованием на коммутаторе |
+| `adSelect` | `bandwidth` | Выбирает активный агрегатор по наибольшей суммарной пропускной способности |
+| `miimon` | `100` | Интервал мониторинга канала в миллисекундах |
+| `updelay` | `200` | Задержка (мс) перед переводом восстановленного канала в активное состояние |
+| `downdelay` | `200` | Задержка (мс) перед объявлением отказавшего канала отключенным |
+| `minLinks` | `1` | Минимальное количество активных каналов, при котором bond остается поднятым |
+| `xmitHashPolicy` | `encap3+4` | Хеширование по IP и TCP/UDP-порту для распределения нагрузки между каналами |
 
-### Selecting interfaces
+### Выбор интерфейсов
 
-The recommended way to select bond members is by PCI bus path using `deviceSelectors`.
-This is more reliable than interface names, which may change across reboots:
+Рекомендуемый способ выбора участников bond — по пути PCI-шины с помощью `deviceSelectors`.
+Это надежнее, чем имена интерфейсов, которые могут меняться между перезагрузками:
 
 ```yaml
 bond:
@@ -107,7 +107,7 @@ bond:
     - busPath: "0000:04:00.1"
 ```
 
-Alternatively, you can select by interface name:
+Также можно выбирать по имени интерфейса:
 
 ```yaml
 bond:
@@ -116,7 +116,7 @@ bond:
     - eth1
 ```
 
-Or by hardware address:
+Или по аппаратному адресу:
 
 ```yaml
 bond:
@@ -125,10 +125,10 @@ bond:
     - hardwareAddr: "aa:bb:cc:dd:ee:f3"
 ```
 
-## VLAN on top of bond
+## VLAN поверх bond
 
-You can create VLAN interfaces on top of the bond.
-This is useful for separating traffic (e.g. management, storage, tenant networks):
+Поверх bond можно создавать VLAN-интерфейсы.
+Это удобно для разделения трафика (например, management, storage, tenant-сетей):
 
 ```yaml
 machine:
@@ -158,10 +158,10 @@ machine:
               - 10.0.0.11/24
 ```
 
-## Floating IP (VIP) with bonding
+## Floating IP (VIP) с bonding
 
-For control plane nodes, place the `vip` section on the interface (or VLAN)
-that is used for the cluster API endpoint:
+Для узлов control plane разместите раздел `vip` на интерфейсе (или VLAN),
+который используется для API endpoint кластера:
 
 ```yaml
 machine:
@@ -189,11 +189,11 @@ machine:
           ip: 192.168.100.10
 ```
 
-Make sure the floating IP matches the one configured in `values.yaml`.
+Убедитесь, что floating IP совпадает с адресом, настроенным в `values.yaml`.
 
-## Apply configuration
+## Применение конфигурации
 
-After editing all node files, apply the configuration as usual:
+После редактирования всех файлов узлов примените конфигурацию обычным способом:
 
 ```bash
 talm apply -f nodes/node1.yaml -i
@@ -202,6 +202,6 @@ talm apply -f nodes/node3.yaml -i
 ```
 
 {{% alert color="info" %}}
-The `-i` (`--insecure`) flag is only needed for the first apply, when nodes are in maintenance mode.
-For already initialized nodes, omit the flag: `talm apply -f nodes/node1.yaml`.
+Флаг `-i` (`--insecure`) нужен только при первом применении, когда узлы находятся в maintenance mode.
+Для уже инициализированных узлов не указывайте этот флаг: `talm apply -f nodes/node1.yaml`.
 {{% /alert %}}

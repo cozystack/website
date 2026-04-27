@@ -1,21 +1,21 @@
 ---
-title: "How to enable Hugepages"
-linkTitle: "Enable Hugepages"
-description: "How to enable Hugepages"
+title: "Как включить Hugepages"
+linkTitle: "Включение Hugepages"
+description: "Как включить Hugepages"
 weight: 130
 ---
 
-Enabling Hugepages for Cozystack can be done both on initial installation and at any time after it.
-Applying this configuration after installation will require a full node reboot.
+Hugepages для Cozystack можно включить как во время первоначальной установки, так и в любой момент после нее.
+Применение этой конфигурации после установки потребует полной перезагрузки узла.
 
-Read more in the Linux Kernel documentation: [HugeTLB Pages](https://docs.kernel.org/admin-guide/mm/hugetlbpage.html).
+Подробнее см. в документации ядра Linux: [HugeTLB Pages](https://docs.kernel.org/admin-guide/mm/hugetlbpage.html).
 
 
-## Using Talm
+## Использование Talm
 
-Requires Talm `v0.16.0` or later.
+Требуется Talm `v0.16.0` или новее.
 
-1.  Add the following lines to `values.yaml`:
+1.  Добавьте следующие строки в `values.yaml`:
 
     ```yaml
     ...
@@ -23,23 +23,23 @@ Requires Talm `v0.16.0` or later.
     nr_hugepages: 3000
     ```
     
-    `vm.nr_hugepages` is the count of pages per 2Mi.
+    `vm.nr_hugepages` — это количество страниц на 2Mi.
 
-1.  Apply the configuration:
+1.  Примените конфигурацию:
 
     ```bash
     talm apply -f nodes/node0.yaml
     ```
 
-1.  Finally, reboot the nodes:
+1.  Затем перезагрузите узлы:
 
     ```bash
     talm -f nodes/node0.yaml reboot
     ```
 
-## Using talosctl
+## Использование talosctl
 
-1.  Add the following lines to your node template:
+1.  Добавьте следующие строки в шаблон узла:
 
     ```yaml
     machine:
@@ -47,15 +47,15 @@ Requires Talm `v0.16.0` or later.
         vm.nr_hugepages: "3000"
     ```
     
-    `vm.nr_hugepages` is the count of pages per 2Mi.
+    `vm.nr_hugepages` — это количество страниц на 2Mi.
 
-1.  Apply the configuration:
+1.  Примените конфигурацию:
 
     ```bash
     talosctl apply -f nodetemplate.yaml -n 192.168.123.11 -e 192.168.123.11
     ```
 
-1.  Reboot the nodes:
+1.  Перезагрузите узлы:
 
     ```bash
     talosctl reboot -n 192.168.123.11 -e 192.168.123.11

@@ -1,13 +1,13 @@
 ---
-title: How to Enable KubeSpan
-linkTitle: Enable KubeSpan
-description: "How to Enable KubeSpan."
+title: Как включить KubeSpan
+linkTitle: Включение KubeSpan
+description: "Как включить KubeSpan."
 weight: 120
 ---
 
-Talos Linux provides a full mesh WireGuard network for your cluster.
+Talos Linux предоставляет full-mesh сеть WireGuard для вашего кластера.
 
-To enable this functionality, you need to configure [KubeSpan](https://www.talos.dev/v1.8/talos-guides/network/kubespan/) and [Cluster Discovery](https://www.talos.dev/v1.2/kubernetes-guides/configuration/discovery/) in your Talos Linux configuration:
+Чтобы включить эту функциональность, настройте [KubeSpan](https://www.talos.dev/v1.8/talos-guides/network/kubespan/) и [Cluster Discovery](https://www.talos.dev/v1.2/kubernetes-guides/configuration/discovery/) в конфигурации Talos Linux:
 
 ```yaml
 machine:
@@ -19,9 +19,9 @@ cluster:
     enabled: true
 ```
 
-Since KubeSpan encapsulates traffic into a WireGuard tunnel, Kube-OVN should also be configured with a lower MTU value.
+Поскольку KubeSpan инкапсулирует трафик в туннель WireGuard, для Kube-OVN также нужно настроить более низкое значение MTU.
 
-To achieve this, add the following to the `networking` component of your Platform Package:
+Для этого добавьте следующее в компонент `networking` вашего Platform Package:
 
 ```yaml
 apiVersion: cozystack.io/v1alpha1

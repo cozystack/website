@@ -1,31 +1,31 @@
 ---
-title: "2. Install and Bootstrap a Kubernetes cluster"
-linkTitle: "2. Install Kubernetes"
-description: "Use Talm CLI to bootstrap a Kubernetes cluster, ready for Cozystack."
+title: "2. Установка и bootstrap кластера Kubernetes"
+linkTitle: "2. Установка Kubernetes"
+description: "Используйте Talm CLI, чтобы выполнить bootstrap кластера Kubernetes, готового к установке Cozystack."
 weight: 15
 ---
 
-## Objectives
+## Цели
 
-We start this step of the tutorial, having [three nodes with Talos Linux installed on them]({{% ref "/docs/v1.2/getting-started/install-talos" %}}).
+К началу этого шага у нас уже есть [три узла с установленным Talos Linux]({{% ref "./install-talos" %}}).
 
-As a result of this step, we will have a Kubernetes cluster installed, configured, and ready to install Cozystack.
-We will also have a `kubeconfig` for this cluster, and will have performed basic checks on the cluster.
+В результате этого шага у вас будет установленный и настроенный Kubernetes-кластер, готовый к установке Cozystack.
+Также вы получите `kubeconfig` для этого кластера и выполните базовые проверки его состояния.
 
-## Installing Kubernetes
+## Установка Kubernetes
 
-Install and bootstrap a Kubernetes cluster using [Talm]({{% ref "/docs/v1.2/install/kubernetes/talm" %}}), a declarative CLI configuration tool with ready configuration presets for Cozystack.
+Установите и выполните bootstrap кластера Kubernetes с помощью [Talm]({{% ref "/docs/v1.2/install/kubernetes/talm" %}}) — декларативного CLI-инструмента управления конфигурацией с готовыми пресетами для Cozystack.
 
 {{% alert color="info" %}}
-This part of the tutorial is being reworked.
-It will include simplified instructions for Talm installation, without all the extra options and corner cases, included in the main Talm guide.
+Этот фрагмент руководства сейчас перерабатывается.
+Здесь появятся упрощённые инструкции по установке Talm без дополнительных опций и редких пограничных случаев, которые описаны в основном руководстве по Talm.
 {{% /alert %}}
 
 
-## Next Step
+## Следующий шаг
 
-Continue the Cozystack tutorial by [installing and configuring Cozystack]({{% ref "/docs/v1.2/getting-started/install-cozystack" %}}).
+Продолжите руководство по Cozystack и [установите Cozystack]({{% ref "./install-cozystack" %}}).
 
-Extra tasks:
+Дополнительно:
 
--   Check out [github.com/cozystack/talm](https://github.com/cozystack/talm) and give it a star!
+-   Загляните в [github.com/cozystack/talm](https://github.com/cozystack/talm) и поставьте проекту звезду.

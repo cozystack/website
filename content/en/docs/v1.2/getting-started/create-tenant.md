@@ -1,86 +1,86 @@
 ---
-title: "4. Create a User Tenant and Configure Access"
-linkTitle: "4. Create User Tenant"
-description: "Create a user tenant, the foundation of RBAC in Cozystack, and get access to it via dashboard and Cozystack API."
+title: "4. Создание пользовательского tenant'а и настройка доступа"
+linkTitle: "4. Создание tenant'а"
+description: "Создайте пользовательский tenant — основу RBAC в Cozystack — и получите доступ к нему через дашборд и Cozystack API."
 weight: 40
 ---
 
-## Objectives
+## Цели
 
-At this step of the tutorial, you will create a user tenant — a space for users to deploy applications and VMs.
-You will also get tenant credentials and log in as a user with access to this tenant.
+На этом шаге вы создадите пользовательский tenant — пространство, в котором пользователи смогут развёртывать приложения и виртуальные машины.
+Вы также получите учётные данные tenant'а и войдёте как пользователь с доступом к этому tenant'у.
 
-## Prerequisites
+## Предварительные требования
 
-Before you begin:
+Перед началом:
 
 
--   Complete the previous steps of the tutorial to get 
-    a [Cozystack cluster]({{% ref "/docs/v1.2/getting-started/install-cozystack" %}}) running,
-    with storage, networking, and management dashboard configured.
+-   Завершите предыдущие шаги руководства, чтобы получить работающий
+    [кластер Cozystack]({{% ref "./install-cozystack" %}}),
+    в котором уже настроены хранилище, сеть и управляющий дашборд.
     
--   Make sure you can access the dashboard, as described in the
-    [previous step of the tutorial]({{% ref "/docs/v1.2/getting-started/install-cozystack" %}}).
+-   Убедитесь, что у вас есть доступ к дашборду, как описано на
+    [предыдущем шаге руководства]({{% ref "./install-cozystack" %}}).
     
--   If you're using OIDC, users and roles must be configured.
-    See the [OIDC guide]({{% ref "/docs/v1.2/operations/oidc" %}}) for details on how to work with the built-in OIDC server.
+-   Если вы используете OIDC, пользователи и роли уже должны быть настроены.
+    Подробности о работе со встроенным OIDC-сервером см. в [руководстве по OIDC]({{% ref "/docs/v1.2/operations/oidc" %}}).
 
-During [Kubernetes installation]({{% ref "/docs/v1.2/getting-started/install-kubernetes" %}}) for Cozystack, 
-you should have obtained the administrative `kubeconfig` file for your new cluster.
-Keep it at hand — it may be useful later for troubleshooting.
-However, for day-to-day operations, you'll want to create user-specific credentials.
-
-
-## Introduction
-
-Tenants are the isolation mechanism in Cozystack.
-They are used to separate clients, teams, or environments.
-Each tenant has its own set of applications and one or more nested Kubernetes clusters.
-Tenant users have full access to their clusters.
-Optionally, you can configure quotas for each tenant to limit resource usage and prevent overconsumption.
-
-To learn more about tenants, read the [Core Concepts]({{% ref "/docs/v1.2/guides/concepts#tenant-system" %}}) guide.
+Во время [установки Kubernetes]({{% ref "./install-kubernetes" %}}) для Cozystack
+вы должны были получить административный файл `kubeconfig` для нового кластера.
+Держите его под рукой — позже он может пригодиться для диагностики.
+Однако для повседневной работы лучше создать отдельные пользовательские учётные данные.
 
 
-## Create a Tenant
+## Введение
 
-Tenants are created using the Cozystack application named `Tenant`.
-After installation, Cozystack includes a built-in tenant called `tenant-root`.
-This root tenant is reserved for platform administrators and should only be used to create child tenants.
-Although it’s technically possible to install applications in `tenant-root`,
-doing so is **not recommended** for production environments.
+Tenant'ы — это механизм изоляции в Cozystack.
+Они используются для разделения клиентов, команд или окружений.
+У каждого tenant'а есть собственный набор приложений и один или несколько вложенных Kubernetes-кластеров.
+Пользователи tenant'а имеют полный доступ к своим кластерам.
+При необходимости вы можете настроить квоты для каждого tenant'а, чтобы ограничить потребление ресурсов и избежать перерасхода.
+
+Чтобы узнать о tenant'ах больше, прочитайте руководство [Core Concepts]({{% ref "/docs/v1.2/guides/concepts#tenant-system" %}}).
+
+
+## Создание tenant'а
+
+Tenant'ы создаются с помощью приложения Cozystack с именем `Tenant`.
+После установки в Cozystack уже существует встроенный tenant `tenant-root`.
+Этот корневой tenant зарезервирован для администраторов платформы и должен использоваться только для создания дочерних tenant'ов.
+Технически установить приложения в `tenant-root` можно,
+но для production-окружений это **не рекомендуется**.
 
 {{< tabs name="create_tenant" >}}
-{{% tab name="Using Dashboard" %}}
+{{% tab name="Через дашборд" %}}
 
-1.  Open the dashboard as a `tenant-root` user.
-1.  Ensure the current context is set to `tenant-root`.
-    Switch context and reload the page if needed.
-1.  Navigate to the **Catalog** tab.
-1.  Search for the **Tenant** application and open it.
-1.  Review the documentation, then click the **Deploy** button to proceed to the parameters page.
-1.  Fill in the tenant `name`.
-    It is the only parameter that can't be changed later.
-1.  (Optional) Fill in the domain name in `host`.
-    This domain name must already exist.
-    Ensure that the tenant user has enough control over the domain to configure DNS records.
-    If left blank, the domain will default to `<name>.<cozystack-domain>`.
-1.  Select the checkboxes to install system-level apps: `etcd`, `monitoring`, `ingress`, and `seaweedfs`.
-    Tenant users will **not** be able to install or uninstall these apps — only administrators can.
+1.  Откройте дашборд от имени пользователя `tenant-root`.
+1.  Убедитесь, что текущий контекст установлен в `tenant-root`.
+    При необходимости переключите контекст и перезагрузите страницу.
+1.  Перейдите на вкладку **Catalog**.
+1.  Найдите приложение **Tenant** и откройте его.
+1.  Ознакомьтесь с документацией, затем нажмите кнопку **Deploy**, чтобы перейти к странице параметров.
+1.  Заполните поле `name` tenant'а.
+    Это единственный параметр, который нельзя изменить позже.
+1.  (Необязательно) Заполните доменное имя в `host`.
+    Это доменное имя уже должно существовать.
+    Убедитесь, что пользователь tenant'а имеет достаточный контроль над доменом для настройки DNS-записей.
+    Если оставить поле пустым, по умолчанию будет использован домен `<name>.<cozystack-domain>`.
+1.  Отметьте флажки для установки системных приложений: `etcd`, `monitoring`, `ingress` и `seaweedfs`.
+    Пользователи tenant'а **не смогут** устанавливать или удалять эти приложения — это могут делать только администраторы.
 
-    The `etcd` option is required for nested Kubernetes.
-    Select it before installing the **Kubernetes** application in the tenant.
-    Only disable it if you're certain the tenant won’t use nested Kubernetes.
-1.  By default, no resource quotas are set.
-    This means no usage limits.
-    You can define quotas to prevent resource overuse.
-1.  Click **Deploy <version>** to install the tenant application into the root tenant.
+    Параметр `etcd` требуется для вложенного Kubernetes.
+    Выберите его до установки приложения **Kubernetes** в tenant'е.
+    Отключайте его только если уверены, что tenant не будет использовать вложенный Kubernetes.
+1.  По умолчанию ресурсные квоты не задаются.
+    Это означает отсутствие ограничений на использование ресурсов.
+    При необходимости можно определить квоты, чтобы избежать их перерасхода.
+1.  Нажмите **Deploy <version>**, чтобы установить приложение tenant'а в корневой tenant.
 
 {{% /tab %}}
 
-{{% tab name="Using kubectl" %}}
+{{% tab name="Через kubectl" %}}
 
-Create a HelmRelease manifest for the tenant. You can use a manifest created via the dashboard as a starting point:
+Создайте манифест HelmRelease для tenant'а. В качестве отправной точки можно взять манифест, созданный через дашборд:
 
 ```yaml
 apiVersion: helm.toolkit.fluxcd.io/v2
@@ -108,12 +108,12 @@ spec:
     seaweedfs: false
 ```
 
-Apply the manifest:
+Примените манифест:
 
 ```bash
-# Use the kubeconfig for the root tenant
+# Используйте kubeconfig корневого tenant'а
 export KUBECONFIG=./kubeconfig-tenant-root
-# Apply the manifest
+# Примените манифест
 kubectl -n tenant-root apply -f hr-tenant-team1.yaml
 ```
 
@@ -121,56 +121,56 @@ kubectl -n tenant-root apply -f hr-tenant-team1.yaml
 {{< /tabs >}}
 
 {{% alert color="info" %}}
-Cilium network policies in Cozystack v1.0+ always isolate sibling tenants from
-each other — there is no `isolated` field in either the Dashboard form or
-the HelmRelease values. Pods inside a tenant namespace also cannot reach
-`kube-apiserver` by default, or the tenant's own `etcd` when the tenant was
-created with `etcd: true`. To opt a pod into one of those paths, label it
-with `policy.cozystack.io/allow-to-apiserver: "true"` or
-`policy.cozystack.io/allow-to-etcd: "true"` respectively. See
-[Tenant `isolated` flag removed]({{% ref "/docs/v1.2/operations/upgrades#tenant-isolated-flag-removed" %}})
-in the upgrade notes for the full table and a worked example.
+Сетевые политики Cilium в Cozystack v1.0+ всегда изолируют соседние tenant'ы
+друг от друга — поля `isolated` больше нет ни в форме дашборда, ни
+в значениях HelmRelease. Pod'ы внутри namespace tenant'а также по умолчанию
+не могут обращаться к `kube-apiserver`, а при создании tenant'а с `etcd: true`
+ещё и к собственному `etcd`. Чтобы разрешить pod'у один из этих путей,
+добавьте ему метку `policy.cozystack.io/allow-to-apiserver: "true"` или
+`policy.cozystack.io/allow-to-etcd: "true"` соответственно. Полную таблицу и
+пример см. в примечаниях к обновлению:
+[Tenant `isolated` flag removed]({{% ref "/docs/v1.2/operations/upgrades#tenant-isolated-flag-removed" %}}).
 {{% /alert %}}
 
-You can assist tenant users with installing database applications or nested Kubernetes clusters.
-As an administrator, you can switch context in the dashboard to access any tenant.
-Tenant users, however, can only access their own tenant and any child tenants.
+Вы можете помогать пользователям tenant'ов с установкой баз данных или вложенных Kubernetes-кластеров.
+Администратор может переключать контекст в дашборде и получать доступ к любому tenant'у.
+Пользователи tenant'а, в свою очередь, могут работать только со своим tenant'ом и его дочерними tenant'ами.
 
 
-## Get Tenant Kubeconfig
+## Получение kubeconfig tenant'а
 
-Tenant users need a kubeconfig file to access their Kubernetes cluster.
-The method to retrieve it depends on whether OIDC is enabled in your Cozystack setup.
+Пользователям tenant'а нужен файл kubeconfig для доступа к своему Kubernetes-кластеру.
+Способ его получения зависит от того, включён ли OIDC в вашей установке Cozystack.
 
-### With OIDC Enabled
+### Если OIDC включён
 
-You can retrieve the kubeconfig file directly from the dashboard, as described in the
-[OIDC guide]({{% ref "/docs/v1.2/operations/oidc/enable_oidc#step-4-retrieve-kubeconfig" %}}).
+Вы можете получить kubeconfig напрямую из дашборда, как описано в
+[руководстве по OIDC]({{% ref "/docs/v1.2/operations/oidc/enable_oidc#step-4-retrieve-kubeconfig" %}}).
 
-### Without OIDC
+### Если OIDC выключен
 
-As an administrator, you'll need to retrieve a service account token from the tenant namespace.
-The secret holding the token has the same name as the tenant.
+В этом случае администратору нужно получить токен service account из namespace tenant'а.
+Секрет с токеном имеет то же имя, что и tenant.
 
-To retrieve the token for a tenant named `team1`, run:
+Чтобы получить токен для tenant'а с именем `team1`, выполните:
 
 ```bash
 kubectl -n tenant-team1 get secret tenant-team1 -o json | jq -r '.data.token | @base64d'
 ```
 
-Next, insert this token into a kubeconfig template, and save the file as `kubeconfig-tenant-<name>.yaml`.
+Затем подставьте этот токен в шаблон kubeconfig и сохраните файл под именем `kubeconfig-tenant-<name>.yaml`.
 
-Make sure to also set the default namespace to the tenant name.
-Many GUI clients will display permission errors if the namespace is not explicitly defined.
+Обязательно задайте namespace по умолчанию равным имени tenant'а.
+Многие GUI-клиенты будут показывать ошибки доступа, если namespace не указан явно.
 
-The same token can also be used by the tenant user to log into the Cozystack dashboard if OIDC is disabled.
+Тот же токен можно использовать и для входа пользователя tenant'а в дашборд Cozystack, если OIDC отключён.
 
-### Get Nested Kubernetes Kubeconfig
+### Получение kubeconfig вложенного Kubernetes
 
-In general, administrators do **not** need to retrieve kubeconfig files for nested Kubernetes clusters.
+Как правило, администраторам **не нужно** получать kubeconfig для вложенных Kubernetes-кластеров.
 
-These clusters are installed by the tenant user, within their own tenant namespace.
-Tenant users have full control over their nested Kubernetes environments.
+Такие кластеры устанавливаются самим пользователем tenant'а внутри его namespace.
+Пользователи tenant'а полностью контролируют свои вложенные Kubernetes-окружения.
 
-To access a nested Kubernetes cluster, the tenant user can download the kubeconfig file
-directly from the corresponding application's page in the dashboard.
+Чтобы получить доступ к вложенному Kubernetes-кластеру, пользователь tenant'а может скачать kubeconfig
+прямо со страницы соответствующего приложения в дашборде.
