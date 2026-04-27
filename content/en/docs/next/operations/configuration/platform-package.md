@@ -63,6 +63,7 @@ spec:
 | `publishing.exposedServices` | `[api, dashboard, vm-exportproxy, cdi-uploadproxy]` | List of services to expose. Possible values: `api`, `dashboard`, `cdi-uploadproxy`, `vm-exportproxy`. |
 | `publishing.ingressName` | `"tenant-root"` | Ingress controller to use for exposing services. |
 | `publishing.externalIPs` | `[]` | List of external IPs used for the specified ingress controller. If not specified, a LoadBalancer service is used by default. |
+| `publishing.exposure` | `"externalIPs"` | Mode for the ingress-nginx Service. `externalIPs` creates a `ClusterIP` Service with `Service.spec.externalIPs` populated from `publishing.externalIPs`. `loadBalancer` creates a `type: LoadBalancer` Service backed by a `CiliumLoadBalancerIPPool` populated with the same addresses. `Service.spec.externalIPs` is deprecated upstream in Kubernetes v1.36 ([KEP-5707][kep-5707]) — switch to `loadBalancer` before upgrading past v1.40. The chart fails fast if `loadBalancer` is set with an empty `publishing.externalIPs`. See [Gateway API → ingress-nginx Service mode]({{% ref "/docs/next/networking/gateway-api#publishingexposure--ingress-nginx-service-mode" %}}) for the full caveat list. |
 | `publishing.certificates.solver` | `"http01"` | ACME challenge solver type for default letsencrypt issuer. Possible values: `http01`, `dns01`. |
 | `publishing.certificates.issuerName` | `"letsencrypt-prod"` | `ClusterIssuer` name for TLS certificates used in system Helm releases. |
 
@@ -97,6 +98,33 @@ spec:
 | `authentication.oidc.insecureSkipVerify` | `false` | Skip TLS certificate verification for the OIDC provider. |
 | `authentication.oidc.keycloakExtraRedirectUri` | `""` | Additional redirect URI for Keycloak OIDC client. |
 | `authentication.oidc.keycloakInternalUrl` | `""` | Internal URL for backend-to-backend requests to Keycloak. When set, the dashboard's oauth2-proxy skips OIDC discovery and routes token, JWKS, userinfo, and logout requests through this URL while keeping browser redirects on the external URL. Example: `http://keycloak-http.cozy-keycloak.svc:8080/realms/cozy`. |
+
+#### Gateway
+
+Platform-wide Gateway API integration. Per-tenant opt-in is governed separately by `tenant.spec.gateway`. See the [Gateway API guide]({{% ref "/docs/next/networking/gateway-api" %}}) for the full architecture and migration path.
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `gateway.enabled` | `false` | Enable Gateway API support across the platform. When `true`, cert-manager `ClusterIssuer`s use an `http01.gatewayHTTPRoute` solver attached to the publishing tenant's Gateway, and exposed services (`dashboard`, `keycloak`, `harbor`, `bucket`, `cozystack-api`, `vm-exportproxy`, `cdi-uploadproxy`) render `HTTPRoute`/`TLSRoute` instead of `Ingress`. Materialising the actual per-tenant Gateway still requires `tenant.spec.gateway: true`. |
+| `gateway.attachedNamespaces` | (see below) | Namespaces allowed to attach `HTTPRoute` or `TLSRoute` to a tenant Gateway via the listener `allowedRoutes` whitelist (matched on the built-in `kubernetes.io/metadata.name` label). The publishing tenant's namespace is always implicitly included. Tenant namespaces (`tenant-*`) are rejected by `cozystack-gateway-attached-namespaces-policy` and by a render-time helm guard — use `tenant.spec.gateway` instead. The `default` namespace is included by default because the Kubernetes API `TLSRoute` lives next to the `kubernetes` Service in `default`. |
+
+Default `gateway.attachedNamespaces`:
+
+```yaml
+gateway:
+  attachedNamespaces:
+    - cozy-cert-manager
+    - cozy-dashboard
+    - cozy-keycloak
+    - cozy-system
+    - cozy-harbor
+    - cozy-bucket
+    - cozy-kubevirt
+    - cozy-kubevirt-cdi
+    - cozy-monitoring
+    - cozy-linstor-gui
+    - default
+```
 
 #### Scheduling
 
@@ -162,5 +190,6 @@ These fields are managed automatically by the Cozystack operator and should not 
 [overwrite-parameters]: {{% ref "/docs/next/operations/configuration/components#overwriting-component-parameters" %}}
 [Resource Management]: {{% ref "/docs/next/guides/resource-management#cpu-allocation-ratio" %}}
 [oidc]: {{% ref "/docs/next/operations/oidc" %}}
+[kep-5707]: https://github.com/kubernetes/enhancements/issues/5707
 [telemetry]: {{% ref "/docs/next/operations/configuration/telemetry" %}}
 [kube-ovn]: https://kubeovn.github.io/docs/en/guide/subnet/#join-subnet
