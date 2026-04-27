@@ -260,6 +260,25 @@ publishing:
 
 Tenants then enable `spec.gateway: true` at creation time.
 
+### `publishing.exposure` — ingress-nginx Service mode
+
+`publishing.exposure` controls how the ingress-nginx `Service` itself is provisioned. It is independent of `gateway.enabled` — Gateway API always uses the per-tenant `CiliumLoadBalancerIPPool` regardless of this flag — but a Gateway API rollout is the natural moment to flip it, so ingress-nginx (still in place for unmigrated tenants and for chart-level features that have not yet moved) and the per-tenant Gateway draw from the same Cilium-managed pool.
+
+| Value                   | Service shape                                                                  | IP source                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `externalIPs` (default) | `ClusterIP` with `Service.spec.externalIPs` set from `publishing.externalIPs`  | Operator-managed routing of those IPs to a cluster node                                              |
+| `loadBalancer`          | `type: LoadBalancer`                                                           | Cilium LB IPAM allocates from a `CiliumLoadBalancerIPPool` populated with `publishing.externalIPs`   |
+
+`Service.spec.externalIPs` is deprecated upstream in Kubernetes v1.36 ([KEP-5707](https://github.com/kubernetes/enhancements/issues/5707)). The `AllowServiceExternalIPs` feature gate is expected to default to `false` around v1.40 and the implementation removed around v1.43 — switch to `loadBalancer` before upgrading past v1.40.
+
+Caveats for `loadBalancer` mode:
+
+- `publishing.externalIPs` must contain at least one non-empty address; otherwise the chart render fails fast (a LoadBalancer Service without a pool would sit in `<pending>` forever).
+- The ingress-nginx Service is created with `externalTrafficPolicy: Local` to preserve the client source IP. The external IP must therefore be routed to a node that runs an ingress-nginx pod (floating IP, keepalived, upstream router, or `podAntiAffinity` to constrain pod placement).
+- Cilium does not announce the IP on its own unless L2 announcements or BGP are enabled in Cilium values (disabled by default in Cozystack). This mode assumes the operator already routes `publishing.externalIPs` to a cluster node.
+- Switching this value on a running cluster recreates the ingress-nginx Service (the kind changes between `ClusterIP` and `LoadBalancer`, and the `HelmRelease` has `upgrade.force: true`). Expect a brief ingress traffic interruption.
+- Scope: this setting controls only the ingress-nginx Service. Other components that write `Service.spec.externalIPs` directly (for example `packages/apps/vpn/templates/service.yaml`) are unaffected and must be migrated separately before the `AllowServiceExternalIPs` gate flips off.
+
 ### For an existing cluster
 
 1. Flip `gateway.enabled: true` on the platform Package. This rerenders cert-manager ClusterIssuers and the exposed-service templates. Existing `Ingress` objects for dashboard / keycloak / cozystack-api (Kubernetes API) / vm-exportproxy / cdi-uploadproxy are deleted by Flux as they are replaced by `HTTPRoute` / `TLSRoute`.
