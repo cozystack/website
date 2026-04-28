@@ -1,65 +1,65 @@
 ---
-linkTitle: Developer Guide
-title: Cozystack Internals and Developer Guide
-description: Cozystack Internals and Development
+linkTitle: Руководство по разработке
+title: Cozystack Руководство по разработке
+description: Cozystack Руководство по разработке
 weight: 100
 aliases:
   - /docs/v1.2/development/development
 ---
 
-## How it works
+## Как это работает
 
-Cozystack is an operator-driven platform. The bootstrap and ongoing management are
-handled by a set of controllers that run inside the cluster. The high-level flow is:
+Cozystack — платформа на основе операторов. Начальная загрузка и текущее управление
+осуществляются набором контроллеров, работающих внутри кластера. Высокоуровневый поток выглядит так:
 
-1. **Installer chart** (`packages/core/installer`) is applied via `helm install`.
-   It deploys the `cozystack-operator` Deployment into the `cozy-system` namespace.
+1. **Инсталлятор чарта** (`packages/core/installer`) применяется через `helm install`.
+   Он разворачивает Deployment `cozystack-operator` в пространстве имён `cozy-system`.
 
-2. **cozystack-operator** starts and performs one-time bootstrap:
-   - Installs Cozystack CRDs (`Package`, `PackageSource`) from embedded manifests
+2. **cozystack-operator** запускается и выполняет однократную начальную загрузку:
+   - Устанавливает CRD Cozystack (`Package`, `PackageSource`) из встроенных манифестов
      (`internal/crdinstall`).
-   - Installs Flux components (source-controller, helm-controller,
-     source-watcher) from embedded manifests (`internal/fluxinstall`).
-   - Creates the **initial OCIRepository** (`cozystack-platform`) from the
-     `platformSourceUrl` and `platformSourceRef` values configured in the installer.
-   - Creates a `PackageSource` that references the initial OCIRepository.
+   - Устанавливает компоненты Flux (source-controller, helm-controller,
+     source-watcher) из встроенных манифестов (`internal/fluxinstall`).
+   - Создаёт **начальный OCIRepository** (`cozystack-platform`) из значений
+     `platformSourceUrl` и `platformSourceRef`, заданных в инсталляторе.
+   - Создаёт `PackageSource`, ссылающийся на начальный OCIRepository.
 
-3. **Reconciliation loop** takes over. The operator watches `PackageSource` and
-   `Package` CRDs and translates them into Flux `HelmRelease` objects. Flux
-   then installs and manages the actual Helm charts.
+3. **Цикл согласования** берёт управление. Оператор следит за CRD `PackageSource` и
+   `Package` и преобразует их в объекты Flux `HelmRelease`. Flux
+   затем устанавливает реальные Helm-чарты и управляет ими.
 
-4. **Platform chart** (`packages/core/platform`) is deployed as a regular
-   Package. It reads the cluster configuration from the
+4. **Platform chart** (`packages/core/platform`) разворачивается как обычный
+   Package. Он читает конфигурацию кластера из ресурса
    `cozystack.cozystack-platform`
    [Package]({{% ref "/docs/v1.2/operations/configuration/platform-package" %}})
-   resource and templates bundle manifests that define which system components
-   should be installed.
-   
-   The platform chart also creates the **secondary OCIRepository** (`cozystack-packages`)
-   by copying the spec from the initial OCIRepository. All PackageSources reference
-   this secondary repository. During upgrades, the platform chart runs migrations
-   as `pre-upgrade` hooks before creating or updating component HelmReleases.
+   и создаёт шаблоны манифестов пакетов, определяющих, какие системные компоненты
+   должны быть установлены.
 
-5. **FluxCD** is the execution engine — it reconciles `HelmRelease` objects
-   created by the operator, pulling chart artifacts from `ExternalArtifact`
-   resources and applying them to the cluster.
+   Platform chart также создаёт **вторичный OCIRepository** (`cozystack-packages`),
+   копируя спецификацию из начального OCIRepository. Все PackageSource ссылаются
+   на этот вторичный репозиторий. При обновлениях platform chart выполняет миграции
+   как `pre-upgrade` хуки перед созданием или обновлением HelmRelease компонентов.
 
-For the full reconciliation chain (PackageSource → ArtifactGenerator → ExternalArtifact → Package → HelmRelease → Pods), dependency resolution, update and rollback flows, and the cozypkg CLI, see [Key Concepts]({{% ref "/docs/v1.2/guides/concepts" %}}).
+5. **FluxCD** — движок выполнения, он согласует объекты `HelmRelease`,
+   созданные оператором, загружает артефакты чартов из ресурсов `ExternalArtifact`
+   и применяет их к кластеру.
 
-### OCIRepositories and Migration Flow
+Полную цепочку согласования (PackageSource → ArtifactGenerator → ExternalArtifact → Package → HelmRelease → Pods), разрешение зависимостей, потоки обновления и отката, а также CLI cozypkg см. в разделе [Ключевые концепции]({{% ref "/docs/v1.2/guides/concepts" %}}).
 
-Cozystack uses two OCIRepository resources to manage platform updates:
+### OCIRepository и поток миграции
 
-| OCIRepository | Created By | References |
+Cozystack использует два ресурса OCIRepository для управления обновлениями платформы:
+
+| OCIRepository | Создаётся | Ссылается на |
 |---|---|---|
-| `cozystack-platform` | cozystack-operator | Configured via installer values (`platformSourceUrl`, `platformSourceRef`) |
-| `cozystack-packages` | Platform chart (`repository.yaml`) | Copies spec from `cozystack-platform` |
+| `cozystack-platform` | cozystack-operator | Настраивается через значения инсталлятора (`platformSourceUrl`, `platformSourceRef`) |
+| `cozystack-packages` | Platform chart (`repository.yaml`) | Копирует спецификацию из `cozystack-platform` |
 
-All PackageSources in `packages/core/platform/sources/` reference `cozystack-packages`.
+Все PackageSource в `packages/core/platform/sources/` ссылаются на `cozystack-packages`.
 
-#### Migration Execution
+#### Выполнение миграций
 
-Migrations run as Helm `pre-upgrade` hooks in the platform chart:
+Миграции выполняются как Helm `pre-upgrade` хуки в platform chart:
 
 ```yaml
 # packages/core/platform/templates/migration-hook.yaml
@@ -70,223 +70,223 @@ metadata:
     helm.sh/hook-weight: "1"
 ```
 
-The migration container reads the current version from the `cozystack-version` ConfigMap and executes migration scripts sequentially from `CURRENT_VERSION` to `TARGET_VERSION - 1`. Each migration updates the ConfigMap on success, ensuring migrations are idempotent and can resume after failures.
+Контейнер миграции считывает текущую версию из ConfigMap `cozystack-version` и выполняет скрипты миграции последовательно от `CURRENT_VERSION` до `TARGET_VERSION - 1`. Каждая миграция обновляет ConfigMap при успехе, обеспечивая идемпотентность миграций и возможность возобновления после сбоев.
 
-#### Why Two Repositories?
+#### Зачем два репозитория?
 
-The separation ensures that:
+Разделение гарантирует, что:
 
-1. The initial OCIRepository is managed by the operator (via installer values).
-2. All PackageSources have a consistent reference (`cozystack-packages`) rather than pointing to the operator-managed source directly.
-3. The platform chart can run migrations before creating the secondary OCIRepository, guaranteeing migrations execute before component updates.
+1. Начальный OCIRepository управляется оператором (через значения инсталлятора).
+2. Все PackageSource имеют согласованную ссылку (`cozystack-packages`), а не указывают напрямую на источник, управляемый оператором.
+3. Platform chart может выполнять миграции перед созданием вторичного OCIRepository, гарантируя выполнение миграций до обновления компонентов.
 
-### Key binaries
+### Ключевые бинарные файлы
 
-| Binary | Source | Role |
+| Бинарный файл | Источник | Роль |
 |---|---|---|
-| **cozystack-operator** | `cmd/cozystack-operator` | Bootstrap (CRDs, Flux, platform source), `PackageSource` and `Package` reconciliation, `cozystack-values` secret replication. |
-| **cozystack-controller** | `cmd/cozystack-controller` | Workload and ApplicationDefinition reconciliation, dashboard management. |
-| **cozystack-api** | `cmd/cozystack-api` | Kubernetes API aggregation layer for `apps.cozystack.io` and `core.cozystack.io` API groups. |
-| **cozypkg** | `cmd/cozypkg` | CLI tool for managing packages — dependency visualization, interactive installation, deletion. |
+| **cozystack-operator** | `cmd/cozystack-operator` | Начальная загрузка (CRD, Flux, источник платформы), согласование `PackageSource` и `Package`, репликация секрета `cozystack-values`. |
+| **cozystack-controller** | `cmd/cozystack-controller` | Согласование рабочих нагрузок и ApplicationDefinition, управление дашбордами. |
+| **cozystack-api** | `cmd/cozystack-api` | Уровень агрегации API Kubernetes для групп API `apps.cozystack.io` и `core.cozystack.io`. |
+| **cozypkg** | `cmd/cozypkg` | CLI-инструмент для управления пакетами — визуализация зависимостей, интерактивная установка и удаление. |
 
-## Repository Structure
+## Структура репозитория
 
-The main structure of the [cozystack](https://github.com/cozystack/cozystack) repository is:
+Основная структура репозитория [cozystack](https://github.com/cozystack/cozystack):
 
 ```shell
 .
-├── api             # Go types for Cozystack CRDs (Package, PackageSource, etc.)
-├── cmd             # Entry points for all binaries
-│   ├── cozystack-operator      # Main platform operator
-│   ├── cozystack-controller    # Workload and application controllers
-│   ├── cozystack-api           # Aggregated API server
-│   └── cozypkg                 # Package management CLI
-├── internal        # Controller and reconciler implementations
-│   ├── operator                # PackageSource and Package reconcilers
-│   ├── controller              # Workload, ApplicationDefinition controllers
-│   ├── fluxinstall             # Embedded Flux manifests and installer
-│   ├── crdinstall              # Embedded CRD manifests and installer
-│   └── cozyvaluesreplicator    # Secret replication logic
-├── packages        # Helm charts organized by layer
-│   ├── core            # Bootstrap and platform configuration
-│   ├── system          # Infrastructure operators and upstream charts
-│   ├── apps            # User-facing application charts
-│   └── extra           # Tenant-specific application charts
-├── pkg             # Shared Go libraries
-├── dashboards      # Grafana dashboards
-├── hack            # Helper scripts for local development
-└── docs            # Changelogs and release notes
+├── api             # Go-типы для CRD Cozystack (Package, PackageSource и т.д.)
+├── cmd             # Точки входа для всех бинарных файлов
+│   ├── cozystack-operator      # Основной оператор платформы
+│   ├── cozystack-controller    # Контроллеры рабочих нагрузок и приложений
+│   ├── cozystack-api           # Агрегированный API-сервер
+│   └── cozypkg                 # CLI для управления пакетами
+├── internal        # Реализации контроллеров и согласователей
+│   ├── operator                # Согласователи PackageSource и Package
+│   ├── controller              # Контроллеры рабочих нагрузок и ApplicationDefinition
+│   ├── fluxinstall             # Встроенные манифесты Flux и инсталлятор
+│   ├── crdinstall              # Встроенные манифесты CRD и инсталлятор
+│   └── cozyvaluesreplicator    # Логика репликации секретов
+├── packages        # Helm-чарты, организованные по слоям
+│   ├── core            # Начальная загрузка и конфигурация платформы
+│   ├── system          # Инфраструктурные операторы и upstream-чарты
+│   ├── apps            # Пользовательские чарты приложений
+│   └── extra           # Чарты приложений для конкретных тенантов
+├── pkg             # Общие Go-библиотеки
+├── dashboards      # Дашборды Grafana
+├── hack            # Вспомогательные скрипты для локальной разработки
+└── docs            # Журналы изменений и примечания к релизам
 ```
 
-Development can be done locally by modifying and updating files in this repository.
+Разработку можно вести локально, изменяя и обновляя файлы в этом репозитории.
 
-## Packages
+## Пакеты
 
 ### [core](https://github.com/cozystack/cozystack/tree/main/packages/core)
 
-Core packages handle bootstrap and platform-level configuration.
+Core-пакеты отвечают за начальную загрузку и конфигурацию на уровне платформы.
 
 #### installer
 
-A Helm chart that deploys the `cozystack-operator` Deployment. It creates the
-`cozy-system` namespace, a ServiceAccount with cluster-admin privileges, and the
-operator Deployment with flags that trigger CRD and Flux installation on startup.
-The operator image and platform source URL are injected at build time.
+Helm-чарт, разворачивающий Deployment `cozystack-operator`. Он создаёт
+пространство имён `cozy-system`, ServiceAccount с правами cluster-admin и
+Deployment оператора с флагами, инициирующими установку CRD и Flux при запуске.
+Образ оператора и URL источника платформы задаются во время сборки.
 
 #### platform
 
-A Helm chart deployed as a regular `Package` (not applied directly). It reads the
-cluster configuration from the `cozystack.cozystack-platform`
+Helm-чарт, разворачиваемый как обычный `Package` (не применяется напрямую). Он читает
+конфигурацию кластера из ресурса `cozystack.cozystack-platform`
 [Package]({{% ref "/docs/v1.2/operations/configuration/platform-package" %}})
-resource and templates manifests according to the specified
-[variant]({{% ref "/docs/v1.2/operations/configuration/variants" %}}) and
-component settings, defining which system components should be installed.
+и создаёт шаблоны манифестов согласно указанному
+[варианту]({{% ref "/docs/v1.2/operations/configuration/variants" %}}) и
+настройкам компонентов, определяя, какие системные компоненты должны быть установлены.
 
 #### flux-aio
 
-Flux components packaged for deployment by the operator.
+Компоненты Flux, упакованные для развёртывания оператором.
 
 #### talos
 
-Talos OS configuration assets.
+Конфигурационные ресурсы Talos OS.
 
 {{% alert color="info" %}}
-Core packages do not use Helm to apply manifests; they are intended to be used only as `helm template . | kubectl apply -f -`.
+Core-пакеты не используют Helm для применения манифестов; они предназначены для использования только как `helm template . | kubectl apply -f -`.
 {{% /alert %}}
 
 ### [system](https://github.com/cozystack/cozystack/tree/main/packages/system)
 
-System packages configure the system to manage and deploy user applications. The
-necessary system components are specified in the bundle configuration.
+System-пакеты настраивают систему для управления и развёртывания пользовательских приложений. 
+Необходимые системные компоненты указываются в конфигурации пакета.
 
-System packages include two kinds of components:
+System-пакеты включают два вида компонентов:
 
-- **Operators** (e.g., `postgres-operator`, `kafka-operator`, `redis-operator`): Controllers
-  that know how to manage the full lifecycle of a specific application, including day-2 operations.
-- **Upstream Helm charts** for applications without a dedicated operator (e.g., `nats`, `ingress-nginx`):
-  These charts are placed in system so that apps and extra packages can deploy them
-  via Flux `HelmRelease` CRs, effectively using FluxCD as the operator.
+- **Операторы** (например, `postgres-operator`, `kafka-operator`, `redis-operator`): Контроллеры,
+  умеющие управлять полным жизненным циклом конкретного приложения, включая операции второго дня.
+- **Upstream Helm-чарты** для приложений без выделенного оператора (например, `nats`, `ingress-nginx`):
+  Эти чарты размещаются в system, чтобы пакеты apps и extra могли разворачивать их
+  через Flux `HelmRelease` CR, фактически используя FluxCD в качестве оператора.
 
 {{% alert color="info" %}}
-System packages use Helm to install and are managed by FluxCD.
+System-пакеты используют Helm для установки и управляются FluxCD.
 {{% /alert %}}
 
 ### [apps](https://github.com/cozystack/cozystack/tree/main/packages/apps)
 
-These user-facing applications appear in the dashboard and include manifests to be applied to the cluster.
+Эти пользовательские приложения отображаются в дашборде и включают манифесты для применения к кластеру.
 
-Apps charts serve as a high-level API for users. They define only the parameters that
-should be exposed and validated through `values.schema.json`, keeping the interface
-minimal and secure. Apps charts should not contain business logic for deploying the
-application itself — instead they delegate to an operator or to FluxCD.
+Чарты apps служат высокоуровневым API для пользователей. Они определяют только те параметры, которые
+должны быть открыты и проверены через `values.schema.json`, сохраняя интерфейс
+минимальным и безопасным. Чарты apps не должны содержать бизнес-логику развёртывания
+самого приложения — вместо этого они делегируют её оператору или FluxCD.
 
-Depending on whether the application has a dedicated operator, apps follow one of two patterns:
+В зависимости от наличия выделенного оператора приложения apps следуют одному из двух паттернов:
 
-#### Operator-based pattern
+#### Паттерн на основе оператора
 
-When an application has a dedicated operator (e.g., PostgreSQL, MongoDB, Redis, Kafka),
-the app chart creates **CRD instances** that the operator manages:
-
-```
-packages/system/postgres-operator/   # Operator Helm chart
-packages/apps/postgres/              # App chart creates postgresql.cnpg.io/v1.Cluster CRs
-```
-
-The operator handles all deployment details and day-2 operations (scaling, backups, failover).
-The app chart simply creates the appropriate CRD with values derived from user input.
-
-#### HelmRelease-based pattern
-
-When an application has no dedicated operator and a Helm chart is the standard deployment
-method, the upstream chart is placed in `system/` and the app chart creates a
-**Flux `HelmRelease` CR** pointing to it:
+Когда для приложения есть выделенный оператор (например, PostgreSQL, MongoDB, Redis, Kafka),
+чарт app создаёт **экземпляры CRD**, которыми управляет оператор:
 
 ```
-packages/system/nats/                # Upstream NATS Helm chart
-packages/apps/nats/                  # App chart creates helm.toolkit.fluxcd.io/v2.HelmRelease
+packages/system/postgres-operator/   # Helm-чарт оператора
+packages/apps/postgres/              # App-чарт создаёт postgresql.cnpg.io/v1.Cluster CR
 ```
 
-In this case FluxCD acts as the operator, managing the Helm release lifecycle. The app
-chart controls which upstream values are exposed to the user, providing an additional layer
-of security — users cannot bypass validation to deploy the chart with arbitrary values.
+Оператор обрабатывает все детали развёртывания и операции второго дня (масштабирование, резервное копирование, переключение при сбое).
+App-чарт просто создаёт соответствующий CRD со значениями, полученными из пользовательского ввода.
 
-Other examples of this pattern: `extra/ingress`, `extra/seaweedfs`, `extra/monitoring`.
+#### Паттерн на основе HelmRelease
+
+Когда для приложения нет выделенного оператора и стандартным методом развёртывания является Helm-чарт,
+upstream-чарт размещается в `system/`, а app-чарт создаёт
+**Flux `HelmRelease` CR**, указывающий на него:
+
+```
+packages/system/nats/                # Upstream Helm-чарт NATS
+packages/apps/nats/                  # App-чарт создаёт helm.toolkit.fluxcd.io/v2.HelmRelease
+```
+
+В этом случае FluxCD выступает оператором, управляя жизненным циклом Helm-релиза. App-чарт
+контролирует, какие upstream-значения открываются пользователю, обеспечивая дополнительный уровень
+безопасности — пользователи не могут обойти валидацию для развёртывания чарта с произвольными значениями.
+
+Другие примеры этого паттерна: `extra/ingress`, `extra/seaweedfs`, `extra/monitoring`.
 
 ### [extra](https://github.com/cozystack/cozystack/tree/main/packages/extra)
 
-Similar to `apps` but not shown in the application catalog. They can only be installed as part of a tenant.
-They are allowed to use by bottom tenants installed in current tenant namespace.
+Аналогично `apps`, но не отображается в каталоге приложений. Могут устанавливаться только в составе тенанта.
+Разрешены для использования нижележащими тенантами, установленными в пространстве имён текущего тенанта.
 
-Read more about [Tenant System](/docs/guides/concepts/#tenant-system) on the Core Concepts page.
+Подробнее о [Системе тенантов](/docs/guides/concepts/#tenant-system) читайте на странице основных концепций.
 
-It is possible to use only one application type within a single tenant namespace.
+В одном пространстве имён тенанта можно использовать только один тип приложения.
 
-Extra packages follow the same two architectural patterns as apps (operator-based or HelmRelease-based).
+Extra-пакеты следуют тем же двум архитектурным паттернам, что и apps (на основе оператора или HelmRelease).
 
 {{% alert color="info" %}}
-Apps and extra packages use Helm for application and are installed from the dashboard and managed by FluxCD.
+Пакеты apps и extra используют Helm для установки приложения и управляются FluxCD через дашборд.
 {{% /alert %}}
 
-## Package Structure
+## Структура пакета
 
-Every package is a typical Helm chart containing all necessary images and manifests
-for the platform. We follow an umbrella chart logic to keep upstream charts in the
-`./charts` directory and override values.yaml in the application's root.
-This structure simplifies upstream chart updates.
+Каждый пакет — это типичный Helm-чарт, содержащий все необходимые образы и манифесты
+для платформы. Мы следуем логике umbrella-чарта, размещая upstream-чарты в
+директории `./charts` и переопределяя values.yaml в корне приложения.
+Такая структура упрощает обновление upstream-чартов.
 
 ```shell
 .
-├── Chart.yaml                           # Helm chart definition and parameter description
-├── Makefile                             # Common targets for simplifying local development
-├── charts                               # Directory for upstream charts
-├── images                               # Directory for Docker images
-├── patches                              # Optional directory for upstream chart patches
-├── templates                            # Additional manifests for the upstream Helm chart
-├── templates/dashboard-resourcemap.yaml # Role used to display k8s resources in dashboard
-├── values.yaml                          # Override values for the upstream Helm chart
-└── values.schema.json                   # JSON schema used for input values validation and to render UI elements in dashboard
+├── Chart.yaml                           # Определение Helm-чарта и описание параметров
+├── Makefile                             # Общие цели для упрощения локальной разработки
+├── charts                               # Директория для upstream-чартов
+├── images                               # Директория для Docker-образов
+├── patches                              # Опциональная директория для патчей upstream-чартов
+├── templates                            # Дополнительные манифесты для upstream Helm-чарта
+├── templates/dashboard-resourcemap.yaml # Роль для отображения ресурсов k8s в дашборде
+├── values.yaml                          # Значения переопределения для upstream Helm-чарта
+└── values.schema.json                   # JSON-схема для валидации входных значений и отрисовки элементов UI в дашборде
 ```
 
-You can use bitnami's [readme-generator](https://github.com/bitnami/readme-generator-for-helm) for generating `README.md` and `values.schema.json` files.
+Для генерации файлов `README.md` и `values.schema.json` можно использовать [readme-generator](https://github.com/bitnami/readme-generator-for-helm) от Bitnami.
 
-Just install it as `readme-generator` binary in your system and run generation using `make generate` command.
+Просто установите его как бинарный файл `readme-generator` в своей системе и запустите генерацию командой `make generate`.
 
-## Helm Chart Development Principles
+## Принципы разработки Helm-чартов
 
-The package structure and development workflow in Cozystack are guided by the following principles:
+Структура пакетов и рабочий процесс разработки в Cozystack основаны на следующих принципах:
 
-### Easy to update upstream charts
+### Простое обновление upstream-чартов
 
-The original upstream chart must be easy to update, override, and modify. We use the umbrella chart pattern — upstream charts live in the `./charts` directory and are vendored as-is. Customizations go into `values.yaml` overrides and additional `templates/`, while structural changes to the upstream chart are applied via `patches/`. This separation ensures that updating to a new upstream version is straightforward: run `make update`, review the diff, and re-apply patches if needed.
+Оригинальный upstream-чарт должен быть легко обновляемым, переопределяемым и изменяемым. Мы используем паттерн umbrella-чарта — upstream-чарты находятся в директории `./charts` и хранятся в оригинальном виде. Кастомизации вносятся через переопределения `values.yaml` и дополнительные `templates/`, а структурные изменения в upstream-чарте применяются через `patches/`. Такое разделение гарантирует простое обновление до новой upstream-версии: выполните `make update`, просмотрите diff и при необходимости повторно примените патчи.
 
-### Local-first artifacts
+### Локальные артефакты
 
-Patches and container images are stored locally and are part of the package. The `patches/` directory holds any modifications to the upstream chart, and the `images/` directory contains Dockerfiles for building all required images. This ensures full reproducibility — everything needed to build and deploy the package is self-contained within the repository.
-
-{{% alert color="info" %}}
-Currently, not all packages build their images locally — some still reference externally-built images. We are actively working toward fully local image builds to achieve complete self-containment and reproducibility.
-{{% /alert %}}
-
-### Local development and testing workflow
-
-Every package must be easy to update and test locally against a real cluster, without relying on CI. The standard `make` targets (`make image`, `make diff`, `make apply`) provide a fast feedback loop: build images, compare rendered manifests against the live cluster, and apply changes — all from a developer's workstation.
-
-### No external dependencies
-
-Packages must not depend on external resources at runtime. All charts, images, and patches are vendored into the repository. This guarantees that builds and deployments are deterministic and do not break due to upstream registry outages, removed tags, or network issues.
+Патчи и образы контейнеров хранятся локально и являются частью пакета. Директория `patches/` содержит любые изменения upstream-чарта, а директория `images/` — Dockerfile для сборки всех необходимых образов. Это обеспечивает полную воспроизводимость — всё необходимое для сборки и развёртывания пакета самодостаточно внутри репозитория.
 
 {{% alert color="info" %}}
-As noted above, full image self-containment is a work in progress. Some packages still pull images from external registries — this is a known gap that we plan to close as capacity allows.
+В настоящее время не все пакеты собирают свои образы локально — некоторые всё ещё ссылаются на образы, собранные внешне. Мы активно работаем над переходом к полностью локальной сборке образов для достижения полной самодостаточности и воспроизводимости.
 {{% /alert %}}
 
-## Development
+### Рабочий процесс локальной разработки и тестирования
 
-### Buildx configuration
+Каждый пакет должен быть легко обновляемым и тестируемым локально на реальном кластере без использования CI. Стандартные цели `make` (`make image`, `make diff`, `make apply`) обеспечивают быструю обратную связь: сборка образов, сравнение отрендеренных манифестов с живым кластером и применение изменений — всё с рабочей станции разработчика.
 
-To build images, you need to install and configure the [`docker buildx`](https://github.com/docker/buildx) plugin.
+### Без внешних зависимостей
 
-Instead of a built-in builder, you can [configure additional ones](https://docs.docker.com/build/builders/), which may be remote, or support multiple architectures.
-This example shows how to create a builder with `kubernetes` driver, which allows you to build images directly in a Kubernetes cluster:
+Пакеты не должны зависеть от внешних ресурсов во время выполнения. Все чарты, образы и патчи включены в репозиторий. Это гарантирует детерминированность сборок и развёртываний, а также отсутствие сбоев из-за недоступности upstream-реестров, удалённых тегов или проблем с сетью.
+
+{{% alert color="info" %}}
+Как отмечалось выше, полная самодостаточность образов находится в процессе реализации. Некоторые пакеты всё ещё загружают образы из внешних реестров — это известный пробел, который мы планируем устранить по мере возможности.
+{{% /alert %}}
+
+## Разработка
+
+### Настройка Buildx
+
+Для сборки образов необходимо установить и настроить плагин [`docker buildx`](https://github.com/docker/buildx).
+
+Вместо встроенного сборщика можно [настроить дополнительные](https://docs.docker.com/build/builders/), которые могут быть удалёнными или поддерживать несколько архитектур.
+В этом примере показано, как создать сборщик с драйвером `kubernetes`, позволяющим собирать образы непосредственно в кластере Kubernetes:
 
 ```bash
 docker buildx create \
@@ -299,85 +299,85 @@ docker buildx create \
   --use
 ```
 
-Alternatively, omit the --driver* options to set up the build environment in an local Docker environment.
+Либо опустите параметры --driver*, чтобы настроить среду сборки в локальном Docker-окружении.
 
-### Packages management
+### Управление пакетами
 
-Each application includes a Makefile to simplify the development process. We follow this logic for every package:
+Каждое приложение включает Makefile для упрощения процесса разработки. Для каждого пакета мы следуем такой логике:
 
 ```shell
-make update  # Update Helm chart and versions from the upstream source
-make image   # Build Docker images used in the package
-make show    # Show output of rendered templates
-make diff    # Diff Helm release against objects in a Kubernetes cluster
-make apply   # Apply Helm release to a Kubernetes cluster
+make update  # Обновить Helm-чарт и версии из upstream-источника
+make image   # Собрать Docker-образы, используемые в пакете
+make show    # Показать вывод отрендеренных шаблонов
+make diff    # Сравнить Helm-релиз с объектами в кластере Kubernetes
+make apply   # Применить Helm-релиз к кластеру Kubernetes
 ```
 
-For example, to update cilium:
+Например, для обновления cilium:
 
 ```shell
-cd packages/system/cilium         # Go to application directory
-make update                       # Download new version from upstream
-make image                        # Build cilium image
-git diff .                        # Show diff with changed manifests
-make diff                         # Show diff with applied cluster manifests
-make apply                        # Apply changed manifests to the cluster
-kubectl get pod -n cozy-cilium    # Check if everything works as expected
-git commit -m "Update cilium"     # Commit changes to the branch
+cd packages/system/cilium         # Перейти в директорию приложения
+make update                       # Загрузить новую версию из upstream
+make image                        # Собрать образ cilium
+git diff .                        # Показать diff с изменёнными манифестами
+make diff                         # Показать diff с применёнными манифестами кластера
+make apply                        # Применить изменённые манифесты к кластеру
+kubectl get pod -n cozy-cilium    # Проверить корректность работы
+git commit -m "Update cilium"     # Зафиксировать изменения в ветке
 ```
 
-To build the cozystack container with an updated chart:
+Для сборки контейнера cozystack с обновлённым чартом:
 
 ```shell
-cd packages/core/installer        # Go to the cozystack package
-make image-packages               # Build packages image
-make apply                        # Apply to the cluster
-kubectl get pod -n cozy-system    # Check if everything works as expected
-kubectl get hr -A                 # Check HelmRelease objects
+cd packages/core/installer        # Перейти в директорию пакета cozystack
+make image-packages               # Собрать образ пакетов
+make apply                        # Применить к кластеру
+kubectl get pod -n cozy-system    # Проверить корректность работы
+kubectl get hr -A                 # Проверить объекты HelmRelease
 ```
 
 {{% alert color="info" %}}
-When rebuilding images, specify the `REGISTRY` environment variable to point to your Docker registry.
+При пересборке образов указывайте переменную окружения `REGISTRY`, указывающую на ваш Docker-реестр.
 
-Feel free to look inside each Makefile to better understand the logic.
+Не стесняйтесь заглядывать в каждый Makefile, чтобы лучше понять логику.
 {{% /alert %}}
 
-### Testing
+### Тестирование
 
-The platform includes an [`e2e.sh`](https://github.com/cozystack/cozystack/blob/main/hack/e2e.sh) script that performs the following tasks:
+Платформа включает скрипт [`e2e.sh`](https://github.com/cozystack/cozystack/blob/main/hack/e2e.sh), выполняющий следующие задачи:
 
-- Runs three QEMU virtual machines
-- Configures Talos Linux
-- Installs Cozystack
-- Waits for all HelmReleases to be installed
-- Performs additional checks to ensure that components are up and running
+- Запускает три виртуальные машины QEMU
+- Настраивает Talos Linux
+- Устанавливает Cozystack
+- Ожидает установки всех HelmRelease
+- Выполняет дополнительные проверки работоспособности компонентов
 
-You can run e2e.sh either locally or directly within a Kubernetes container.
+Скрипт e2e.sh можно запускать как локально, так и непосредственно в контейнере Kubernetes.
 
-To run tests in a Kubernetes cluster, navigate to the `packages/core/testing` directory and execute the following commands:
+Для запуска тестов в кластере Kubernetes перейдите в директорию `packages/core/testing` и выполните следующие команды:
 
 ```shell
-make apply    # Create testing sandbox in Kubernetes cluster
-make test     # Run the end-to-end tests in existing sandbox
-make delete   # Remove testing sandbox from Kubernetes cluster
+make apply    # Создать тестовую песочницу в кластере Kubernetes
+make test     # Запустить end-to-end тесты в существующей песочнице
+make delete   # Удалить тестовую песочницу из кластера Kubernetes
 ```
 
 {{% alert color="warning" %}}
-:warning: To run e2e tests in a Kubernetes cluster, your nodes must have sufficient free resources to create 3 VMs and store the data for the deployed applications.
+:warning: Для запуска e2e-тестов в кластере Kubernetes узлы должны иметь достаточно свободных ресурсов для создания 3 ВМ и хранения данных развёртываемых приложений.
 
-It is recommended to use bare-metal nodes of the parent Cozystack cluster.
+Рекомендуется использовать bare-metal узлы родительского кластера Cozystack.
 {{% /alert %}}
 
-### Dynamic Development Environment
+### Динамическая среда разработки
 
-If you prefer to develop Cozystack in virtual machines instead of modifying the existing cluster, you can utilize the same sandbox from testing environment. The Makefile in the `packages/core/testing` includes additional options:
+Если вы предпочитаете разрабатывать Cozystack в виртуальных машинах вместо изменения существующего кластера, можно использовать ту же песочницу из тестовой среды. Makefile в `packages/core/testing` включает дополнительные опции:
 
 ```shell
-make exec     # Opens an interactive shell in the sandbox container.
-make login    # Downloads the kubeconfig into a temporary directory and runs a shell with the sandbox environment; mirrord must be installed.
-make proxy    # Enable a SOCKS5 proxy server; mirrord and gost must be installed.
+make exec     # Открывает интерактивную оболочку в контейнере песочницы.
+make login    # Загружает kubeconfig во временную директорию и запускает оболочку с окружением песочницы; требуется установленный mirrord.
+make proxy    # Включает SOCKS5 прокси-сервер; требуются mirrord и gost.
 ```
 
-Socks5 proxy can be configured in a browser to access services of a cluster running in sandbox. Firefox has a handy extension for toogling proxy on/off:
+Прокси Socks5 можно настроить в браузере для доступа к сервисам кластера, работающего в песочнице. В Firefox есть удобное расширение для переключения прокси:
 
 - [Proxy Toggle](https://addons.mozilla.org/en-US/firefox/addon/proxy-toggle/)
