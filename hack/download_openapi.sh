@@ -50,9 +50,11 @@ for version_dir in ${DOCS_BASE}/v*/; do
 
   echo "Finding latest release for $version (pattern: ${tag_pattern})..."
 
-  # Find the latest non-draft release matching this version
+  # Find the latest stable release matching this version. Prereleases must be
+  # excluded explicitly: GNU `sort -V` orders e.g. v1.3.0-rc.1 AFTER v1.3.0
+  # (opposite of semver), so without this filter `tail -1` would pick the rc.
   latest_tag=$(echo "$RELEASES_JSON" \
-    | jq -r '.[] | select(.draft == false) | .tag_name' \
+    | jq -r '.[] | select(.draft == false and .prerelease == false) | .tag_name' \
     | grep -E "$tag_pattern" \
     | sort -V \
     | tail -1 || true)
