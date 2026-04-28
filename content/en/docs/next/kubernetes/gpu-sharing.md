@@ -78,6 +78,8 @@ spec:
           nvidia.com/gpucores: 30
 ```
 
+The example above uses absolute memory (`gpumem`). Use `gpumem-percentage` for portability across GPU models with different memory sizes.
+
 | Resource | Description |
 | --- | --- |
 | `nvidia.com/gpu` | Number of virtual GPUs (always `1` per container) |
