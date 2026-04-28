@@ -82,7 +82,7 @@ The example above uses absolute memory (`gpumem`). Use `gpumem-percentage` for p
 
 | Resource | Description |
 | --- | --- |
-| `nvidia.com/gpu` | Number of virtual GPUs (always `1` per container) |
+| `nvidia.com/gpu` | Number of virtual GPUs requested |
 | `nvidia.com/gpumem` | GPU memory limit in MiB |
 | `nvidia.com/gpucores` | Percentage of GPU compute cores (1–100) |
 | `nvidia.com/gpumem-percentage` | GPU memory limit as a percentage (1–100) |
