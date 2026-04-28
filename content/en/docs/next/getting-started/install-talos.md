@@ -35,10 +35,12 @@ curl -sSL https://github.com/cozystack/boot-to-talos/raw/refs/heads/main/hack/in
 Run `boot-to-talos` and provide the configuration values.
 Make sure to use Cozystack's own Talos build, found at [ghcr.io/cozystack/cozystack/talos](https://github.com/cozystack/cozystack/pkgs/container/cozystack%2Ftalos).
 
+For Cozystack {{< version-pin "cozystack_tag" >}} the pinned Talos version is **{{< version-pin "talos" >}}** — override the installer's default when prompted:
+
 ```console
 $ boot-to-talos
 Target disk [/dev/sda]:
-Talos installer image [ghcr.io/cozystack/cozystack/talos:v1.10.5]:
+Talos installer image [ghcr.io/cozystack/cozystack/talos:v1.11.6]: ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}
 Add networking configuration? [yes]:
 Interface [eth0]:
 IP address [10.0.2.15]:
@@ -47,7 +49,7 @@ Gateway (or 'none') [10.0.2.2]:
 Configure serial console? (or 'no') [ttyS0]:
 
 Summary:
-  Image: ghcr.io/cozystack/cozystack/talos:v1.10.5
+  Image: ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}
   Disk:  /dev/sda
   Extra kernel args: ip=10.0.2.15::10.0.2.2:255.255.255.0::eth0::::: console=ttyS0
 
@@ -56,12 +58,12 @@ WARNING: ALL DATA ON /dev/sda WILL BE ERASED!
 Continue? [yes]:
 
 2025/08/03 00:11:03 created temporary directory /tmp/installer-3221603450
-2025/08/03 00:11:03 pulling image ghcr.io/cozystack/cozystack/talos:v1.10.5
+2025/08/03 00:11:03 pulling image ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}
 2025/08/03 00:11:03 extracting image layers
 2025/08/03 00:11:07 creating raw disk /tmp/installer-3221603450/image.raw (2 GiB)
 2025/08/03 00:11:07 attached /tmp/installer-3221603450/image.raw to /dev/loop0
 2025/08/03 00:11:07 starting Talos installer
-2025/08/03 00:11:07 running Talos installer v1.10.5
+2025/08/03 00:11:07 running Talos installer {{< version-pin "talos" >}}
 2025/08/03 00:11:07 WARNING: config validation:
 2025/08/03 00:11:07   use "worker" instead of "" for machine type
 2025/08/03 00:11:07 created EFI (C12A7328-F81F-11D2-BA4B-00A0C93EC93B) size 104857600 bytes
@@ -76,7 +78,7 @@ Continue? [yes]:
 2025/08/03 00:11:07 copying from io reader to /boot/A/initramfs.xz
 2025/08/03 00:11:08 writing /boot/grub/grub.cfg to disk
 2025/08/03 00:11:08 executing: grub-install --boot-directory=/boot --removable --efi-directory=/boot/EFI /dev/loop0
-2025/08/03 00:11:08 installation of v1.10.5 complete
+2025/08/03 00:11:08 installation of {{< version-pin "talos" >}} complete
 2025/08/03 00:11:08 Talos installer finished successfully
 2025/08/03 00:11:08 remounting all filesystems read-only
 2025/08/03 00:11:08 copy /tmp/installer-3221603450/image.raw → /dev/sda

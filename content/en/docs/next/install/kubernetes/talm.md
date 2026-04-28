@@ -32,7 +32,7 @@ All you need for an installation with Talm is to have access to the nodes: direc
 This guide will use private IPs as a default option in examples, and public IPs in instructions and examples which are specific for the public IP setup.
 
 If you are using DHCP, you might not be aware of the IP addresses assigned to your nodes in the private subnet.
-Nodes with Talos Linux [expose Talos API on port `50000`](https://www.talos.dev/v1.10/learn-more/talos-network-connectivity/).
+Nodes with Talos Linux [expose Talos API on port `50000`](https://www.talos.dev/{{< version-pin "talos_minor" >}}/learn-more/talos-network-connectivity/).
 You can use `nmap` to find them, providing your network mask (`192.168.123.0/24` in the example):
 
 ```bash
@@ -69,7 +69,7 @@ For this guide, you need a couple of tools installed:
     brew install siderolabs/tap/talosctl
     ```
 
-    For more installation options, see the [`talosctl` installation guide](https://www.talos.dev/v1.9/talos-guides/install/talosctl/)
+    For more installation options, see the [`talosctl` installation guide](https://www.talos.dev/{{< version-pin "talos_minor" >}}/talos-guides/install/talosctl/)
 
 ## 2. Initialize Cluster Configuration
 
@@ -111,9 +111,9 @@ endpoint: "https://192.168.100.10:6443"
 clusterDomain: cozy.local
 ## Floating IP — should be an unused IP in the same subnet as nodes
 floatingIP: 192.168.100.10
-## Talos source image: use the latest available version
+## Talos source image: pinned to the version that ships with the current Cozystack release
 ## https://github.com/cozystack/cozystack/pkgs/container/cozystack%2Ftalos
-image: "ghcr.io/cozystack/cozystack/talos:v1.10.5"
+image: "ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}"
 ## Pod subnet — used to assign IPs to pods
 podSubnets:
 - 10.244.0.0/16

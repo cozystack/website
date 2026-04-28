@@ -24,10 +24,10 @@ or come and share your experience in the [Cozystack community](https://t.me/cozy
 
 The first step is to make a Talos Linux installation image available for use in Oracle Cloud as a custom image.
 
-1.  Download the Talos Linux image archive from the [Cozystack releases page](https://github.com/cozystack/cozystack/releases/latest/) and unpack it:
+1.  Download the Talos Linux image archive for Cozystack {{< version-pin "cozystack_tag" >}} from the [releases page](https://github.com/cozystack/cozystack/releases/tag/{{< version-pin "cozystack_tag" >}}) and unpack it:
 
     ```bash
-    wget https://github.com/cozystack/cozystack/releases/latest/download/metal-amd64.raw.xz
+    wget https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/metal-amd64.raw.xz
     xz -d metal-amd64.raw.xz
     ```
 
@@ -294,7 +294,7 @@ mv talm /usr/local/bin/talm
 
     The node's public IP must be specified for both the `--nodes` (`-n`) and `--endpoints` (`-e`) parameters.
     To learn more about Talos node configuration and endpoints, refer to the
-    [Talos documentation](https://www.talos.dev/v1.10/learn-more/talosctl/#endpoints-and-nodes)
+    [Talos documentation](https://www.talos.dev/{{< version-pin "talos_minor" >}}/learn-more/talosctl/#endpoints-and-nodes)
 
 1.  Edit the node configuration file as needed.
 

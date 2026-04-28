@@ -31,7 +31,7 @@ This installs the operator, CRDs, and creates the `PackageSource` resource.
 
 ### Installing on non-Talos OS
 
-By default, the Cozystack operator is configured to use the [KubePrism](https://www.talos.dev/latest/kubernetes-guides/configuration/kubeprism/)
+By default, the Cozystack operator is configured to use the [KubePrism](https://www.talos.dev/{{< version-pin "talos_minor" >}}/kubernetes-guides/configuration/kubeprism/)
 feature of Talos Linux, which allows access to the Kubernetes API via a local address on the node.
 
 If you're installing Cozystack on a system other than Talos Linux, set the operator variant during installation:
@@ -268,9 +268,9 @@ It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecom
 to set `failmode=continue` on ZFS storage pools to allow DRBD to handle disk failures instead of ZFS.
 
 ```bash
-kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv1 -- zpool set failmode=continue data
-kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv2 -- zpool set failmode=continue data
-kubectl exec -ti -n cozy-linstor ds/linstor-satellite.srv3 -- zpool set failmode=continue data
+kubectl exec -ti -n cozy-linstor pod/linstor-satellite.srv1 -- zpool set failmode=continue data
+kubectl exec -ti -n cozy-linstor pod/linstor-satellite.srv2 -- zpool set failmode=continue data
+kubectl exec -ti -n cozy-linstor pod/linstor-satellite.srv3 -- zpool set failmode=continue data
 ```
 
     {{% /tab %}}

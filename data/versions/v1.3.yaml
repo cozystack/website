@@ -1,0 +1,23 @@
+# Pinned upstream-tool versions for the Cozystack v1.3 docs.
+#
+# Referenced from content via the {{< version-pin "<key>" >}} shortcode. The
+# shortcode derives the version directory from the page's file path, so a page
+# under content/en/docs/v1.3/ reads this file.
+#
+# Only include pins that are coupled to the Cozystack release and would go
+# stale if not updated — the Talos tag that ships in the installer, Cozystack
+# release-asset URLs, and tagged source-tree links. Tools that stay
+# backwards-compatible across minors (talm, boot-to-talos, talos-bootstrap
+# install scripts) stay floating on main / latest in the markdown.
+#
+# Update when cutting a new minor (see hack/release-checklist.md).
+
+# Cozystack release the docs are pinned to.
+cozystack_version: "1.3.0"     # bare, as used by `helm --version`
+cozystack_tag:     "v1.3.0"    # v-prefixed, as used in GitHub URLs
+
+# Talos version shipped by the Cozystack installer for this minor.
+# Source of truth: packages/core/talos/images/talos/profiles/installer.yaml
+# in the cozystack/cozystack repo at `cozystack_tag`.
+talos:       "v1.12.6"
+talos_minor: "v1.12"           # the docs minor used by talos.dev URLs

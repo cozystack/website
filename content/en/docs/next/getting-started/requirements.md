@@ -9,7 +9,7 @@ weight: 1
 
 You will need the following tools installed on your workstation:
 
--   [talosctl](https://www.talos.dev/v1.10/talos-guides/install/talosctl/), the command line client for Talos Linux.
+-   [talosctl](https://www.talos.dev/{{< version-pin "talos_minor" >}}/talos-guides/install/talosctl/), the command line client for Talos Linux (use the {{< version-pin "talos_minor" >}}.x series that matches Cozystack {{< version-pin "cozystack_version" >}}).
 -   [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), the command line client for Kubernetes.
 -   [Talm](https://github.com/cozystack/talm?tab=readme-ov-file#installation), Cozystack's own configuration manager for Talos Linux:<br>
     
