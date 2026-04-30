@@ -140,7 +140,7 @@ We are now ready to create a VM.
       name: gpu
       namespace: tenant-example
     spec:
-      running: true
+      runStrategy: Always
       instanceProfile: ubuntu
       instanceType: u1.medium
       systemDisk:
@@ -341,6 +341,15 @@ spec:
     spec:
       nodeSelector:
         nvidia.com/gpu.workload.config: vm-vgpu
+      # GPU nodes commonly carry a NoSchedule taint; adjust the key
+      # to match your cluster's tainting scheme.
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      # Profile loading is on the critical path for VM scheduling
+      # (no profile → no allocatable resource → no VM).
+      priorityClassName: system-node-critical
       terminationGracePeriodSeconds: 5
       containers:
       - name: loader
@@ -385,11 +394,18 @@ spec:
               # versions reject as 'invalid argument'.
               if printf '%s' "$profile" > "$path" 2>/dev/null; then
                 echo "set $bus -> $profile (was $current)"
+                # clear the per-bus failure flag once a write succeeds
+                rm -f "/tmp/.fail.$bus" 2>/dev/null
               else
-                # Likely refcount > 0 (VM holds the VF). Suppress the
-                # noisy retry; the next pass will pick it up after the
-                # VM releases.
-                :
+                # Log on the first failure for a given bus only — repeats
+                # are usually 'VM is holding the VF' (refcount > 0) and
+                # would flood the log every minute. A persistent typo
+                # in the ConfigMap still surfaces because the flag file
+                # is removed when the bus eventually accepts a write.
+                if [ ! -e "/tmp/.fail.$bus" ]; then
+                  echo "WARN: write rejected for $bus -> $profile (current=$current); will retry quietly until success"
+                  : > "/tmp/.fail.$bus"
+                fi
               fi
             done < /etc/vgpu-profiles/profiles
             sleep 60 &
@@ -412,9 +428,11 @@ Instead, deliver the token and `gridd.conf` to the guest via cloud-init or a con
 # inside the VirtualMachine cloudInitNoCloud userData
 write_files:
 - path: /etc/nvidia/ClientConfigToken/client_configuration_token.tok
-  # 0744 follows NVIDIA's recommendation in the Licensing User Guide
-  # so nvidia-gridd (which does not necessarily run as the file owner)
-  # can read it.
+  # 0744 follows NVIDIA's recommendation in the Virtual GPU Software
+  # Licensing User Guide ("Configuring a Licensed Client on Linux"):
+  # nvidia-gridd does not necessarily run as the file owner, so the
+  # file needs to be readable by other accounts.
+  # https://docs.nvidia.com/vgpu/latest/grid-licensing-user-guide/
   permissions: '0744'
   encoding: b64
   content: <base64 token>
@@ -549,9 +567,10 @@ spec:
             - pkg-config
             write_files:
             - path: /etc/nvidia/ClientConfigToken/client_configuration_token.tok
-              # 0744 follows NVIDIA's recommendation in the Licensing
-              # User Guide so nvidia-gridd (which does not necessarily
-              # run as the file owner) can read it.
+              # 0744 follows NVIDIA's recommendation in the Virtual GPU
+              # Software Licensing User Guide ("Configuring a Licensed
+              # Client on Linux"); see the same comment on the earlier
+              # snippet for the citation.
               permissions: '0744'
               encoding: b64
               content: <base64 token>
