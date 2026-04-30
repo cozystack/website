@@ -135,8 +135,7 @@ We are now ready to create a VM.
     ```yaml
     ---
     apiVersion: apps.cozystack.io/v1alpha1
-    appVersion: '*'
-    kind: VirtualMachine
+    kind: VMInstance
     metadata:
       name: gpu
       namespace: tenant-example
@@ -245,13 +244,18 @@ git clone https://github.com/NVIDIA/gpu-driver-container.git
 cd gpu-driver-container/vgpu-manager/ubuntu24.04
 
 # Place the downloaded .run alongside the Dockerfile (do not commit it)
-cp /path/to/NVIDIA-Linux-x86_64-595.58.02-vgpu-kvm.run .
+cp /path/to/NVIDIA-Linux-x86_64-<driver-version>-vgpu-kvm.run .
 
+# --platform linux/amd64 is mandatory on Apple Silicon / arm64 build
+# hosts: GPU nodes are amd64 and the kubelet pull will fail with
+# 'no matching manifest' if the image was built native on arm64.
 docker build \
-  --build-arg DRIVER_VERSION=595.58.02 \
-  -t registry.example.com/nvidia/vgpu-manager:595.58.02-ubuntu24.04 .
+  --platform linux/amd64 \
+  --build-arg DRIVER_VERSION=<driver-version> \
+  -t registry.example.com/nvidia/vgpu-manager:<driver-version>-ubuntu24.04 .
 
-docker push registry.example.com/nvidia/vgpu-manager:595.58.02-ubuntu24.04
+# docker login first if your registry needs auth
+docker push registry.example.com/nvidia/vgpu-manager:<driver-version>-ubuntu24.04
 ```
 
 {{% alert color="info" %}}
@@ -307,7 +311,7 @@ The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, sets `sand
     kubectl exec -n cozy-gpu-operator <vgpu-manager-pod> -- nvidia-smi
     ```
 
-    `nvidia-smi` should enumerate the physical GPUs and report `Host VGPU Mode : SR-IOV`. The driver enables SR-IOV automatically (e.g. 16 VFs per L40S).
+    `nvidia-smi` should enumerate the physical GPUs and report `Host VGPU Mode : SR-IOV`. The driver enables SR-IOV automatically; the maximum VF count is hardware-dependent and the configured profile size further reduces it (for example an L40S exposes up to 16 VFs at `-1Q` but only 2 at `-24Q` — total framebuffer divided by per-profile framebuffer).
 
 ### 3. Assign vGPU Profiles to SR-IOV VFs
 
@@ -372,6 +376,9 @@ spec:
         - -c
         - |
           set -u
+          # exit cleanly on SIGTERM so kubelet does not need to SIGKILL
+          # after terminationGracePeriodSeconds on rolling updates.
+          trap 'exit 0' TERM INT
           while true; do
             while IFS= read -r line; do
               # strip leading/trailing whitespace and any trailing comment
@@ -385,11 +392,13 @@ spec:
               # so manual out-of-band changes are visible in the log
               # only when the loader actually overrides them, and so
               # the kernel does not reject writes while a VM holds the VF.
-              current=$(cat "$path" 2>/dev/null || echo "")
+              current=$(cat "$path" 2>/dev/null || printf '')
               if [ "$current" = "$profile" ]; then
                 continue
               fi
-              if echo "$profile" > "$path" 2>/dev/null; then
+              # printf '%s' avoids a trailing newline that some driver
+              # versions reject as 'invalid argument'.
+              if printf '%s' "$profile" > "$path" 2>/dev/null; then
                 echo "set $bus -> $profile (was $current)"
               else
                 # Likely refcount > 0 (VM holds the VF). Suppress the
@@ -398,7 +407,8 @@ spec:
                 :
               fi
             done < /etc/vgpu-profiles/profiles
-            sleep 60   # re-apply periodically in case the driver re-enumerates
+            sleep 60 &
+            wait $!   # wait so the trap fires immediately on SIGTERM
           done
       volumes:
       - { name: sys, hostPath: { path: /sys } }
@@ -477,7 +487,7 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{": "}{.status.a
 
 ### 6. Create a Virtual Machine with vGPU
 
-KubeVirt accepts the vGPU resource under either `hostDevices:` or `gpus:`; the runtime semantics differ slightly (`gpus:` adds virtio-vga display semantics, `hostDevices:` does not). The example below uses `hostDevices:` for a headless compute VM. The example uses the upstream `kubevirt.io/v1` `VirtualMachine` kind directly rather than the Cozystack `apps.cozystack.io/v1alpha1` wrapper used in the passthrough section above — the wrapper's `gpus:` field passes the resource name straight through to KubeVirt, which works for the passthrough case, but the wrapper has not been exercised end-to-end against an SR-IOV vGPU resource and lacks an explicit `hostDevices:` surface for headless setups. Until the wrapper grows a tested SR-IOV vGPU path, raw KubeVirt is the safe option. Tenants need permission to create raw KubeVirt resources in their namespace; if your tenant policy disallows this, wait for wrapper support.
+KubeVirt accepts the vGPU resource under either `hostDevices:` or `gpus:`. The two structs differ only in that `gpus:` carries an optional `virtualGPUOptions` field whose `display.enabled` defaults to `true` (provisioning a vGPU console output); `hostDevices:` has no such field. For a headless compute VM `hostDevices:` is the natural choice. The example uses the upstream `kubevirt.io/v1` `VirtualMachine` kind directly rather than the Cozystack `apps.cozystack.io/v1alpha1` `VMInstance` wrapper used in the passthrough section above — the wrapper's `gpus:` field passes the resource name straight through to KubeVirt, which works for the passthrough case, but the wrapper has not been exercised end-to-end against an SR-IOV vGPU resource and lacks an explicit `hostDevices:` surface for headless setups. Until the wrapper grows a tested SR-IOV vGPU path, raw KubeVirt is the safe option. Tenants need permission to create raw KubeVirt resources in their namespace; if your tenant policy disallows this, wait for wrapper support.
 
 {{% alert color="warning" %}}
 **Do not use a stock containerDisk root volume for in-VM driver install.** The Ubuntu containerDisk image gives the guest a ~2.4 GiB root filesystem (qcow2 overlay on the immutable container layer). Kernel headers + `build-essential` + DKMS sources + `libnvidia-*.so` libraries together overflow the rootfs and `nvidia-installer` aborts mid-install (we observed `SIGBUS` from a write into an mmap of a file the kernel could no longer extend). Use a CDI `DataVolume` of 20 GiB or larger for the root disk in any non-throwaway test, or pre-bake the GRID driver into a custom containerDisk image.
@@ -498,6 +508,10 @@ spec:
       name: vgpu-smoke-root
     spec:
       storage:
+        # adjust storageClassName to a class that exists on your cluster;
+        # 'replicated' is the same StorageClass used by the passthrough
+        # example above on a stock Cozystack tenant.
+        storageClassName: replicated
         resources:
           requests:
             storage: 20Gi
@@ -572,13 +586,21 @@ Once the VM is running and cloud-init has settled, install the **guest** GRID dr
 # transfer the .run from the workstation that downloaded it from
 # the Licensing Portal — virtctl scp uses the same SSH path as
 # virtctl ssh, so it goes through the cluster API server
-virtctl scp NVIDIA-Linux-x86_64-<driver-version>-grid.run ubuntu@vm/vgpu-smoke:/tmp/
+virtctl scp --namespace tenant-example \
+  NVIDIA-Linux-x86_64-<driver-version>-grid.run \
+  ubuntu@vm/vgpu-smoke:/tmp/
 
-virtctl ssh ubuntu@vm/vgpu-smoke -- \
+virtctl ssh --namespace tenant-example ubuntu@vm/vgpu-smoke -- \
   sudo sh /tmp/NVIDIA-Linux-x86_64-<driver-version>-grid.run --dkms --silent
+
+# the .run installs the nvidia-gridd systemd unit but does not
+# necessarily start it on first boot; enable it explicitly so the
+# license handshake runs without a guest reboot
+virtctl ssh --namespace tenant-example ubuntu@vm/vgpu-smoke -- \
+  sudo systemctl enable --now nvidia-gridd.service
 ```
 
-The `--dkms` flag asks the installer to register kernel module sources with DKMS so future kernel updates re-build them automatically.
+The `--dkms` flag asks the installer to register kernel module sources with DKMS so future kernel updates re-build them automatically. `virtctl scp` and `virtctl ssh` need the VM's namespace explicitly — they default to `default`, not the VM's namespace.
 
 Verify the vGPU is visible:
 
@@ -603,7 +625,7 @@ If the License Status remains `Unlicensed (Unrestricted)` for more than a couple
 
 ### vGPU Profiles
 
-Each GPU model supports several profile families that determine which workload class the partition is licensed for: **`-Q`** (NVIDIA RTX Virtual Workstation, vWS — graphics workloads), **`-A`** (NVIDIA Virtual Compute Server / Compute — CUDA without display), **`-B`** (NVIDIA Virtual PC, vPC — basic VDI). Each family has the same partition sizes; the suffix selects the license type the guest will request. The table below lists the `Q` family for NVIDIA L40S; the same partition sizes are also available as `-A`, `-B`, etc:
+Each GPU model supports one or more profile families that determine which workload class the partition is licensed for: **`-Q`** (NVIDIA RTX Virtual Workstation, vWS — graphics workloads), **`-A`** (NVIDIA Virtual Compute Server / Compute — CUDA without display), **`-B`** (NVIDIA Virtual PC, vPC — basic VDI). The suffix selects the license type the guest will request; partition sizes vary per GPU and per family — not all combinations are available on all GPUs. The table below lists the `Q` family for NVIDIA L40S; consult NVIDIA's documentation for the full per-GPU matrix:
 
 | Profile | Frame Buffer | Max Instances | Use Case |
 | --- | --- | --- | --- |
