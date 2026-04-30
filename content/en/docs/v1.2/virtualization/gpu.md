@@ -206,7 +206,7 @@ GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU 
 **This entire workflow depends on upstream components that are not yet released.** Two foundational pieces are required and neither is in a Cozystack release as of this writing:
 
 - The `vgpu` variant of the `gpu-operator` package — tracked in [cozystack/cozystack#2323](https://github.com/cozystack/cozystack/pull/2323), still in draft.
-- KubeVirt's SR-IOV vGPU support ([kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) — currently `main`-only. Targeted at the next minor release (v1.9.0); track the PR for the actual release tag. Released tags up to and including v1.8.x do not advertise SR-IOV VFs as PCI host devices, and backports are not planned.
+- KubeVirt's SR-IOV vGPU support ([kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) — `main`-only. See the [Prerequisites](#prerequisites) section below for the full version story.
 
 Treat this guide as forward-looking documentation. If you follow it on a current Cozystack release the variant CR will be rejected and the `kubectl edit kubevirt` patch will not produce allocatable resources.
 {{% /alert %}}
@@ -225,7 +225,8 @@ Treat this guide as forward-looking documentation. If you follow it on a current
 ### Prerequisites
 
 - An Ada Lovelace (or newer) NVIDIA GPU that supports SR-IOV vGPU (L4, L40, L40S, etc.).
-- Ubuntu 24.04 host OS. Older Ubuntu releases also work if NVIDIA's `gpu-driver-container` repository ships a matching `vgpu-manager/<release>/Dockerfile`. **Talos Linux is not recommended** for the vGPU path. NVIDIA does not publicly distribute the vGPU guest driver — it requires NVIDIA Enterprise Portal access — and Sidero [closed siderolabs/extensions#461](https://github.com/siderolabs/extensions/issues/461) noting that they cannot support vGPU "unless NVIDIA changes their licensing terms or provides us a way to obtain, test, and distribute the software". For passthrough Talos is fine; only vGPU is affected.
+- Ubuntu 24.04 host OS. Older Ubuntu releases also work if NVIDIA's `gpu-driver-container` repository ships a matching `vgpu-manager/<release>/Dockerfile`.
+- **Talos Linux is not recommended** for the vGPU path. NVIDIA does not publicly distribute the vGPU guest driver — it requires NVIDIA Enterprise Portal access — and Sidero [closed siderolabs/extensions#461](https://github.com/siderolabs/extensions/issues/461) noting that they cannot support vGPU "unless NVIDIA changes their licensing terms or provides us a way to obtain, test, and distribute the software". Passthrough on Talos is fine; only vGPU is affected.
 - KubeVirt with [kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890) ("vGPU: SRIOV support", merged to `main` 2026-04-10). Targeted at the next minor release (v1.9.0); track the PR for the actual release tag. Released tags up to and including v1.8.x do not advertise SR-IOV VFs as PCI host devices, and backports are not planned. If you need vGPU before v1.9.0 lands you have to run a `main`-based nightly build of `virt-handler`; the rest of the operator can stay on the latest released tag.
 - An NVIDIA vGPU Software / NVIDIA AI Enterprise subscription.
 - A reachable NVIDIA Delegated License Service (DLS) instance and a matching `client_configuration_token.tok` file.
@@ -239,7 +240,7 @@ The vGPU Manager driver is proprietary software distributed by NVIDIA under a co
 The GPU Operator expects a pre-built driver container image — it does not install the driver from a raw `.run` file at runtime.
 
 1. Download the vGPU Manager driver from the [NVIDIA Licensing Portal](https://ui.licensing.nvidia.com) (Software Downloads → NVIDIA AI Enterprise → Linux KVM, **not** the Ubuntu KVM `.deb` — that ships pre-built modules for stock kernels only).
-2. Build the driver container image from NVIDIA's upstream repository (the older `gitlab.com/nvidia/container-images/driver` is archived). `registry.example.com` below is RFC 2606 placeholder syntax — replace it with your private registry hostname:
+2. Build the driver container image from NVIDIA's upstream repository (the older `gitlab.com/nvidia/container-images/driver` is archived). Replace `registry.example.com` with your private registry hostname:
 
 ```bash
 git clone https://github.com/NVIDIA/gpu-driver-container.git
@@ -279,6 +280,8 @@ The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, sets `sand
 
 2. Create the GPU Operator Package with the `vgpu` variant, providing your vGPU Manager image coordinates:
 
+    Replace `<driver-version>` with the version you built (it must match the tag you pushed in step 1). If your registry requires authentication, create a docker-registry Secret in the `cozy-gpu-operator` namespace first and uncomment the `imagePullSecrets` block. The chart reads `imagePullSecrets` per-component (`vgpuManager`, `driver`, `validator`, …) as a list of strings — not `[{name: ...}]`:
+
     ```yaml
     apiVersion: cozystack.io/v1alpha1
     kind: Package
@@ -293,19 +296,10 @@ The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, sets `sand
               vgpuManager:
                 repository: registry.example.com/nvidia
                 image: vgpu-manager
-                version: "595.58.02-ubuntu24.04"
-    ```
-
-    If your registry requires authentication, create a docker-registry Secret in the `cozy-gpu-operator` namespace first, then reference it. `imagePullSecrets` is a per-component field on the gpu-operator chart (`vgpuManager`, `driver`, `validator`, …); the value is a list of strings, not `[{name: ...}]`:
-
-    ```yaml
-    gpu-operator:
-      vgpuManager:
-        repository: registry.example.com/nvidia
-        image: vgpu-manager
-        version: "595.58.02-ubuntu24.04"
-        imagePullSecrets:
-        - nvidia-registry-secret
+                version: "<driver-version>-ubuntu24.04"
+                # Uncomment if your registry needs auth:
+                # imagePullSecrets:
+                # - nvidia-registry-secret
     ```
 
 3. Verify the DaemonSet is running and `nvidia.ko` loads on every GPU node:
@@ -326,31 +320,31 @@ kubectl exec -n cozy-gpu-operator <vgpu-manager-pod> -- \
   cat /sys/bus/pci/devices/0000:02:00.5/nvidia/creatable_vgpu_types
 ```
 
-Write the chosen profile (for example `1155` = L40S-24Q on an L40S):
+Write the chosen profile — substitute `<profile-id>` with the numeric ID for the desired profile from the `creatable_vgpu_types` listing above. **Numeric IDs come from the driver and are not guaranteed stable across driver versions** — always derive them from sysfs on the actual hardware rather than copy-pasting from external references:
 
 ```bash
 kubectl exec -n cozy-gpu-operator <vgpu-manager-pod> -- \
-  sh -c 'echo 1155 > /sys/bus/pci/devices/0000:02:00.5/nvidia/current_vgpu_type'
+  sh -c 'echo <profile-id> > /sys/bus/pci/devices/0000:02:00.5/nvidia/current_vgpu_type'
 ```
 
 {{% alert color="info" %}}
-Profile assignment is currently out-of-band — there is no first-class operator for the SR-IOV path yet. Manual `kubectl exec` is fine for a proof-of-concept cluster, but for anything longer-lived deploy a small DaemonSet that re-applies the assignment on every reboot (`current_vgpu_type` resets to 0 on PCIe re-enumeration). The skeleton below reads a `ConfigMap` mapping bus-IDs to profile IDs and writes them into the host sysfs through the existing privileged `vgpu-manager` container; production-grade implementations will want pre-checks (idempotency, error reporting, MIG awareness) on top.
+Profile assignment is currently out-of-band — there is no first-class operator for the SR-IOV path yet. Manual `kubectl exec` is fine for a proof-of-concept cluster. For anything longer-lived, a small DaemonSet that re-applies the assignment on every node start is the typical pattern. The skeleton below is a starting point — production-grade implementations should add proper error reporting, MIG awareness, and a watcher that re-applies on PCIe re-enumeration (the script as written only handles cold reboots; if the driver re-binds without restarting the pod, the profile resets to 0 and the loop has already exited).
 {{% /alert %}}
 
 ```yaml
-# ConfigMap that maps PCI bus-IDs to vGPU profile IDs.
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: vgpu-profiles
   namespace: cozy-gpu-operator
 data:
+  # One <bus-id>=<profile-id> per line. Profile IDs are
+  # driver-version-dependent — read them from
+  # /sys/bus/pci/devices/<VF>/nvidia/creatable_vgpu_types.
   profiles: |
-    0000:02:00.4=1155
-    0000:02:00.5=1155
-    # one line per VF, value is the numeric profile id
+    0000:02:00.4=<profile-id>
+    0000:02:00.5=<profile-id>
 ---
-# DaemonSet that re-applies the profiles on every node start.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -365,7 +359,6 @@ spec:
       labels:
         app: vgpu-profile-loader
     spec:
-      hostPID: true
       nodeSelector:
         nvidia.com/gpu.workload.config: vm-vgpu
       containers:
@@ -375,19 +368,30 @@ spec:
           privileged: true
         volumeMounts:
         - { name: sys, mountPath: /sys }
-        - { name: profiles, mountPath: /etc/vgpu-profiles }
+        - { name: profiles, mountPath: /etc/vgpu-profiles, readOnly: true }
         command:
         - sh
         - -c
         - |
-          set -eu
-          while IFS='=' read -r bus profile; do
-            [ -z "$bus" ] || [ "${bus#\#}" != "$bus" ] && continue
-            echo "$profile" > "/sys/bus/pci/devices/$bus/nvidia/current_vgpu_type"
-            echo "set $bus -> $profile"
-          done < /etc/vgpu-profiles/profiles
-          # stay alive so kubelet does not loop the pod
-          exec sleep infinity
+          set -u
+          while true; do
+            while IFS= read -r line; do
+              # skip blank lines and comments
+              line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+              [ -z "$line" ] && continue
+              case "$line" in \#*) continue ;; esac
+              bus=${line%%=*}; profile=${line#*=}
+              [ "$bus" = "$line" ] && continue   # no '=' separator
+              path="/sys/bus/pci/devices/$bus/nvidia/current_vgpu_type"
+              [ -w "$path" ] || { echo "skip $bus (no $path)"; continue; }
+              if echo "$profile" > "$path" 2>/dev/null; then
+                echo "set $bus -> $profile"
+              else
+                echo "ERROR: failed to set $bus -> $profile"
+              fi
+            done < /etc/vgpu-profiles/profiles
+            sleep 60   # re-apply periodically in case the driver re-enumerates
+          done
       volumes:
       - { name: sys, hostPath: { path: /sys } }
       - { name: profiles, configMap: { name: vgpu-profiles } }
@@ -439,16 +443,14 @@ If the guest reports `Unlicensed (Unrestricted)` for more than a couple of minut
 
 After [kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890), `virt-handler` recognises SR-IOV VFs bound to the `nvidia` driver as candidates whenever a vGPU profile is configured (`current_vgpu_type` ≠ 0). PFs are skipped automatically.
 
-```bash
-kubectl edit kubevirt -n cozy-kubevirt
-```
+`kubectl edit kubevirt -n cozy-kubevirt` opens the live object — **merge** the entry below into the existing `permittedHostDevices.pciHostDevices` list (the passthrough section above adds its own entries; do not overwrite them):
 
 ```yaml
 spec:
   configuration:
     permittedHostDevices:
       pciHostDevices:
-      - pciVendorSelector: "10DE:26B9"   # L40S — same device ID for PF and VF
+      - pciVendorSelector: "10DE:26B9"   # L40S — same tuple for PF and VF
         resourceName: nvidia.com/L40S-24Q
 ```
 
@@ -470,7 +472,7 @@ KubeVirt accepts the vGPU resource under either `hostDevices:` or `gpus:`; the r
 **Do not use a stock containerDisk root volume for in-VM driver install.** The Ubuntu containerDisk image gives the guest a ~2.4 GiB root filesystem (qcow2 overlay on the immutable container layer). Kernel headers + `build-essential` + DKMS sources + `libnvidia-*.so` libraries together overflow the rootfs and `nvidia-installer` aborts mid-install (we observed `SIGBUS` from a write into an mmap of a file the kernel could no longer extend). Use a CDI `DataVolume` of 20 GiB or larger for the root disk in any non-throwaway test, or pre-bake the GRID driver into a custom containerDisk image.
 {{% /alert %}}
 
-The example below uses a `DataVolume` so the root has room for the driver install, and a `cloudInitNoCloud` disk that drops the licensing token, `gridd.conf`, an SSH key for `virtctl ssh`, and the build dependencies. `<base64 token>` and `<your ssh public key>` are placeholders the operator fills in:
+The example below uses a `DataVolume` so the root has room for the driver install, and a `cloudInitNoCloud` disk that drops the licensing token, `gridd.conf`, an SSH key for `virtctl ssh`, and the build dependencies. `<base64 token>` and `<your ssh public key>` are placeholders the operator fills in. Note that the field name for "keep this VM running" differs from the passthrough section above: raw `kubevirt.io/v1` uses `runStrategy: Always`; the Cozystack `apps.cozystack.io/v1alpha1` wrapper uses `running: true`. Both mean the same thing:
 
 ```yaml
 apiVersion: kubevirt.io/v1
@@ -523,13 +525,13 @@ spec:
         cloudInitNoCloud:
           userData: |
             #cloud-config
-            users:
-            - default
-            - name: ubuntu
-              sudo: ALL=(ALL) NOPASSWD:ALL
-              shell: /bin/bash
-              ssh_authorized_keys:
-              - <your ssh public key>
+            # The containerDisks/ubuntu image already provisions an
+            # `ubuntu` user; do not redefine it via users: (cloud-init
+            # silently no-ops a user redefinition and the SSH key is
+            # ignored). Top-level ssh_authorized_keys is added to the
+            # default user.
+            ssh_authorized_keys:
+            - <your ssh public key>
             packages:
             - build-essential
             - dkms
@@ -537,7 +539,10 @@ spec:
             - pkg-config
             write_files:
             - path: /etc/nvidia/ClientConfigToken/client_configuration_token.tok
-              permissions: '0600'
+              # 0744 follows NVIDIA's recommendation in the Licensing
+              # User Guide so nvidia-gridd (which does not necessarily
+              # run as the file owner) can read it.
+              permissions: '0744'
               encoding: b64
               content: <base64 token>
             - path: /etc/nvidia/gridd.conf
@@ -550,7 +555,19 @@ spec:
 kubectl apply -f vgpu-smoke.yaml
 ```
 
-Once the VM is running and cloud-init has settled, install the **guest** GRID driver from the corresponding `.run` (the `linux-grid` variant, distinct from the host `vgpu-kvm` package — and pin the version to whatever currently ships on the NVIDIA Licensing Portal). Open a session via `virtctl ssh ubuntu@vm/vgpu-smoke` and run the installer with the `--dkms` flag so future kernel updates re-build the modules automatically.
+Once the VM is running and cloud-init has settled, install the **guest** GRID driver from the corresponding `.run` (the `linux-grid` variant, distinct from the host `vgpu-kvm` package — and use the version that currently ships on the NVIDIA Licensing Portal):
+
+```bash
+# transfer the .run from the workstation that downloaded it from
+# the Licensing Portal — virtctl scp uses the same SSH path as
+# virtctl ssh, so it goes through the cluster API server
+virtctl scp NVIDIA-Linux-x86_64-<driver-version>-grid.run ubuntu@vm/vgpu-smoke:/tmp/
+
+virtctl ssh ubuntu@vm/vgpu-smoke -- \
+  sudo sh /tmp/NVIDIA-Linux-x86_64-<driver-version>-grid.run --dkms --silent
+```
+
+The `--dkms` flag asks the installer to register kernel module sources with DKMS so future kernel updates re-build them automatically.
 
 Verify the vGPU is visible:
 
@@ -575,7 +592,7 @@ If the License Status remains `Unlicensed (Unrestricted)` for more than a couple
 
 ### vGPU Profiles
 
-Each GPU model supports specific vGPU profiles that determine how the GPU is partitioned. Common profiles for NVIDIA L40S:
+Each GPU model supports several profile families that determine which workload class the partition is licensed for: **`-Q`** (NVIDIA RTX Virtual Workstation, vWS — graphics workloads), **`-A`** (NVIDIA Virtual Compute Server / Compute — CUDA without display), **`-B`** (NVIDIA Virtual PC, vPC — basic VDI). Each family has the same partition sizes; the suffix selects the license type the guest will request. The table below lists the `Q` family for NVIDIA L40S; the same partition sizes are also available as `-A`, `-B`, etc:
 
 | Profile | Frame Buffer | Max Instances | Use Case |
 | --- | --- | --- | --- |
