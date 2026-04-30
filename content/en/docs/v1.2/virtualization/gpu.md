@@ -1,7 +1,7 @@
 ---
-title: "Running VMs with GPU Passthrough or vGPU"
+title: "Running VMs with GPU Passthrough and vGPU"
 linkTitle: "GPU Passthrough and vGPU"
-description: "Running VMs with GPU Passthrough or NVIDIA vGPU on Cozystack"
+description: "Running VMs with GPU Passthrough and NVIDIA vGPU on Cozystack"
 weight: 40
 aliases:
   - /docs/v1.2/operations/virtualization/gpu
@@ -161,7 +161,7 @@ We are now ready to create a VM.
 
     Example output:
     ```console
-    virtualmachines.apps.cozystack.io/gpu created
+    vminstances.apps.cozystack.io/gpu created
     ```
 
 2.  Verify the VM status:
@@ -172,13 +172,13 @@ We are now ready to create a VM.
 
     ```console
     NAME                       AGE   PHASE     IP             NODENAME        READY
-    virtual-machine-gpu        73m   Running   10.244.3.191   luc-csxhk-002   True
+    vm-instance-gpu        73m   Running   10.244.3.191   luc-csxhk-002   True
     ```
 
 3.  Log in to the VM and confirm that it has access to GPU:
 
     ```bash
-    virtctl console virtual-machine-gpu
+    virtctl console vm-instance-gpu
     ```
 
     Example output:
@@ -188,7 +188,7 @@ We are now ready to create a VM.
     vmi-gpu login: ubuntu
     Password:
 
-    ubuntu@virtual-machine-gpu:~$ lspci -nnk -d 10de:
+    ubuntu@vm-instance-gpu:~$ lspci -nnk -d 10de:
     08:00.0 3D controller [0302]: NVIDIA Corporation GA102GL [A10] [10de:2236] (rev a1)
             Subsystem: NVIDIA Corporation GA102GL [A10] [10de:1851]
             Kernel driver in use: nvidia
