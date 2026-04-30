@@ -206,7 +206,7 @@ GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU 
 **This entire workflow depends on upstream components that are not yet released.** Two foundational pieces are required and neither is in a Cozystack release as of this writing:
 
 - The `vgpu` variant of the `gpu-operator` package — tracked in [cozystack/cozystack#2323](https://github.com/cozystack/cozystack/pull/2323), still in draft.
-- KubeVirt's SR-IOV vGPU support ([kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) — currently `main`-only; will ship in v1.9.0 (no firm release date as of writing). KubeVirt versions up to and including v1.8.x do not advertise SR-IOV VFs as PCI host devices.
+- KubeVirt's SR-IOV vGPU support ([kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) — currently `main`-only. Targeted at the next minor release (v1.9.0); track the PR for the actual release tag. Released tags up to and including v1.8.x do not advertise SR-IOV VFs as PCI host devices, and backports are not planned.
 
 Treat this guide as forward-looking documentation. If you follow it on a current Cozystack release the variant CR will be rejected and the `kubectl edit kubevirt` patch will not produce allocatable resources.
 {{% /alert %}}
@@ -225,8 +225,8 @@ Treat this guide as forward-looking documentation. If you follow it on a current
 ### Prerequisites
 
 - An Ada Lovelace (or newer) NVIDIA GPU that supports SR-IOV vGPU (L4, L40, L40S, etc.).
-- Ubuntu 24.04 host OS. Older Ubuntu releases also work if NVIDIA's `gpu-driver-container` repository ships a matching `vgpu-manager/<release>/Dockerfile`. **Talos Linux is not recommended** for the vGPU path. NVIDIA does not publicly distribute the vGPU guest driver — it requires NVIDIA Enterprise Portal access — and Sidero [closed siderolabs/extensions#461](https://github.com/siderolabs/extensions/issues/461) noting that they cannot support vGPU «unless NVIDIA changes their licensing terms or provides us a way to obtain, test, and distribute the software». For passthrough Talos is fine; only vGPU is affected.
-- KubeVirt **v1.9.0 or later**. SR-IOV vGPU passthrough was added by [kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890) («vGPU: SRIOV support», merged to `main` 2026-04-10) and is targeted for the v1.9.0 release; track the PR for the actual release tag. Earlier released tags (`v1.6.x` / `v1.7.x` / `v1.8.x`) do not advertise SR-IOV VFs as PCI host devices, and backports are not planned. If you need vGPU before v1.9.0 lands you have to run a `main`-based nightly build of `virt-handler`; the rest of the operator can stay on the latest released tag.
+- Ubuntu 24.04 host OS. Older Ubuntu releases also work if NVIDIA's `gpu-driver-container` repository ships a matching `vgpu-manager/<release>/Dockerfile`. **Talos Linux is not recommended** for the vGPU path. NVIDIA does not publicly distribute the vGPU guest driver — it requires NVIDIA Enterprise Portal access — and Sidero [closed siderolabs/extensions#461](https://github.com/siderolabs/extensions/issues/461) noting that they cannot support vGPU "unless NVIDIA changes their licensing terms or provides us a way to obtain, test, and distribute the software". For passthrough Talos is fine; only vGPU is affected.
+- KubeVirt with [kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890) ("vGPU: SRIOV support", merged to `main` 2026-04-10). Targeted at the next minor release (v1.9.0); track the PR for the actual release tag. Released tags up to and including v1.8.x do not advertise SR-IOV VFs as PCI host devices, and backports are not planned. If you need vGPU before v1.9.0 lands you have to run a `main`-based nightly build of `virt-handler`; the rest of the operator can stay on the latest released tag.
 - An NVIDIA vGPU Software / NVIDIA AI Enterprise subscription.
 - A reachable NVIDIA Delegated License Service (DLS) instance and a matching `client_configuration_token.tok` file.
 
@@ -239,7 +239,7 @@ The vGPU Manager driver is proprietary software distributed by NVIDIA under a co
 The GPU Operator expects a pre-built driver container image — it does not install the driver from a raw `.run` file at runtime.
 
 1. Download the vGPU Manager driver from the [NVIDIA Licensing Portal](https://ui.licensing.nvidia.com) (Software Downloads → NVIDIA AI Enterprise → Linux KVM, **not** the Ubuntu KVM `.deb` — that ships pre-built modules for stock kernels only).
-2. Build the driver container image from NVIDIA's upstream repository (the older `gitlab.com/nvidia/container-images/driver` is archived):
+2. Build the driver container image from NVIDIA's upstream repository (the older `gitlab.com/nvidia/container-images/driver` is archived). `registry.example.com` below is RFC 2606 placeholder syntax — replace it with your private registry hostname:
 
 ```bash
 git clone https://github.com/NVIDIA/gpu-driver-container.git
@@ -256,7 +256,7 @@ docker push registry.example.com/nvidia/vgpu-manager:595.58.02-ubuntu24.04
 ```
 
 {{% alert color="info" %}}
-The build downloads kernel headers at container start time and compiles `nvidia.ko` against the host kernel version, so a single image works across kernel patch versions for the same Ubuntu release.
+The container's entrypoint downloads kernel headers at pod start time and compiles `nvidia.ko` against the running kernel, so a single image works across kernel patch versions for the same Ubuntu release.
 {{% /alert %}}
 
 {{% alert color="warning" %}}
@@ -266,7 +266,7 @@ Uploading the vGPU driver to a publicly available registry is a violation of the
 ### 2. Install the GPU Operator with vGPU Variant
 
 {{% alert color="warning" %}}
-**The vgpu variant is experimental.** NVIDIA's `vgpu-device-manager` walks `/sys/class/mdev_bus/`, which does not exist on Ada Lovelace or Blackwell — the DaemonSet errors with «no parent devices found» and is therefore disabled by default. Profile assignment is currently an out-of-band step (`echo <id> > /sys/.../current_vgpu_type` per VF) that must be re-applied after every node reboot. Without it, `permittedHostDevices.pciHostDevices` reports zero allocatable resources. **Do not deploy the variant in production until you have an automated profile-assignment mechanism in place** — typically a small DaemonSet that reads a ConfigMap (`<bus-id> = <profile-id>`) and writes the corresponding `current_vgpu_type` files at boot.
+**The vgpu variant is experimental.** NVIDIA's `vgpu-device-manager` walks `/sys/class/mdev_bus/`, which does not exist on Ada Lovelace or Blackwell — the DaemonSet errors with "no parent devices found" and is therefore disabled by default. Profile assignment is currently an out-of-band step (`echo <id> > /sys/.../current_vgpu_type` per VF) that must be re-applied after every node reboot. Without it, `permittedHostDevices.pciHostDevices` reports zero allocatable resources. **Do not deploy the variant in production until you have an automated profile-assignment mechanism in place** — typically a small DaemonSet that reads a ConfigMap (`<bus-id> = <profile-id>`) and writes the corresponding `current_vgpu_type` files at boot.
 {{% /alert %}}
 
 The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, sets `sandboxWorkloads.defaultWorkload: vm-vgpu` so unlabelled GPU nodes activate the variant, and disables the pod-side driver, device plugin, and `vgpu-device-manager` DaemonSets. Flip `vgpuDeviceManager.enabled: true` only when running an mdev-era GPU (Pascal–Ampere).
@@ -334,8 +334,64 @@ kubectl exec -n cozy-gpu-operator <vgpu-manager-pod> -- \
 ```
 
 {{% alert color="info" %}}
-Profile assignment is currently out-of-band — there is no first-class operator for the SR-IOV path yet. A small DaemonSet that writes `current_vgpu_type` per VF based on a ConfigMap is the typical pattern; until upstream catches up, manual `kubectl exec` is the workable alternative for proof-of-concept clusters.
+Profile assignment is currently out-of-band — there is no first-class operator for the SR-IOV path yet. Manual `kubectl exec` is fine for a proof-of-concept cluster, but for anything longer-lived deploy a small DaemonSet that re-applies the assignment on every reboot (`current_vgpu_type` resets to 0 on PCIe re-enumeration). The skeleton below reads a `ConfigMap` mapping bus-IDs to profile IDs and writes them into the host sysfs through the existing privileged `vgpu-manager` container; production-grade implementations will want pre-checks (idempotency, error reporting, MIG awareness) on top.
 {{% /alert %}}
+
+```yaml
+# ConfigMap that maps PCI bus-IDs to vGPU profile IDs.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vgpu-profiles
+  namespace: cozy-gpu-operator
+data:
+  profiles: |
+    0000:02:00.4=1155
+    0000:02:00.5=1155
+    # one line per VF, value is the numeric profile id
+---
+# DaemonSet that re-applies the profiles on every node start.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vgpu-profile-loader
+  namespace: cozy-gpu-operator
+spec:
+  selector:
+    matchLabels:
+      app: vgpu-profile-loader
+  template:
+    metadata:
+      labels:
+        app: vgpu-profile-loader
+    spec:
+      hostPID: true
+      nodeSelector:
+        nvidia.com/gpu.workload.config: vm-vgpu
+      containers:
+      - name: loader
+        image: alpine:3.20
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - { name: sys, mountPath: /sys }
+        - { name: profiles, mountPath: /etc/vgpu-profiles }
+        command:
+        - sh
+        - -c
+        - |
+          set -eu
+          while IFS='=' read -r bus profile; do
+            [ -z "$bus" ] || [ "${bus#\#}" != "$bus" ] && continue
+            echo "$profile" > "/sys/bus/pci/devices/$bus/nvidia/current_vgpu_type"
+            echo "set $bus -> $profile"
+          done < /etc/vgpu-profiles/profiles
+          # stay alive so kubelet does not loop the pod
+          exec sleep infinity
+      volumes:
+      - { name: sys, hostPath: { path: /sys } }
+      - { name: profiles, configMap: { name: vgpu-profiles } }
+```
 
 ### 4. Configure the NVIDIA License Service (DLS)
 
@@ -369,7 +425,7 @@ write_files:
 Verify activation inside the guest:
 
 ```bash
-nvidia-smi -q | grep -A 1 'License Status'
+nvidia-smi -q | grep 'License Status'
 # License Status   : Licensed
 ```
 
@@ -396,7 +452,7 @@ spec:
         resourceName: nvidia.com/L40S-24Q
 ```
 
-`pciVendorSelector` is the `vendor:device` tuple of the GPU; on L40S (and other Ada-Lovelace cards) the SR-IOV VFs report the same tuple as the PF — `lspci -nn -d 10de:` on the host shows both as `[10de:26b9]`. `virt-handler` distinguishes them by «is-VF + has-vGPU-profile», so a single `pciVendorSelector` matches the right set. Verify on your specific GPU with `lspci -nn -d 10de:` before assuming this — some generations split PF/VF tuples.
+`pciVendorSelector` is the `vendor:device` tuple of the GPU; on L40S (and other Ada-Lovelace cards) the SR-IOV VFs report the same tuple as the PF — `lspci -nn -d 10de:` on the host shows both as `[10de:26b9]`. `virt-handler` distinguishes them by "is-VF + has-vGPU-profile", so a single `pciVendorSelector` matches the right set. Verify on your specific GPU with `lspci -nn -d 10de:` before assuming this — some generations split PF/VF tuples.
 
 Match `resourceName` to the profile you wrote into `current_vgpu_type`. **Do not** set `externalResourceProvider: true` here — the device plugin lives inside `virt-handler` itself for SR-IOV vGPU; no external sandbox device plugin advertises this resource.
 
@@ -408,7 +464,13 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{": "}{.status.a
 
 ### 6. Create a Virtual Machine with vGPU
 
-The vGPU resource is exposed as a stock `pciHostDevices` entry, so any KubeVirt VM that requests it via `hostDevices` (or `gpus:`, which accepts both PCI and mdev resource names) will work. The example below uses the upstream `kubevirt.io/v1` `VirtualMachine` kind directly rather than the Cozystack `apps.cozystack.io/v1alpha1` wrapper used in the passthrough section above — at the time of writing the wrapper does not surface a `hostDevices` field, so the raw KubeVirt CR is the path that lets the SR-IOV resource through. Tenants need permission to create raw KubeVirt resources in their namespace; if your tenant policy disallows this, expose the resource through the wrapper once support lands.
+KubeVirt accepts the vGPU resource under either `hostDevices:` or `gpus:`; the runtime semantics differ slightly (`gpus:` adds virtio-vga display semantics, `hostDevices:` does not). The example below uses `hostDevices:` for a headless compute VM. The example uses the upstream `kubevirt.io/v1` `VirtualMachine` kind directly rather than the Cozystack `apps.cozystack.io/v1alpha1` wrapper used in the passthrough section above — at the time of writing the wrapper does not surface a `hostDevices` field, and whether its `gpus:` field correctly resolves SR-IOV vGPU resource names has not been validated. Until that gap is closed, the raw KubeVirt CR is the safe path. Tenants need permission to create raw KubeVirt resources in their namespace; if your tenant policy disallows this, wait for wrapper support.
+
+{{% alert color="warning" %}}
+**Do not use a stock containerDisk root volume for in-VM driver install.** The Ubuntu containerDisk image gives the guest a ~2.4 GiB root filesystem (qcow2 overlay on the immutable container layer). Kernel headers + `build-essential` + DKMS sources + `libnvidia-*.so` libraries together overflow the rootfs and `nvidia-installer` aborts mid-install (we observed `SIGBUS` from a write into an mmap of a file the kernel could no longer extend). Use a CDI `DataVolume` of 20 GiB or larger for the root disk in any non-throwaway test, or pre-bake the GRID driver into a custom containerDisk image.
+{{% /alert %}}
+
+The example below uses a `DataVolume` so the root has room for the driver install, and a `cloudInitNoCloud` disk that drops the licensing token, `gridd.conf`, an SSH key for `virtctl ssh`, and the build dependencies. `<base64 token>` and `<your ssh public key>` are placeholders the operator fills in:
 
 ```yaml
 apiVersion: kubevirt.io/v1
@@ -418,6 +480,17 @@ metadata:
   namespace: tenant-example
 spec:
   runStrategy: Always
+  dataVolumeTemplates:
+  - metadata:
+      name: vgpu-smoke-root
+    spec:
+      storage:
+        resources:
+          requests:
+            storage: 20Gi
+      source:
+        registry:
+          url: docker://quay.io/containerdisks/ubuntu:24.04
   template:
     spec:
       domain:
@@ -428,6 +501,9 @@ spec:
         devices:
           disks:
           - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
             disk:
               bus: virtio
           interfaces:
@@ -441,23 +517,42 @@ spec:
         pod: {}
       volumes:
       - name: rootdisk
-        containerDisk:
-          image: quay.io/containerdisks/ubuntu:24.04
+        dataVolume:
+          name: vgpu-smoke-root
+      - name: cloudinitdisk
+        cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            users:
+            - default
+            - name: ubuntu
+              sudo: ALL=(ALL) NOPASSWD:ALL
+              shell: /bin/bash
+              ssh_authorized_keys:
+              - <your ssh public key>
+            packages:
+            - build-essential
+            - dkms
+            - linux-headers-generic
+            - pkg-config
+            write_files:
+            - path: /etc/nvidia/ClientConfigToken/client_configuration_token.tok
+              permissions: '0600'
+              encoding: b64
+              content: <base64 token>
+            - path: /etc/nvidia/gridd.conf
+              permissions: '0644'
+              content: |
+                FeatureType=1
 ```
-
-{{% alert color="warning" %}}
-The Ubuntu containerDisk image gives the guest a 2.4 GiB root filesystem (qcow2 overlay on the immutable container layer). That is **not enough** to install the GRID guest driver — kernel headers, build-essential, DKMS sources, and `libnvidia-*.so` libraries together overflow the rootfs and `nvidia-installer` aborts with `SIGBUS`. Use a CDI `DataVolume` of 20 GiB or larger for the root disk in any non-throwaway test.
-{{% /alert %}}
 
 ```bash
-kubectl apply -f vmi-vgpu.yaml
+kubectl apply -f vgpu-smoke.yaml
 ```
 
-Once the VM is running, install the **guest** GRID driver from the corresponding `.run` (this is the `linux-grid` variant, distinct from the host `vgpu-kvm` package), then verify the vGPU is visible:
+Once the VM is running and cloud-init has settled, install the **guest** GRID driver from the corresponding `.run` (the `linux-grid` variant, distinct from the host `vgpu-kvm` package — and pin the version to whatever currently ships on the NVIDIA Licensing Portal). Open a session via `virtctl ssh ubuntu@vm/vgpu-smoke` and run the installer with the `--dkms` flag so future kernel updates re-build the modules automatically.
 
-```bash
-virtctl console vgpu-smoke
-```
+Verify the vGPU is visible:
 
 ```console
 ubuntu@vgpu-smoke:~$ nvidia-smi
@@ -471,7 +566,12 @@ ubuntu@vgpu-smoke:~$ nvidia-smi
 +-----------------------------------------+------------------------+----------------------+
 ```
 
-`nvidia-smi -q | grep -i license` should report `Licensed` once `nvidia-gridd` checks in with the DLS endpoint baked into the ClientConfigToken.
+```bash
+nvidia-smi -q | grep 'License Status'
+# License Status   : Licensed
+```
+
+If the License Status remains `Unlicensed (Unrestricted)` for more than a couple of minutes after `nvidia-gridd` starts, see step 4 above for troubleshooting.
 
 ### vGPU Profiles
 
