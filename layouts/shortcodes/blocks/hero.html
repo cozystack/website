@@ -41,6 +41,11 @@
         <div class="col-lg-9">
           {{ with .Get "title" }}<h1 class="display-1">{{ . | html }}</h1>{{ end }}
           {{ with .Get "subtitle" }}<p class="display-2">{{ . | html }}</p>{{ end }}
+          {{ with .Page.Params.taglines }}
+          <ul class="hero-taglines" aria-label="Cozystack platform positioning">
+            {{ range . }}<li class="hero-tagline">{{ . | html }}</li>{{ end }}
+          </ul>
+          {{ end }}
         </div>
         <div class="col-lg-3 d-none d-lg-block text-end">
           <a href="https://landscape.cncf.io/?group=certified-partners-and-providers&item=platform--paas-container-service--cozystack" target="_blank" rel="noopener noreferrer">
