@@ -192,7 +192,7 @@ We are now ready to create a VM.
     Password:
 
     ubuntu@virtual-machine-gpu:~$ lspci -nnk -d 10de:
-    08:00.0 3D controller [0302]: NVIDIA Corporation GA102GL [A10] [10de:26b9] (rev a1)
+    08:00.0 3D controller [0302]: NVIDIA Corporation GA102GL [A10] [10de:2236] (rev a1)
             Subsystem: NVIDIA Corporation GA102GL [A10] [10de:1851]
             Kernel driver in use: nvidia
             Kernel modules: nvidiafb, nvidia_drm, nvidia
@@ -201,6 +201,15 @@ We are now ready to create a VM.
 ## GPU Sharing for Virtual Machines (vGPU)
 
 GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU between multiple VMs, you can use **NVIDIA vGPU**, which slices a single physical GPU into multiple virtual GPUs that VMs consume independently.
+
+{{% alert color="warning" %}}
+**This entire workflow depends on upstream components that are not yet released.** Two foundational pieces are required and neither is in a Cozystack release as of this writing:
+
+- The `vgpu` variant of the `gpu-operator` package — tracked in [cozystack/cozystack#2323](https://github.com/cozystack/cozystack/pull/2323), still in draft.
+- KubeVirt's SR-IOV vGPU support ([kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) — currently `main`-only; will ship in v1.9.0 (no firm release date as of writing). KubeVirt versions up to and including v1.8.x do not advertise SR-IOV VFs as PCI host devices.
+
+Treat this guide as forward-looking documentation. If you follow it on a current Cozystack release the variant CR will be rejected and the `kubectl edit kubevirt` patch will not produce allocatable resources.
+{{% /alert %}}
 
 {{% alert color="info" %}}
 **Why not MIG?** MIG (Multi-Instance GPU) partitions a GPU into isolated instances, but these are logical divisions within a single PCIe device. VFIO cannot pass them to VMs — MIG only works with containers. To use MIG with VMs, you need vGPU on top of MIG partitions (still requires a vGPU license).
@@ -216,8 +225,8 @@ GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU 
 ### Prerequisites
 
 - An Ada Lovelace (or newer) NVIDIA GPU that supports SR-IOV vGPU (L4, L40, L40S, etc.).
-- Ubuntu 24.04 host OS. Older Ubuntu releases also work if NVIDIA's `gpu-driver-container` repository ships a matching `vgpu-manager/<release>/Dockerfile`. **Talos Linux is not recommended** — we tried, and the path is blocked: NVIDIA does not grant redistribution rights for the proprietary `.run`, and Sidero closed [siderolabs/extensions#461](https://github.com/siderolabs/extensions/issues/461) as «won't fix», so building a Talos system extension that bakes in the vGPU driver is not feasible without violating the EULA. For passthrough Talos is fine; only vGPU is affected.
-- KubeVirt **v1.9.0 or later**. SR-IOV vGPU passthrough was added by [kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890) («vGPU: SRIOV support», merged to `main` 2026-04-10) and will ship in the v1.9.0 release (ETA July 2026). Earlier released tags (`v1.6.x` / `v1.7.x` / `v1.8.x`) do not advertise SR-IOV VFs as PCI host devices, and backports are not planned. If you need vGPU before v1.9.0 lands you have to run a `main`-based nightly build of `virt-handler`; the rest of the operator can stay on the latest released tag.
+- Ubuntu 24.04 host OS. Older Ubuntu releases also work if NVIDIA's `gpu-driver-container` repository ships a matching `vgpu-manager/<release>/Dockerfile`. **Talos Linux is not recommended** for the vGPU path. NVIDIA does not publicly distribute the vGPU guest driver — it requires NVIDIA Enterprise Portal access — and Sidero [closed siderolabs/extensions#461](https://github.com/siderolabs/extensions/issues/461) noting that they cannot support vGPU «unless NVIDIA changes their licensing terms or provides us a way to obtain, test, and distribute the software». For passthrough Talos is fine; only vGPU is affected.
+- KubeVirt **v1.9.0 or later**. SR-IOV vGPU passthrough was added by [kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890) («vGPU: SRIOV support», merged to `main` 2026-04-10) and is targeted for the v1.9.0 release; track the PR for the actual release tag. Earlier released tags (`v1.6.x` / `v1.7.x` / `v1.8.x`) do not advertise SR-IOV VFs as PCI host devices, and backports are not planned. If you need vGPU before v1.9.0 lands you have to run a `main`-based nightly build of `virt-handler`; the rest of the operator can stay on the latest released tag.
 - An NVIDIA vGPU Software / NVIDIA AI Enterprise subscription.
 - A reachable NVIDIA Delegated License Service (DLS) instance and a matching `client_configuration_token.tok` file.
 
@@ -387,9 +396,9 @@ spec:
         resourceName: nvidia.com/L40S-24Q
 ```
 
-On L40S (and other Ada-Lovelace cards) the SR-IOV VFs report the same PCI device ID as the PF — `lspci -nn -d 10de:` on the host shows both as `[10de:26b9]`. `virt-handler` distinguishes them by «is-VF + has-vGPU-profile», so a single `pciVendorSelector` matches the right set. Verify on your specific GPU before assuming this — some other generations split PF/VF IDs.
+`pciVendorSelector` is the `vendor:device` tuple of the GPU; on L40S (and other Ada-Lovelace cards) the SR-IOV VFs report the same tuple as the PF — `lspci -nn -d 10de:` on the host shows both as `[10de:26b9]`. `virt-handler` distinguishes them by «is-VF + has-vGPU-profile», so a single `pciVendorSelector` matches the right set. Verify on your specific GPU with `lspci -nn -d 10de:` before assuming this — some generations split PF/VF tuples.
 
-Adjust `pciVendorSelector` (the device ID, not the vendor:device pair) and `resourceName` to match your GPU and chosen profile. **Do not** set `externalResourceProvider: true` here — the device plugin lives inside `virt-handler` itself for SR-IOV vGPU; no external sandbox device plugin advertises this resource.
+Match `resourceName` to the profile you wrote into `current_vgpu_type`. **Do not** set `externalResourceProvider: true` here — the device plugin lives inside `virt-handler` itself for SR-IOV vGPU; no external sandbox device plugin advertises this resource.
 
 Verify allocatable capacity:
 
@@ -399,7 +408,7 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{": "}{.status.a
 
 ### 6. Create a Virtual Machine with vGPU
 
-For SR-IOV vGPU, request the resource via `hostDevices`. The `gpus:` field expects an mdev resource and will not match a `pciHostDevices` entry.
+The vGPU resource is exposed as a stock `pciHostDevices` entry, so any KubeVirt VM that requests it via `hostDevices` (or `gpus:`, which accepts both PCI and mdev resource names) will work. The example below uses the upstream `kubevirt.io/v1` `VirtualMachine` kind directly rather than the Cozystack `apps.cozystack.io/v1alpha1` wrapper used in the passthrough section above — at the time of writing the wrapper does not surface a `hostDevices` field, so the raw KubeVirt CR is the path that lets the SR-IOV resource through. Tenants need permission to create raw KubeVirt resources in their namespace; if your tenant policy disallows this, expose the resource through the wrapper once support lands.
 
 ```yaml
 apiVersion: kubevirt.io/v1
