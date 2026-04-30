@@ -203,9 +203,11 @@ GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU 
 **This entire workflow depends on upstream components that are not yet released.** Two foundational pieces are required and neither is in a Cozystack release as of this writing:
 
 - The `vgpu` variant of the `gpu-operator` package — tracked in [cozystack/cozystack#2323](https://github.com/cozystack/cozystack/pull/2323); until that lands the `vgpu` variant is unavailable in released Cozystack versions.
-- KubeVirt's SR-IOV vGPU support ([kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) — `main`-only. See the [Prerequisites](#prerequisites) section below for the full version story.
+- KubeVirt's SR-IOV vGPU support ([kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) — `main`-only. See the [vGPU Prerequisites](#vgpu-prerequisites) section below for the full version story.
 
-Treat this guide as forward-looking documentation. If you follow it on a current Cozystack release the variant CR will be rejected and the `kubectl edit kubevirt` patch will not produce allocatable resources.
+Treat this guide as forward-looking documentation: until the upstream PRs land in released artifacts, following it end-to-end on a current Cozystack release will not produce a working vGPU. The most likely failure mode is silent — the `kubectl edit kubevirt` patch is accepted but no allocatable resources appear because the released `virt-handler` does not advertise SR-IOV VFs.
+
+**Last verified:** 2026-04-29 against KubeVirt `main` (`virt-handler` nightly `20260429_74d7c52588`) + cozystack/cozystack#2323 head + NVIDIA vGPU 20.0 host driver `595.58.02` + GRID guest driver `595.58.03`.
 {{% /alert %}}
 
 {{% alert color="info" %}}
@@ -219,7 +221,7 @@ Treat this guide as forward-looking documentation. If you follow it on a current
 - **Mediated devices (mdev)** — Pascal / Volta / Turing / Ampere up to A100 / A30. KubeVirt advertises them via `permittedHostDevices.mediatedDevices`. For these GPUs follow the [upstream NVIDIA GPU Operator docs](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/install-gpu-operator-vgpu.html) — the configuration shown below does not apply.
 {{% /alert %}}
 
-### Prerequisites
+### vGPU Prerequisites
 
 - An Ada Lovelace (or newer) NVIDIA GPU that supports SR-IOV vGPU (L4, L40, L40S, etc.).
 - Ubuntu 24.04 host OS. Older Ubuntu releases also work if NVIDIA's `gpu-driver-container` repository ships a matching `vgpu-manager/<release>/Dockerfile`.
@@ -287,7 +289,7 @@ The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, sets `sand
     kubectl exec -n cozy-gpu-operator <vgpu-manager-pod> -- nvidia-smi
     ```
 
-    `nvidia-smi` should enumerate the physical GPUs and report `Host VGPU Mode : SR-IOV`. The driver enables SR-IOV automatically; the maximum VF count is hardware-dependent and the configured profile size further reduces it (for example an L40S exposes up to 16 VFs at `-1Q` but only 2 at `-24Q` — total framebuffer divided by per-profile framebuffer).
+    `nvidia-smi` should enumerate the physical GPUs and report `Host VGPU Mode : SR-IOV`. The driver enables SR-IOV automatically; the maximum VF count is hardware-dependent (PCIe SR-IOV capability), and the configured profile size further caps how many VFs can carry that profile because total per-GPU framebuffer is fixed (for example an L40S has 48 GiB framebuffer, so at most 2 VFs can hold an `-24Q` profile, even though the GPU itself exposes more SR-IOV VFs).
 
 ### 3. Assign vGPU Profiles to SR-IOV VFs
 
@@ -339,11 +341,18 @@ spec:
     spec:
       nodeSelector:
         nvidia.com/gpu.workload.config: vm-vgpu
+      terminationGracePeriodSeconds: 5
       containers:
       - name: loader
         image: alpine:3.20
         securityContext:
           privileged: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            memory: 32Mi
         volumeMounts:
         - { name: sys, mountPath: /sys }
         - { name: profiles, mountPath: /etc/vgpu-profiles, readOnly: true }
@@ -469,7 +478,7 @@ KubeVirt accepts the vGPU resource under either `hostDevices:` or `gpus:`. The t
 **Do not use a stock containerDisk root volume for in-VM driver install.** The Ubuntu containerDisk image gives the guest a ~2.4 GiB root filesystem (qcow2 overlay on the immutable container layer). Kernel headers + `build-essential` + DKMS sources + `libnvidia-*.so` libraries together overflow the rootfs and `nvidia-installer` aborts mid-install (we observed `SIGBUS` from a write into an mmap of a file the kernel could no longer extend). Use a CDI `DataVolume` of 20 GiB or larger for the root disk in any non-throwaway test, or pre-bake the GRID driver into a custom containerDisk image.
 {{% /alert %}}
 
-The example below uses a `DataVolume` so the root has room for the driver install, and a `cloudInitNoCloud` disk that drops the licensing token, `gridd.conf`, an SSH key for `virtctl ssh`, and the build dependencies. `<base64 token>` and `<your ssh public key>` are placeholders the operator fills in. Note that the field name for "keep this VM running" differs from the passthrough section above: raw `kubevirt.io/v1` uses `runStrategy: Always`; the Cozystack `apps.cozystack.io/v1alpha1` wrapper uses `running: true`. Both mean the same thing:
+The example below uses a `DataVolume` so the root has room for the driver install, and a `cloudInitNoCloud` disk that drops the licensing token, `gridd.conf`, an SSH key for `virtctl ssh`, and the build dependencies. `<base64 token>` and `<your ssh public key>` are placeholders the operator fills in:
 
 ```yaml
 apiVersion: kubevirt.io/v1
