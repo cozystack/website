@@ -232,38 +232,14 @@ Treat this guide as forward-looking documentation. If you follow it on a current
 The vGPU Manager driver is proprietary software distributed by NVIDIA under a commercial license. Cozystack does not include or redistribute this driver. You must obtain it directly from NVIDIA and build the container image yourself.
 {{% /alert %}}
 
-### 1. Build the vGPU Manager Image
+### 1. Build and Push the vGPU Manager Image
 
-The GPU Operator expects a pre-built driver container image — it does not install the driver from a raw `.run` file at runtime.
+The GPU Operator expects a pre-built driver container image — it does not install the driver from a raw `.run` file at runtime. NVIDIA owns this build path; their [`gpu-driver-container` repository](https://github.com/NVIDIA/gpu-driver-container) ships per-OS Dockerfiles under `vgpu-manager/<os>/` and is the source of truth for build args, base images, and supported OS releases. Follow the README in that repository to build the image.
 
-1. Download the vGPU Manager driver from the [NVIDIA Licensing Portal](https://ui.licensing.nvidia.com) (Software Downloads → NVIDIA AI Enterprise → Linux KVM, **not** the Ubuntu KVM `.deb` — that ships pre-built modules for stock kernels only).
-2. Build the driver container image from NVIDIA's upstream repository (the older `gitlab.com/nvidia/container-images/driver` is archived). Replace `registry.example.com` with your private registry hostname:
-
-```bash
-git clone https://github.com/NVIDIA/gpu-driver-container.git
-cd gpu-driver-container/vgpu-manager/ubuntu24.04
-
-# Place the downloaded .run alongside the Dockerfile (do not commit it)
-cp /path/to/NVIDIA-Linux-x86_64-<driver-version>-vgpu-kvm.run .
-
-# --platform linux/amd64 is mandatory on Apple Silicon / arm64 build
-# hosts: GPU nodes are amd64 and the kubelet pull will fail with
-# 'no matching manifest' if the image was built native on arm64.
-docker build \
-  --platform linux/amd64 \
-  --build-arg DRIVER_VERSION=<driver-version> \
-  -t registry.example.com/nvidia/vgpu-manager:<driver-version>-ubuntu24.04 .
-
-# docker login first if your registry needs auth
-docker push registry.example.com/nvidia/vgpu-manager:<driver-version>-ubuntu24.04
-```
-
-{{% alert color="info" %}}
-The container's entrypoint downloads kernel headers at pod start time and compiles `nvidia.ko` against the running kernel, so a single image works across kernel patch versions for the same Ubuntu release.
-{{% /alert %}}
+The proprietary `.run` is delivered through the [NVIDIA Licensing Portal](https://ui.licensing.nvidia.com) (Software Downloads → NVIDIA AI Enterprise → Linux KVM — **not** the Ubuntu KVM `.deb`, which ships pre-built modules for stock kernels only).
 
 {{% alert color="warning" %}}
-Uploading the vGPU driver to a publicly available registry is a violation of the NVIDIA vGPU EULA. Always use a private registry — Cozystack's in-cluster Harbor (as a non-proxy project) is a good fit.
+Uploading the vGPU driver to a publicly readable registry is a violation of the NVIDIA vGPU EULA. Always use a private registry — Cozystack's in-cluster Harbor (as a non-proxy project) is a good fit.
 {{% /alert %}}
 
 ### 2. Install the GPU Operator with vGPU Variant
