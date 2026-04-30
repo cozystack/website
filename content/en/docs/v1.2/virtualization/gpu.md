@@ -209,7 +209,7 @@ GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU 
 {{% alert color="info" %}}
 **Two driver models.** NVIDIA's vGPU driver uses two different host-side mechanisms:
 
-- **SR-IOV with per-VF NVIDIA sysfs** — Ada Lovelace and newer (L4, L40, L40S, B100, etc.) on the vGPU 17 / 20 driver branch. KubeVirt advertises VFs via `permittedHostDevices.pciHostDevices`. **This guide focuses on this path** — it is what NVIDIA ships for current data-centre GPUs.
+- **SR-IOV with per-VF NVIDIA sysfs** — Ada Lovelace (L4, L40, L40S, …) and Blackwell (B100, …) on the vGPU 17 / 20 driver branch. KubeVirt advertises VFs via `permittedHostDevices.pciHostDevices`. **This guide focuses on this path** — it is what NVIDIA ships for current data-centre GPUs.
 - **Mediated devices (mdev)** — Pascal / Volta / Turing / Ampere up to A100 / A30. KubeVirt advertises them via `permittedHostDevices.mediatedDevices`. For these GPUs follow the [upstream NVIDIA GPU Operator docs](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/install-gpu-operator-vgpu.html) — the configuration shown below does not apply.
 {{% /alert %}}
 
@@ -256,7 +256,11 @@ Uploading the vGPU driver to a publicly available registry is a violation of the
 
 ### 2. Install the GPU Operator with vGPU Variant
 
-The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, disables the pod-side driver and device plugin, and leaves NVIDIA's `vgpu-device-manager` DaemonSet **off** by default. The device manager walks `/sys/class/mdev_bus/`, which does not exist on Ada+ — flip its flag on only when running an mdev-era GPU.
+{{% alert color="warning" %}}
+**The vgpu variant is experimental.** NVIDIA's `vgpu-device-manager` walks `/sys/class/mdev_bus/`, which does not exist on Ada Lovelace or Blackwell — the DaemonSet errors with «no parent devices found» and is therefore disabled by default. Profile assignment is currently an out-of-band step (`echo <id> > /sys/.../current_vgpu_type` per VF) that must be re-applied after every node reboot. Without it, `permittedHostDevices.pciHostDevices` reports zero allocatable resources. **Do not deploy the variant in production until you have an automated profile-assignment mechanism in place** — typically a small DaemonSet that reads a ConfigMap (`<bus-id> = <profile-id>`) and writes the corresponding `current_vgpu_type` files at boot.
+{{% /alert %}}
+
+The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, sets `sandboxWorkloads.defaultWorkload: vm-vgpu` so unlabelled GPU nodes activate the variant, and disables the pod-side driver, device plugin, and `vgpu-device-manager` DaemonSets. Flip `vgpuDeviceManager.enabled: true` only when running an mdev-era GPU (Pascal–Ampere).
 
 1. Label the worker node for vGPU workloads:
 
@@ -283,7 +287,7 @@ The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, disables t
                 version: "595.58.02-ubuntu24.04"
     ```
 
-    If your registry requires authentication, create a docker-registry Secret in the `cozy-gpu-operator` namespace first, then reference it. The chart's `imagePullSecrets` is a list of strings, not `[{name: ...}]`:
+    If your registry requires authentication, create a docker-registry Secret in the `cozy-gpu-operator` namespace first, then reference it. `imagePullSecrets` is a per-component field on the gpu-operator chart (`vgpuManager`, `driver`, `validator`, …); the value is a list of strings, not `[{name: ...}]`:
 
     ```yaml
     gpu-operator:
@@ -291,8 +295,8 @@ The GPU Operator's `vgpu` variant enables the vGPU Manager DaemonSet, disables t
         repository: registry.example.com/nvidia
         image: vgpu-manager
         version: "595.58.02-ubuntu24.04"
-      imagePullSecrets:
-      - nvidia-registry-secret
+        imagePullSecrets:
+        - nvidia-registry-secret
     ```
 
 3. Verify the DaemonSet is running and `nvidia.ko` loads on every GPU node:
@@ -326,36 +330,45 @@ Profile assignment is currently out-of-band — there is no first-class operator
 
 ### 4. Configure the NVIDIA License Service (DLS)
 
-vGPU 17 / 20 uses the NVIDIA Delegated License Service. The legacy `ServerAddress=` / `ServerPort=7070` lines in `gridd.conf` are no longer authoritative — `nvidia-gridd` reads the DLS endpoint from the ClientConfigToken file directly.
+vGPU 17 / 20 uses the NVIDIA Delegated License Service. The legacy `ServerAddress=` / `ServerPort=7070` lines in `gridd.conf` are no longer authoritative — `nvidia-gridd` (running **inside the guest**) reads the DLS endpoint from the ClientConfigToken file directly.
 
-Create a Secret with the token in the `cozy-gpu-operator` namespace:
+The host vGPU Manager DaemonSet does not request a license — it only enables SR-IOV and loads `nvidia.ko`. Licensing is consumed entirely by the guest. The gpu-operator chart's `driver.licensingConfig.secretName` would mount the Secret into the **driver pod on the host**, where it has no effect for SR-IOV vGPU; do not wire the licensing Secret through it.
 
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: licensing-config
-  namespace: cozy-gpu-operator
-data:
-  client_configuration_token.tok: <base64 token>
-stringData:
-  gridd.conf: |
-    # FeatureType=0  → auto-detect (recommended)
-    # FeatureType=2  → explicitly NVIDIA RTX Virtual Workstation
-    # FeatureType=4  → explicitly NVIDIA vGPU for Compute
-    FeatureType=0
-```
-
-Reference the Secret in the Package values:
+Instead, deliver the token and `gridd.conf` to the guest via cloud-init or a containerDisk overlay so they land at `/etc/nvidia/ClientConfigToken/client_configuration_token.tok` and `/etc/nvidia/gridd.conf`:
 
 ```yaml
-gpu-operator:
-  driver:
-    licensingConfig:
-      secretName: licensing-config
+# inside the VirtualMachine cloudInitNoCloud userData
+write_files:
+- path: /etc/nvidia/ClientConfigToken/client_configuration_token.tok
+  permissions: '0600'
+  encoding: b64
+  content: <base64 token>
+- path: /etc/nvidia/gridd.conf
+  permissions: '0644'
+  content: |
+    # FeatureType selects which vGPU Software license the guest requests:
+    #   0 — unlicensed state (no license requested; Q profiles run in
+    #       reduced mode after the grace period)
+    #   1 — NVIDIA vGPU; the driver auto-selects the correct license type
+    #       from the configured vGPU profile (Q → vWS, B → vPC,
+    #       A → vCS / Compute). Use this for SR-IOV vGPU profiles.
+    #   2 — explicitly NVIDIA RTX Virtual Workstation
+    #   4 — explicitly NVIDIA Virtual Compute Server
+    FeatureType=1
 ```
 
-The Secret is consumed by the **guest**, not the host vGPU Manager. Inject the token and `gridd.conf` via cloud-init, or mount them into the VM via a ConfigMap / Secret disk so that they land at `/etc/nvidia/ClientConfigToken/` and `/etc/nvidia/gridd.conf` respectively.
+Verify activation inside the guest:
+
+```bash
+nvidia-smi -q | grep -A 1 'License Status'
+# License Status   : Licensed
+```
+
+If the guest reports `Unlicensed (Unrestricted)` for more than a couple of minutes, check `journalctl _COMM=nvidia-gridd` inside the guest for handshake errors against the DLS endpoint baked into the token.
+
+{{% alert color="info" %}}
+**Migrating from older GPU Operator versions.** The upstream chart deprecated `driver.licensingConfig.configMapName` in favour of `driver.licensingConfig.secretName`. The old key still works but is marked deprecated in the CRD. If you previously wired licensing through `configMapName` for passthrough deployments, switch to `secretName` on the next upgrade — the Secret content (`gridd.conf` and the ClientConfigToken) does not need to change. SR-IOV vGPU does not consume the host-side licensing knob at all (see above).
+{{% /alert %}}
 
 ### 5. Update the KubeVirt Custom Resource
 
@@ -370,9 +383,11 @@ spec:
   configuration:
     permittedHostDevices:
       pciHostDevices:
-      - pciVendorSelector: "10DE:26B9"   # L40S device ID
+      - pciVendorSelector: "10DE:26B9"   # L40S — same device ID for PF and VF
         resourceName: nvidia.com/L40S-24Q
 ```
+
+On L40S (and other Ada-Lovelace cards) the SR-IOV VFs report the same PCI device ID as the PF — `lspci -nn -d 10de:` on the host shows both as `[10de:26b9]`. `virt-handler` distinguishes them by «is-VF + has-vGPU-profile», so a single `pciVendorSelector` matches the right set. Verify on your specific GPU before assuming this — some other generations split PF/VF IDs.
 
 Adjust `pciVendorSelector` (the device ID, not the vendor:device pair) and `resourceName` to match your GPU and chosen profile. **Do not** set `externalResourceProvider: true` here — the device plugin lives inside `virt-handler` itself for SR-IOV vGPU; no external sandbox device plugin advertises this resource.
 
