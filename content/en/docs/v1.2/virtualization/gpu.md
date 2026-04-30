@@ -1,15 +1,13 @@
 ---
-title: "Running VMs with GPU Passthrough"
-linkTitle: "GPU Passthrough"
-description: "Running VMs with GPU Passthrough"
+title: "Running VMs with GPU Passthrough or vGPU"
+linkTitle: "GPU Passthrough and vGPU"
+description: "Running VMs with GPU Passthrough or NVIDIA vGPU on Cozystack"
 weight: 40
 aliases:
   - /docs/v1.2/operations/virtualization/gpu
 ---
 
-This section demonstrates how to deploy virtual machines (VMs) with GPU passthrough using Cozystack.
-First, we’ll deploy the GPU Operator to configure the worker node for GPU passthrough
-Then we will deploy a [KubeVirt](https://kubevirt.io/) VM that requests a GPU.
+This section demonstrates how to deliver GPU access to virtual machines (VMs) on Cozystack. It covers two flows: **GPU passthrough** (one whole physical GPU bound to a single VM via `vfio-pci`) and **NVIDIA vGPU** (one physical GPU sliced into multiple virtual GPUs via SR-IOV, with each VF passed to a different VM). The passthrough flow comes first; jump to [GPU Sharing for Virtual Machines (vGPU)](#gpu-sharing-for-virtual-machines-vgpu) for the vGPU walk-through.
 
 By default, to provision a GPU Passthrough, the GPU Operator will deploy the following components:
 
@@ -205,7 +203,7 @@ GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU 
 {{% alert color="warning" %}}
 **This entire workflow depends on upstream components that are not yet released.** Two foundational pieces are required and neither is in a Cozystack release as of this writing:
 
-- The `vgpu` variant of the `gpu-operator` package — tracked in [cozystack/cozystack#2323](https://github.com/cozystack/cozystack/pull/2323), still in draft.
+- The `vgpu` variant of the `gpu-operator` package — tracked in [cozystack/cozystack#2323](https://github.com/cozystack/cozystack/pull/2323); until that lands the `vgpu` variant is unavailable in released Cozystack versions.
 - KubeVirt's SR-IOV vGPU support ([kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) — `main`-only. See the [Prerequisites](#prerequisites) section below for the full version story.
 
 Treat this guide as forward-looking documentation. If you follow it on a current Cozystack release the variant CR will be rejected and the `kubectl edit kubevirt` patch will not produce allocatable resources.
@@ -218,7 +216,7 @@ Treat this guide as forward-looking documentation. If you follow it on a current
 {{% alert color="info" %}}
 **Two driver models.** NVIDIA's vGPU driver uses two different host-side mechanisms:
 
-- **SR-IOV with per-VF NVIDIA sysfs** — Ada Lovelace (L4, L40, L40S, …) and Blackwell (B100, …) on the vGPU 17 / 20 driver branch. KubeVirt advertises VFs via `permittedHostDevices.pciHostDevices`. **This guide focuses on this path** — it is what NVIDIA ships for current data-centre GPUs.
+- **SR-IOV with per-VF NVIDIA sysfs** — Ada Lovelace (L4, L40, L40S, …) and Blackwell (B100, …) on the **vGPU 20.x driver branch** (driver `595.x`). KubeVirt advertises VFs via `permittedHostDevices.pciHostDevices`. **This guide focuses on this path** — it is what NVIDIA ships for current data-centre GPUs. vGPU 17.x supports the same hardware via SR-IOV but pre-dates KubeVirt's `pciHostDevices` integration ([kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890)) and is out of scope here.
 - **Mediated devices (mdev)** — Pascal / Volta / Turing / Ampere up to A100 / A30. KubeVirt advertises them via `permittedHostDevices.mediatedDevices`. For these GPUs follow the [upstream NVIDIA GPU Operator docs](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/latest/install-gpu-operator-vgpu.html) — the configuration shown below does not apply.
 {{% /alert %}}
 
@@ -328,7 +326,7 @@ kubectl exec -n cozy-gpu-operator <vgpu-manager-pod> -- \
 ```
 
 {{% alert color="info" %}}
-Profile assignment is currently out-of-band — there is no first-class operator for the SR-IOV path yet. Manual `kubectl exec` is fine for a proof-of-concept cluster. For anything longer-lived, a small DaemonSet that re-applies the assignment on every node start is the typical pattern. The skeleton below is a starting point — production-grade implementations should add proper error reporting, MIG awareness, and a watcher that re-applies on PCIe re-enumeration (the script as written only handles cold reboots; if the driver re-binds without restarting the pod, the profile resets to 0 and the loop has already exited).
+Profile assignment is currently out-of-band — there is no first-class operator for the SR-IOV path yet. Manual `kubectl exec` is fine for a proof-of-concept cluster. For anything longer-lived, a small DaemonSet that re-applies the assignment periodically is the typical pattern. The skeleton below is a starting point — production-grade implementations will want richer error reporting, MIG awareness, and explicit ConfigMap reload handling. **Side-effect to be aware of:** while this DaemonSet runs, manual `kubectl exec` changes to `current_vgpu_type` are reverted within 60 s. Edit the ConfigMap rather than the sysfs file directly.
 {{% /alert %}}
 
 ```yaml
@@ -376,18 +374,28 @@ spec:
           set -u
           while true; do
             while IFS= read -r line; do
-              # skip blank lines and comments
-              line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+              # strip leading/trailing whitespace and any trailing comment
+              line=$(printf '%s' "$line" | sed 's/[[:space:]]*#.*$//;s/^[[:space:]]*//;s/[[:space:]]*$//')
               [ -z "$line" ] && continue
-              case "$line" in \#*) continue ;; esac
               bus=${line%%=*}; profile=${line#*=}
-              [ "$bus" = "$line" ] && continue   # no '=' separator
+              [ "$bus" = "$line" ] && { echo "skip malformed line: $line"; continue; }
               path="/sys/bus/pci/devices/$bus/nvidia/current_vgpu_type"
               [ -w "$path" ] || { echo "skip $bus (no $path)"; continue; }
+              # read-before-write: skip if the profile already matches
+              # so manual out-of-band changes are visible in the log
+              # only when the loader actually overrides them, and so
+              # the kernel does not reject writes while a VM holds the VF.
+              current=$(cat "$path" 2>/dev/null || echo "")
+              if [ "$current" = "$profile" ]; then
+                continue
+              fi
               if echo "$profile" > "$path" 2>/dev/null; then
-                echo "set $bus -> $profile"
+                echo "set $bus -> $profile (was $current)"
               else
-                echo "ERROR: failed to set $bus -> $profile"
+                # Likely refcount > 0 (VM holds the VF). Suppress the
+                # noisy retry; the next pass will pick it up after the
+                # VM releases.
+                :
               fi
             done < /etc/vgpu-profiles/profiles
             sleep 60   # re-apply periodically in case the driver re-enumerates
@@ -409,7 +417,10 @@ Instead, deliver the token and `gridd.conf` to the guest via cloud-init or a con
 # inside the VirtualMachine cloudInitNoCloud userData
 write_files:
 - path: /etc/nvidia/ClientConfigToken/client_configuration_token.tok
-  permissions: '0600'
+  # 0744 follows NVIDIA's recommendation in the Licensing User Guide
+  # so nvidia-gridd (which does not necessarily run as the file owner)
+  # can read it.
+  permissions: '0744'
   encoding: b64
   content: <base64 token>
 - path: /etc/nvidia/gridd.conf
@@ -436,7 +447,7 @@ nvidia-smi -q | grep 'License Status'
 If the guest reports `Unlicensed (Unrestricted)` for more than a couple of minutes, check `journalctl _COMM=nvidia-gridd` inside the guest for handshake errors against the DLS endpoint baked into the token.
 
 {{% alert color="info" %}}
-**Migrating from older GPU Operator versions.** The upstream chart deprecated `driver.licensingConfig.configMapName` in favour of `driver.licensingConfig.secretName`. The old key still works but is marked deprecated in the CRD. If you previously wired licensing through `configMapName` for passthrough deployments, switch to `secretName` on the next upgrade — the Secret content (`gridd.conf` and the ClientConfigToken) does not need to change. SR-IOV vGPU does not consume the host-side licensing knob at all (see above).
+**Migrating from older GPU Operator versions (passthrough only).** The upstream chart deprecated `driver.licensingConfig.configMapName` in favour of `driver.licensingConfig.secretName`. The old key still works but is marked deprecated in the CRD. If you previously wired licensing through `configMapName` for passthrough deployments, switch to `secretName` on the next upgrade — the Secret content (`gridd.conf` and the ClientConfigToken) does not need to change. SR-IOV vGPU operators can ignore this; the host-side licensing knob is unused on the vGPU path (token consumption happens in the guest, see above).
 {{% /alert %}}
 
 ### 5. Update the KubeVirt Custom Resource
@@ -466,7 +477,7 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{": "}{.status.a
 
 ### 6. Create a Virtual Machine with vGPU
 
-KubeVirt accepts the vGPU resource under either `hostDevices:` or `gpus:`; the runtime semantics differ slightly (`gpus:` adds virtio-vga display semantics, `hostDevices:` does not). The example below uses `hostDevices:` for a headless compute VM. The example uses the upstream `kubevirt.io/v1` `VirtualMachine` kind directly rather than the Cozystack `apps.cozystack.io/v1alpha1` wrapper used in the passthrough section above — at the time of writing the wrapper does not surface a `hostDevices` field, and whether its `gpus:` field correctly resolves SR-IOV vGPU resource names has not been validated. Until that gap is closed, the raw KubeVirt CR is the safe path. Tenants need permission to create raw KubeVirt resources in their namespace; if your tenant policy disallows this, wait for wrapper support.
+KubeVirt accepts the vGPU resource under either `hostDevices:` or `gpus:`; the runtime semantics differ slightly (`gpus:` adds virtio-vga display semantics, `hostDevices:` does not). The example below uses `hostDevices:` for a headless compute VM. The example uses the upstream `kubevirt.io/v1` `VirtualMachine` kind directly rather than the Cozystack `apps.cozystack.io/v1alpha1` wrapper used in the passthrough section above — the wrapper's `gpus:` field passes the resource name straight through to KubeVirt, which works for the passthrough case, but the wrapper has not been exercised end-to-end against an SR-IOV vGPU resource and lacks an explicit `hostDevices:` surface for headless setups. Until the wrapper grows a tested SR-IOV vGPU path, raw KubeVirt is the safe option. Tenants need permission to create raw KubeVirt resources in their namespace; if your tenant policy disallows this, wait for wrapper support.
 
 {{% alert color="warning" %}}
 **Do not use a stock containerDisk root volume for in-VM driver install.** The Ubuntu containerDisk image gives the guest a ~2.4 GiB root filesystem (qcow2 overlay on the immutable container layer). Kernel headers + `build-essential` + DKMS sources + `libnvidia-*.so` libraries together overflow the rootfs and `nvidia-installer` aborts mid-install (we observed `SIGBUS` from a write into an mmap of a file the kernel could no longer extend). Use a CDI `DataVolume` of 20 GiB or larger for the root disk in any non-throwaway test, or pre-bake the GRID driver into a custom containerDisk image.
