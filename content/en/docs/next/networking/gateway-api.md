@@ -124,7 +124,10 @@ spec:
             - cozy-kubevirt-cdi
             - cozy-monitoring
             - cozy-linstor-gui
+            - default
 ```
+
+The `default` namespace is included because the Kubernetes API `TLSRoute` (shipped by the cozystack-api package) lives next to the `kubernetes` Service it points at, which is always in `default`.
 
 Flipping `gateway.enabled=true` wires three things:
 
