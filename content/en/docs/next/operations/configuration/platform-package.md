@@ -115,11 +115,11 @@ spec:
 
 #### Gateway
 
-Platform-wide Gateway API integration. Per-tenant opt-in is governed separately by `tenant.spec.gateway`. See the [Gateway API guide]({{% ref "/docs/next/networking/gateway-api" %}}) for the full architecture and migration path.
+Platform-wide Gateway API integration. The actual per-tenant Gateway is materialised on a tenant-by-tenant basis: derived-apex tenants (the common case) opt in automatically; custom-apex tenants opt in explicitly via `tenant.spec.gateway: true`. See the [Gateway API guide]({{% ref "/docs/next/networking/gateway-api" %}}) for the full architecture and migration path.
 
 | Value | Default | Description |
 | --- | --- | --- |
-| `gateway.enabled` | `false` | Enable Gateway API support across the platform. When `true`, cert-manager `ClusterIssuer`s use an `http01.gatewayHTTPRoute` solver attached to the publishing tenant's Gateway, and exposed services (`dashboard`, `keycloak`, `harbor`, `bucket`, `cozystack-api`, `vm-exportproxy`, `cdi-uploadproxy`) render `HTTPRoute`/`TLSRoute` instead of `Ingress`. Materialising the actual per-tenant Gateway still requires `tenant.spec.gateway: true`. |
+| `gateway.enabled` | `false` | Enable Gateway API support across the platform. When `true`, cert-manager `ClusterIssuer`s use an `http01.gatewayHTTPRoute` solver attached to the publishing tenant's Gateway, and exposed services (`dashboard`, `keycloak`, `harbor`, `bucket`, `cozystack-api`, `vm-exportproxy`, `cdi-uploadproxy`) render `HTTPRoute`/`TLSRoute` instead of `Ingress`. Materialising the actual per-tenant Gateway is auto-on for tenants whose apex is derived from the parent (`tenant.spec.host` empty); custom-apex tenants need explicit `tenant.spec.gateway: true`. |
 | `gateway.attachedNamespaces` | (see below) | Namespaces allowed to attach `HTTPRoute` or `TLSRoute` to a tenant Gateway via the listener `allowedRoutes` whitelist (matched on the built-in `kubernetes.io/metadata.name` label). The publishing tenant's namespace is always implicitly included. Tenant namespaces (`tenant-*`) are rejected by `cozystack-gateway-attached-namespaces-policy` and by a render-time helm guard — use `tenant.spec.gateway` instead. The `default` namespace is included by default because the Kubernetes API `TLSRoute` lives next to the `kubernetes` Service in `default`. |
 
 Default `gateway.attachedNamespaces`:

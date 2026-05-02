@@ -137,9 +137,9 @@ Flipping `gateway.enabled=true` wires three things:
 
 The `attachedNamespaces` list restricts which namespaces may attach `HTTPRoute` or `TLSRoute` to tenant Gateways through the listener `allowedRoutes` whitelist (see [Security](#security)). It is also guarded by a runtime `ValidatingAdmissionPolicy` that rejects any `tenant-*` entry, plus a render-time helm `fail` for the same.
 
-### 2. Per-tenant toggle
+### 2. Per-tenant Gateway
 
-Set `spec.gateway: true` on any tenant to materialise its `TenantGateway` CR (and through the controller, its `Gateway`, `Issuer`, `Certificate`(s) and `CiliumLoadBalancerIPPool`):
+A tenant gets its own `TenantGateway` CR (and through the controller, its `Gateway`, `Issuer`, `Certificate`(s) and `CiliumLoadBalancerIPPool`) automatically when its apex is derived from the parent — i.e. `tenant.spec.host` is left unset and the chart computes `<tenant name>.<parent apex>`. The implicit assumption is that derived-apex tenants want their URLs routable; forcing operators to also set `tenant.spec.gateway: true` would be a needless extra step.
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
@@ -147,15 +147,32 @@ kind: Tenant
 metadata:
   name: alice
   namespace: tenant-root
-spec:
-  gateway: true
-  resourceQuotas:
-    count/certificates.cert-manager.io: "10"
+spec: {}  # gateway auto-on, host derived as alice.<parent apex>
 ```
 
-Tenants may leave `spec.host` empty — the tenant chart computes it as `<tenant name>.<parent apex>`. Setting `spec.host` is reserved for cluster-admins and cozystack/Flux service accounts (enforced runtime by `cozystack-tenant-host-policy`, see [Security](#security)).
+For tenants with a custom non-derived apex (independent domain like `customer1.io`, not a subdomain), the operator made a deliberate apex choice — keep explicit opt-in to avoid surprising LB IP / ACME registration on tenants the operator may not have intended to expose:
 
-A child tenant with `spec.gateway: true` receives its own Gateway, its own Certificate(s), and its own `Issuer` that talks to Let's Encrypt on a separate ACME account — so child tenants do not share HTTP-01 challenge state with the parent or with siblings. There is no "share the parent's Gateway" mode; per-tenant Gateway is a deliberate isolation property of the security model.
+```yaml
+apiVersion: apps.cozystack.io/v1alpha1
+kind: Tenant
+metadata:
+  name: acme
+  namespace: tenant-root
+spec:
+  host: customer1.io
+  gateway: true   # required: custom apex does not auto-default
+```
+
+Operators who specifically want a derived-apex tenant without a Gateway (e.g. a dev sandbox without external exposure) opt out explicitly:
+
+```yaml
+spec:
+  gateway: false  # escape hatch — disables the auto-on default
+```
+
+Setting `tenant.spec.host` to a custom value is reserved for cluster-admins and cozystack/Flux service accounts (enforced runtime by `cozystack-tenant-host-policy`, see [Security](#security)).
+
+A tenant Gateway, regardless of how it was opted in, is its own per-tenant boundary: separate `Gateway`, separate `Issuer` and ACME account, separate `Certificate`(s) — child tenants do not share HTTP-01 challenge state with the parent or with siblings. There is no "share the parent's Gateway" mode; per-tenant Gateway is a deliberate isolation property of the security model.
 
 ## Cert mode: HTTP-01 (default) vs DNS-01 (opt-in)
 
