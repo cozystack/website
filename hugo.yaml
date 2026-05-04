@@ -63,10 +63,13 @@ module:
       disable: false
   mounts:
     # Mount local content
+    # Note: `next/` is the permanent trunk for unreleased docs. It is mounted here
+    # (visible in local dev and Netlify deploy previews) and excluded from
+    # production builds via `config/production/hugo.yaml`.
     - source: content/en
       target: content
-      excludeFiles:
-        - '**/_include/*'
+      files:
+        - '! **/_include/*'
     # Mount npm dependencies for Docsy
     - source: node_modules/bootstrap
       target: assets/vendor/bootstrap
@@ -114,6 +117,7 @@ permalinks:
 params:
   description: Free Cloud Platform based on Kubernetes
   copyright: Cozystack a Series of LF Projects, LLC
+  ahrefsAnalytics: sEZ/gu88M21DndmPulYRFw
   github_repo: https://github.com/cozystack/website
   github_branch: main
   github_project_repo: https://github.com/cozystack/cozystack
@@ -126,8 +130,17 @@ params:
   offlineSearch: false
   version_menu: "Versions"
   version_menu_pagelinks: true
-  latest_version_id: "v1.2"
+  latest_version_id: "v1.3"
   versions:
+    - version: "v1.3"
+      url: "/docs/v1.3/"
+      id: "v1.3"
+      order: 5
+    - version: "next"
+      url: "/docs/next/"
+      id: "next"
+      order: 999
+      hidden: true
     - version: "v1.2"
       url: "/docs/v1.2/"
       id: "v1.2"

@@ -1,9 +1,13 @@
 name: Fetch Telemetry Data
 
 on:
-  schedule:
-    # Run daily at 08:00 UTC (00:00 Pacific during PST, 01:00 during PDT)
-    - cron: '0 8 * * *'
+  # Daily cron is paused until the telemetry-server current-month fix ships.
+  # Until then the live /api/overview response for the current month is a
+  # frozen first-of-month snapshot, and an automatic fetch would overwrite
+  # the manually-corrected telemetry.json with stale numbers. Re-enable the
+  # schedule once cozystack-telemetry-server is deployed with the fix.
+  # schedule:
+  #   - cron: '0 8 * * *'
   workflow_dispatch:
 
 permissions:

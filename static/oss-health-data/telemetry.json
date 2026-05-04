@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-04-17T19:38:08Z",
+  "updated_at": "2026-04-22T18:11:05Z",
   "title": "Telemetry",
   "source": {
     "label": "Cozystack Telemetry Server"
@@ -10,95 +10,95 @@
       "summary_cards": [
         {
           "label": "Clusters",
-          "value": "43"
+          "value": "112"
         },
         {
           "label": "Total Nodes",
-          "value": "164",
-          "hint": "avg 3.8 per cluster"
+          "value": "450",
+          "hint": "avg 4.0 per cluster"
         },
         {
           "label": "Tenants",
-          "value": "83",
-          "hint": "avg 1.9 per cluster"
+          "value": "444",
+          "hint": "avg 4.0 per cluster"
         }
       ],
       "apps": [
         {
           "name": "Ingress",
-          "value": "44"
+          "value": "115"
         },
         {
           "name": "Etcd",
-          "value": "40"
+          "value": "104"
         },
         {
           "name": "Kubernetes",
-          "value": "30"
+          "value": "78"
         },
         {
           "name": "Monitoring",
-          "value": "29"
+          "value": "76"
         },
         {
           "name": "Bucket",
-          "value": "21"
+          "value": "55"
         },
         {
           "name": "SeaweedFS",
-          "value": "14"
+          "value": "36"
         },
         {
           "name": "VMInstance",
-          "value": "12"
+          "value": "31"
         },
         {
           "name": "VMDisk",
-          "value": "11"
+          "value": "29"
         },
         {
           "name": "VirtualPrivateCloud",
-          "value": "7"
+          "value": "18"
         },
         {
           "name": "Postgres",
-          "value": "6"
+          "value": "16"
         },
         {
           "name": "Redis",
-          "value": "5"
+          "value": "13"
         },
         {
           "name": "MongoDB",
-          "value": "2"
+          "value": "5"
         },
         {
           "name": "Harbor",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "Kafka",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "MariaDB",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "NFS",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "OpenBAO",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "RabbitMQ",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "TCPBalancer",
-          "value": "1"
+          "value": "3"
         }
       ],
       "range": {
@@ -107,228 +107,204 @@
       }
     },
     "quarter": {
-      "label": "March 2026 — April 2026",
+      "label": "Quarter",
       "summary_cards": [
         {
           "label": "Clusters",
-          "value": "41"
+          "value": "112"
         },
         {
           "label": "Total Nodes",
-          "value": "162",
+          "value": "450",
           "hint": "avg 4.0 per cluster"
         },
         {
           "label": "Tenants",
-          "value": "55",
-          "hint": "avg 1.3 per cluster"
+          "value": "444",
+          "hint": "avg 4.0 per cluster"
         }
       ],
       "apps": [
         {
           "name": "Ingress",
-          "value": "32"
+          "value": "115"
         },
         {
           "name": "Etcd",
-          "value": "26"
-        },
-        {
-          "name": "Monitoring",
-          "value": "23"
+          "value": "104"
         },
         {
           "name": "Kubernetes",
-          "value": "18"
+          "value": "78"
+        },
+        {
+          "name": "Monitoring",
+          "value": "76"
         },
         {
           "name": "Bucket",
-          "value": "15"
+          "value": "55"
         },
         {
           "name": "SeaweedFS",
-          "value": "10"
-        },
-        {
-          "name": "VMDisk",
-          "value": "8"
+          "value": "36"
         },
         {
           "name": "VMInstance",
-          "value": "7"
+          "value": "31"
         },
         {
-          "name": "Postgres",
-          "value": "6"
-        },
-        {
-          "name": "Redis",
-          "value": "5"
+          "name": "VMDisk",
+          "value": "29"
         },
         {
           "name": "VirtualPrivateCloud",
-          "value": "4"
+          "value": "18"
         },
         {
-          "name": "Qdrant",
-          "value": "2"
+          "name": "Postgres",
+          "value": "16"
         },
         {
-          "name": "ClickHouse",
-          "value": "1"
-        },
-        {
-          "name": "Harbor",
-          "value": "1"
-        },
-        {
-          "name": "Kafka",
-          "value": "1"
-        },
-        {
-          "name": "MariaDB",
-          "value": "1"
+          "name": "Redis",
+          "value": "13"
         },
         {
           "name": "MongoDB",
-          "value": "1"
+          "value": "5"
         },
         {
-          "name": "NATS",
-          "value": "1"
+          "name": "Harbor",
+          "value": "3"
+        },
+        {
+          "name": "Kafka",
+          "value": "3"
+        },
+        {
+          "name": "MariaDB",
+          "value": "3"
         },
         {
           "name": "NFS",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "OpenBAO",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "RabbitMQ",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "TCPBalancer",
-          "value": "1"
+          "value": "3"
         }
       ],
       "range": {
-        "from": "2026-03-01",
+        "from": "2026-04-01",
         "to": "2026-04-30"
       }
     },
     "year": {
-      "label": "March 2026 — April 2026",
+      "label": "Year",
       "summary_cards": [
         {
           "label": "Clusters",
-          "value": "41"
+          "value": "112"
         },
         {
           "label": "Total Nodes",
-          "value": "162",
+          "value": "450",
           "hint": "avg 4.0 per cluster"
         },
         {
           "label": "Tenants",
-          "value": "55",
-          "hint": "avg 1.3 per cluster"
+          "value": "444",
+          "hint": "avg 4.0 per cluster"
         }
       ],
       "apps": [
         {
           "name": "Ingress",
-          "value": "32"
+          "value": "115"
         },
         {
           "name": "Etcd",
-          "value": "26"
-        },
-        {
-          "name": "Monitoring",
-          "value": "23"
+          "value": "104"
         },
         {
           "name": "Kubernetes",
-          "value": "18"
+          "value": "78"
+        },
+        {
+          "name": "Monitoring",
+          "value": "76"
         },
         {
           "name": "Bucket",
-          "value": "15"
+          "value": "55"
         },
         {
           "name": "SeaweedFS",
-          "value": "10"
-        },
-        {
-          "name": "VMDisk",
-          "value": "8"
+          "value": "36"
         },
         {
           "name": "VMInstance",
-          "value": "7"
+          "value": "31"
         },
         {
-          "name": "Postgres",
-          "value": "6"
-        },
-        {
-          "name": "Redis",
-          "value": "5"
+          "name": "VMDisk",
+          "value": "29"
         },
         {
           "name": "VirtualPrivateCloud",
-          "value": "4"
+          "value": "18"
         },
         {
-          "name": "Qdrant",
-          "value": "2"
+          "name": "Postgres",
+          "value": "16"
         },
         {
-          "name": "ClickHouse",
-          "value": "1"
-        },
-        {
-          "name": "Harbor",
-          "value": "1"
-        },
-        {
-          "name": "Kafka",
-          "value": "1"
-        },
-        {
-          "name": "MariaDB",
-          "value": "1"
+          "name": "Redis",
+          "value": "13"
         },
         {
           "name": "MongoDB",
-          "value": "1"
+          "value": "5"
         },
         {
-          "name": "NATS",
-          "value": "1"
+          "name": "Harbor",
+          "value": "3"
+        },
+        {
+          "name": "Kafka",
+          "value": "3"
+        },
+        {
+          "name": "MariaDB",
+          "value": "3"
         },
         {
           "name": "NFS",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "OpenBAO",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "RabbitMQ",
-          "value": "1"
+          "value": "3"
         },
         {
           "name": "TCPBalancer",
-          "value": "1"
+          "value": "3"
         }
       ],
       "range": {
-        "from": "2026-03-01",
+        "from": "2026-04-01",
         "to": "2026-04-30"
       }
     }
