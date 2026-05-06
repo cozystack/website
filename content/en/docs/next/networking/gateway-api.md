@@ -174,6 +174,28 @@ Setting `tenant.spec.host` to a custom value is reserved for cluster-admins and 
 
 A tenant Gateway, regardless of how it was opted in, is its own per-tenant boundary: separate `Gateway`, separate `Issuer` and ACME account, separate `Certificate`(s) — child tenants do not share HTTP-01 challenge state with the parent or with siblings. There is no "share the parent's Gateway" mode; per-tenant Gateway is a deliberate isolation property of the security model.
 
+### 3. Pinning a tenant Gateway to a specific external IP
+
+By default the per-tenant Gateway's auto-created LoadBalancer Service draws its IP from the platform-wide `publishing.externalIPs` pool, rendered into a `CiliumLoadBalancerIPPool` scoped to the tenant namespace. For a tenant that needs a specific, predictable address — typical when the operator has reserved a particular public IP for a customer apex — set `tenant.spec.gatewayIP`:
+
+```yaml
+apiVersion: apps.cozystack.io/v1alpha1
+kind: Tenant
+metadata:
+  name: acme
+  namespace: tenant-root
+spec:
+  host: customer1.io
+  gateway: true
+  gatewayIP: "203.0.113.42"
+```
+
+When `gatewayIP` is non-empty, the tenant chart renders a dedicated `CiliumLoadBalancerIPPool` carrying that single IP and a service selector scoped to the tenant namespace. The value also propagates through `TenantGateway.spec.loadBalancerIP`, and the controller writes `lbipam.cilium.io/ips=<addr>` on the rendered Gateway via `spec.infrastructure.annotations`. Cilium's Gateway-API operator forwards the annotation to the auto-created Service ([GEP-1762](https://gateway-api.sigs.k8s.io/geps/gep-1762/)), and Cilium LB-IPAM allocates exactly that address.
+
+The chosen IP must not overlap with `publishing.externalIPs` — Cilium flags overlapping pools as conflicting and allocates from neither. Reserve a dedicated address per tenant Gateway (or extend the platform pool to make room) before setting `gatewayIP`.
+
+The current implementation is a one-Gateway-per-tenant-per-IP shape: each tenant Gateway gets its own LoadBalancer Service and its own IP. Sharing one external IP across multiple tenant Gateways is not supported until [Cilium ListenerSet support](https://github.com/cilium/cilium/issues/42756) lands — without it the Cilium sharing-key port-collision blocker (every tenant Gateway wants 443/TCP) makes the multi-tenant shared-IP case non-functional.
+
 ## Cert mode: HTTP-01 (default) vs DNS-01 (opt-in)
 
 `publishing.certificates.solver` controls how the per-tenant Issuer sources TLS certs.
