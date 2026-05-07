@@ -7,13 +7,17 @@ weight: 15
 
 ## Overview
 
-Cozystack ships Gateway API support as an opt-in alternative to ingress-nginx. When enabled, every tenant with `spec.gateway: true` gets its own `Gateway` materialised in its own namespace, with the Cilium Gateway API controller programming Envoy-on-DaemonSet and announcing the tenant's LoadBalancer IPs through Cilium LB IPAM.
+Cozystack ships Gateway API support as an opt-in alternative to ingress-nginx. When enabled, every tenant with `spec.gateway: true` gets its own `Gateway` materialised in its own namespace, with the Cilium Gateway API controller programming Envoy-on-DaemonSet. The tenant's LoadBalancer Service draws its IP from a per-tenant MetalLB `IPAddressPool` rendered by the tenant chart in `cozy-metallb`; the cluster admin's existing `L2Advertisement` or `BGPAdvertisement` announces it to the link.
 
 The chart does not render `Gateway`, `Issuer`, or `Certificate` resources directly. Instead it renders one `gateway.cozystack.io/v1alpha1 TenantGateway` CR per tenant, and `cozystack-controller` reconciles all the downstream Gateway API and cert-manager objects from there. This avoids the Helm-vs-controller race on `Gateway.spec.listeners` that route-driven dynamic listener materialization would otherwise cause.
 
-This page documents the architecture, the two-step opt-in, the cert-mode choice (HTTP-01 default vs DNS-01 wildcard opt-in), the seven-layer security model, and the migration story from ingress-nginx.
+This page documents the architecture, the two-step opt-in, the cert-mode choice (HTTP-01 default vs DNS-01 wildcard opt-in), the three-group security model, and the migration story from ingress-nginx.
 
 Gateway API and ingress-nginx coexist on the same cluster — the two modes are selected per service / per tenant, not globally. Existing clusters upgrade with `gateway.enabled=false` and see no behavioural change.
+
+### Tenant API surface
+
+Tenants in Cozystack interact with the platform exclusively through `apps.cozystack.io/*` resources (Tenant, Bucket, Kubernetes, …) served by `cozystack-api`. Tenant RBAC (`cozy:tenant:*` aggregated to a RoleBinding in the tenant's own namespace) does not grant write access to `gateway.networking.k8s.io/*`, core `Namespaces`, or `cozystack.io/Package`. The security model below is built around that constraint — tenants do not write Gateways or HTTPRoutes directly, so most of its layers protect against chart bugs, controller bugs, supply-chain compromise, and cluster-admin mistakes rather than against tenant-user input.
 
 ## Architecture
 
@@ -51,7 +55,7 @@ The controller:
 ```mermaid
 flowchart LR
     CLIENT["External client"]
-    LB["CiliumLoadBalancerIPPool<br/>(announces publishing.externalIPs)"]
+    LB["MetalLB IPAddressPool<br/>(per-tenant /32 in cozy-metallb,<br/>label cozystack.io/per-tenant-gateway=true)"]
     ENV["cilium-envoy DaemonSet<br/>(L7 termination / L4 passthrough)"]
     GW["Gateway 'cozystack'<br/>(per-tenant namespace)"]
     HTR["HTTPRoute<br/>dashboard, keycloak, harbor, bucket, ..."]
@@ -72,7 +76,7 @@ flowchart LR
 - **One `GatewayClass cilium`** cluster-wide. There is no per-tenant GatewayClass, so no tenant can hijack the class by naming theirs after someone else.
 - **One `Gateway` per tenant** in the tenant's own namespace. All listeners for that tenant live on a single Gateway object; there is no cross-Gateway merge.
 - **Envoy** runs as a Cilium DaemonSet (`cilium.envoy.enabled=true`) and handles both TLS termination (HTTPS listeners) and TLS passthrough (dedicated per-service listeners for the kubeapiserver and the KubeVirt VM export / CDI upload proxies).
-- **LoadBalancer IP** is assigned by Cilium LB IPAM from a `CiliumLoadBalancerIPPool` scoped to the tenant's `cilium-gateway-cozystack` Service.
+- **LoadBalancer IP** is assigned by MetalLB from a per-tenant `IPAddressPool` (rendered by the tenant chart in `cozy-metallb`, label `cozystack.io/per-tenant-gateway: "true"`, `serviceAllocation.namespaces` scoped to the tenant). The TenantGateway controller writes `metallb.universe.tf/address-pool=<tenant-namespace>-gateway` on `Gateway.spec.infrastructure.annotations`; Cilium's Gateway-API controller forwards that annotation to the auto-created Service via [GEP-1762](https://gateway-api.sigs.k8s.io/geps/gep-1762/), and MetalLB allocates the IP held by the pool. Advertisement (L2 / BGP) is admin-side and out of scope of the chart.
 
 ### Listener layout on a tenant Gateway
 
@@ -139,7 +143,7 @@ The `attachedNamespaces` list restricts which namespaces may attach `HTTPRoute` 
 
 ### 2. Per-tenant Gateway
 
-A tenant gets its own `TenantGateway` CR (and through the controller, its `Gateway`, `Issuer`, `Certificate`(s) and `CiliumLoadBalancerIPPool`) automatically when its apex is derived from the parent — i.e. `tenant.spec.host` is left unset and the chart computes `<tenant name>.<parent apex>`. The implicit assumption is that derived-apex tenants want their URLs routable; forcing operators to also set `tenant.spec.gateway: true` would be a needless extra step.
+A tenant gets its own `TenantGateway` CR (and through the controller, its `Gateway`, `Issuer`, `Certificate`(s) and per-tenant MetalLB `IPAddressPool`) automatically when its apex is derived from the parent — i.e. `tenant.spec.host` is left unset and the chart computes `<tenant name>.<parent apex>`. The implicit assumption is that derived-apex tenants want their URLs routable; forcing operators to also set `tenant.spec.gateway: true` would be a needless extra step.
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
@@ -174,9 +178,9 @@ Setting `tenant.spec.host` to a custom value is reserved for cluster-admins and 
 
 A tenant Gateway, regardless of how it was opted in, is its own per-tenant boundary: separate `Gateway`, separate `Issuer` and ACME account, separate `Certificate`(s) — child tenants do not share HTTP-01 challenge state with the parent or with siblings. There is no "share the parent's Gateway" mode; per-tenant Gateway is a deliberate isolation property of the security model.
 
-### 3. Pinning a tenant Gateway to a specific external IP
+### 3. Per-tenant Gateway IP
 
-By default the per-tenant Gateway's auto-created LoadBalancer Service draws its IP from the platform-wide `publishing.externalIPs` pool, rendered into a `CiliumLoadBalancerIPPool` scoped to the tenant namespace. For a tenant that needs a specific, predictable address — typical when the operator has reserved a particular public IP for a customer apex — set `tenant.spec.gatewayIP`:
+Every tenant Gateway gets its own LoadBalancer Service. At the Cilium Gateway-API layer every tenant Gateway claims `443/TCP`, sharing-key is therefore inactive (pending [Cilium ListenerSet](https://github.com/cilium/cilium/issues/42756)), and **one IP per tenant Gateway is required** — not optional pinning. The publishing tenant declares the address via `tenant.spec.gatewayIP`:
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
@@ -190,11 +194,25 @@ spec:
   gatewayIP: "203.0.113.42"
 ```
 
-When `gatewayIP` is non-empty, the tenant chart renders a dedicated `CiliumLoadBalancerIPPool` carrying that single IP and a service selector scoped to the tenant namespace. The value also propagates through `TenantGateway.spec.loadBalancerIP`, and the controller writes `lbipam.cilium.io/ips=<addr>` on the rendered Gateway via `spec.infrastructure.annotations`. Cilium's Gateway-API operator forwards the annotation to the auto-created Service ([GEP-1762](https://gateway-api.sigs.k8s.io/geps/gep-1762/)), and Cilium LB-IPAM allocates exactly that address.
+The tenant chart renders a per-tenant `metallb.io/v1beta1 IPAddressPool` in `cozy-metallb` carrying that single `/32` (or `/128` for IPv6), labeled `cozystack.io/per-tenant-gateway: "true"`, with `serviceAllocation.namespaces` scoped to the tenant. The TenantGateway controller writes `metallb.universe.tf/address-pool=<tenant-namespace>-gateway` on `Gateway.spec.infrastructure.annotations`; Cilium's Gateway-API controller forwards the annotation to the auto-created Service via [GEP-1762](https://gateway-api.sigs.k8s.io/geps/gep-1762/), and MetalLB allocates the IP held by the pool.
 
-The chosen IP must not overlap with `publishing.externalIPs` — Cilium flags overlapping pools as conflicting and allocates from neither. Reserve a dedicated address per tenant Gateway (or extend the platform pool to make room) before setting `gatewayIP`.
+L2/BGP advertisement is admin-side and out of scope of the chart. A cluster-wide `L2Advertisement` or `BGPAdvertisement` (no `ipAddressPools` selector → applies to all pools) covers per-tenant pools automatically. To target specifically the cozystack-managed pools, select on the `cozystack.io/per-tenant-gateway=true` label:
 
-The current implementation is a one-Gateway-per-tenant-per-IP shape: each tenant Gateway gets its own LoadBalancer Service and its own IP. Sharing one external IP across multiple tenant Gateways is not supported until [Cilium ListenerSet support](https://github.com/cilium/cilium/issues/42756) lands — without it the Cilium sharing-key port-collision blocker (every tenant Gateway wants 443/TCP) makes the multi-tenant shared-IP case non-functional.
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: cozystack-per-tenant-gateway
+  namespace: cozy-metallb
+spec:
+  ipAddressPoolSelectors:
+  - matchLabels:
+      cozystack.io/per-tenant-gateway: "true"
+```
+
+`tenant.spec.gatewayIP` values must be globally unique across all Tenants in the cluster — overlap is rejected at admission time by `cozystack-api` (a duplicate IP would leave one tenant's Gateway in `<pending>` indefinitely, since MetalLB allocates the IP to whichever Service it programs first and never re-binds). The check uses `net/netip` canonicalisation, so `192.0.2.10`, `192.0.2.10/32`, ` 192.0.2.10 `, and IPv6 alternate forms (`2001:db8::1` vs `2001:db8:0:0:0:0:0:1`) all resolve to the same key. Unparseable input and CIDR prefixes wider than `/32` (IPv4) or `/128` (IPv6) are rejected with the exact bad value echoed back. The check is best-effort under strict concurrency: two simultaneous `kubectl apply` calls against different `cozystack-api` replicas can both pass admission. Operators sequencing tenant rollouts via GitOps see no race in practice; concurrent CI pipelines should serialise tenant creation when assigning IPs from a shared pool.
+
+The chosen IP must fall inside an admin-managed announcer range. MetalLB allocates the IP from the per-tenant pool regardless, but without an announcer covering that pool the IP never reaches the link.
 
 ## Cert mode: HTTP-01 (default) vs DNS-01 (opt-in)
 
@@ -261,34 +279,51 @@ The Passthrough listener is added to the Gateway only if the corresponding servi
 
 ## Security
 
-Gateway API multi-tenancy in Cozystack is guarded at **seven independent layers**: one listener-level selector (Layer 1, controller-owned), five `ValidatingAdmissionPolicy` gates (Layers 2-5, 7), and one render-time helm guard (Layer 6). Compromising one of them does not bypass the others; admission-time checks fail closed (`failurePolicy: Fail`, `validationActions: [Deny]`).
+The protections below split into three groups by who they defend against. Tenants in Cozystack do not write Gateway API resources directly (see [Tenant API surface](#tenant-api-surface) above), so most of the seven layers below are not protecting against tenant-user input — they guard against bugs in cozystack-controller / Flux, supply-chain compromise of an app chart, and confused-deputy mistakes by a cluster admin. All admission-time checks are fail-closed (`failurePolicy: Fail`, `validationActions: [Deny]`).
+
+**Tenant-user-input gates** — Layer 4 (`cozystack-tenant-host-policy`) plus the cross-Tenant `gatewayIP` overlap check in `cozystack-api`'s admission chain (`pkg/registry/apps/application/rest.go`). `Tenant.spec.host` and `Tenant.spec.gatewayIP` are the two user-supplied fields that surface as a security boundary at the LB / hostname layer; both are gated on every Create / Update.
+
+**Defense-in-depth** — Layers 1, 2, 5, 6, 7. These cover chart bugs, controller bugs, supply-chain compromise, and confused-deputy admin mistakes. They do not protect against tenant-user input because the relevant RBAC isn't granted in the first place.
+
+**Admin-against-themselves** — Layer 3 (`cozystack-gateway-attached-namespaces-policy`). Rejects a `kubectl edit packages.cozystack.io` that would slip a `tenant-*` entry into the platform Package's `gateway.attachedNamespaces`. Layer 6 catches the same misconfiguration at helm render time.
 
 ```mermaid
 flowchart TD
-    ATK["Attacker<br/>(tenant user, misconfig, compromised SA)"]
+    USER["Tenant user<br/>(apps.cozystack.io/* via cozystack-api)"]
+    CHART["App chart bug /<br/>supply-chain compromise"]
+    ADMIN["Cluster admin<br/>(misconfig)"]
+
+    L4["L4 VAP: Tenant spec.host writes<br/>restricted to trusted callers"]
+    OVL["cozystack-api admission:<br/>cross-Tenant gatewayIP uniqueness"]
+
     L1["L1: Listener allowedRoutes selector<br/>(kubernetes.io/metadata.name)"]
     L2["L2 VAP: Gateway listener hostname<br/>matches namespace.cozystack.io/host"]
-    L3["L3 VAP: Package attachedNamespaces<br/>rejects tenant-*"]
-    L4["L4 VAP: Tenant spec.host writes<br/>restricted to trusted callers"]
     L5["L5 VAP: namespace.cozystack.io/host label<br/>writes restricted to trusted callers"]
     L6["L6 Render-time helm fail<br/>tenant-* in attachedNamespaces"]
     L7["L7 VAP: HTTPRoute/TLSRoute hostnames<br/>match namespace label (tenant-* only)"]
-    GW["Cross-tenant hostname hijack<br/>BLOCKED"]
 
-    ATK --> L1
-    ATK --> L2
-    ATK --> L3
-    ATK --> L4
-    ATK --> L5
-    ATK --> L6
-    ATK --> L7
+    L3["L3 VAP: Package attachedNamespaces<br/>rejects tenant-*"]
+
+    GW["Cross-tenant hostname hijack<br/>or duplicate LB IP<br/>BLOCKED"]
+
+    USER -->|Tenant spec.host / spec.gatewayIP| L4
+    USER --> OVL
+    L4 --> GW
+    OVL --> GW
+
+    CHART -->|emits Gateway/HTTPRoute| L1
+    CHART --> L2
+    CHART --> L5
+    CHART --> L6
+    CHART --> L7
     L1 --> GW
     L2 --> GW
-    L3 --> GW
-    L4 --> GW
     L5 --> GW
     L6 --> GW
     L7 --> GW
+
+    ADMIN -->|kubectl edit Package| L3
+    L3 --> GW
 ```
 
 ### Layer 1 — Listener `allowedRoutes` namespace whitelist
@@ -329,7 +364,7 @@ The cozystack-basics chart fails the helm render if `_cluster.gateway-attached-n
 
 `ValidatingAdmissionPolicy` scoped to `gateway.networking.k8s.io/v1 HTTPRoute` and `v1alpha2 TLSRoute` CREATE/UPDATE. Scoped to `tenant-*` namespaces (cozy-* are cluster-admin-managed and trusted to publish under any apex). Rejects any `spec.hostnames` entry that is not equal to the namespace's `namespace.cozystack.io/host` label or a subdomain of it. **Fail-closed when the label is absent** — a `tenant-*` namespace without `namespace.cozystack.io/host` is rejected, not silently allowed.
 
-Closes the cross-apex hostname surface a tenant user with HTTPRoute RBAC could otherwise exploit. The within-apex cross-namespace case (a tenant claiming a hostname owned by a `cozy-*` app) is handled by the controller at reconcile time — see [HostnameConflict resolution](#hostnameconflict-resolution) below.
+Defense-in-depth against an app chart bug or supply-chain compromise that emits Gateway API resources outside the tenant's apex — tenants in Cozystack do not hold `gateway.networking.k8s.io/*` RBAC by design (see [Tenant API surface](#tenant-api-surface)), so this is not a tenant-user defense. The within-apex cross-namespace case (a tenant chart claiming a hostname owned by a `cozy-*` app) is handled by the controller at reconcile time — see [HostnameConflict resolution](#hostnameconflict-resolution) below.
 
 For `tenant-root` the allowed host suffix is `publishing.host`; for any `tenant-<name>` that inherits from its parent the suffix is `<name>.<parent apex>`. A child tenant with an independent apex (`customer1.io` instead of a subdomain) is handled correctly because the VAP reads the per-namespace label rather than assuming a subdomain hierarchy.
 
@@ -360,7 +395,7 @@ These residuals are design choices, not runtime gaps:
 
 - **Cluster-admin credentials.** Anyone in `system:masters` or with a matching cozystack/Flux SA can set any host. Gateway API isolation is not the weakest link at that trust level.
 - **DNS control.** A tenant whose VAP-allowed hostname does not resolve to the cluster's LB IP cannot complete ACME HTTP-01. No Certificate is issued; no hijack even if admission somehow admitted the Gateway. ACME's DNS-based identity proof is the last line.
-- **Shared LB IP pool.** Tenants drawing from the same `publishing.externalIPs` block compete for addresses via Cilium LB IPAM. Operators with multiple opted-in tenants should carve up the IP space per tenant.
+- **Per-tenant LB IP.** Each tenant Gateway requires its own `gatewayIP` (declared in `tenant.spec.gatewayIP`); MetalLB allocates from a per-tenant `IPAddressPool` rendered by the chart. Cross-Tenant overlap is rejected at admission time. Operators planning multiple opted-in tenants should reserve a `/32` (or `/128`) per Gateway from a pool covered by the cluster's existing `L2Advertisement` or `BGPAdvertisement`.
 
 ## Certificates
 
@@ -405,6 +440,26 @@ spec:
 
 The two modes coexist. Switching happens per cluster (`gateway.enabled`) and per tenant (`tenant.spec.gateway`), not globally.
 
+### LB allocator prerequisites
+
+Tenant Gateway requires a working LoadBalancer allocator. Cozystack ships MetalLB installed by default; the tenant chart renders per-tenant `IPAddressPool` resources in `cozy-metallb`, but L2/BGP advertisement is admin-side and out of scope of the chart.
+
+Before enabling Gateway API on a tenant, verify the cluster has at least one `L2Advertisement` or `BGPAdvertisement` whose selector covers per-tenant pools. The simplest configuration is a cluster-wide L2 advertisement matched on the `cozystack.io/per-tenant-gateway` label:
+
+```yaml
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: cozystack-per-tenant-gateway
+  namespace: cozy-metallb
+spec:
+  ipAddressPoolSelectors:
+  - matchLabels:
+      cozystack.io/per-tenant-gateway: "true"
+```
+
+For BGP-routed environments, swap the kind to `BGPAdvertisement` and pair it with one or more `BGPPeer` resources. MetalLB allocates the per-tenant IP regardless of advertisement state — a missing or mis-selecting advertisement is the most common cause of a `<pending>` Service.
+
 ### For a new cluster
 
 Set both flags at install time. Ingress-nginx can be disabled entirely:
@@ -416,16 +471,16 @@ publishing:
   exposure: loadBalancer  # ingress-nginx also moves off Service.spec.externalIPs
 ```
 
-Tenants then enable `spec.gateway: true` at creation time.
+Tenants then enable `spec.gateway: true` at creation time. Each tenant must declare its `tenant.spec.gatewayIP` (per-tenant IP is required by design — see [Per-tenant Gateway IP](#3-per-tenant-gateway-ip) above).
 
 ### `publishing.exposure` — ingress-nginx Service mode
 
-`publishing.exposure` controls how the ingress-nginx `Service` itself is provisioned. It is independent of `gateway.enabled` — Gateway API always uses the per-tenant `CiliumLoadBalancerIPPool` regardless of this flag — but a Gateway API rollout is the natural moment to flip it, so ingress-nginx (still in place for unmigrated tenants and for chart-level features that have not yet moved) and the per-tenant Gateway draw from the same Cilium-managed pool.
+`publishing.exposure` controls how the ingress-nginx `Service` itself is provisioned. It is **independent** of `gateway.enabled` — Gateway API always uses per-tenant MetalLB `IPAddressPool` resources regardless of this flag, while ingress-nginx (still in place for unmigrated tenants and for chart-level features that have not yet moved) follows `publishing.exposure` for its own Service shape. A Gateway API rollout is a natural moment to flip `exposure` so both flows draw from the same allocator family.
 
 | Value                   | Service shape                                                                  | IP source                                                                                            |
 | ----------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
 | `externalIPs` (default) | `ClusterIP` with `Service.spec.externalIPs` set from `publishing.externalIPs`  | Operator-managed routing of those IPs to a cluster node                                              |
-| `loadBalancer`          | `type: LoadBalancer`                                                           | Cilium LB IPAM allocates from a `CiliumLoadBalancerIPPool` populated with `publishing.externalIPs`   |
+| `loadBalancer`          | `type: LoadBalancer`                                                           | Cilium LB IPAM allocates from a `CiliumLoadBalancerIPPool` populated with `publishing.externalIPs` (legacy ingress-nginx flow; tenant Gateway uses MetalLB pools instead — see [Per-tenant Gateway IP](#3-per-tenant-gateway-ip))   |
 
 `Service.spec.externalIPs` is deprecated upstream in Kubernetes v1.36 ([KEP-5707](https://github.com/kubernetes/enhancements/issues/5707)). The `AllowServiceExternalIPs` feature gate is expected to default to `false` around v1.40 and the implementation removed around v1.43 — switch to `loadBalancer` before upgrading past v1.40.
 
@@ -508,12 +563,30 @@ A non-trusted caller tried to set `tenant.spec.host`. Use an empty `spec.host` (
 
 ### Gateway Service `<pending>` LoadBalancer IP
 
-Two causes:
+Diagnosis steps:
 
-- `publishing.externalIPs` is empty AND `publishing.exposure=externalIPs`. No `CiliumLoadBalancerIPPool` is rendered. (Empty + `loadBalancer` mode is OK; an external pool is expected.)
-- Another Gateway (same tenant or another tenant's on the same IP pool) has already claimed the addresses.
+1. Confirm the per-tenant `IPAddressPool` exists:
 
-`kubectl get ciliumloadbalancerippool` shows the pools, their serviceSelector, and which Service owns each IP.
+   ```bash
+   kubectl get ipaddresspool --namespace cozy-metallb <tenant-namespace>-gateway
+   ```
+
+   The pool is rendered by the tenant chart only when `tenant.spec.gatewayIP` is non-empty AND the auto-default helper resolves true (or `tenant.spec.gateway: true` is explicit). Empty `gatewayIP` means no IP source — set it to a routable address inside an admin-managed announcer range.
+
+2. Confirm an `L2Advertisement` or `BGPAdvertisement` covers the pool. A cluster-wide advertisement (no `ipAddressPools` selector → applies to all pools) covers the per-tenant pool automatically; a label-scoped advertisement must select on `cozystack.io/per-tenant-gateway: "true"`:
+
+   ```bash
+   kubectl get l2advertisement --namespace cozy-metallb -o yaml
+   kubectl get bgpadvertisement --namespace cozy-metallb -o yaml
+   ```
+
+3. Look for cross-Tenant overlap. `cozystack-api` admission rejects on every Create / Update, but a stuck `<pending>` Service can still be the result of two operators racing the admission gate during concurrent applies. Find every Tenant in the cluster currently using a gatewayIP:
+
+   ```bash
+   kubectl get tenant.apps.cozystack.io -A -o json | jq '.items[] | select(.spec.gatewayIP != "" and .spec.gatewayIP != null) | {name: .metadata.name, namespace: .metadata.namespace, gatewayIP: .spec.gatewayIP}'
+   ```
+
+4. If MetalLB controller logs show the pool exists but the Service has no IP, check the MetalLB speaker logs for that node — the announcer (L2 ARP / BGP peer) may have failed to elect a leader for that address.
 
 ## See also
 
