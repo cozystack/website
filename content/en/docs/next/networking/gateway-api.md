@@ -1,7 +1,7 @@
 ---
 title: "Gateway API (Cilium)"
 linkTitle: "Gateway API"
-description: "Per-tenant Gateway API ingress backed by Cilium — TenantGateway CRD, cert-manager integration, TLS termination and passthrough, seven-layer cross-tenant isolation."
+description: "Per-tenant Gateway API ingress backed by Cilium — TenantGateway CRD, cert-manager integration, TLS termination and passthrough, three-group security model."
 weight: 15
 ---
 
@@ -11,9 +11,13 @@ Cozystack ships Gateway API support as an opt-in alternative to ingress-nginx. W
 
 The chart does not render `Gateway`, `Issuer`, or `Certificate` resources directly. Instead it renders one `gateway.cozystack.io/v1alpha1 TenantGateway` CR per tenant, and `cozystack-controller` reconciles all the downstream Gateway API and cert-manager objects from there. This avoids the Helm-vs-controller race on `Gateway.spec.listeners` that route-driven dynamic listener materialization would otherwise cause.
 
-This page documents the architecture, the two-step opt-in, the cert-mode choice (HTTP-01 default vs DNS-01 wildcard opt-in), the seven-layer security model, and the migration story from ingress-nginx.
+This page documents the architecture, the two-step opt-in, the cert-mode choice (HTTP-01 default vs DNS-01 wildcard opt-in), the three-group security model, and the migration story from ingress-nginx.
 
 Gateway API and ingress-nginx coexist on the same cluster — the two modes are selected per service / per tenant, not globally. Existing clusters upgrade with `gateway.enabled=false` and see no behavioural change.
+
+### Tenant API surface
+
+Tenants in Cozystack interact with the platform exclusively through `apps.cozystack.io/*` resources (Tenant, Bucket, Kubernetes, …) served by `cozystack-api`. Tenant RBAC (`cozy:tenant:*` aggregated to a RoleBinding in the tenant's own namespace) does not grant write access to `gateway.networking.k8s.io/*`, core `Namespaces`, or `cozystack.io/Package`. The security model below is built around that constraint — tenants do not write Gateways or HTTPRoutes directly, so most of its layers protect against chart bugs, controller bugs, supply-chain compromise, and cluster-admin mistakes rather than against tenant-user input.
 
 ## Architecture
 
@@ -239,34 +243,48 @@ The Passthrough listener is added to the Gateway only if the corresponding servi
 
 ## Security
 
-Gateway API multi-tenancy in Cozystack is guarded at **seven independent layers**: one listener-level selector (Layer 1, controller-owned), five `ValidatingAdmissionPolicy` gates (Layers 2-5, 7), and one render-time helm guard (Layer 6). Compromising one of them does not bypass the others; admission-time checks fail closed (`failurePolicy: Fail`, `validationActions: [Deny]`).
+Tenants in Cozystack interact with the platform exclusively through `apps.cozystack.io/*` resources (Tenant, Bucket, Kubernetes, …) served by `cozystack-api`. Tenant RBAC (`cozy:tenant:*` aggregated to a RoleBinding in the tenant's own namespace) does not grant write access to `gateway.networking.k8s.io/*`, core `Namespaces`, or `cozystack.io/Package`. The protections below split into three groups by who they defend against — most of the seven layers are not protecting against tenant-user input (that RBAC isn't granted in the first place); they guard against bugs in cozystack-controller / Flux, supply-chain compromise of an app chart, and confused-deputy mistakes by a cluster admin. All admission-time checks are fail-closed (`failurePolicy: Fail`, `validationActions: [Deny]`).
+
+**Tenant-user-input gates** — Layer 4 (`cozystack-tenant-host-policy`). `Tenant.spec.host` is the user-supplied field that surfaces as a security boundary at the hostname layer; it is gated on every Create / Update via `cozystack-api`'s admission chain.
+
+**Defense-in-depth** — Layers 1, 2, 5, 6, 7. Cover chart bugs, controller bugs, supply-chain compromise of an app chart, confused-deputy admin mistakes. They do not protect against tenant-user input because the relevant RBAC isn't granted.
+
+**Admin-against-themselves** — Layer 3 (`cozystack-gateway-attached-namespaces-policy`). Rejects a `kubectl edit packages.cozystack.io` that would slip a `tenant-*` entry into the platform Package's `gateway.attachedNamespaces`. Layer 6 catches the same misconfiguration at helm render time.
 
 ```mermaid
 flowchart TD
-    ATK["Attacker<br/>(tenant user, misconfig, compromised SA)"]
+    USER["Tenant user<br/>(apps.cozystack.io/* via cozystack-api)"]
+    CHART["App chart bug /<br/>supply-chain compromise"]
+    ADMIN["Cluster admin<br/>(misconfig)"]
+
+    L4["L4 VAP: Tenant spec.host writes<br/>restricted to trusted callers"]
+
     L1["L1: Listener allowedRoutes selector<br/>(kubernetes.io/metadata.name)"]
     L2["L2 VAP: Gateway listener hostname<br/>matches namespace.cozystack.io/host"]
-    L3["L3 VAP: Package attachedNamespaces<br/>rejects tenant-*"]
-    L4["L4 VAP: Tenant spec.host writes<br/>restricted to trusted callers"]
     L5["L5 VAP: namespace.cozystack.io/host label<br/>writes restricted to trusted callers"]
     L6["L6 Render-time helm fail<br/>tenant-* in attachedNamespaces"]
     L7["L7 VAP: HTTPRoute/TLSRoute hostnames<br/>match namespace label (tenant-* only)"]
+
+    L3["L3 VAP: Package attachedNamespaces<br/>rejects tenant-*"]
+
     GW["Cross-tenant hostname hijack<br/>BLOCKED"]
 
-    ATK --> L1
-    ATK --> L2
-    ATK --> L3
-    ATK --> L4
-    ATK --> L5
-    ATK --> L6
-    ATK --> L7
+    USER -->|Tenant spec.host| L4
+    L4 --> GW
+
+    CHART -->|emits Gateway/HTTPRoute| L1
+    CHART --> L2
+    CHART --> L5
+    CHART --> L6
+    CHART --> L7
     L1 --> GW
     L2 --> GW
-    L3 --> GW
-    L4 --> GW
     L5 --> GW
     L6 --> GW
     L7 --> GW
+
+    ADMIN -->|kubectl edit Package| L3
+    L3 --> GW
 ```
 
 ### Layer 1 — Listener `allowedRoutes` namespace whitelist
@@ -307,7 +325,7 @@ The cozystack-basics chart fails the helm render if `_cluster.gateway-attached-n
 
 `ValidatingAdmissionPolicy` scoped to `gateway.networking.k8s.io/v1 HTTPRoute` and `v1alpha2 TLSRoute` CREATE/UPDATE. Scoped to `tenant-*` namespaces (cozy-* are cluster-admin-managed and trusted to publish under any apex). Rejects any `spec.hostnames` entry that is not equal to the namespace's `namespace.cozystack.io/host` label or a subdomain of it. **Fail-closed when the label is absent** — a `tenant-*` namespace without `namespace.cozystack.io/host` is rejected, not silently allowed.
 
-Closes the cross-apex hostname surface a tenant user with HTTPRoute RBAC could otherwise exploit. The within-apex cross-namespace case (a tenant claiming a hostname owned by a `cozy-*` app) is handled by the controller at reconcile time — see [HostnameConflict resolution](#hostnameconflict-resolution) below.
+Defense-in-depth against an app chart bug or supply-chain compromise that emits Gateway API resources outside the tenant's apex — tenants in Cozystack do not hold `gateway.networking.k8s.io/*` RBAC by design, so this is not a tenant-user defense. The within-apex cross-namespace case (a tenant chart claiming a hostname owned by a `cozy-*` app) is handled by the controller at reconcile time — see [HostnameConflict resolution](#hostnameconflict-resolution) below.
 
 For `tenant-root` the allowed host suffix is `publishing.host`; for any `tenant-<name>` that inherits from its parent the suffix is `<name>.<parent apex>`. A child tenant with an independent apex (`customer1.io` instead of a subdomain) is handled correctly because the VAP reads the per-namespace label rather than assuming a subdomain hierarchy.
 
