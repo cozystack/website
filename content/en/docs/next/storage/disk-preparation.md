@@ -155,7 +155,19 @@ Clean disks should show no `FSTYPE`.
 
 ## Creating Storage Pools
 
-Once disks are clean, create a LINSTOR storage pool.
+Once disks are clean, choose a backend and create the LINSTOR storage pool. Cozystack ships drivers for three LINSTOR backends; pick one based on what is available on the nodes.
+
+### Choosing a backend
+
+| Backend | When to pick | Notes |
+|---|---|---|
+| **ZFS** | Default for the cozystack-tuned Talos image (the ZFS extension is baked in). Also fine on generic Linux with ZFS-on-Linux installed. | Higher RAM use (ARC); compression and snapshots built-in. |
+| **LVM Thin Pool** | Generic Linux without ZFS (RHEL 10 / Rocky 10 / Alma 10 do not ship OpenZFS). Supports thin overprovisioning. | Pool fill-up beyond 100% freezes writes — keep utilisation under ~95%. |
+| **LVM (thick)** | Simple, fixed allocations. No snapshots without LVM-level snapshot LVs. | Rarely the right pick in cozystack deployments; documented for completeness. |
+
+DRBD replication works with all three — DRBD lives on top of the chosen pool, not inside it.
+
+### ZFS storage pool
 
 For ZFS storage pools with multiple disks:
 ```bash
@@ -184,6 +196,79 @@ Expected output:
 | data        | node2 | ZFS    | data     | 47.34 TiB    | 47.62 TiB     | Ok    |
 +-----------------------------------------------------------------------+
 ```
+
+### LVM Thin storage pool
+
+For nodes without ZFS, LVM thin pool is the recommended LINSTOR backend.
+
+#### Prerequisites
+
+- `lvm2` package installed on every storage node (`pvcreate` / `vgcreate` / `lvcreate` available).
+- Kernel module `dm_thin_pool` loaded on every storage node. Verify from the satellite pod:
+
+  ```bash
+  kubectl exec -n cozy-linstor <satellite-pod-name> -c linstor-satellite -- \
+    lsmod | grep dm_thin_pool
+  ```
+
+  On generic Linux distributions the module loads on demand the first time `lvcreate --type thin-pool` runs. On Talos the kernel modules are immutable and must be declared in the machine-config:
+
+  ```yaml
+  machine:
+    kernel:
+      modules:
+        - name: dm_thin_pool
+  ```
+
+  Apply with `talm apply` and reboot the node. Confirm with `lsmod | grep dm_thin_pool` afterwards.
+
+#### Step 1: Create the LVM thin pool
+
+For each storage node, create a Physical Volume, Volume Group, and Thin Pool Logical Volume. The recommended path is the LINSTOR helper; the manual path is documented as a fallback.
+
+##### Option A — via LINSTOR (recommended)
+
+```bash
+linstor physical-storage create-device-pool lvmthin <node-name> /dev/nvme0n1 \
+  --pool-name thinpool0 \
+  --vg-name vg-data \
+  --storage-pool data
+```
+
+The helper takes one device per invocation; for multi-disk thin pools, create a VG manually (Option B) and register it with LINSTOR.
+
+##### Option B — manually inside the satellite pod
+
+```bash
+kubectl exec -n cozy-linstor <satellite-pod-name> -c linstor-satellite -- sh -c '
+  pvcreate /dev/nvme0n1
+  vgcreate vg-data /dev/nvme0n1
+  lvcreate --type thin-pool --extents 95%FREE --name thinpool0 vg-data
+'
+linstor storage-pool create lvmthin <node-name> data vg-data/thinpool0
+```
+
+`--extents 95%FREE` leaves room for thin-pool metadata growth. `lvm2` sizes the metadata LV automatically on create — do not pass `--poolmetadatasize` unless you know exactly what you need.
+
+#### Step 2: Verify
+
+```bash
+linstor storage-pool list
+```
+
+Expected output:
+```
++----------------------------------------------------------------------------------+
+| StoragePool | Node  | Driver   | PoolName          | FreeCapacity | TotalCapacity | State |
+|==================================================================================|
+| data        | node1 | LVM_THIN | vg-data/thinpool0 | 3.32 TiB     | 3.49 TiB      | Ok    |
+| data        | node2 | LVM_THIN | vg-data/thinpool0 | 3.32 TiB     | 3.49 TiB      | Ok    |
++----------------------------------------------------------------------------------+
+```
+
+{{< alert color="warning" >}}
+**Thin pool utilisation**: never let actual data usage exceed roughly 95% of the thin pool. Writes block when the underlying pool runs out of space, regardless of how much virtual capacity each volume claims. Monitor with `linstor storage-pool list` and the LINSTOR Prometheus exporter.
+{{< /alert >}}
 
 ## Troubleshooting
 
@@ -222,6 +307,41 @@ kubectl exec -n cozy-linstor <satellite-pod-name> -c linstor-satellite -- lsblk 
 
 If you need to wipe disks on worker nodes, ensure your node configuration allows access or consult your cluster administrator.
 
+### LVM Thin: `Pool creation failed` or `dm_thin_pool not loaded`
+
+**Symptom**
+
+`linstor physical-storage create-device-pool lvmthin ...` fails, or the manual `lvcreate --type thin-pool` reports `device-mapper: thin: kernel-side fix required` / `Failed to activate thin pool`.
+
+**Cause**
+
+The `dm_thin_pool` kernel module is not loaded on the node. On generic Linux it loads on demand, but only if `lvm2` was already installed at the time of the first thin-pool create; otherwise the module is missing. On Talos it must be declared in the machine-config (see [LVM Thin storage pool prerequisites](#lvm-thin-storage-pool) above).
+
+**Fix on generic Linux**:
+
+```bash
+kubectl exec -n cozy-linstor <satellite-pod-name> -c linstor-satellite -- \
+  modprobe dm_thin_pool
+```
+
+Persist by adding `dm_thin_pool` to `/etc/modules-load.d/cozystack.conf`.
+
+**Fix on Talos**: add the module to the machine-config and re-apply with `talm apply`. Reboot the affected node.
+
+### LVM Thin: `Volume group "vg-data" not found` after node reboot
+
+**Symptom**
+
+The thin pool was created successfully, but after a node reboot LINSTOR reports the storage pool as `Error` and `vgs` on the node shows no `vg-data`.
+
+**Cause**
+
+The Physical Volume signature was wiped (`wipefs` or partition tool) or the underlying device was renamed (`/dev/nvme0n1` became `/dev/nvme1n1` after a controller swap).
+
+**Fix**
+
+Re-detect the PV (`pvscan --cache`) and re-activate the VG (`vgchange --activate y vg-data`). If the device path actually changed, update the LINSTOR storage pool registration with the new path.
+
 ## Quick Reference
 
 | Command | Description |
@@ -229,6 +349,9 @@ If you need to wipe disks on worker nodes, ensure your node configuration allows
 | `linstor sp l` | List storage pools |
 | `linstor ps l` | List available physical storage |
 | `linstor ps cdp zfs <node> <disks> --pool-name <name> --storage-pool <name>` | Create ZFS storage pool |
+| `linstor ps cdp lvmthin <node> <disk> --pool-name <thin-lv> --vg-name <vg> --storage-pool <name>` | Create LVM thin pool |
+| `linstor sp create lvmthin <node> <storage-pool> <vg>/<thin-lv>` | Register an existing thin pool with LINSTOR |
+| `lsmod \| grep dm_thin_pool` | Verify the thin-pool kernel module is loaded |
 | `talm -f nodes/<node>.yaml wipe disk <disks>` | Wipe disk metadata |
 | `talm -f nodes/<node>.yaml get disks` | List disks on node |
 
