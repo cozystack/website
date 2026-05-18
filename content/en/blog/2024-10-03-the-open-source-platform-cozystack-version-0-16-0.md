@@ -4,6 +4,13 @@ slug: the-open-source-platform-cozystack-version-0-16-0
 date: 2024-10-03
 author: "Timur Tukaev"
 description: "Key Highlights Cozystack now features an alert system based on the open-source tool Alerta, with the ability to configure notifications…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*jOAv-G1LLJy84HwQHpI0Pw.png"
+article_types:
+  - release
+topics:
+  - platform
+
 ---
 
 ### The Open Source Platform Cozystack Version 0.16.0 Released: Alert System with Telegram Notifications and More Improvements

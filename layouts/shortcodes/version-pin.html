@@ -1,0 +1,43 @@
+{{- /*
+version-pin — render a pinned upstream-tool version for the current docs version.
+
+Usage (inside a page under content/en/docs/<version>/…):
+
+  version-pin "talos"            → e.g. "v1.12.6"
+  version-pin "cozystack_tag"    → e.g. "v1.3.0"
+
+Values live in data/versions/<version>.yaml. The shortcode derives <version>
+from the page's file path (the first path segment after "docs/") so authors
+don't repeat it in every call.
+
+Fails loudly (errorf → build stops) on a missing data file or missing key,
+so a release bump can't silently leave stale literals behind.
+*/ -}}
+
+{{- $key := .Get 0 -}}
+{{- if not $key -}}
+  {{- errorf "version-pin: key argument is required (page %s)" .Page.File.Path -}}
+{{- end -}}
+
+{{- $parts := split .Page.File.Path "/" -}}
+{{- $version := "" -}}
+{{- range $i, $p := $parts -}}
+  {{- if and (eq $p "docs") (gt (len $parts) (add $i 1)) -}}
+    {{- $version = index $parts (add $i 1) -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $version -}}
+  {{- errorf "version-pin: could not derive docs version from path %q" .Page.File.Path -}}
+{{- end -}}
+
+{{- $data := index .Site.Data.versions $version -}}
+{{- if not $data -}}
+  {{- errorf "version-pin: no data/versions/%s.yaml (page %s)" $version .Page.File.Path -}}
+{{- end -}}
+
+{{- $value := index $data $key -}}
+{{- if not $value -}}
+  {{- errorf "version-pin: key %q missing in data/versions/%s.yaml (page %s)" $key $version .Page.File.Path -}}
+{{- end -}}
+
+{{- $value -}}

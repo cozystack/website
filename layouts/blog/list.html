@@ -1,4 +1,59 @@
 {{ define "main" }}
+<style>
+.blog-filter {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem 1.25rem;
+	align-items: center;
+	margin: 1rem 0 2rem;
+	padding: 0.9rem 1.25rem;
+	background: var(--bs-tertiary-bg, #f7f7f8);
+	border: 1px solid var(--bs-border-color, #dee2e6);
+	border-radius: 0.5rem;
+}
+.blog-filter__field {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+.blog-filter__label {
+	font-weight: 600;
+	color: var(--bs-secondary-color, #6c757d);
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+.blog-filter__select {
+	padding: 0.35rem 2.1rem 0.35rem 0.7rem;
+	border: 1px solid var(--bs-border-color, #ced4da);
+	border-radius: 0.375rem;
+	background-color: var(--bs-body-bg, #fff);
+	color: var(--bs-body-color, #212529);
+	font-size: 0.9rem;
+	line-height: 1.4;
+	min-width: 8.5rem;
+	width: auto;
+	appearance: none;
+	-webkit-appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%236c757d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.6rem center;
+	background-size: 0.75rem;
+}
+.blog-filter__count {
+	margin: 0;
+	margin-left: auto;
+	color: var(--bs-secondary-color, #6c757d);
+	font-size: 0.85rem;
+}
+.blog-post-card[hidden] {
+	display: none !important;
+}
+.blog-year-group[hidden] {
+	display: none !important;
+}
+</style>
+
 <div class="td-content">
 	<h1>{{ .Title }}</h1>
 	{{ .Content }}
@@ -7,49 +62,152 @@
 {{ if (and .Parent .Parent.IsHome) }}
 {{ $.Scratch.Set "blog-pages" (where .Site.RegularPages "Section" .Section) }}
 {{ else }}
-{{$.Scratch.Set "blog-pages" .Pages }}
+{{ $.Scratch.Set "blog-pages" .Pages }}
 {{ end }}
+
+{{/* Fixed order for article_types reflects the editorial lifecycle */}}
+{{ $articleTypeOrder := slice "release" "how-to" "case" "tech-article" "news" }}
+
+<div class="blog-filter" id="blog-filter">
+	<div class="blog-filter__field">
+		<label class="blog-filter__label" for="blog-filter-type">Type</label>
+		<select class="blog-filter__select" id="blog-filter-type" data-filter-kind="article_type">
+			<option value="">All</option>
+			{{ range $slug := $articleTypeOrder }}
+				{{ if (index $.Site.Taxonomies.article_types $slug) }}
+					<option value="{{ $slug }}">{{ $slug | humanize }}</option>
+				{{ end }}
+			{{ end }}
+		</select>
+	</div>
+	<div class="blog-filter__field">
+		<label class="blog-filter__label" for="blog-filter-topic">Topic</label>
+		<select class="blog-filter__select" id="blog-filter-topic" data-filter-kind="topic">
+			<option value="">All</option>
+			{{ range $slug, $_ := .Site.Taxonomies.topics }}
+				<option value="{{ $slug }}">{{ $slug | humanize }}</option>
+			{{ end }}
+		</select>
+	</div>
+	<p class="blog-filter__count" id="blog-filter-count"></p>
+</div>
 
 <div class="row">
 	<div class="col-12">
 		{{- if .Pages -}}
-		{{ $pag := .Paginate (( $.Scratch.Get "blog-pages").GroupByDate "2006" )}}
-			{{ range $pag.PageGroups }}
-			<h2>{{ T "post_posts_in" }} {{ .Key }}</h2>
-			<ul class="list-unstyled mt-4">
-				{{ range .Pages }}
-				<!-- Styling changes for blog previews: https://github.com/fluxcd/website/pull/636 -->
-				<li class="media mb-5">
-					<div class="media-body">
-						<h5 class="mt-0 mb-1"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h5>
-						<p class="mt-0 mb-1"><small class="text-muted">{{ .Date.Format ($.Param "time_format_blog") }} {{ T "ui_in"}} {{ .CurrentSection.LinkTitle }}</small></p>
-						<header class="article-meta">
-							{{ partial "taxonomy_terms_article_wrapper.html" . }}
-							{{ if (and (not .Params.hide_readingtime) (.Site.Params.ui.readingtime.enable)) }}
-								{{ partial "reading-time.html" . }}
+			{{ range (( $.Scratch.Get "blog-pages").GroupByDate "2006") }}
+			<section class="blog-year-group" data-year="{{ .Key }}">
+				<h2>{{ T "post_posts_in" }} {{ .Key }}</h2>
+				<ul class="list-unstyled mt-4">
+					{{ range .Pages }}
+					{{ $at := "" }}
+					{{ with .Params.article_types }}{{ $at = delimit . " " }}{{ end }}
+					{{ $tp := "" }}
+					{{ with .Params.topics }}{{ $tp = delimit . " " }}{{ end }}
+					<!-- Styling changes for blog previews: https://github.com/fluxcd/website/pull/636 -->
+					<li class="media mb-5 blog-post-card"
+						data-article-types="{{ $at }}"
+						data-topics="{{ $tp }}">
+						<div class="media-body">
+							<h5 class="mt-0 mb-1"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h5>
+							<p class="mt-0 mb-1"><small class="text-muted">{{ .Date.Format ($.Param "time_format_blog") }} {{ T "ui_in"}} {{ .CurrentSection.LinkTitle }}</small></p>
+							<header class="article-meta">
+								{{ partial "taxonomy_terms_article_wrapper.html" . }}
+								{{ if (and (not .Params.hide_readingtime) (.Site.Params.ui.readingtime.enable)) }}
+									{{ partial "reading-time.html" . }}
+								{{ end }}
+							</header>
+							{{ partial "featured-image.html" (dict "p" . "w" 250 "h" 125 "class" "float-left mr-3 pt-1 d-none d-md-block") }}
+							<p class="mb-md-2"><small class="text-muted">tl;dr: {{ .Description }}</small></p>
+							<p class="mb-2 mb-md-3">
+								{{ .Plain | safeHTML | truncate 400 }}
+							</p>
+							{{ if .Truncated }}
+							<p class="pt-0"><a href="{{ .RelPermalink }}" aria-label="{{ T "ui_read_more"}} - {{ .LinkTitle }}">{{ T "ui_read_more"}}</a></p>
 							{{ end }}
-						</header>
-						{{ partial "featured-image.html" (dict "p" . "w" 250 "h" 125 "class" "float-left mr-3 pt-1 d-none d-md-block") }}
-						<p class="mb-md-2"><small class="text-muted">tl;dr: {{ .Description }}</small></p>
-						<p class="mb-2 mb-md-3">
-							{{ .Plain | safeHTML | truncate 400 }}
-						</p>
-						{{ if .Truncated }}
-						<p class="pt-0"><a href="{{ .RelPermalink }}" aria-label="{{ T "ui_read_more"}} - {{ .LinkTitle }}">{{ T "ui_read_more"}}</a></p>
-						{{ end }}
-					</div>
-				</li>
-				{{ end }}
-			</ul>
+						</div>
+					</li>
+					{{ end }}
+				</ul>
+			</section>
 			{{ end }}
 		{{ end }}
 	</div>
 </div>
-<div class="row pl-2 pt-2">
-	<div class="col">
-		{{ if .Pages }}
-			{{ template "_internal/pagination.html" . }}
-		{{ end }}
-	</div>
-</div>
+
+<script>
+(function () {
+	var root = document.getElementById('blog-filter');
+	if (!root) return;
+
+	var typeSel = document.getElementById('blog-filter-type');
+	var topicSel = document.getElementById('blog-filter-topic');
+	var countEl = document.getElementById('blog-filter-count');
+	var cards = document.querySelectorAll('.blog-post-card');
+	var groups = document.querySelectorAll('.blog-year-group');
+
+	function readURL() {
+		var p = new URLSearchParams(window.location.search);
+		var t = p.get('type') || '';
+		var tp = p.get('topic') || '';
+		// Mutually exclusive — prefer type if both present.
+		if (t) { typeSel.value = t; topicSel.value = ''; }
+		else if (tp) { topicSel.value = tp; typeSel.value = ''; }
+	}
+
+	function writeURL() {
+		var p = new URLSearchParams(window.location.search);
+		p.delete('type'); p.delete('topic');
+		if (typeSel.value) p.set('type', typeSel.value);
+		else if (topicSel.value) p.set('topic', topicSel.value);
+		var q = p.toString();
+		var next = window.location.pathname + (q ? '?' + q : '') + window.location.hash;
+		window.history.replaceState(null, '', next);
+	}
+
+	function apply() {
+		var activeType = typeSel.value;
+		var activeTopic = topicSel.value;
+		var visible = 0;
+		cards.forEach(function (card) {
+			var show;
+			if (!activeType && !activeTopic) {
+				show = true;
+			} else if (activeType) {
+				var cardTypes = (card.dataset.articleTypes || '').split(' ').filter(Boolean);
+				show = cardTypes.indexOf(activeType) !== -1;
+			} else {
+				var cardTopics = (card.dataset.topics || '').split(' ').filter(Boolean);
+				show = cardTopics.indexOf(activeTopic) !== -1;
+			}
+			card.hidden = !show;
+			if (show) visible++;
+		});
+		groups.forEach(function (g) {
+			var any = Array.from(g.querySelectorAll('.blog-post-card')).some(function (c) { return !c.hidden; });
+			g.hidden = !any;
+		});
+		var total = cards.length;
+		if (activeType || activeTopic) {
+			countEl.textContent = 'Showing ' + visible + ' of ' + total + ' posts';
+		} else {
+			countEl.textContent = total + ' posts';
+		}
+	}
+
+	typeSel.addEventListener('change', function () {
+		if (typeSel.value) topicSel.value = '';
+		writeURL();
+		apply();
+	});
+	topicSel.addEventListener('change', function () {
+		if (topicSel.value) typeSel.value = '';
+		writeURL();
+		apply();
+	});
+
+	readURL();
+	apply();
+})();
+</script>
 {{ end }}

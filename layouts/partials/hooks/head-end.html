@@ -4,3 +4,113 @@
 {{ end }}
 
 {{ template "_internal/google_analytics.html" . }}
+
+{{/* Ahrefs Analytics */}}
+{{ with .Site.Params.ahrefsAnalytics }}
+<script src="https://analytics.ahrefs.com/analytics.js" data-key="{{ . }}" async></script>
+{{ end }}
+
+{{/* SEO: canonical + noindex for legacy doc versions.
+     Older non-latest doc versions (v0, v1.0, v1.1, …) duplicate content from
+     the latest version (v1.2). Without dedup signals, search engines split
+     ranking signals across all five copies. We mark old versions as noindex
+     (still crawlable for users following links) and canonicalize current
+     pages to themselves. */}}
+{{- $latestVersion := .Site.Params.latest_version_id | default "v1.2" -}}
+{{- $isOldDocsVersion := false -}}
+{{- range .Site.Params.versions -}}
+  {{- if and .id (ne .id $latestVersion) (ne .id "next") -}}
+    {{- if in $.RelPermalink (printf "/docs/%s/" .id) -}}
+      {{- $isOldDocsVersion = true -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if $isOldDocsVersion }}
+<meta name="robots" content="noindex, follow" />
+{{- else }}
+<link rel="canonical" href="{{ .Permalink }}" />
+{{- end }}
+
+{{/* JSON-LD Organization (every page) */}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Cozystack",
+  "url": "{{ "/" | absURL }}",
+  "logo": "{{ "img/cozystack-social.png" | absURL }}",
+  "description": {{ .Site.Params.description | jsonify }},
+  "foundingDate": "2023",
+  "sameAs": [
+    "https://github.com/cozystack/cozystack",
+    "https://landscape.cncf.io/?item=platform--paas-container-service--cozystack",
+    "https://kubernetes.slack.com/messages/cozystack",
+    "https://t.me/cozystack"
+  ]
+}
+</script>
+
+{{/* JSON-LD WebSite (homepage only) */}}
+{{- if .IsHome }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Cozystack",
+  "url": "{{ "/" | absURL }}",
+  "description": {{ .Site.Params.description | jsonify }}
+}
+</script>
+
+{{/* JSON-LD SoftwareApplication (homepage only) — helps AI search engines
+     classify Cozystack correctly when answering "what is Cozystack" queries. */}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Cozystack",
+  "applicationCategory": "Cloud Platform",
+  "operatingSystem": "Linux",
+  "url": "{{ "/" | absURL }}",
+  "description": {{ .Site.Params.description | jsonify }},
+  "license": "https://www.apache.org/licenses/LICENSE-2.0",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "softwareRequirements": "Kubernetes, KubeVirt, Cilium, LINSTOR, Talos Linux"
+}
+</script>
+{{- end }}
+
+{{/* JSON-LD BlogPosting (single blog posts) */}}
+{{- if and (eq .Section "blog") (not .IsSection) (not .IsHome) }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": {{ .Title | jsonify }},
+  "description": {{ .Description | jsonify }},
+  "datePublished": "{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}",
+  "dateModified": "{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}",
+  "author": {
+    "@type": "Person",
+    "name": {{ .Params.author | default "Cozystack Team" | jsonify }}
+  },
+  "image": "{{ with .Params.images }}{{ index . 0 | absURL }}{{ else }}{{ index $.Site.Params.images 0 | absURL }}{{ end }}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Cozystack",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ "img/cozystack-social.png" | absURL }}"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ .Permalink }}"
+  }
+}
+</script>
+{{- end }}

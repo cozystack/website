@@ -2,6 +2,13 @@
 title: "Cozystack v1.0 & v1.1: Introducing Package-Based Architecture, Cozystack Operator, Velero Strategy Controller, MongoDB and OpenBAO Support"
 slug: cozystack-1-0-release
 date: 2026-03-16T07:30:00+00:00
+images:
+  - "image1.png"
+article_types:
+  - release
+topics:
+  - platform
+
 ---
 
 **Author**: Timur Tukaev (Ænix)

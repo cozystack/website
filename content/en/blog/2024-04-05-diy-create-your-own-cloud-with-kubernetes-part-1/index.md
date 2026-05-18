@@ -2,6 +2,12 @@
 title: "DIY: Create Your Own Cloud with Kubernetes (Part 1)"
 slug: diy-create-your-own-cloud-with-kubernetes-part-1
 date: 2024-04-05T07:30:00+00:00
+article_types:
+  - tech-article
+topics:
+  - platform
+  - kubernetes
+
 ---
 
 **Author**: Andrei Kvapil (Ænix)
@@ -170,7 +176,7 @@ two years ago was entirely built using this approach. But unfortunately, it does
 deploy your very first parent cluster that will hold the others. So now you have prepared a
 solution that will help you do this the same using PXE approach.
 
-Essentially, all you need to do is [run temporary]({{% ref "/docs/v1/install/talos/pxe" %}})
+Essentially, all you need to do is [run temporary]({{% ref "/docs/v1.0/install/talos/pxe" %}})
 **DHCP** and **PXE** servers inside containers. Then your nodes will boot from your
 image, and you can use a simple Debian-flavored script to help you bootstrap your nodes.
 

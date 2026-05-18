@@ -1,0 +1,12 @@
+{{- /*
+  oss-cards: wrapper for a grid of OSS component cards.
+
+  Usage:
+    {{< oss-cards >}}
+      {{< oss-card name="KubeVirt" license="Apache-2.0" source="..." description="..." >}}
+      {{< oss-card name="Cilium" license="Apache-2.0" source="..." description="..." >}}
+    {{< /oss-cards >}}
+*/ -}}
+<div class="oss-cards-grid">
+{{ .Inner }}
+</div>

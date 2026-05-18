@@ -4,6 +4,13 @@ slug: protofire-experience-operating-kubernetes-with-cozystack
 date: 2025-09-10
 author: "Timur Tukaev"
 description: "In a recent infrastructure transition that spanned several months, our team explored alternative container orchestration platforms to…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*ZaReZmQFCRYbv7yM1zoq-g.png"
+article_types:
+  - case
+topics:
+  - kubernetes
+
 ---
 
 ### [Protofire](https://www.linkedin.com/company/protofire-io/) Experience Operating Kubernetes with Cozystack

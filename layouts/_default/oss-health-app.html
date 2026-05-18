@@ -1,0 +1,334 @@
+{{ define "main" }}
+<a class="td-offset-anchor"></a>
+<section class="oss-health-shell"
+  data-oss-health-key="{{ .Params.oss_health_key }}"
+  data-oss-health-kind="{{ .Params.oss_health_kind }}">
+  <div class="oss-health-shell__hero">
+    <div class="container oss-health-shell__hero-inner">
+      <div class="oss-health-shell__copy">
+        <p class="oss-health-shell__eyebrow">Open source project health</p>
+        <h1>{{ .Title }}</h1>
+        {{ with .Params.lede }}<p class="oss-health-shell__lede">{{ . }}</p>{{ end }}
+        <div class="oss-health-shell__meta">
+          <span class="oss-health-shell__meta-item" data-oss-health-updated>Loading latest snapshot...</span>
+          <a class="oss-health-shell__meta-link" href="{{ .Params.source_url }}" target="_blank" rel="noopener noreferrer">Source</a>
+        </div>
+      </div>
+      <div class="oss-health-shell__aside">
+        <div class="oss-health-shell__pulse">
+          <span class="oss-health-shell__pulse-dot"></span>
+          Monthly snapshot automation enabled
+        </div>
+        <p>{{ .Description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="container oss-health-app">
+    <div class="oss-health-app__status" data-oss-health-status hidden></div>
+    <div class="oss-health-app__content" data-oss-health-root></div>
+    <noscript>
+      <div class="alert alert-warning mt-4">
+        This page needs JavaScript to render the latest snapshot. Use the source link above if scripting is disabled.
+      </div>
+    </noscript>
+  </div>
+</section>
+
+<script>
+(() => {
+  const shell = document.querySelector("[data-oss-health-key]");
+  if (!shell) return;
+
+  const key = shell.dataset.ossHealthKey;
+  const kind = shell.dataset.ossHealthKind;
+  const root = shell.querySelector("[data-oss-health-root]");
+  const updatedNode = shell.querySelector("[data-oss-health-updated]");
+  const statusNode = shell.querySelector("[data-oss-health-status]");
+
+  const formatDateTime = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat("en", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "UTC",
+      timeZoneName: "short",
+    }).format(date);
+  };
+
+  const escapeHtml = (value) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
+  const renderLink = (item) => {
+    const text = escapeHtml(item.name);
+    if (!item.url) return text;
+    return `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+  };
+
+  const renderCards = (cards) => `
+    <div class="oss-health-grid oss-health-grid--cards">
+      ${cards.map((card) => `
+        <article class="oss-health-stat">
+          <span class="oss-health-stat__label">${escapeHtml(card.label)}</span>
+          <strong class="oss-health-stat__value">${escapeHtml(card.value)}</strong>
+          ${card.hint ? `<span class="oss-health-stat__hint">${escapeHtml(card.hint)}</span>` : ""}
+        </article>
+      `).join("")}
+    </div>
+  `;
+
+  const renderMiniStats = (period) => `
+    <div class="oss-health-mini">
+      <div class="oss-health-mini__item">
+        <span>Window</span>
+        <strong>${escapeHtml(period.description)}</strong>
+      </div>
+      <div class="oss-health-mini__item">
+        <span>Range</span>
+        <strong>${escapeHtml(period.range.from)} to ${escapeHtml(period.range.to)}</strong>
+      </div>
+      <div class="oss-health-mini__item">
+        <span>Issues Opened</span>
+        <strong>${escapeHtml(period.issues_opened)}</strong>
+      </div>
+      <div class="oss-health-mini__item">
+        <span>Issues Closed</span>
+        <strong>${escapeHtml(period.issues_closed)}</strong>
+      </div>
+    </div>
+  `;
+
+  const renderTable = (title, metricLabel, items) => `
+    <section class="oss-health-panel">
+      <div class="oss-health-panel__header">
+        <h2>${escapeHtml(title)}</h2>
+      </div>
+      <div class="oss-health-table-wrap">
+        <table class="oss-health-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>${escapeHtml(metricLabel)}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map((item) => `
+              <tr>
+                <td>${renderLink(item)}</td>
+                <td>${escapeHtml(item.value)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+
+  const renderLanguages = (languages) => `
+    <section class="oss-health-panel">
+      <div class="oss-health-panel__header">
+        <h2>Languages</h2>
+      </div>
+      <div class="oss-health-language-cloud">
+        ${languages.map((item) => `
+          <span class="oss-health-language-pill">
+            <span>${escapeHtml(item.name)}</span>
+            <strong>${escapeHtml(item.value)}</strong>
+          </span>
+        `).join("")}
+      </div>
+    </section>
+  `;
+
+  const renderPeriod = (period) => `
+    <div class="oss-health-period">
+      ${renderCards(period.summary_cards)}
+      ${renderMiniStats(period)}
+      <div class="oss-health-grid oss-health-grid--panels">
+        ${renderTable("Top Contributors", "Commits", period.top_contributors)}
+        ${renderTable("Top PR Authors", "PRs Opened", period.top_pr_authors)}
+      </div>
+      ${renderLanguages(period.languages)}
+    </div>
+  `;
+
+  const renderTimeseries = (payload) => {
+    const order = ["month", "quarter", "year"];
+    let active = "month";
+
+    const renderActive = () => {
+      const period = payload.periods[active];
+      const controls = `
+        <div class="oss-health-switcher" role="tablist" aria-label="Report period">
+          ${order.map((name) => `
+            <button class="oss-health-switcher__button${name === active ? " is-active" : ""}" data-period="${name}" role="tab" aria-selected="${name === active ? "true" : "false"}">
+              ${escapeHtml(payload.periods[name].label)}
+            </button>
+          `).join("")}
+        </div>
+      `;
+
+      root.innerHTML = `
+        <section class="oss-health-stage">
+          <div class="oss-health-stage__header">
+            <div>
+              <p class="oss-health-stage__kicker">${escapeHtml(payload.source.label)}</p>
+              <h2>${escapeHtml(payload.title)} snapshot</h2>
+            </div>
+            ${controls}
+          </div>
+          ${renderPeriod(period)}
+        </section>
+      `;
+
+      root.querySelectorAll("[data-period]").forEach((button) => {
+        button.addEventListener("click", () => {
+          active = button.dataset.period;
+          renderActive();
+        });
+      });
+    };
+
+    renderActive();
+  };
+
+  const renderTelemetry = (payload) => {
+    const order = ["month", "quarter", "year"];
+    const labels = { month: "Month", quarter: "Quarter", year: "Year" };
+    const available = order.filter((name) => payload.periods[name]);
+    if (!available.length) {
+      root.innerHTML = `<p class="oss-health-empty">No telemetry data available yet.</p>`;
+      return;
+    }
+    let active = available[0];
+
+    const renderActive = () => {
+      const period = payload.periods[active];
+      const controls = `
+        <div class="oss-health-switcher" role="tablist" aria-label="Report period">
+          ${available.map((name) => `
+            <button class="oss-health-switcher__button${name === active ? " is-active" : ""}" data-period="${name}" role="tab" aria-selected="${name === active ? "true" : "false"}">
+              ${labels[name]}
+            </button>
+          `).join("")}
+        </div>
+      `;
+
+      const rangeStrip = period.range
+        ? `<div class="oss-health-mini">
+             <div class="oss-health-mini__item">
+               <span>Window</span>
+               <strong>${escapeHtml(period.label)}</strong>
+             </div>
+             <div class="oss-health-mini__item">
+               <span>Range</span>
+               <strong>${escapeHtml(period.range.from)} — ${escapeHtml(period.range.to)}</strong>
+             </div>
+           </div>`
+        : "";
+
+      const appsSection = period.apps && period.apps.length
+        ? renderTable("Applications in use", "Instances", period.apps)
+        : `<p class="oss-health-empty">No application instances reported for this period yet.</p>`;
+
+      root.innerHTML = `
+        <section class="oss-health-stage">
+          <div class="oss-health-stage__header">
+            <div>
+              <p class="oss-health-stage__kicker">${escapeHtml(payload.source.label)}</p>
+              <h2>${escapeHtml(payload.title)} snapshot</h2>
+            </div>
+            ${controls}
+          </div>
+          <div class="oss-health-period">
+            ${renderCards(period.summary_cards)}
+            ${rangeStrip}
+            ${appsSection}
+          </div>
+        </section>
+      `;
+
+      root.querySelectorAll("[data-period]").forEach((button) => {
+        button.addEventListener("click", () => {
+          active = button.dataset.period;
+          renderActive();
+        });
+      });
+    };
+
+    renderActive();
+  };
+
+  const renderOpenSSF = (payload) => {
+    const badgeUpdated = payload.badge_last_updated_at
+      ? `<div class="oss-health-mini__item"><span>Badge updated</span><strong>${escapeHtml(formatDateTime(payload.badge_last_updated_at))}</strong></div>`
+      : "";
+
+    root.innerHTML = `
+      <section class="oss-health-stage">
+        <div class="oss-health-state">
+          <article class="oss-health-state__badge">
+            <img
+              class="oss-health-state__brand"
+              src="https://openssf.org/wp-content/uploads/2023/12/Open-SSF-Logo-horizontal-colorwhite.svg"
+              alt="OpenSSF logo">
+            <a href="${escapeHtml(payload.project_url)}" target="_blank" rel="noopener noreferrer">
+              <img src="${escapeHtml(payload.badge_url)}" alt="OpenSSF Best Practices badge for Cozystack">
+            </a>
+          </article>
+          <article class="oss-health-state__panel">
+            <p class="oss-health-stage__kicker">${escapeHtml(payload.source.label)}</p>
+            <h2>${escapeHtml(payload.project_name)}</h2>
+            <div class="oss-health-state__pill is-${escapeHtml(payload.state.toLowerCase().replaceAll(" ", "-"))}">
+              ${escapeHtml(payload.state)}
+            </div>
+            <p class="oss-health-state__copy">OpenSSF Best Practices tracks whether the project meets a published baseline for documentation, process, testing, and security hygiene.</p>
+            <div class="oss-health-mini">
+              <div class="oss-health-mini__item"><span>Checked</span><strong>${escapeHtml(formatDateTime(payload.last_checked_at))}</strong></div>
+              ${badgeUpdated}
+            </div>
+            <div class="oss-health-actions">
+              <a class="btn btn-primary" href="${escapeHtml(payload.project_url)}" target="_blank" rel="noopener noreferrer">Open project page</a>
+              <a class="btn btn-outline-primary" href="${escapeHtml(payload.status_url)}" target="_blank" rel="noopener noreferrer">Canonical status page</a>
+            </div>
+          </article>
+        </div>
+      </section>
+    `;
+  };
+
+  const setError = (message) => {
+    statusNode.hidden = false;
+    statusNode.textContent = message;
+  };
+
+  fetch(`/oss-health-data/${key}.json`, { credentials: "same-origin" })
+    .then((response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    })
+    .then((payload) => {
+      updatedNode.textContent = `Updated ${formatDateTime(payload.updated_at)}`;
+      if (kind === "state") {
+        renderOpenSSF(payload);
+      } else if (kind === "telemetry") {
+        renderTelemetry(payload);
+      } else {
+        renderTimeseries(payload);
+      }
+    })
+    .catch((error) => {
+      setError(`Could not load the latest snapshot: ${error.message}`);
+    });
+})();
+</script>
+{{ end }}

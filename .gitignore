@@ -22,5 +22,8 @@ hugo/
 # IDE files
 .idea
 
+# Downloaded OpenAPI specs (fetched at build time)
+static/docs/*/cozystack-api/
+
 # Claude Code local settings
 .claude/

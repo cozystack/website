@@ -1,0 +1,21 @@
+# Pinned upstream-tool versions for the `next/` trunk docs.
+#
+# Referenced from content via the {{< version-pin "<key>" >}} shortcode. See
+# data/versions/v1.3.yaml for key semantics and rationale.
+#
+# During development of an upcoming release, keep these values pointing at the
+# latest upstream pre-release / pinned versions for the forthcoming minor so
+# the `next/` docs render deterministically. At release time,
+# hack/release_next.sh copies this file to data/versions/v<major>.<minor>.yaml
+# so the released docs freeze on the values that were true at the cut.
+
+# Upcoming Cozystack release the trunk targets.
+# Use the target tag while the minor is in development (e.g. "v1.4.0").
+cozystack_version: "1.3.0"
+cozystack_tag:     "v1.3.0"
+
+# Talos version shipped by the Cozystack installer for the upcoming minor.
+# Keep in sync with packages/core/talos/images/talos/profiles/installer.yaml
+# in cozystack/cozystack on main.
+talos:       "v1.12.6"
+talos_minor: "v1.12"

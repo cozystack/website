@@ -1,0 +1,65 @@
+# Production-only config overrides.
+# Merged on top of the repo-root hugo.yaml when HUGO_ENV=production (default for
+# `hugo --gc --minify`). Local dev (`hugo server`) and Netlify deploy previews
+# (context.deploy-preview sets a non-production HUGO_ENV) skip this file.
+#
+# The only purpose is to exclude content/en/docs/next/ from the production build.
+# Hugo replaces arrays wholesale during config merge, so the full module.mounts
+# list is repeated here with the `docs/next/**` exclusion added to the content
+# mount.
+module:
+  proxy: direct
+  hugoVersion:
+    extended: true
+  imports:
+    - path: github.com/google/docsy
+      disable: false
+      mounts:
+      - source: assets/scss
+        target: assets/scss/docsy
+      - source: assets/icons
+        target: assets/icons
+      - source: assets/js
+        target: assets/js
+      - source: assets/json
+        target: assets/json
+      - source: assets/_vendor
+        target: assets/_vendor
+      - source: assets/stubs
+        target: assets/stubs
+      - source: layouts
+        target: layouts
+      - source: static
+        target: static
+      - source: i18n
+        target: i18n
+      - source: data
+        target: data
+      - source: archetypes
+        target: archetypes
+    - path: github.com/google/docsy/dependencies
+      disable: false
+    - path: github.com/mfg92/hugo-shortcode-gallery
+      disable: false
+  mounts:
+    - source: content/en
+      target: content
+      files:
+        - '! **/_include/*'
+        - '! docs/next/**'
+    - source: node_modules/bootstrap
+      target: assets/vendor/bootstrap
+    - source: node_modules/@fortawesome/fontawesome-free
+      target: assets/vendor/Font-Awesome
+    - source: node_modules/@fortawesome/fontawesome-free/webfonts
+      target: static/webfonts
+    - source: assets
+      target: assets
+    - source: layouts
+      target: layouts
+    - source: static
+      target: static
+    - source: i18n
+      target: i18n
+    - source: data
+      target: data

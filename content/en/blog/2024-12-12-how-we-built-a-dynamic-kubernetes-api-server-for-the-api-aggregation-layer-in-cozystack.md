@@ -4,6 +4,14 @@ slug: how-we-built-a-dynamic-kubernetes-api-server-for-the-api-aggregation-layer
 date: 2024-12-12
 author: "Andrei Kvapil"
 description: "Hi there! I’m Andrei Kvapil, but you might know me as @kvaps in communities dedicated to Kubernetes and cloud-native tools. In this…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*UnLXn4UMrp8BzIliKvmIPA.png"
+article_types:
+  - tech-article
+topics:
+  - platform
+  - kubernetes
+
 ---
 
 ### How we built a dynamic Kubernetes API Server for the API Aggregation Layer in Cozystack

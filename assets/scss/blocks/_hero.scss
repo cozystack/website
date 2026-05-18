@@ -56,6 +56,34 @@
     }
   }
 
+  .hero-taglines {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .hero-tagline {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid rgba($cozy-light-blue, 0.55);
+    border-radius: 999px;
+    color: $cozy-white;
+    background: rgba($cozy-dark-blue, 0.18);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+
+    @include media-breakpoint-down(sm) {
+      white-space: normal;
+      font-size: 0.9rem;
+    }
+  }
+
   // Align Kubernetes Certified logo with the title top
   .row.align-items-start {
     img[alt="Certified Kubernetes"] {

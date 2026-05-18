@@ -4,6 +4,13 @@ slug: what-s-new-in-cozystack-v0-17
 date: 2024-10-24
 author: "Timur Tukaev"
 description: "This update mainly focuses on enhancing the platform’s virtualization features, while also introducing several other improvements."
+images:
+  - "https://cdn-images-1.medium.com/max/800/0*TPCZ3Zpt6v38RauU"
+article_types:
+  - release
+topics:
+  - platform
+
 ---
 
 ### What’s New in Cozystack v0.17: Windows on VMs, VM image upload app, and web interface for S3 buckets

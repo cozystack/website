@@ -1,0 +1,70 @@
+name: Fetch Telemetry Data
+
+on:
+  # Keep this as a manual telemetry-only backfill path. The monthly OSS Health
+  # refresh intentionally does not update telemetry while /api/overview differs
+  # from the Grafana-backed source of truth.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: fetch-telemetry
+  cancel-in-progress: false
+
+jobs:
+  fetch-telemetry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: 'main'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch and transform telemetry data
+        run: python3 hack/fetch_telemetry.py
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet static/oss-health-data/telemetry.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add static/oss-health-data/telemetry.json
+          git branch -D update-telemetry || true
+          git checkout -b update-telemetry
+          git commit --signoff -m "[oss-health] Update telemetry snapshot $(date -u +'%Y-%m-%d %H:%M:%S')"
+          git push --force --set-upstream origin update-telemetry
+
+      - name: Open pull request if not exists
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_state=$(gh pr view update-telemetry --json state --jq .state 2>/dev/null || echo "")
+          echo "Current PR state: ${pr_state:-NONE}"
+
+          if [[ "$pr_state" == "OPEN" ]]; then
+            echo "An open pull request already exists – skipping creation."
+          else
+            gh pr create \
+              --title "[oss-health] Update telemetry snapshot" \
+              --body "Automated telemetry update via workflow." \
+              --head update-telemetry \
+              --base main
+          fi

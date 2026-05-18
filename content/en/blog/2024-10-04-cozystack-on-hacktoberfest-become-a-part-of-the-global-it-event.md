@@ -4,6 +4,14 @@ slug: cozystack-on-hacktoberfest-become-a-part-of-the-global-it-event-
 date: 2024-10-04
 author: "Timur Tukaev"
 description: "We’ve decided to participate in Hacktoberfest. If you’re participating too, come visit our GitHub and check out the amazing issues. And if…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*0Xw0OKj1Ldx9MLJqOWX7CQ.jpeg"
+article_types:
+  - news
+topics:
+  - community
+  - events
+
 ---
 
 ### Cozystack on Hacktoberfest: become a part of the global IT event!

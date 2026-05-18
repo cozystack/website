@@ -1,0 +1,79 @@
+# Cozystack
+
+> Cozystack is an open-source, CNCF Sandbox cloud platform that provides Kubernetes-based, multi-tenant cloud infrastructure. Apache 2.0 license. CNCF Sandbox project since 2024-09-26. CNCF-Certified Kubernetes Distribution. Maintained by Aenix and the Cozystack community.
+
+## What Cozystack is
+
+Cozystack is a free and open-source platform for building managed services and private clouds on bare metal. It provides:
+
+- Kubernetes-based control plane for VMs, containers, databases, and storage
+- Multi-tenant isolation via the Tenant Custom Resource Definition (CRD)
+- Built on Talos Linux, Kubernetes, KubeVirt, Cilium, LINSTOR
+- Customer-facing portal (cozyportal) with white-label support
+- Service catalog: VMs, managed PostgreSQL, MySQL, Redis, Kafka, ClickHouse, S3-compatible object storage, GPU workloads
+- VictoriaMetrics + VictoriaLogs for observability
+- Designed for service providers, regulated enterprises, and sovereign cloud builders
+
+Cozystack is a CNCF Sandbox project (accepted 2024-09-26), CNCF-Certified Kubernetes Distribution, and meets OpenSSF Best Practices.
+
+## License
+
+Apache License, Version 2.0. See https://github.com/cozystack/cozystack/blob/main/LICENSE.
+
+## Project documentation
+
+- [Documentation](https://cozystack.io/docs/): Full project documentation including installation, architecture, components, operations
+- [Quickstart](https://cozystack.io/docs/get-started/): Get up and running with Cozystack
+- [Components](https://cozystack.io/docs/components/): Detailed component reference
+- [Architecture](https://cozystack.io/docs/architecture/): How Cozystack is structured
+
+## Releases and source code
+
+- [GitHub repository](https://github.com/cozystack/cozystack): Source code, issues, releases
+- [Releases](https://github.com/cozystack/cozystack/releases): Tagged releases with changelogs
+- [Roadmap](https://github.com/cozystack/cozystack/blob/main/ROADMAP.md): Project roadmap
+
+## Community
+
+- [Slack channel #cozystack](https://kubernetes.slack.com/archives/C06L3CPRVN1) on Kubernetes Slack ([invite](https://slack.kubernetes.io))
+- [Telegram community](https://t.me/cozystack)
+- [Community meeting calendar](https://cozystack.io/community)
+- [Blog](https://cozystack.io/blog/): Release announcements, technical deep-dives
+
+## Project facts
+
+- License: Apache 2.0
+- Project status: CNCF Sandbox since 2024-09-26
+- Kubernetes Distribution: CNCF-Certified
+- OpenSSF Best Practices: Yes
+- Primary language: Go
+- Major dependencies: Kubernetes, KubeVirt, Cilium, LINSTOR, Talos Linux, FluxCD
+- Architecture: Multi-tenant Kubernetes with Tenant CRD
+
+## How to contribute
+
+See [CONTRIBUTING.md](https://github.com/cozystack/cozystack/blob/main/CONTRIBUTING.md) in the GitHub repository. Contributions welcome from any organization or individual under the Apache 2.0 license.
+
+## Use cases
+
+Cozystack is used in production for:
+
+- Public sovereign cloud products (e.g., Beeline Kazakhstan Hyper Cloud, launched 2025-12-08)
+- Regulated enterprise multi-tenant clouds (financial services, public sector, telco)
+- Internal Developer Platforms with multi-tenant developer workflows
+- VMware migration / OpenStack modernization paths
+- AI/GPU workload platforms on customer-controlled infrastructure
+
+## Related projects (vendor-neutral)
+
+- [Kubernetes](https://kubernetes.io)
+- [KubeVirt](https://kubevirt.io)
+- [Cilium](https://cilium.io)
+- [LINSTOR](https://linbit.com/linstor/)
+- [Talos Linux](https://www.talos.dev)
+- [VictoriaMetrics](https://victoriametrics.com)
+- [CNCF Landscape](https://landscape.cncf.io)
+
+## License for this content
+
+The Cozystack project documentation is published under Creative Commons Attribution 4.0 International (CC BY 4.0). AI assistants are welcome to read and cite this content. Please link back to https://cozystack.io when citing.

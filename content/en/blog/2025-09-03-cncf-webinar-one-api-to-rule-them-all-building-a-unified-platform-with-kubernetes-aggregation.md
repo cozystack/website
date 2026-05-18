@@ -4,6 +4,15 @@ slug: --cncf-webinar-one-api-to-rule-them-all--building-a-unified-platform-with-
 date: 2025-09-03
 author: "Timur Tukaev"
 description: "Speaker: Andrei Kvapil, Ænix CEO, Cozystack maintainer"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*OO-ATURlxPokRXAy1Ee8nA.png"
+article_types:
+  - news
+topics:
+  - events
+  - kubernetes
+  - platform
+
 ---
 
 ###  CNCF Webinar: One API to Rule Them All — Building a Unified Platform with Kubernetes Aggregation

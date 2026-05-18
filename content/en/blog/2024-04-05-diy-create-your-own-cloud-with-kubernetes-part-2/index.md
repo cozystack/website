@@ -2,6 +2,14 @@
 title: "DIY: Create Your Own Cloud with Kubernetes (Part 2)"
 slug: diy-create-your-own-cloud-with-kubernetes-part-2
 date: 2024-04-05T07:35:00+00:00
+article_types:
+  - tech-article
+topics:
+  - platform
+  - kubernetes
+  - networking
+  - storage
+
 ---
 
 **Author**: Andrei Kvapil (Ænix)
@@ -27,7 +35,7 @@ project and development team.
 Virtual machines are the primary means of isolating tenants from each other in a cloud environment.
 In virtual machines, users can execute code and programs with administrative privilege, but this
 doesn't affect other tenants or the environment itself. In other words, virtual machines allow to
-achieve [hard multi-tenancy isolation]({{% ref "/docs/v1/guides/concepts#tenant-system" %}}), and run
+achieve [hard multi-tenancy isolation]({{% ref "/docs/v1.0/guides/concepts#tenant-system" %}}), and run
 in environments where tenants do not trust each other.
 
 ## Virtualization technologies in Kubernetes

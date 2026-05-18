@@ -4,6 +4,13 @@ slug: a-simple-way-to-install-talos-linux-on-any-machine-with-any-provider
 date: 2025-04-28
 author: "Andrei Kvapil"
 description: "Talos Linux is a specialized operating system designed for running Kubernetes. In my opinion, it does that task better than others. First…"
+images:
+  - "https://cdn-images-1.medium.com/max/800/1*ca81wgE3M5JA6B9ST8gT1A.png"
+article_types:
+  - how-to
+topics:
+  - talos
+
 ---
 
 ### A Simple Way to Install Talos Linux on Any Machine, with Any Provider

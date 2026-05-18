@@ -4,6 +4,13 @@ slug: cozystack-1-2-opensearch-vpc-peering-and-smarter-tenant-scheduling
 date: 2026-03-31
 author: "Timur Tukaev"
 description: "Cozystack 1.2 brings managed OpenSearch, VPC peering, SchedulingClass, and a stabilization follow-up in v1.2.1."
+article_types:
+  - release
+topics:
+  - platform
+  - opensearch
+  - networking
+
 ---
 
 ### Cozystack 1.2: OpenSearch, VPC Peering, and Smarter Tenant Scheduling

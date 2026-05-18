@@ -248,36 +248,45 @@ nav.navbar {
   }
 }
 
-// Sidebar version switcher
+// Sidebar version switcher (dropdown)
 .version-switcher {
-  display: flex;
-  gap: 0.5rem;
   padding: 0.75rem 1rem;
 
-  &__item {
-    flex: 1;
-    text-align: center;
-    padding: 0.35rem 0.75rem;
+  &__toggle {
+    width: 100%;
+    padding: 0.4rem 0.75rem;
     border-radius: 0.25rem;
     font-size: 0.85rem;
     font-weight: 600;
     color: $cozy-dark-blue;
     background: rgba($cozy-dark-blue, 0.05);
     border: 1px solid rgba($cozy-dark-blue, 0.2);
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s;
 
     &:hover {
       background: rgba($cozy-dark-blue, 0.12);
     }
 
-    &--active {
-      background: $cozy-dark-blue;
-      color: $cozy-white;
-      border-color: $cozy-dark-blue;
+    &::after {
+      float: right;
+      margin-top: 0.35rem;
+    }
+  }
 
-      &:hover {
-        background: $cozy-darkest-blue;
+  &__menu {
+    width: 100%;
+    font-size: 0.85rem;
+    min-width: unset;
+
+    .dropdown-item {
+      font-weight: 600;
+      color: $cozy-dark-blue;
+
+      &.active {
+        background: $cozy-dark-blue;
+        color: $cozy-white;
       }
     }
   }

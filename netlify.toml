@@ -1,9 +1,9 @@
 [build]
   publish = "public"
-  command = "npm install && hugo --gc --minify"
+  command = "npm install && ./hack/download_openapi.sh && hugo --gc --minify"
 
 [build.environment]
-  HUGO_VERSION = "0.151.1"
+  HUGO_VERSION = "0.160.1"
   HUGO_EXTENDED = "true"
   NODE_VERSION = "20"
   GO_VERSION = "1.23"
@@ -11,11 +11,22 @@
 [context.production.environment]
   HUGO_ENV = "production"
 
+# Deploy previews render content/en/docs/next/ so reviewers can see upcoming-release
+# docs. HUGO_ENV != "production" skips config/production/hugo.yaml, which is where
+# the `docs/next/**` content-mount exclusion lives.
+[context.deploy-preview.environment]
+  HUGO_ENV = "preview"
+
 [context.deploy-preview]
-  command = "npm install && hugo --gc --minify --buildFuture -b $DEPLOY_PRIME_URL"
+  command = "npm install && ./hack/download_openapi.sh && hugo --gc --minify --buildFuture -b $DEPLOY_PRIME_URL"
 
 [context.branch-deploy]
-  command = "npm install && hugo --gc --minify -b $DEPLOY_PRIME_URL"
+  command = "npm install && ./hack/download_openapi.sh && hugo --gc --minify -b $DEPLOY_PRIME_URL"
+
+[[redirects]]
+  from = "/docs/v1/*"
+  to = "/docs/v1.2/:splat"
+  status = 301
 
 [[redirects]]
   from = "/*"
