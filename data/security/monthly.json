@@ -1,0 +1,13 @@
+{
+  "month": "",
+  "generated_at": "",
+  "new_count": 0,
+  "fixed": [],
+  "in_progress": [],
+  "accepted_risk": [],
+  "stats": {
+    "total_tracked": 0,
+    "total_triaged": 0,
+    "false_positives": 0
+  }
+}
