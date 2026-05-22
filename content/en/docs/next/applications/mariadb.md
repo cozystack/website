@@ -111,7 +111,7 @@ more details:
 
 ### Backup parameters
 {{% alert color="warning" %}}
-**The chart-level `backup.*` values documented below are deprecated.** The legacy `mariadb-dump` + `restic` flow is superseded by the Cozystack backups framework: define a `BackupClass` + `MariaDB` strategy once, then drive backups via `BackupJob` / `Plan` and restores via `RestoreJob`. Existing tenants with `backup.enabled=true` continue to render the legacy resources unchanged. See [Application Backup and Recovery]({{% ref "/docs/next/applications/backup-and-recovery" %}}) (tenant guide) and [Managed Application Backup Configuration]({{% ref "/docs/next/operations/services/managed-app-backup-configuration" %}}) (admin setup).
+**The chart-level `backup.*` values documented below are deprecated.** The legacy `mariadb-dump` + `restic` flow is superseded by the Cozystack backups framework: define a `BackupClass` + `MariaDB` strategy once, then drive backups via `BackupJob` / `Plan` and restores via `RestoreJob`. Existing tenants with `backup.enabled=true` continue to render the legacy resources unchanged. See [Application Backup and Recovery]({{% ref "/docs/next/applications/backup-and-recovery" %}}) (tenant guide) and [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) (admin setup).
 {{% /alert %}}
 
 | Name                     | Description                                     | Type     | Value                                                  |

@@ -10,7 +10,7 @@ The `velero` addon of the [Managed Kubernetes]({{% ref "/docs/next/kubernetes" %
 {{% alert color="info" %}}
 This guide is for the **tenant-side** Velero addon, which runs inside a tenant Kubernetes cluster and is operated by the tenant user.
 
-For the platform-level Velero used by cluster administrators to back up `VMInstance`/`VMDisk` resources from the management cluster, see [Velero Backup Configuration]({{% ref "/docs/next/operations/services/velero-backup-configuration" %}}).
+For the platform-level Velero used by cluster administrators to back up `VMInstance`/`VMDisk` resources from the management cluster, see [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}).
 {{% /alert %}}
 
 ## What the addon installs
@@ -172,4 +172,4 @@ The same pattern restores into a **different** tenant Kubernetes cluster as well
 
 - [Managed Kubernetes — `addons.velero` parameters]({{% ref "/docs/next/kubernetes#parameters" %}})
 - [Buckets and Users]({{% ref "/docs/next/operations/services/object-storage/buckets" %}})
-- [Velero Backup Configuration (platform admin)]({{% ref "/docs/next/operations/services/velero-backup-configuration" %}})
+- [Backup Classes (platform admin)]({{% ref "/docs/next/operations/services/backup-classes" %}})

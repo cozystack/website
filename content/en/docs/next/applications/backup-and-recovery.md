@@ -8,12 +8,11 @@ weight: 4
 This guide covers backing up and restoring **Cozystack-managed databases** — Postgres, MariaDB, and ClickHouse — as a tenant user: running one-off and scheduled backups, checking status, and restoring from a backup either in place or into a separate target instance.
 
 {{% alert color="info" %}}
-**Storage, credentials, and the `BackupClass` are admin-provisioned.** Before you can run a `BackupJob`, an administrator provisions the S3 storage and the per-application credential Secrets your driver expects, and creates the cluster-scoped `BackupClass` you reference. Ask your administrator for:
+**Storage and the `BackupClass` are platform-provisioned.** Cozystack ships a single cluster-scoped `BackupClass` named `cozy-default` that covers Postgres, MariaDB, ClickHouse, Etcd, VMInstance, and VMDisk via a per-Kind `strategies[]` array. You reference it by name from `BackupJob` / `Plan` / `RestoreJob` — there is no per-application `BackupClass`, and you do **not** create or supply S3 credentials, endpoints, or paths. The platform projects a credentials Secret (`cozy-backups-creds`) into your tenant namespace automatically right before each BackupJob runs.
 
-- the `BackupClass` name to use for your application Kind (you cannot list `BackupClass` resources under your tenant kubeconfig — they are cluster-scoped);
-- confirmation that the per-application credential Secrets exist in your namespace for every managed-DB application you want to back up.
+If your administrator has created additional sibling `BackupClass` resources (different retention, different storage, etc.), ask for the name and substitute it for `cozy-default` in the examples below. `BackupClass` is cluster-scoped, so you cannot list it under a tenant kubeconfig — your administrator will tell you which names are valid.
 
-Admins follow the [Managed Application Backup Configuration]({{% ref "/docs/next/operations/services/managed-app-backup-configuration" %}}) guide.
+Admins follow the [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) guide.
 {{% /alert %}}
 
 {{% alert color="warning" %}}
@@ -28,8 +27,8 @@ For backups that include the application's Helm release, CRs, and PVC snapshots 
 
 ## Prerequisites
 
-- A `BackupClass` name handed to you by your administrator (for example, `postgres-data-backup` for a `Postgres` application).
-- An existing managed-DB application (`Postgres`, `MariaDB`, or `ClickHouse`) in your tenant namespace.
+- A `BackupClass` name. On a default install this is `cozy-default`, which covers `Postgres`, `MariaDB`, `ClickHouse`, and `Etcd`. If your administrator has created a sibling class, substitute that name everywhere below.
+- An existing managed-DB application (`Postgres`, `MariaDB`, `ClickHouse`, or `Etcd`) in your tenant namespace.
 - `kubectl` and a tenant kubeconfig with the `tenant-<ns>-admin` role.
 
 The examples below assume `tenant-user` for the tenant namespace; substitute your own.
@@ -51,7 +50,7 @@ spec:
     apiGroup: apps.cozystack.io
     kind: Postgres
     name: my-postgres
-  backupClassName: postgres-data-backup
+  backupClassName: cozy-default
 ```
 
 ```bash
@@ -62,7 +61,7 @@ kubectl -n tenant-user describe backupjob my-postgres-adhoc
 
 When the `BackupJob` reaches `phase: Succeeded`, the driver creates a `Backup` object with the same name. That name is what you reference when restoring.
 
-Replace `Postgres` / `postgres-data-backup` with `MariaDB` / `mariadb-data-backup` or `ClickHouse` / `clickhouse-data-backup` for the other drivers.
+Replace `Postgres` with `MariaDB`, `ClickHouse`, or `Etcd` for the other drivers — the `BackupClass` (`cozy-default`) is the same; the platform-shipped class binds a strategy for every supported Kind.
 
 ### Scheduled backup
 
@@ -79,7 +78,7 @@ spec:
     apiGroup: apps.cozystack.io
     kind: Postgres
     name: my-postgres
-  backupClassName: postgres-data-backup
+  backupClassName: cozy-default
   schedule:
     type: cron
     cron: "0 */6 * * *"   # every 6 hours
@@ -110,7 +109,7 @@ kubectl -n tenant-user describe backupjob my-postgres-adhoc
 kubectl -n tenant-user get events --field-selector involvedObject.name=my-postgres-adhoc
 ```
 
-If `status.message` does not pinpoint the failure, hand the `BackupJob` name to your administrator and they will inspect the operator-native CR the driver created (see [Tenant escalation: driver-side diagnostics]({{% ref "/docs/next/operations/services/managed-app-backup-configuration#tenant-escalation-driver-side-diagnostics" %}}) in the admin guide).
+If `status.message` does not pinpoint the failure, hand the `BackupJob` name to your administrator and they will inspect the operator-native CR the driver created (see [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) in the admin guide).
 
 ## Restore in place
 
@@ -201,10 +200,10 @@ kubectl -n tenant-user describe backupjob my-postgres-adhoc
 kubectl -n tenant-user get events --field-selector involvedObject.name=my-postgres-adhoc
 ```
 
-If those do not explain the failure, the next layer of diagnostics lives on the operator-native CR the driver created (`cnpg.io/Backup`, `k8s.mariadb.com/Backup`, or the ClickHouse strategy `Pod` logs). These resources are not reachable under the tenant kubeconfig — hand the `BackupJob` name to your administrator and they will follow [Tenant escalation: driver-side diagnostics]({{% ref "/docs/next/operations/services/managed-app-backup-configuration#tenant-escalation-driver-side-diagnostics" %}}).
+If those do not explain the failure, the next layer of diagnostics lives on the operator-native CR the driver created (`cnpg.io/Backup`, `k8s.mariadb.com/Backup`, or the ClickHouse strategy `Pod` logs). These resources are not reachable under the tenant kubeconfig — hand the `BackupJob` name to your administrator and they will follow [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}).
 
 ## See also
 
-- [Managed Application Backup Configuration]({{% ref "/docs/next/operations/services/managed-app-backup-configuration" %}}) — how administrators define strategies and `BackupClass` resources.
+- [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) — how administrators define strategies and `BackupClass` resources.
 - [Backup and Recovery (VMs)]({{% ref "/docs/next/virtualization/backup-and-recovery" %}}) — the parallel guide for VMInstance / VMDisk backups (HelmRelease + CRs + PVC snapshots).
-- [Velero Backup Configuration]({{% ref "/docs/next/operations/services/velero-backup-configuration" %}}) — administrator setup for the Velero-driven VM backups.
+- [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) — administrator setup for the Velero-driven VM backups.
