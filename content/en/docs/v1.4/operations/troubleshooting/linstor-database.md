@@ -54,27 +54,22 @@ If you see that something could not delete properly, it's better to investigate 
 
 ## CRD API versions and field visibility
 
-LINSTOR's `internal.linstor.linbit.com` CRDs declare multiple served apiVersions (for example `v1-15-0`, `v1-17-0`,
-`v1-25-1`, `v1-31-1`) but persist data under a single storage version. Newer fields, such as
-`LayerDrbdResources.spec.tcp_port_list` (where DRBD TCP ports are stored), exist only in the newer schemas. When you
-read through an older served version, those fields are silently stripped by the Kubernetes API server during conversion,
-so `kubectl get -o json | jq` returns `null` for them even when the data is there.
+LINSTOR's `internal.linstor.linbit.com` CRDs declare multiple served apiVersions (for example `v1-15-0`, `v1-17-0`, `v1-25-1`, `v1-31-1`) but persist data under a single storage version. Newer fields, such as `LayerDrbdResources.spec.tcp_port_list` (where DRBD TCP ports are stored), exist only in the newer schemas. When you read through an older served version, those fields are silently stripped by the Kubernetes API server during conversion, so `kubectl get -o json | jq` returns `null` for them even when the data is there.
 
-To see what `linstor-controller` actually reads, query through the storage version directly:
+To see what `linstor-controller` actually reads, discover and query through the storage version. All subsequent `kubectl get --raw` examples in this guide assume `STORAGE_VERSION` is set as below:
 
 ```bash
-# Find the storage version
-kubectl get crd layerdrbdresources.internal.linstor.linbit.com -o json \
-  | jq -r '.spec.versions[] | select(.storage==true) | .name'
+# Discover the storage version once
+STORAGE_VERSION=$(kubectl get crd layerdrbdresources.internal.linstor.linbit.com -o json \
+  | jq -r '.spec.versions[] | select(.storage==true) | .name')
+echo "$STORAGE_VERSION"
 
-# Query via storage version (substitute the version returned above)
-kubectl get --raw "/apis/internal.linstor.linbit.com/v1-31-1/layerdrbdresources" \
+# Query via storage version
+kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/layerdrbdresources" \
   | jq '.items[0].spec'
 ```
 
-This also affects [backups](#backup-and-analyze) taken with plain `kubectl get` — fields that are not present in the
-discovered served version are not written to the backup file. Restoring such a backup can produce records that
-`linstor-controller` refuses to load (see [Example 4: Missing tcp_port_list on LayerDrbdResources](#example-4-missing-tcp_port_list-on-layerdrbdresources)).
+This also affects [backups](#backup-and-analyze) taken with plain `kubectl get` — fields that are not present in the discovered served version are not written to the backup file. Restoring such a backup can produce records that `linstor-controller` refuses to load (see [Example 4: Missing tcp_port_list on LayerDrbdResources](#example-4-missing-tcp_port_list-on-layerdrbdresources)).
 
 
 ## Example of logs
@@ -266,18 +261,17 @@ CRs have cryptic names, so it's convenient to download all of them as JSON and e
 {{% alert color="warning" %}}
 :warning: **Backup via storage apiVersion**
 
-The plain `kubectl get` commands above query the CRDs via the discovered served apiVersion, which can drop newer fields
-(notably `LayerDrbdResources.spec.tcp_port_list`) — see [CRD API versions and field visibility](#crd-api-versions-and-field-visibility).
-If you intend to use the backup for restore, fetch each CRD via the storage apiVersion explicitly. Find the storage
-version with:
+The plain `kubectl get` commands above query the CRDs via the discovered served apiVersion, which can drop newer fields (notably `LayerDrbdResources.spec.tcp_port_list`) — see [CRD API versions and field visibility](#crd-api-versions-and-field-visibility). If you intend to use the backup for restore, fetch each CRD via the storage apiVersion explicitly:
 
 ```bash
-kubectl get crd layerdrbdresources.internal.linstor.linbit.com -o json \
-  | jq -r '.spec.versions[] | select(.storage==true) | .name'
-```
+STORAGE_VERSION=$(kubectl get crd layerdrbdresources.internal.linstor.linbit.com -o json \
+  | jq -r '.spec.versions[] | select(.storage==true) | .name')
 
-and replace `kubectl get {} -ojson` in the loop above with
-`kubectl get --raw "/apis/internal.linstor.linbit.com/<storage-version>/<resource>"` per CRD.
+for crd in $(kubectl get crds | grep -o '.*\.internal\.linstor\.linbit\.com'); do
+  resource=$(echo "$crd" | cut -d. -f1)
+  kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/${resource}" > "${crd}.json"
+done
+```
 {{% /alert %}}
 
 
@@ -411,25 +405,20 @@ If the error report mentions a TCP port allocation conflict:
 Error message: cozy01's TCP port 7012 is already in use
 ```
 
-with the stacktrace pointing at `DynamicNumberPoolImpl.allocate` → `DrbdRscData.setPorts` → `LayerDrbdRscDbDriver.loadImpl`,
-this means two different `LayerDrbdResources` records on the same node hold the same value in `spec.tcp_port_list`. On
-controller startup, the second `allocate(port)` call against the node's port pool throws `ValueInUseException`.
+with the stacktrace pointing at `DynamicNumberPoolImpl.allocate` → `DrbdRscData.setPorts` → `LayerDrbdRscDbDriver.loadImpl`, this means two different `LayerDrbdResources` records on the same node hold the same value in `spec.tcp_port_list`. On controller startup, the second `allocate(port)` call against the node's port pool throws `ValueInUseException`.
 
-This can happen after `toggle-disk` operations or restore from snapshot/backup on LINSTOR versions affected by a
-regression introduced in v1.31.2 (when TCP ports were moved to a per-node pool); tracked upstream in
-[LINBIT/linstor-server#476](https://github.com/LINBIT/linstor-server/pull/476).
+This can happen after `toggle-disk` operations or restore from snapshot/backup on LINSTOR versions affected by a regression introduced in v1.31.2 (when TCP ports were moved to a per-node pool); tracked upstream in [LINBIT/linstor-server#476](https://github.com/LINBIT/linstor-server/pull/476).
 
-To find the duplicate records, query through the storage apiVersion (the field is hidden via older served versions —
-see [CRD API versions and field visibility](#crd-api-versions-and-field-visibility)):
+To find the duplicate records, query through the storage apiVersion (the field is hidden via older served versions — see [CRD API versions and field visibility](#crd-api-versions-and-field-visibility)):
 
 ```bash
 PORT=7012        # from the error message
 NODE=COZY01      # from the error message, uppercase
 
-kubectl get --raw "/apis/internal.linstor.linbit.com/v1-31-1/layerdrbdresources" \
+kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/layerdrbdresources" \
   | jq -r --arg p "[$PORT]" '.items[] | select(.spec.tcp_port_list == $p) | .spec.layer_resource_id' \
   | while read lri; do
-      kubectl get --raw "/apis/internal.linstor.linbit.com/v1-31-1/layerresourceids" \
+      kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/layerresourceids" \
         | jq -r --argjson l "$lri" '.items[] | select(.spec.layer_resource_id == $l and .spec.layer_resource_kind == "DRBD") | [.spec.layer_resource_id, .spec.node_name, .spec.resource_name] | @tsv'
     done
 ```
@@ -443,9 +432,7 @@ Expected output: more than one record on the same node. For example:
 633   COZY01   PVC-E36C9A57-0DF1-452E-BAD3-CB1117B8D995    <- duplicate on COZY01
 ```
 
-In this example the legitimate resource is `PVC-EF2A414E`, with replicas on `COZY02` and `COZY03`, both with port `7012`
-(DRBD resources use the same port across all peers — this is correct). The two records on `COZY01` belong to different
-resources but share that same port; only one of them can stay.
+In this example the legitimate resource is `PVC-EF2A414E`, with replicas on `COZY02` and `COZY03`, both with port `7012` (DRBD resources use the same port across all peers — this is correct). The two records on `COZY01` belong to different resources but share that same port; only one of them can stay.
 
 Before deleting, identify the orphan by cross-checking:
 
@@ -462,16 +449,15 @@ Before deleting, identify the orphan by cross-checking:
 
     ```bash
     RSC=PVC-31690526-8027-412F-9F13-2766E8D26341
-    kubectl get --raw "/apis/internal.linstor.linbit.com/v1-31-1/layerresourceids" \
+    kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/layerresourceids" \
       | jq -r --arg r "$RSC" '.items[] | select(.spec.resource_name == $r and .spec.layer_resource_kind == "DRBD") | .spec.layer_resource_id' \
       | while read l; do
-          kubectl get --raw "/apis/internal.linstor.linbit.com/v1-31-1/layerdrbdresources" \
+          kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/layerdrbdresources" \
             | jq -r --argjson l "$l" '.items[] | select(.spec.layer_resource_id == $l) | [.spec.layer_resource_id, .spec.tcp_port_list, .spec.flags] | @tsv'
         done
     ```
 
-    Inconsistent port lists across replicas of the same resource indicate corruption: the resource is broken on the
-    LINSTOR side and is a candidate for cleanup.
+    Inconsistent port lists across replicas of the same resource indicate corruption: the resource is broken on the LINSTOR side and is a candidate for cleanup.
 
 3.  **DRBD flags**: `spec.flags` on `LayerDrbdResources` is a bitmask over `DrbdRscFlags`:
 
@@ -489,17 +475,14 @@ Before deleting, identify the orphan by cross-checking:
     | `FORCE_NEW_METADATA` | 512 |
     | `INVALIDATE` | 1024 |
 
-    A record with `flags=4` (DISKLESS without INITIALIZED) is a tiebreaker replica that never reached steady state —
-    frequently a leftover of a botched `toggle-disk`.
+    A record with `flags=4` (DISKLESS without INITIALIZED) is a tiebreaker replica that never reached steady state — frequently a leftover of a botched `toggle-disk`.
 
-Use `linstor-find-db.sh` from [Method 1](#method-1-using-a-helper-script) to delete the orphan and all its related
-records. `linstor-find-db.sh` does not return the resource-level definitions; fetch them separately and add to the
-delete list:
+Use `linstor-find-db.sh` from [Method 1](#method-1-using-a-helper-script) to delete the orphan and all its related records. `linstor-find-db.sh` does not return the resource-level definitions; fetch them separately and add to the delete list:
 
 ```bash
 RSC=PVC-31690526-8027-412F-9F13-2766E8D26341
 for kind in resourcedefinitions layerdrbdresourcedefinitions volumedefinitions layerdrbdvolumedefinitions; do
-  kubectl get --raw "/apis/internal.linstor.linbit.com/v1-31-1/$kind" \
+  kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/$kind" \
     | jq -r --arg r "$RSC" '.items[] | select(.spec.resource_name == $r) | "\(.kind).internal.linstor.linbit.com/\(.metadata.name)"'
 done
 ```
@@ -514,34 +497,29 @@ If the error report mentions:
 Error message: Node: 'cozyXX', Rsc: 'pvc-XXX' did not have tcpPorts stored!
 ```
 
-The `LayerDrbdResources` record for that resource on that node has no `tcp_port_list` field. This typically happens
-after a restore from a backup that was taken through an older served apiVersion (which strips the field — see
-[CRD API versions and field visibility](#crd-api-versions-and-field-visibility)).
+The `LayerDrbdResources` record for that resource on that node has no `tcp_port_list` field. This typically happens after a restore from a backup that was taken through an older served apiVersion (which strips the field — see [CRD API versions and field visibility](#crd-api-versions-and-field-visibility)).
 
 To find all affected records via the storage apiVersion:
 
 ```bash
-kubectl get --raw "/apis/internal.linstor.linbit.com/v1-31-1/layerdrbdresources" \
+kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/layerdrbdresources" \
   | jq -r '.items[] | select(.spec.tcp_port_list == null or .spec.tcp_port_list == "") | .spec.layer_resource_id' \
   | while read lri; do
-      kubectl get --raw "/apis/internal.linstor.linbit.com/v1-31-1/layerresourceids" \
+      kubectl get --raw "/apis/internal.linstor.linbit.com/${STORAGE_VERSION}/layerresourceids" \
         | jq -r --argjson l "$lri" '.items[] | select(.spec.layer_resource_id == $l and .spec.layer_resource_kind == "DRBD") | [.spec.layer_resource_id, .spec.node_name, .spec.resource_name] | @tsv'
     done
 ```
 
 For each affected record, decide between two paths:
 
--   **Salvageable**: peer replicas of the same resource have a consistent non-null `tcp_port_list`. Patch the affected
-    record with the same value:
+-   **Salvageable**: peer replicas of the same resource have a consistent non-null `tcp_port_list`. Patch the affected record with the same value:
 
     ```bash
     kubectl patch layerdrbdresources.internal.linstor.linbit.com/<name> \
       --type=merge --patch '{"spec":{"tcp_port_list":"[7018]"}}'
     ```
 
--   **Already broken**: PV is `NotFound`, or peer replicas have inconsistent ports, or it's a stale tiebreaker
-    (`flags=4`). Use the [Example 3](#example-3-duplicate-tcp-ports-on-a-node) cleanup procedure to remove the resource
-    and all its related records.
+-   **Already broken**: PV is `NotFound`, or peer replicas have inconsistent ports, or it's a stale tiebreaker (`flags=4`). Use the [Example 3](#example-3-duplicate-tcp-ports-on-a-node) cleanup procedure to remove the resource and all its related records.
 
 ### Iterative fixing
 
@@ -590,13 +568,7 @@ If something went wrong, and you are lost, it's possible to restore at least wha
 {{% alert color="warning" %}}
 :warning: **Verify the backup was taken via the storage apiVersion**
 
-If your backup was produced with plain `kubectl get -o json`, it may be missing newer fields (notably
-`LayerDrbdResources.spec.tcp_port_list`) — see [CRD API versions and field visibility](#crd-api-versions-and-field-visibility).
-Restoring such a backup creates records that look intact but cause `linstor-controller` to crash with
-`did not have tcpPorts stored!` — see [Example 4](#example-4-missing-tcp_port_list-on-layerdrbdresources). Before
-restoring, sanity-check the JSON files for the affected field, e.g.
-`jq '[.items[] | select(.spec.tcp_port_list != null)] | length' layerdrbdresources.internal.linstor.linbit.com.json`
-should match the number of items in that CRD.
+If your backup was produced with plain `kubectl get -o json`, it may be missing newer fields (notably `LayerDrbdResources.spec.tcp_port_list`) — see [CRD API versions and field visibility](#crd-api-versions-and-field-visibility). Restoring such a backup creates records that look intact but cause `linstor-controller` to crash with `did not have tcpPorts stored!` — see [Example 4](#example-4-missing-tcp_port_list-on-layerdrbdresources). Before restoring, sanity-check the JSON files for the affected field, e.g. `jq '[.items[] | select(.spec.tcp_port_list != null)] | length' layerdrbdresources.internal.linstor.linbit.com.json` should match the number of items in that CRD.
 {{% /alert %}}
 
 ```bash
