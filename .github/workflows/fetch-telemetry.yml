@@ -1,9 +1,13 @@
 name: Fetch Telemetry Data
 
 on:
-  # Keep this as a manual telemetry-only backfill path. The monthly OSS Health
-  # refresh intentionally does not update telemetry while /api/overview differs
-  # from the Grafana-backed source of truth.
+  # Monthly telemetry refresh. /api/overview now counts entities over the period
+  # window instead of at an instant (cozystack/cozystack-telemetry-server#8), so
+  # it matches the Grafana-backed source of truth and is safe to consume on a
+  # schedule again. Aligned with the monthly OSS Health cron; workflow_dispatch
+  # remains for manual backfills.
+  schedule:
+    - cron: '0 4 1 * *'
   workflow_dispatch:
 
 permissions:

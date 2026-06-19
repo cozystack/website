@@ -8,8 +8,9 @@ What it does:
 3. Merge case-insensitive / Pax* / legacy-name aliases into one canonical entry
    per application, keeping the maximum instance count (zero-count entries
    left after the merge are dropped from the table).
-4. Pull `Tenant` out of the apps map and surface it as the top-level Tenants
-   summary card (the raw `total_tenants` field from the API is always zero).
+4. Surface tenant count as the top-level Tenants summary card, preferring the
+   period's `total_tenants` field (correct since telemetry-server #8) and
+   falling back to `apps.Tenant` for older payloads where it was zero.
 5. Emit the payload in the shape consumed by `oss-health-app.html` +
    `renderTelemetry`, including `summary_cards`, `apps`, `range`.
 
@@ -100,7 +101,9 @@ def transform_period(raw_period: dict, label_fallback: str) -> dict | None:
     if not raw_period:
         return None
     apps_raw = raw_period.get("apps", {}) or {}
-    tenants = int(apps_raw.get("Tenant", 0))
+    # Prefer the period's own total_tenants (correct since telemetry-server #8);
+    # fall back to apps.Tenant for older payloads where total_tenants was 0.
+    tenants = int(raw_period.get("total_tenants") or apps_raw.get("Tenant", 0))
     clusters = int(raw_period.get("clusters", 0))
     total_nodes = int(raw_period.get("total_nodes", 0))
     avg_nodes = raw_period.get("avg_nodes_per_cluster")
