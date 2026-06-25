@@ -28,7 +28,7 @@ This managed service is controlled by the CloudNativePG operator, ensuring effic
 ## Operations
 
 {{% alert color="warning" %}}
-**Backups: prefer the `BackupClass` flow.** The chart-level `backup.*` values documented below still configure the Barman object store and S3 credentials that backups read from, but the chart-emitted `ScheduledBackup` and the `bootstrap`-based recovery flow have been **superseded** by the Cozystack backups framework: define a `BackupClass` + `CNPG` strategy once, then drive scheduled backups via `Plan` and restores via `RestoreJob`. See [Application Backup and Recovery]({{% ref "/docs/next/applications/backup-and-recovery" %}}) (tenant guide) and [Managed Application Backup Configuration]({{% ref "/docs/next/operations/services/managed-app-backup-configuration" %}}) (admin setup).
+**Backups: prefer the `BackupClass` flow.** The chart-level `backup.*` values documented below still configure the Barman object store and S3 credentials that backups read from, but the chart-emitted `ScheduledBackup` and the `bootstrap`-based recovery flow have been **superseded** by the Cozystack backups framework: define a `BackupClass` + `CNPG` strategy once, then drive scheduled backups via `Plan` and restores via `RestoreJob`. See [Application Backup and Recovery]({{% ref "/docs/next/applications/backup-and-recovery" %}}) (tenant guide) and [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) (admin setup).
 {{% /alert %}}
 
 ### How to enable backups
