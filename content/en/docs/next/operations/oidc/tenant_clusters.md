@@ -20,36 +20,77 @@ name is `kubernetes-prod-a`), and the platform root host is
 
 ## Overview
 
-Each Cozystack tenant gets its own dedicated Keycloak realm for its
-kube-apiservers and tenant-scoped applications. The management
-identity domain (the `cozy` realm) stays separated from per-tenant
-identity. Users granted access to a tenant cluster live in that
-tenant's realm only — they cannot accidentally log into the management
-cluster or another tenant.
+Per-tenant identity is delivered through a tenant-module: when a
+tenant opts in via `Tenant.spec.oidc=true`, the platform provisions a
+dedicated Keycloak realm + a realm-admin user + a `keycloak-admin`
+Secret with the credentials. Tenant operators self-manage users in
+their realm; child Kubernetes CRs and tenant-scoped applications wire
+themselves to the realm declaratively through cozystack manifests.
 
-When the `Kubernetes` CR opts into OIDC (`spec.oidc.enabled: true`):
+The management identity domain (the `cozy` realm) stays separated from
+per-tenant identity. Users granted access to a tenant cluster live in
+that tenant's realm only — they cannot accidentally log into the
+management cluster or another tenant.
 
-1. The `apps/tenant` chart auto-provisions a `ClusterKeycloakRealm`
-   named after the tenant (`tenant-acme`) and the standard `groups`
-   `KeycloakClientScope` inside it. The realm name is published as
-   `_namespace.oidc-realm` in the tenant's `cozystack-values` Secret
-   so descendants and apps pick it up.
-2. The `apps/kubernetes` chart creates a per-cluster public
-   `KeycloakClient kubernetes-prod-a` (with its own audience scope so
-   cross-cluster token replay fails inside the same realm), the
-   `KeycloakRealmGroup prod-a`, and wires the tenant kube-apiserver
-   via `KamajiControlPlane.spec.apiServer.extraArgs`.
+When `Tenant.spec.oidc=true` is set:
+
+1. `apps/tenant` renders an `oidc` HelmRelease in the tenant namespace
+   (same tenant-module pattern as `etcd`, `monitoring`, `ingress`).
+2. The HR resolves to the `extra/oidc` chart, which provisions
+   `ClusterKeycloakRealm tenant-acme`, the standard `groups`
+   `KeycloakClientScope`, a `KeycloakRealmUser admin` with the
+   built-in `realm-admin` client role on `realm-management`, and a
+   `Secret keycloak-admin` carrying the URL + username + password the
+   tenant operator uses to log into the realm's admin console.
+3. The realm name is published to `_namespace.oidc-realm` in the
+   tenant's `cozystack-values` Secret so descendant tenants and
+   tenant-scoped apps inherit it the same way they inherit
+   `etcd` / `monitoring` / `ingress`.
+
+When a Kubernetes CR opts into OIDC (`spec.oidc.enabled: true`):
+
+1. `apps/kubernetes` reads `_namespace.oidc-realm` (own OR inherited).
+   If empty, the chart soft-renders an
+   `<release>-awaiting-oidc-realm` ConfigMap beacon and the
+   kube-apiserver runs without OIDC arguments — the client-cert (mTLS)
+   admin kubeconfig stays usable.
+2. Once the realm name is non-empty, the chart creates a per-cluster
+   public `KeycloakClient tenant-acme-kubernetes-prod-a` (with its own
+   audience scope so cross-cluster token replay fails inside the same
+   realm), creates `KeycloakRealmGroup tenant-acme-kubernetes-prod-a`,
+   and wires the tenant kube-apiserver via
+   `KamajiControlPlane.spec.apiServer.extraArgs`.
 3. A post-install Job (`kubernetes-prod-a-oidc-rbac`) applies a
    `ClusterRoleBinding` inside the tenant cluster, binding the realm
-   group `prod-a` to the built-in `cluster-admin` ClusterRole.
-   Operators grant or revoke access by adding or removing users from
-   the Keycloak group.
+   group `tenant-acme-kubernetes-prod-a` to the built-in
+   `cluster-admin` ClusterRole. Operators grant or revoke access by
+   adding or removing users from the Keycloak group.
 
-Operators do **not** need to pre-toggle `Tenant.spec.oidc.enabled`
-during normal operation — the parent `apps/tenant` chart auto-detects
-child Kubernetes CRs with `oidc.enabled: true` and provisions the
-realm automatically. The explicit `Tenant.spec.oidc.enabled=true` is
-only useful as a manual cleanup workaround (see Limitations below).
+## Realm inheritance
+
+Descendant tenants without their own `spec.oidc=true` inherit the
+nearest ancestor's realm name through the cozystack-values
+propagation chain. Their `Kubernetes` CRs wire against the ancestor's
+realm; the chart renders the per-cluster `KeycloakClient` and
+`KeycloakRealmGroup` into the descendant's own namespace, with
+`realmRef` pointing at the ancestor's cluster-scoped realm.
+
+| Tenant | `spec.oidc` | `_namespace.oidc-realm` |
+| --- | --- | --- |
+| `tenant-acme` | `true` | `tenant-acme` (owns) |
+| `tenant-acme-prod` | `false` | `tenant-acme` (inherited) |
+| `tenant-acme-prod-eu` | `false` | `tenant-acme` (inherited via chain) |
+| `tenant-acme-staging` | `true` | `tenant-acme-staging` (owns — override) |
+
+Realm-wide unique names prevent collisions when two siblings under the
+same parent realm each have a `Kubernetes` CR of the same
+metadata.name — `tenant-acme-prod-kubernetes-dev` and
+`tenant-acme-staging-kubernetes-dev` are distinct identifiers in the
+shared `tenant-acme` realm.
+
+Identity-admin delegation lives with the realm-owning tenant only:
+only that tenant gets the `keycloak-admin` Secret. Descendants
+consume the realm declaratively but do not gain admin access to it.
 
 ## Prerequisites
 
@@ -61,7 +102,43 @@ only useful as a manual cleanup workaround (see Limitations below).
   issuer over HTTPS using its system trust store — self-signed
   Keycloak deployments are not supported (see Limitations).
 
-## Enable OIDC on a tenant cluster
+## Enable OIDC on a tenant
+
+```yaml
+apiVersion: apps.cozystack.io/v1alpha1
+kind: Tenant
+metadata:
+  name: acme
+  namespace: tenant-root
+spec:
+  etcd: true
+  ingress: true
+  oidc: true
+```
+
+On the next `apps/tenant` reconcile (default interval 5 min) the
+`oidc` HR appears in `tenant-acme`. The `extra/oidc` chart then takes
+1-2 minutes to provision the realm + admin user + Secret. Open the
+`keycloak-admin` Secret through the cozystack dashboard or kubectl to
+grab the realm admin URL + credentials:
+
+```bash
+kubectl --context=mgmt -n tenant-acme get secret keycloak-admin -o yaml
+```
+
+The Secret carries:
+
+- `url` — the admin console URL (e.g. `https://keycloak.acme.example.com/admin/tenant-acme/console/`)
+- `username` — `admin`
+- `password` — random alphanumeric, stable across re-renders
+- `realm` — `tenant-acme`
+- `email` — `admin@tenant-acme.local` (or operator override)
+
+The tenant operator logs into the admin URL with these credentials and
+manages users, groups, identity providers, password policies inside
+their realm — independently of the platform admin.
+
+## Enable OIDC on a tenant Kubernetes cluster
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
@@ -84,31 +161,29 @@ spec:
     enabled: true
 ```
 
-Each chart in the chain reconciles on its own loop (default interval
-5 minutes), so the full cascade takes up to ~10 minutes worst case
-from a cold start:
+Each chart in the chain reconciles on its own loop (default 5 min),
+so the full cascade takes up to ~10 minutes worst case from a cold
+start:
 
-1. The `apps/tenant` reconcile creates `ClusterKeycloakRealm tenant-acme`
-   and publishes `_namespace.oidc-realm=tenant-acme` to the tenant's
-   `cozystack-values` Secret.
-2. The `apps/kubernetes` reconcile picks up the realm, provisions the
-   per-cluster `KeycloakClient kubernetes-prod-a`, the realm group
-   `prod-a`, and adds OIDC flags to the kube-apiserver.
-3. The post-install Job binds `Group prod-a` to `cluster-admin` inside
-   the tenant cluster.
-
-Until step 1 completes, `apps/kubernetes` renders a
-`kubernetes-prod-a-awaiting-oidc-realm` ConfigMap beacon in the tenant
-namespace and the kube-apiserver runs without OIDC arguments — the
-client-cert (mTLS) admin kubeconfig stays usable throughout.
+1. `apps/tenant` reconcile creates the `oidc` HR; `extra/oidc`
+   provisions `ClusterKeycloakRealm tenant-acme` and publishes
+   `_namespace.oidc-realm=tenant-acme` to cozystack-values.
+2. `apps/kubernetes` reconcile picks up the realm, provisions the
+   per-cluster `KeycloakClient tenant-acme-kubernetes-prod-a`, the
+   realm group `tenant-acme-kubernetes-prod-a`, and adds OIDC flags
+   to the kube-apiserver.
+3. The post-install Job binds `Group tenant-acme-kubernetes-prod-a`
+   to `cluster-admin` inside the tenant cluster.
 
 ## Create a user and grant access
 
 In Keycloak (the tenant realm — `tenant-acme`):
 
 1. Create a user, set a non-temporary password, mark email verified.
-2. Add the user to the realm group named after the cluster (`prod-a`).
-   One membership = full `cluster-admin` access to that cluster.
+2. Add the user to the realm group named after the cluster in the
+   format `<tenant-namespace>-kubernetes-<cluster-name>` (e.g.
+   `tenant-acme-kubernetes-prod-a`). One membership = full
+   `cluster-admin` access to that cluster.
 
 To revoke access, remove the user from the group.
 
@@ -162,7 +237,7 @@ users:
       - oidc-login
       - get-token
       - --oidc-issuer-url=https://keycloak.acme.example.com/realms/tenant-acme
-      - --oidc-client-id=kubernetes-prod-a
+      - --oidc-client-id=tenant-acme-kubernetes-prod-a
 ```
 
 Running `kubectl get pods` opens the browser, logs the user into
@@ -170,29 +245,6 @@ Keycloak, returns the id_token, and the apiserver authenticates based
 on the `groups` claim.
 
 ## Limitations
-
-### Realm cleanup is not automatic after the last child OIDC cluster is removed
-
-The `apps/tenant` chart uses Helm's `lookup` function to discover
-whether any child `Kubernetes` CR has `spec.oidc.enabled=true`.
-Helm-controller does **not** re-render a chart when a `lookup` result
-changes — it only re-renders when the chart source artifact or the
-HelmRelease values change. Consequently, deleting the last
-`Kubernetes` CR with OIDC enabled does **not** trigger an
-`apps/tenant` re-render, and the orphan `ClusterKeycloakRealm` stays
-in the tenant namespace.
-
-To force cleanup, the operator can:
-
-- Toggle `Tenant.spec.oidc.enabled=true` and then back to `false`.
-  Each toggle changes the HelmRelease values, which triggers a
-  re-render with the up-to-date lookup result. After the second
-  toggle, the chart no longer renders the realm and Helm prunes it.
-  This is the only legitimate use of `Tenant.spec.oidc.enabled` —
-  during normal operation the field stays at its default `false`.
-- Or wait for the next platform upgrade that bumps any
-  chart-affecting source — the realm cleanup happens for free as a
-  side effect of the new render.
 
 ### Self-signed Keycloak is not supported
 
@@ -241,12 +293,32 @@ browser-flow logins. For CI pipelines that need a non-interactive
 token, the cluster-admin can patch the client on the live cluster:
 
 ```bash
-kubectl --context=mgmt -n tenant-acme patch keycloakclient kubernetes-prod-a \
+kubectl --context=mgmt -n tenant-acme patch keycloakclient tenant-acme-kubernetes-prod-a \
   --type=merge --patch '{"spec":{"directAccess":true}}'
 ```
 
 This is intentionally not the default — interactive flow stays
 recommended for human users.
+
+### Disabling parent OIDC while descendant clusters use the inherited realm
+
+If a parent tenant flips `spec.oidc=false` while descendant tenants
+still have `Kubernetes` CRs with `spec.oidc.enabled=true` referencing
+the parent's realm, convergence takes up to one helm-controller
+reconcile interval (default 5 min):
+
+1. Parent's `oidc` HR uninstalls — realm + admin user +
+   `keycloak-admin` Secret are removed.
+2. `_namespace.oidc-realm` in descendant cozystack-values reverts to
+   empty on the next tenant reconcile.
+3. Descendant's `apps/kubernetes` reconciles, drops the OIDC apiserver
+   args, and prunes the per-cluster KeycloakClient + RealmGroup CRs.
+
+During the window, descendant KeycloakClient / RealmGroup CRs
+reference a deleted realm — the EDP Keycloak Operator logs errors but
+does not damage cluster state. OIDC tokens stop working immediately;
+the per-cluster client-cert admin kubeconfig remains usable as the
+recovery path.
 
 ## Troubleshooting
 
@@ -290,7 +362,10 @@ kubectl --context=mgmt -n tenant-acme logs \
   job/kubernetes-prod-a-oidc-rbac
 ```
 
-### Realm or scope objects stuck after CR deletion
+### Realm or scope objects stuck after Tenant.spec.oidc=false
 
-See "Realm cleanup is not automatic" under Limitations. Operator
-intervention required (toggle `Tenant.spec.oidc`).
+Flux uninstalls the `oidc` HR on the next tenant reconcile, which
+drops the realm + scope + user + Secret automatically — no orphan
+workaround required (unlike the previous design where realm
+provisioning was inline in `apps/tenant`). If a stale object persists,
+check the Keycloak Operator's logs for reconciliation errors.
