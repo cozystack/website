@@ -1,0 +1,11 @@
+[home_screenshots]
+other = "Скриншоты"
+
+[home_benefits]
+other = "Преимущества"
+
+[home_features]
+other = "Возможности"
+
+[home_cncf_sandbox]
+other = "Cozystack — это Sandbox-проект <a href=\"https://cncf.io\">Cloud Native Computing Foundation</a>"

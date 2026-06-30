@@ -68,6 +68,27 @@ module:
     # production builds via `config/production/hugo.yaml`.
     - source: content/en
       target: content
+      lang: en
+      files:
+        - '! **/_include/*'
+    - source: content/de
+      target: content
+      lang: de
+      files:
+        - '! **/_include/*'
+    - source: content/ru
+      target: content
+      lang: ru
+      files:
+        - '! **/_include/*'
+    - source: content/zh-cn
+      target: content
+      lang: zh-cn
+      files:
+        - '! **/_include/*'
+    - source: content/hi
+      target: content
+      lang: hi
       files:
         - '! **/_include/*'
     # Mount npm dependencies for Docsy
@@ -104,9 +125,38 @@ markup:
 
 languages:
   en:
+    languageName: English
+    languageCode: en
+    weight: 1
     params:
-      languageName: English
-      languageCode: en
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  de:
+    languageName: Deutsch
+    languageCode: de
+    weight: 2
+    params:
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  ru:
+    languageName: Русский
+    languageCode: ru
+    weight: 3
+    params:
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  zh-cn:
+    languageName: 简体中文
+    languageCode: zh-Hans
+    weight: 4
+    params:
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  hi:
+    languageName: हिन्दी
+    languageCode: hi
+    weight: 5
+    params:
       time_format_default: 2006-01-02
       time_format_blog: 2006-01-02
 

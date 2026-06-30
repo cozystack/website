@@ -1,0 +1,11 @@
+[home_screenshots]
+other = "屏幕截图"
+
+[home_benefits]
+other = "优势"
+
+[home_features]
+other = "功能特性"
+
+[home_cncf_sandbox]
+other = "Cozystack 是 <a href=\"https://cncf.io\">Cloud Native Computing Foundation</a> 的 Sandbox 项目"

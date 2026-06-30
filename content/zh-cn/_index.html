@@ -1,0 +1,126 @@
+---
+title: "Cozystack：基于 Kubernetes 的免费云平台"
+description: >
+  将一组裸金属服务器变成智能系统，通过简单的 REST API 轻松创建 Kubernetes 集群、数据库即服务、虚拟机、负载均衡器、HTTP 缓存服务以及其他服务。
+
+  使用 Cozystack 构建你自己的云，或提供高性价比的开发环境。
+seo:
+  title: "Cozystack — 基于 Kubernetes 的开源私有云"
+  description: "基于 Kubernetes 的开源云平台，提供托管虚拟机、数据库、S3 存储和 GPU 工作负载。CNCF Sandbox 项目。"
+  keywords: ["私有云", "Kubernetes", "开源云平台", "托管 Kubernetes"]
+source_digest: "sha256:<en-source-hash>"
+translation_status: current
+l10n: transcreate
+taglines:
+  - AWS 的自托管替代方案
+  - 面向 AI 的基础设施
+  - 开源 VMware 替代方案
+benefits:
+  - title: API-first
+    icon: fas fa-code
+    description: >
+      Cozystack 基于 Kubernetes，强调与其 API 的紧密交互。它并不追求把所有元素都隐藏在华丽的 UI 或各种定制背后，而是提供标准接口，并引导用户使用基本原语进行操作。
+  - title: 标准化与统一
+    icon: fas fa-certificate
+    description: >
+      平台的所有组件都构建在业界广泛认可的成熟开源工具和技术之上。
+      我们力求采用最成熟、最经过验证的方案，让整个平台保持简单，并避免厂商锁定。
+  - title: 协作而非竞争
+    icon: fas fa-handshake
+    description: >
+      我们为自己的社区感到自豪，并与周边项目紧密协作。
+      如果我们开发的某项平台功能对上游项目有用，
+      我们更愿意将其贡献给该项目，而不是留在平台内部。
+features:
+  - title: 易于安装
+    icon: fas fa-wrench
+    description: >
+      借助 [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/)，我们提供了极其简单的安装方式，
+      让你能够在裸数据中心的服务器上通过 PXE 或 ISO 方式引导 Cozystack。
+      使用不可变操作系统有助于保持系统一致性，并确保一切按预期运行。
+  - title: 易于集成
+    icon: fas fa-plug
+    description: >
+      我们提供原生的 Kubernetes RESTful API，它以声明式而广为人知。
+      因此，要与你的计费系统集成，只需让你的系统向 Kubernetes API 提交一份描述目标服务的特定 YAML 清单即可。
+      其余的工作交给 Cozystack 完成。
+  - title: 易于扩展
+    icon: fas fa-up-right-and-down-left-from-center
+    description: >
+      平台中的每个软件包都由一组 YAML 文件构成。因此，任何熟悉 Kubernetes 原语的人都可以修改或扩展平台。软件包的交付由广为人知、应用广泛的 FluxCD 可靠完成。
+  - title: 高性能、低开销
+    icon: fas fa-gauge-high
+    description: >
+      我们重视性能。因此我们在稳定性与功能之间权衡，采用性能最佳的技术。
+      此外，我们独特的租户模型能够为控制平面高效分配云资源，在保证必要安全级别的同时兼顾成本效益。
+  - title: 内置监控与告警
+    icon: fas fa-area-chart
+    description: >
+      每个服务的每个实例都配有一套预先配置的仪表盘和告警。
+      你可以为每个租户创建独立的监控中心，也可以将它们合并为一个。
+  - title: 内置应用管理 UI
+    icon: fas fa-window-maximize
+    description: >
+      虽然平台的首要目标是提供优雅的 API，但它也提供了用于部署应用的仪表盘。
+      该 Web UI 便于快速上手平台，并直观展示其能力。
+---
+
+<div class="hero-gitops">
+  {{% blocks/hero title="Cozystack：基于 Kubernetes 的免费云平台" color="primary"
+  height="auto" link_title="开始使用" link_url="/docs/get-started/" %}}
+  将一组裸金属服务器变成智能系统，通过简单的 REST API 轻松创建 Kubernetes 集群、数据库即服务、虚拟机、负载均衡器、HTTP 缓存服务以及其他服务。
+
+  使用 Cozystack 构建你自己的云，或提供高性价比的开发环境。
+
+  {{% /blocks/hero %}}
+
+  <div class="lead-flux">
+  {{< blocks/lead >}}
+  {{< /blocks/lead >}}
+  </div>
+</div>
+
+<!-- Screenshot Gallery -->
+{{< home/screenshot-gallery >}}
+
+<!-- Benefits & Features -->
+
+{{< home/benefits >}}
+{{< home/features >}}
+
+<!-- Community -->
+<div class="section-community">
+  {{< blocks/lead color="dark" >}}
+  <h2 class="section-label">
+    社区
+  </h2>
+
+  <p>我们衷心感谢社区对 Cozystack 成长一以贯之的支持与贡献。<br/> 加入我们的社区，成为我们旅程的一部分。</p>
+
+  {{< /blocks/lead >}}
+
+  <div class="subsection-community-row">
+    {{< blocks/section color="dark" type="community-row">}}
+
+    {{< home/community icon="fab fa-github" title="GitHub Discussions" >}}
+    <a target="_blank" href="https://github.com/cozystack/cozystack/discussions">加入 GitHub Discussions 的讨论</a>。与 Cozystack 相关的一切——从规范、功能规划到 Show &amp; Tell——都在这里发生。
+
+    {{< /home/community >}}
+
+    {{< home/community icon="fab fa-slack" title="Slack" >}}
+    如果你想与 Cozystack 团队和社区实时交流，欢迎加入我们的 Slack。这是结识大家的好方式。
+
+    获取 <a target="_blank" href="https://slack.kubernetes.io/">Slack 邀请</a>，或前往 <a target="_blank" href="https://kubernetes.slack.com/messages/cozystack"><code>#cozystack</code> 频道</a>。
+
+    {{< /home/community >}}
+
+    {{< home/community icon="fa fa-paper-plane" title="Telegram" >}}
+    我们在 Telegram 上也有一个庞大的社区。加入 <a target="_blank" href="https://t.me/cozystack/">@cozystack</a> 群聊，与其他用户交流、提问，并及时了解最新动态与进展。
+    {{< /home/community >}}
+
+    {{< /blocks/section >}}
+  </div>
+
+</div>
+
+{{< home/cncf >}}

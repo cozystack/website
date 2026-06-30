@@ -1,6 +1,18 @@
 [caution]
 other = "Caution:"
 
+[home_screenshots]
+other = "Screenshots"
+
+[home_benefits]
+other = "Benefits"
+
+[home_features]
+other = "Features"
+
+[home_cncf_sandbox]
+other = "Cozystack is a <a href=\"https://cncf.io\">Cloud Native Computing Foundation</a> Sandbox project"
+
 [join_community]
 other = "Join the Community"
 
