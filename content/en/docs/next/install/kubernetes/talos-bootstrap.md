@@ -102,6 +102,10 @@ talos-bootstrap --help
         - 10.96.0.0/16
     ```
 
+    {{% alert title="Do not change op: on these entries" color="warning" %}}
+    Talos rejects `op: create` for any file outside `/var`, returning the error `create operation not allowed outside of /var` — the only exception is the special-cased `/etc/cri/conf.d/20-customization.part`. Because `/etc/lvm/lvm.conf` already exists on the node, it must use `op: overwrite`. Changing the op (or pointing `create` at another `/etc` path) fails the `WriteUserFiles` boot step: the node pauses and enters a reboot loop, and `talosctl bootstrap` reports only `bootstrap is not available yet` with no obvious cause.
+    {{% /alert %}}
+
 1.  Make another configuration patch file `patch-controlplane.yaml` with settings exclusive to control plane nodes:
 
     ```yaml
