@@ -1,7 +1,7 @@
 {
   "badge_last_updated_at": "2026-04-01T20:30:34Z",
   "badge_url": "https://www.bestpractices.dev/projects/10177/badge",
-  "last_checked_at": "2026-06-01T05:39:27Z",
+  "last_checked_at": "2026-07-01T05:34:20Z",
   "project_name": "Cozystack",
   "project_url": "https://www.bestpractices.dev/projects/10177",
   "source": {
@@ -11,5 +11,5 @@
   "state": "Passing",
   "status_url": "https://www.bestpractices.dev/en/projects/10177/passing",
   "title": "OpenSSF",
-  "updated_at": "2026-06-01T05:39:27Z"
+  "updated_at": "2026-07-01T05:34:20Z"
 }
