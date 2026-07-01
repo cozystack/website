@@ -394,6 +394,19 @@ spec:
         - cluster
 ```
 
+### Host Firewall and Node IPv6
+
+Cozystack enables Cilium's host firewall (`hostFirewall.enabled: true`) to enforce the system-port restrictions described above on the nodes themselves. The Cilium IPv6 datapath stays disabled (`ipv6.enabled: false`), since pod networking is provided by Kube-OVN.
+
+In upstream Cilium this combination drops all IPv6 traffic on the node's network devices before any policy evaluation. This breaks IPv6 Neighbor Discovery and, with it, all node-level IPv6 connectivity — for example, BGP unnumbered peering over link-local addresses on L3 fabrics. A `CiliumClusterwideNetworkPolicy` cannot allow this traffic back, because the drop happens before policy enforcement.
+
+The Cilium image shipped with Cozystack carries a BPF patch that passes IPv6 to the kernel stack instead, matching the behavior when the host firewall is disabled. The patch is carried until an equivalent fix is available upstream. See [cozystack/cozystack#2871](https://github.com/cozystack/cozystack/pull/2871) for the implementation. Practical consequences:
+
+- Node IPv6 (Neighbor Discovery, BGP over link-local addresses, and any other node-level IPv6 traffic) keeps working with the host firewall enabled.
+- Cilium host policies apply to IPv4 only. Node IPv6 is not filtered by Cilium; if nodes exposed over IPv6 need filtering, it must be done by other means.
+
+To opt out of the host firewall entirely, set `cilium.hostFirewall.enabled: false` in the values of the `cozystack.cilium` Package. Note that this also disables all IPv4 host policies, including the system-port restrictions.
+
 ## Observability with Hubble
 
 Hubble provides network traffic visibility for the Cilium data plane. It is
