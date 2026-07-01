@@ -95,6 +95,7 @@ The structure of the project mostly mirrors an ordinary Helm chart:
 - `secrets.encrypted.yaml`, `talosconfig.encrypted` - encrypted counterparts produced from `talm.key` (commit these to git instead of the plaintext files).
 - `talm.key` - the project-local age key used for encrypt / decrypt. Back this up; without it the encrypted files cannot be reopened.
 - `values.yaml` - a common values file used to provide parameters for the templating.
+- `.talm-preset.lock` - a machine-managed file recording the preset name and its content hash at init time; used to detect preset drift after a talm binary upgrade. Commit it to git so the baseline is shared across the team.
 - `nodes` - an optional directory used to describe and store generated configuration for nodes.
 
 #### Available Presets
@@ -150,6 +151,17 @@ cd cozystack-cluster
 talm init --update --preset cozystack          # interactive: prompts for each preset-template diff
 talm init --update --preset cozystack --force  # non-interactive: auto-accept all diffs
 ```
+
+`--update` re-syncs the vendored `charts/talm/` exactly — files that the new library no longer ships (or strays like `.DS_Store`) are pruned — and advances the preset baseline in `.talm-preset.lock`.
+
+#### Chart Drift Detection (Talm v0.32+)
+
+Render commands read the project's local `charts/talm/` copy, never the binary's built-in charts, so upgrading the talm binary does not touch your project — the vendored chart silently goes stale. Release builds of talm detect this and print a non-fatal `WARN:` line on stderr for two independent signals:
+
+- **Library drift**: the vendored `charts/talm/` differs by content from the copy built into the binary. A pure version stamp difference stays silent; a real difference is reported with a sample of the differing paths (`modified:` / `extra:` / `missing:`).
+- **Preset drift**: the binary ships a newer preset than the baseline pinned in `.talm-preset.lock` at init time. Your `templates/` edits are never reported as drift — the comparison is binary-vs-baseline, not binary-vs-project.
+
+Both warnings point at the remediation above. To escalate the warning into a hard error (exit 1) — for example, in CI — set `strictCharts: true` in `Chart.yaml` so the whole team inherits it, or pass `--strict-charts` for a single run. Under strict mode, a baseline that cannot be verified (a corrupted or deleted `.talm-preset.lock`, an unreadable `charts/talm/`) also blocks, so deleting the baseline is not a bypass; without strict mode, such failures degrade to a warning, and projects created before baseline pinning stay silent.
 
 #### Encrypt / Decrypt Round-Trip
 
