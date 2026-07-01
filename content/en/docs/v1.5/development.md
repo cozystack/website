@@ -122,6 +122,25 @@ Development can be done locally by modifying and updating files in this reposito
 
 ## Packages
 
+Cozystack is, at its core, a **provider of managed services**. Much like the managed
+offerings of AWS or Google Cloud, a user comes to order a **final entity** — a
+PostgreSQL database, a Kafka queue, an S3 bucket, a Kubernetes cluster, a virtual
+machine — rather than to assemble the underlying infrastructure themselves. Each of these is a **first-class object** in the Cozystack
+API (`apps.cozystack.io`): the user declares *what* they want, and the platform
+provisions and operates the implementation underneath. The user gets an endpoint and
+credentials and never has to know — or even see — how or where the service actually runs.
+
+The four package categories follow directly from this model:
+
+- **`core`** — how the platform bootstraps and configures itself.
+- **`system`** — the operators and upstream charts that actually run workloads.
+- **`apps`** — the first-class managed services a user orders directly.
+- **`extra`** — enabler modules a tenant switches on, which power those services under
+  the hood without being ordered as standalone services.
+
+The split between `apps` and `extra` is the one most often misunderstood, so it is
+spelled out in detail below.
+
 ### [core](https://github.com/cozystack/cozystack/tree/main/packages/core)
 
 Core packages handle bootstrap and platform-level configuration.
@@ -173,12 +192,19 @@ System packages use Helm to install and are managed by FluxCD.
 
 ### [apps](https://github.com/cozystack/cozystack/tree/main/packages/apps)
 
-These user-facing applications appear in the dashboard and include manifests to be applied to the cluster.
+`apps` are the **first-class managed services** a user orders directly. Each one is a
+final entity shown in the dashboard catalog and exposed through the `apps.cozystack.io`
+API: `apps/postgres` ("Managed PostgreSQL service"), `apps/kubernetes` ("Managed
+Kubernetes service"), `apps/kafka`, `apps/bucket` (an S3 bucket), `apps/vm-instance`,
+and so on.
 
-Apps charts serve as a high-level API for users. They define only the parameters that
-should be exposed and validated through `values.schema.json`, keeping the interface
-minimal and secure. Apps charts should not contain business logic for deploying the
-application itself — instead they delegate to an operator or to FluxCD.
+An app chart is a **high-level API**, not a deployment recipe. It defines only the
+parameters that should be exposed and validated through `values.schema.json`, keeping
+the interface minimal and secure — for example, a user selects a Postgres *version* but
+cannot override the container image. The chart contains no business logic for running
+the application itself; it delegates to an operator or to FluxCD. This thin API layer
+over the raw operator exists so the platform keeps full control of every input
+(security) and hands the user a final, ready-to-consume service (UX).
 
 Depending on whether the application has a dedicated operator, apps follow one of two patterns:
 
@@ -214,8 +240,31 @@ Other examples of this pattern: `extra/ingress`, `extra/seaweedfs`, `extra/monit
 
 ### [extra](https://github.com/cozystack/cozystack/tree/main/packages/extra)
 
-Similar to `apps` but not shown in the application catalog. They can only be installed as part of a tenant.
-They are allowed to use by bottom tenants installed in current tenant namespace.
+`extra` packages are **enabler modules**, not first-class services. A user never orders
+them as a final entity; instead they are switched on as **tenant options**, and once
+enabled they provide capabilities that the `apps` services build on — working under the
+hood. For that reason they are *not* shown in the application catalog and can only be
+installed as part of a tenant. Because an `extra` module is enabled at the tenant level,
+it is shared by the child (bottom) tenants nested in that tenant's namespace —
+provisioned once and reused beneath them (for example, a child tenant without its own
+`monitoring` sends its metrics to the parent tenant's monitoring stack instead of
+running a second copy).
+
+The clearest example is object storage:
+
+- `extra/seaweedfs` ("Managed SeaweedFS Service") deploys a SeaweedFS cluster and
+  registers `BucketClass` resources for the tenant.
+- `apps/bucket` ("S3 compatible storage") is what the user actually orders — it creates
+  a `BucketClaim` against one of those `BucketClass`es.
+
+So a tenant administrator *enables the SeaweedFS module once*, and from then on users
+can order S3 buckets as a first-class service. The user consumes a bucket; they never
+see, order, or manage SeaweedFS itself — it is an implementation detail of "S3 bucket".
+The same relationship holds for `extra/etcd` ("Storage for Kubernetes clusters"), which
+provides the datastore for `apps/kubernetes` managed clusters. Other `extra` modules
+supply tenant-wide infrastructure rather than orderable services: `extra/ingress`
+(NGINX Ingress Controller), `extra/gateway` (per-tenant Gateway API backed by Cilium),
+`extra/external-dns`, and `extra/monitoring`.
 
 Read more about [Tenant System](/docs/guides/concepts/#tenant-system) on the Core Concepts page.
 
@@ -226,6 +275,38 @@ Extra packages follow the same two architectural patterns as apps (operator-base
 {{% alert color="info" %}}
 Apps and extra packages use Helm for application and are installed from the dashboard and managed by FluxCD.
 {{% /alert %}}
+
+### Choosing apps, extra, or a bundled dependency
+
+When adding a new capability, decide where it belongs by asking who consumes it:
+
+1. **Does the user order it directly as a final service?** Then it is a first-class
+   managed service → `apps`, shown in the catalog (e.g., `apps/postgres`, `apps/bucket`).
+2. **Is it a shared dependency** — used by several apps, or reused across tenants? Then
+   it is an enabler the platform/tenant switches on once and many things build on →
+   `extra` (e.g., `extra/seaweedfs` backs every `apps/bucket`; `extra/monitoring` collects
+   metrics for all apps in a tenant).
+3. **Is it a single, private dependency** of one application, shared with no one? Then it
+   is *not* a package at all — it is bundled **inside the consuming chart** and deployed
+   together with it, invisible to the user. For example, the `monitoring` stack ships its
+   own PostgreSQL database for Alerta as part of its release (the former `ferretdb` app
+   likewise shipped its own PostgreSQL inside the chart); the user neither sees nor has
+   access to these internal databases.
+
+Dependencies also run **between first-class services**. When a dependency is itself
+something the user creates, keeps, and manages on its own, it stays an `apps` service
+and other apps simply **reference** it instead of bundling it. For example, `apps/vm-disk`
+("Virtual Machine Disk") is ordered on its own, and `apps/vm-instance` attaches one or
+more existing disks by name (the dashboard lists the available disks to choose from). A
+disk has its own lifecycle — it can outlive an instance, be detached and reattached, or
+join several disks on one VM — so it is a service in its own right, not something hidden
+inside `vm-instance`.
+
+Two questions settle most cases: **who orders it** (the user → `apps`; the platform or a
+tenant → `extra`) and **does it have value on its own** (yes → its own `apps` service
+that others reference; no → bundled and hidden inside the consuming chart). Sharing tips
+the scale toward `extra`: a dependency that must be provisioned once and reused across
+apps or tenants becomes a module rather than a per-instance bundle.
 
 ## Package Structure
 
