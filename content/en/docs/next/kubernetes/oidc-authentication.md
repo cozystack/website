@@ -138,6 +138,7 @@ Setting `spec.oidc.mode` back to `None` — or deleting the `Kubernetes` resourc
 
 - **Don't mix with legacy `--oidc-*` flags.** The tenant kube-apiserver refuses to boot if both `--authentication-config` (injected by `spec.oidc`) and any legacy `--oidc-*` flag are set. If you previously wired OIDC by hand through `controlPlane.apiServer.extraArgs`, remove those flags before enabling `spec.oidc`. The chart fails the render with a pointer to this migration.
 - **`oidc-login` plugin required.** Without `kubectl krew install oidc-login` the exec block errors out client-side. The plugin is a documented prerequisite.
+- **`emailVerified: true` on Keycloak users.** With `username.claim: email` (the `System`-mode default and the pattern the `CustomConfig` examples above use), the tenant kube-apiserver rejects tokens whose `email_verified` claim is explicitly `false` with `oidc: email not verified`. When you provision users in the platform `cozy` realm — via a `KeycloakRealmUser` or through the Keycloak UI — set `emailVerified: true`, or run the email-verify flow, before granting cluster access. A missing `email_verified` claim is treated as verified.
 - **Custom issuer with a self-signed CA.** In `CustomConfig` mode you can supply the CA inline under `issuer.certificateAuthority`. The legacy `--oidc-*` flag path could not.
 
 ## What's out of scope for this feature
