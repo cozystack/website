@@ -102,6 +102,10 @@ talos-bootstrap --help
         - 10.96.0.0/16
     ```
 
+    {{% alert title="Update Talos to v1.13.6 or newer (CVE-2026-53359)" color="warning" %}}
+[CVE-2026-53359](/blog/2026/07/security-advisory-cve-2026-53359-januscape-kvm-guest-to-host-escape/) ("Januscape") and CVE-2026-46113 are related use-after-free bugs in the KVM x86 shadow MMU that let a guest VM escape to its host. Both are fixed in the kernel, and Talos v1.13.6 is the first release that carries both fixes — it ships Linux 6.18.38. If the image tag above resolves to an earlier release, set it to `v1.13.6` or newer. Nested virtualization stays enabled: the kernel fix removes the bug itself, so workloads that rely on nested virtualization keep working.
+    {{% /alert %}}
+
 1.  Make another configuration patch file `patch-controlplane.yaml` with settings exclusive to control plane nodes:
 
     ```yaml

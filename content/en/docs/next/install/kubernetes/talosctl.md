@@ -126,6 +126,10 @@ Discovered open port 50000/tcp on 192.168.123.13
         - 10.96.0.0/16
     ```
 
+    {{% alert title="Update Talos to v1.13.6 or newer (CVE-2026-53359)" color="warning" %}}
+[CVE-2026-53359](/blog/2026/07/security-advisory-cve-2026-53359-januscape-kvm-guest-to-host-escape/) ("Januscape") and CVE-2026-46113 are related use-after-free bugs in the KVM x86 shadow MMU that let a guest VM escape to its host. Both are fixed in the kernel, and Talos v1.13.6 is the first release that carries both fixes — it ships Linux 6.18.38. If the image tag above resolves to an earlier release, set it to `v1.13.6` or newer. Nested virtualization stays enabled: the kernel fix removes the bug itself, so workloads that rely on nested virtualization keep working.
+    {{% /alert %}}
+
     {{% alert title="Do not change op: on these entries" color="warning" %}}
 Talos rejects `op: create` for any file outside `/var`, returning the error `create operation not allowed outside of /var` — the only exception is the special-cased `/etc/cri/conf.d/20-customization.part`. Because `/etc/lvm/lvm.conf` already exists on the node, it must use `op: overwrite`. Changing the op (or pointing `create` at another `/etc` path) fails the `WriteUserFiles` boot step: the node pauses and enters a reboot loop, and `talosctl bootstrap` reports only `bootstrap is not available yet` with no obvious cause.
     {{% /alert %}}
