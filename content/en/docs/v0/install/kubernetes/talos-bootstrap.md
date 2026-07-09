@@ -106,6 +106,12 @@ talos-bootstrap --help
         - 10.96.0.0/16
     ```
 
+    {{% alert title="No Talos release before v1.13.6 fixes CVE-2026-53359" color="warning" %}}
+[CVE-2026-53359](/blog/2026/07/security-advisory-cve-2026-53359-januscape-kvm-guest-to-host-escape/) ("Januscape") and CVE-2026-46113 are related use-after-free bugs in the KVM x86 shadow MMU that let a guest VM escape to its host. Both fixes live in the kernel, and Talos v1.13.6 is the first release that carries them: every release of the 1.10, 1.11 and 1.12 lines is missing at least one, whichever of them this Cozystack version installs. The complete fix is Talos v1.13.6 or newer: upgrade to a Cozystack release that installs from the Talos 1.13 line, then set the Talos image tag to `v1.13.6` or newer.
+
+If you cannot upgrade and you run untrusted guests, disabling KVM nested virtualization (`kvm_intel.nested=0`, `kvm_amd.nested=0`) removes the entry point the published exploit relies on. Treat it as a stop-gap rather than a fix, and mind where it applies. On Talos 1.12 and newer, `machine.install.extraKernelArgs` also needs `machine.install.grubUseUKICmdline: false` next to it: `talosctl gen config` writes that field as `true`, and Talos rejects a config carrying both with `install.extraKernelArgs and install.grubUseUKICmdline can't be used together`. On Talos 1.10 and 1.11 the field does not exist and is not needed. That rejection is loud; the remaining failure is not. Even once the config is accepted, the arguments only reach a GRUB-booted node: a fresh UEFI install of Talos 1.10 or newer boots through systemd-boot, where the kernel command line lives inside the Unified Kernel Image, and there Talos takes the arguments without complaint and ignores them. On those nodes the arguments have to be baked into the boot assets with [Image Factory or Imager](https://www.talos.dev/v1.12/talos-guides/install/boot-assets/). Either way, check `/proc/cmdline` on the node afterwards rather than assuming the mitigation took.
+    {{% /alert %}}
+
 1.  Make another configuration patch file `patch-controlplane.yaml` with settings exclusive to control plane nodes:
 
     ```yaml
