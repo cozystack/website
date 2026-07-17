@@ -51,11 +51,6 @@ def _read(path: str, default: str = "") -> str:
     return open(path, encoding="utf-8").read() if os.path.exists(path) else default
 
 
-def load_keyword_map(cfg: dict, lang: str) -> dict:
-    path = os.path.join(lib.REPO_ROOT, cfg["ahrefs"]["keyword_map_dir"], f"{lang}.yaml")
-    return (yaml.safe_load(open(path, encoding="utf-8")) or {}) if os.path.exists(path) else {}
-
-
 def render(template: str, lang_cfg: dict, glossary: dict) -> str:
     dnt = ", ".join(glossary.get("do_not_translate", []))
     preferred = "\n".join(
@@ -148,16 +143,11 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> str | None:
             if isinstance(fm.get(k), str):
                 fm_values[k] = fm[k]
 
-    kw = load_keyword_map(cfg, lang_cfg["code"])
-    kw_hint = ("\n\nSEO keyword targets (transcreate title/description toward these, "
-               "no stuffing): " + ", ".join(kw[rel])) if kw.get(rel) else ""
-
     # --- Stage 1: translate ---
     sys_translate = render(_read(os.path.join(PROMPT_DIR, "translate.md")), lang_cfg, glossary)
     payload = (
         "Translate the FRONTMATTER values and the BODY below.\n"
         "Return EXACTLY:\n===FRONTMATTER===\n<key: value per line>\n===BODY===\n<translated body>"
-        + kw_hint
         + "\n\n===FRONTMATTER===\n" + "\n".join(f"{k}: {v}" for k, v in fm_values.items())
         + "\n===BODY===\n" + masked_body
     )

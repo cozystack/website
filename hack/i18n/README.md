@@ -95,11 +95,9 @@ python3 hack/i18n/translate.py --dry-run # plan, no model calls
 | `prompts/review-maintainer.md` | native Cozystack-maintainer reviewer (technical correctness) |
 | `prompts/revise.md` | revise a translation against reviewer findings |
 | `style-guides/<lang>.md` | per-language tone/register conventions |
-| `keyword-maps/<lang>.yaml` | Ahrefs-derived SEO keyword targets (generated) |
 | `lib.py` | shared helpers (config, discovery, digest, front matter, protect/restore) |
 | `worklist.py` | diff detector |
 | `translate.py` | translate + review-gate driver |
-| `ahrefs_keywords.py` | regenerate SEO keyword maps from Ahrefs |
 | `run-daily.sh` | daily runner (subscription, until limit, commit + PR) |
 
 ## Scope
@@ -119,5 +117,4 @@ human merge instead.
 ## Secrets
 
 - Translation auth: `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) — subscription, not metered. Local runner reads it from the env; the optional GitHub Action reads it from a repo secret of the same name.
-- `AHREFS_API_KEY` — optional (SEO keyword localization).
 - Never set `ANTHROPIC_API_KEY` for this pipeline — it shadows the subscription and bills metered API (the run hard-fails if it's present).

@@ -38,10 +38,6 @@ jobs:
       # subscription auth path works in CI.
       - run: npm install -g @anthropic-ai/claude-code
 
-      - name: Refresh Ahrefs keyword maps
-        env:
-          AHREFS_API_KEY: ${{ secrets.AHREFS_API_KEY }}
-        run: python3 hack/i18n/ahrefs_keywords.py ${{ github.event.inputs.lang && format('--lang {0}', github.event.inputs.lang) || '' }}
 
       - name: Translate + review gate (Max subscription via Agent SDK)
         env:
