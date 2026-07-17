@@ -2,10 +2,25 @@
 #
 # Single source of truth for the automated i18n pipeline: which languages
 # exist, which model translates which content, and which paths are in scope.
-# Consumed by hack/i18n/*.py and .github/workflows/i18n-translate.yml.
+# Consumed by hack/i18n/*.py and hack/i18n/run-daily.sh.
 
 source_lang: en
 content_dir: content
+
+# Auth: use the maintainer's Claude subscription (Max) via OAuth, NOT a metered
+# API key. The bare anthropic.Anthropic() client resolves credentials in order
+# (ANTHROPIC_API_KEY -> ANTHROPIC_AUTH_TOKEN -> `ant auth login` / Claude OAuth
+# profile), so with no API key set it uses the logged-in subscription. Run
+# `claude setup-token` (or `ant auth login`) once on the machine that runs the
+# daily job. See hack/i18n/run-daily.sh.
+auth: oauth
+
+# Cadence: run daily until the subscription's usage limits are hit. On a 429 /
+# rate-limit the pipeline stops cleanly (does not error the run) and resumes the
+# next day — pages are written atomically (only after the full review gate
+# passes), so an interrupted run never leaves a half-processed page.
+rate_limit:
+  stop_on_limit: true
 
 # Target languages. `code` must match the Hugo `languages:` key in hugo.yaml
 # and the i18n/<code>.toml filename. `hreflang` is the BCP-47 tag emitted in
@@ -70,10 +85,43 @@ exclude_globs:
   - "docs/next/**"
   - "**/_include/**"
 
+# Quality gate — runs on EVERY page (not just hero) before it is written.
+# Each page goes through: translate -> back-translate -> two native reviewers
+# -> revise-if-needed. A page is only written once it passes the gate, so the
+# published tree is always post-review (publish-then-native-ratify, but with a
+# machine review gate in front). All stages use Opus via the OAuth subscription.
+back_translation:
+  enabled: true
+  # Round-trip check: translate the localized page back to English and compare
+  # to the original. If meaning drifted (added/dropped/changed claims, numbers,
+  # or technical facts), the page is revised and re-checked. max_retries bounds
+  # the revise loop per page.
+  max_retries: 2
+
+review:
+  # Two virtual native reviewers per target language, each with a distinct remit.
+  # Both must pass (or the page is revised addressing their findings and
+  # re-reviewed, up to max_rounds). Reviewers are prompted AS native speakers of
+  # the target language.
+  max_rounds: 2
+  reviewers:
+    - id: technical-editor
+      prompt: prompts/review-editor.md      # literary quality / fluency / register
+    - id: cozystack-maintainer
+      prompt: prompts/review-maintainer.md  # technical correctness (k8s/Cozystack)
+
+# Front-matter stamp written on pages that clear the machine gate. Native
+# human owners flip this to "ratified" after their pass; the site can badge or
+# prioritize by it. Machine gate never sets "ratified".
+review_status_field: translation_review
+review_status_value: auto-reviewed
+
 # Publish mode: the pipeline auto-merges translations because content/<lang>/
 # is exempt from CODEOWNERS (see .github/CODEOWNERS). Code/layouts stay gated.
 #   auto_merge: open a PR and enable GitHub auto-merge
 #   pr_only:    open a PR and stop (a human merges)
+# With the OAuth/daily model the daily runner commits directly to a branch and
+# opens/updates one PR per day (see run-daily.sh).
 publish_mode: auto_merge
 
 # Ahrefs SEO/GEO. Keyword maps localize SEO front matter (title/description/

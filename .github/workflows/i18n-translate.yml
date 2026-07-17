@@ -1,22 +1,20 @@
 name: i18n translate
 
-# Automated translation pipeline. Detects English pages that are new or whose
-# source changed (via source_digest), translates them into every configured
-# language with Claude, and publishes the result. Publish mode is set in
-# hack/i18n/config.yaml (auto_merge → opens a PR and enables auto-merge; content/
-# <lang>/ is exempt from CODEOWNERS so translations merge without a human gate,
-# while code/layouts stay protected).
+# Optional CI path for the translation pipeline. The PRIMARY path is the local
+# daily runner (hack/i18n/run-daily.sh) driven by the maintainer's Claude
+# subscription (OAuth/Max) — see hack/i18n/README.md. This workflow exists for
+# running the same pipeline in CI when a subscription OAuth token is available
+# as a secret (CLAUDE_CODE_OAUTH_TOKEN, from `claude setup-token`). It is
+# manual-dispatch only; there is no metered API key here.
 
 on:
-  schedule:
-    - cron: "0 3 * * *"          # nightly
   workflow_dispatch:
     inputs:
       lang:
         description: "Restrict to one language code (blank = all)"
         required: false
       limit:
-        description: "Max pages this run (blank = no limit)"
+        description: "Max pages this run (blank = until the limit)"
         required: false
 
 permissions:
@@ -31,25 +29,21 @@ jobs:
   translate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Install dependencies
-        run: pip install anthropic pyyaml
+      - run: pip install anthropic pyyaml
 
       - name: Refresh Ahrefs keyword maps
         env:
           AHREFS_API_KEY: ${{ secrets.AHREFS_API_KEY }}
         run: python3 hack/i18n/ahrefs_keywords.py ${{ github.event.inputs.lang && format('--lang {0}', github.event.inputs.lang) || '' }}
 
-      - name: Translate missing / stale pages
+      - name: Translate + review gate (OAuth subscription)
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # OAuth subscription token from `claude setup-token` — NOT an API key.
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
         run: |
           python3 hack/i18n/translate.py \
             ${{ github.event.inputs.lang && format('--lang {0}', github.event.inputs.lang) || '' }} \
@@ -63,25 +57,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if git diff --quiet; then
-            echo "No translation changes — nothing to publish."
-            exit 0
-          fi
-          BRANCH="i18n/auto-$(git rev-parse --short HEAD)-${GITHUB_RUN_ID}"
-          git config user.name  "cozystack-i18n-bot"
+          if git diff --quiet -- content/; then echo "no changes"; exit 0; fi
+          BRANCH="i18n/ci-$(git rev-parse --short HEAD)-${GITHUB_RUN_ID}"
+          git config user.name "cozystack-i18n-bot"
           git config user.email "noreply@cozystack.io"
           git checkout -b "$BRANCH"
           git add content/
-          git commit --signoff -m "i18n: automated translation update
-
-Machine-translated new/updated pages (publish-then-review). Native owners
-ratify asynchronously; source_digest tracks freshness against English."
+          git commit --signoff -m "i18n: machine-reviewed translation update"
           git push origin "$BRANCH"
-          MODE=$(python3 -c "import sys;sys.path.insert(0,'hack/i18n');import lib;print(lib.load_config()['publish_mode'])")
           gh pr create --base main --head "$BRANCH" \
-            --title "i18n: automated translation update" \
-            --body "Automated by the i18n translation pipeline. Only \`content/<lang>/\` is touched (CODEOWNERS-exempt). Freshness and key parity verified by \`check-i18n.sh\`."
-          if [ "$MODE" = "auto_merge" ]; then
-            gh pr merge "$BRANCH" --auto --squash || \
-              echo "::warning::auto-merge not enabled/allowed by branch protection — PR left open for a maintainer"
-          fi
+            --title "i18n: translation update" \
+            --body "Automated. content/<lang> only (CODEOWNERS-exempt); back-translation + two native reviewers passed."
+          gh pr merge "$BRANCH" --auto --squash || echo "auto-merge not enabled; PR left open"
