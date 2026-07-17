@@ -3,11 +3,12 @@
 # run-daily.sh — daily translation run on the maintainer's Claude subscription.
 #
 # Auth is the maintainer's Claude subscription (Max) via the Claude Agent SDK,
-# NOT an API key. Setup once on this machine:
-#   npm install -g @anthropic-ai/claude-code   # if the CLI isn't present
-#   claude setup-token                          # prints sk-ant-oat01-...
-#   export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
-# (put the export in your shell profile / the cron env so this script sees it).
+# NOT an API key. Two ways the SDK finds the subscription — either works:
+#   (a) you are already logged in with the `claude` CLI on this machine
+#       (`claude` / `/login`) — nothing else to do; or
+#   (b) headless/CI: `claude setup-token` -> export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+# The only hard requirement is that ANTHROPIC_API_KEY is NOT set: it shadows the
+# subscription and silently bills metered API.
 #
 # It translates + review-gates as many pages as the daily usage limit allows,
 # stops cleanly when the limit is hit, commits the day's output to a dated
@@ -21,23 +22,33 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-# Subscription-only. An API key would shadow the OAuth token and bill metered API.
+# Subscription-only. An API key would shadow the subscription and bill metered API.
 if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
   echo "error: ANTHROPIC_API_KEY is set — unset it so the run uses your Max subscription." >&2
   exit 1
 fi
-if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
-  echo "error: CLAUDE_CODE_OAUTH_TOKEN not set — run 'claude setup-token' and export it." >&2
+if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && ! command -v claude >/dev/null 2>&1; then
+  echo "error: no subscription credential — either log in with the \`claude\` CLI on this" >&2
+  echo "       machine, or run 'claude setup-token' and export CLAUDE_CODE_OAUTH_TOKEN." >&2
   exit 1
 fi
 
-python3 -m pip install --quiet claude-agent-sdk pyyaml 2>/dev/null || true
+# Self-contained venv: distro Pythons are PEP 668 "externally managed", so a
+# plain `pip install` fails. Bootstrap once, reuse on later runs.
+VENV="${I18N_VENV:-$REPO_ROOT/.venv-i18n}"
+if [ ! -x "$VENV/bin/python" ]; then
+  echo "bootstrapping venv at $VENV ..."
+  python3 -m venv "$VENV"
+  "$VENV/bin/pip" install --quiet --upgrade pip
+fi
+"$VENV/bin/pip" install --quiet claude-agent-sdk pyyaml
+PY="$VENV/bin/python"
 
 echo "== i18n daily run $(date -u +%Y-%m-%dT%H:%MZ) =="
-python3 hack/i18n/worklist.py "$@" | head -3
+"$PY" hack/i18n/worklist.py "$@" | head -3
 
 # Translate until the daily limit stops us (translate.py exits 0 on rate limit).
-python3 hack/i18n/translate.py "$@"
+"$PY" hack/i18n/translate.py "$@"
 
 # Verify freshness + i18n key parity before publishing.
 ./hack/check-i18n.sh

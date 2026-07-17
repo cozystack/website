@@ -253,9 +253,9 @@ def main() -> int:
         print("::error::ANTHROPIC_API_KEY is set — it shadows the Max subscription and would "
               "bill metered API. `unset ANTHROPIC_API_KEY` before running.", file=sys.stderr)
         return 1
-    if not os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
-        print("::warning::CLAUDE_CODE_OAUTH_TOKEN not set — run `claude setup-token`, export it, "
-              "then rerun (the Agent SDK also accepts a prior `claude` login).", file=sys.stderr)
+    # No CLAUDE_CODE_OAUTH_TOKEN is fine when the `claude` CLI is logged in on this
+    # machine — the Agent SDK picks that credential up. The token is only needed
+    # headless/CI. If neither exists the SDK raises on the first call.
 
     done = 0
     for it in items:

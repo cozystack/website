@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+# venv bootstrapped by run-daily.sh (repo root); listed here too for safety
+.venv-i18n/

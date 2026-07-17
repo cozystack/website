@@ -27,3 +27,6 @@ static/docs/*/cozystack-api/
 
 # Claude Code local settings
 .claude/
+
+# i18n pipeline venv (bootstrapped by hack/i18n/run-daily.sh)
+.venv-i18n/
