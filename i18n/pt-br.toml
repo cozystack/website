@@ -66,3 +66,21 @@ other = "Encontrou um erro?"
 
 [translation_see_english]
 other = "Consulte o"
+
+[docs_landing_new_users]
+other = "<strong>Novos usuários:</strong> comece pela <a href=\"{{ .url }}\">documentação da {{ .version }}</a> — a versão estável atual."
+
+[docs_landing_available_versions]
+other = "Versões disponíveis"
+
+[docs_landing_col_version]
+other = "Versão"
+
+[docs_landing_col_status]
+other = "Status"
+
+[docs_landing_status_latest]
+other = "Mais recente (estável)"
+
+[docs_landing_status_previous]
+other = "Versão anterior"
