@@ -1,16 +1,1 @@
-# Default owners for everything in the repo.
 * @kvaps @lllamnyp
-
-# Localized content is produced and updated by the automated translation
-# pipeline (hack/i18n/, .github/workflows/i18n-translate.yml) under a
-# publish-then-review model: machine translations ship immediately and native
-# owners ratify asynchronously. These paths are intentionally exempt from the
-# default CODEOWNERS review so the pipeline can auto-merge translation updates.
-# Code, layouts, config, English source, and the pipeline itself stay owned by
-# the maintainers.
-/content/de/
-/content/ru/
-/content/zh-cn/
-/content/hi/
-/content/es/
-/content/pt-br/

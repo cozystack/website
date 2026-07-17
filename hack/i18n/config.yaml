@@ -117,13 +117,16 @@ review:
 review_status_field: translation_review
 review_status_value: auto-reviewed
 
-# Publish mode: the pipeline auto-merges translations because content/<lang>/
-# is exempt from CODEOWNERS (see .github/CODEOWNERS). Code/layouts stay gated.
-#   auto_merge: open a PR and enable GitHub auto-merge
-#   pr_only:    open a PR and stop (a human merges)
-# With the OAuth/daily model the daily runner commits directly to a branch and
-# opens/updates one PR per day (see run-daily.sh).
-publish_mode: auto_merge
+# Publish mode.
+#   pr_only:    open/update a PR and stop — a maintainer merges it (DEFAULT)
+#   auto_merge: additionally enable GitHub auto-merge
+#
+# We deliberately use pr_only: nothing about CODEOWNERS or branch protection
+# changes, and no machine output reaches the production site without a
+# maintainer merging it. The runner translates DAILY (to use each day's quota)
+# but accumulates into ONE branch per ISO week, so maintainers review and merge
+# a single translation PR per week instead of a stream of them.
+publish_mode: pr_only
 
 # SEO note: there is deliberately no keyword-research step here. The English
 # source is already SEO-optimized during authoring, so the translation carries

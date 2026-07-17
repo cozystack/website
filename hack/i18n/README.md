@@ -2,8 +2,8 @@
 
 Automated, in-tree localization for cozystack.io with a machine review gate.
 Detects English pages that are new or changed and, for each one, runs a
-translate → verify → review → revise loop before publishing. Runs daily on the
-maintainer's Claude subscription until the usage limit is hit.
+translate → verify → review → revise loop. Runs daily on a Claude subscription
+until the usage limit is hit; a maintainer merges one translation PR per week.
 
 Lives in the website repo (vendor-neutral, community-inspectable) alongside the
 existing `hack/check-i18n.sh` CI guard.
@@ -29,7 +29,7 @@ content/en/**  ──▶ worklist.py        (missing | stale, via source_digest)
                        ▼
              write content/<lang>/**   (source_digest + translation_review stamp)
                        │
-                   check-i18n.sh  →  daily PR  →  auto-merge (CODEOWNERS-exempt)
+                   check-i18n.sh  →  weekly PR  →  merged by a maintainer
 ```
 
 A page is written **only after it clears the gate**, so the published tree is
@@ -63,7 +63,7 @@ Verify the active credential before running:
 { [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] && echo "subscription (ok)" || echo "no credential"; }
 ```
 
-## Daily run
+## Cadence — daily run, weekly PR
 
 ```bash
 hack/i18n/run-daily.sh            # all languages, until the limit
@@ -71,9 +71,14 @@ hack/i18n/run-daily.sh --lang ru  # one language
 ```
 
 Schedule it once a day (cron/launchd). Each run translates and review-gates as
-many pages as the limit allows, stops cleanly on a 429, commits the day's
-output to a dated branch, and opens/auto-merges one PR. Over time it clears the
-backlog, then just keeps translations fresh against the English source.
+many pages as the day's quota allows, stops cleanly at the limit, and commits
+onto a single `i18n/week-<ISO week>` branch. One PR per week is opened and kept
+updated; **a maintainer merges it**. Running daily uses each day's quota (a
+weekly-only run would use ~1/7 of the available capacity), while the weekly PR
+keeps review to one deliberate merge instead of a stream of them.
+
+Over time this clears the backlog, then just keeps translations fresh against
+the English source.
 
 Manual/dry inspection:
 
@@ -109,10 +114,23 @@ python3 hack/i18n/translate.py --dry-run # plan, no model calls
 
 ## Governance
 
-`content/<lang>/` is exempt from `.github/CODEOWNERS`, so the daily PR
-auto-merges. Code, layouts, config, English source, and this pipeline stay
-maintainer-owned. Set `publish_mode: pr_only` in `config.yaml` to require a
-human merge instead.
+Nothing here changes CODEOWNERS or branch protection. `publish_mode: pr_only`
+means the pipeline only ever opens a PR touching `content/<lang>/`; a
+maintainer reviews and merges it weekly. Code, layouts, config, the English
+source, and this pipeline itself remain maintainer-owned as before.
+
+Pages are stamped `translation_review: auto-reviewed` when they clear the
+machine gate and `auto-reviewed-with-findings` when the revise loop ran out of
+rounds with findings still open — the latter are the ones worth a human's
+attention first. Native owners flip either to `ratified` after their pass.
+
+## Ownership and continuity
+
+The pipeline currently authenticates with a maintainer's Claude subscription
+(`auth: oauth-subscription`) to bootstrap the backlog. The intent is to move to
+an organization-owned API key (`auth: api-key` + `ANTHROPIC_API_KEY`) once it is
+provisioned, so the pipeline does not depend on one individual's account. That
+switch is a config change; no code changes.
 
 ## Secrets
 
