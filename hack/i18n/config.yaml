@@ -7,13 +7,12 @@
 source_lang: en
 content_dir: content
 
-# Auth: use the maintainer's Claude subscription (Max) via OAuth, NOT a metered
-# API key. The bare anthropic.Anthropic() client resolves credentials in order
-# (ANTHROPIC_API_KEY -> ANTHROPIC_AUTH_TOKEN -> `ant auth login` / Claude OAuth
-# profile), so with no API key set it uses the logged-in subscription. Run
-# `claude setup-token` (or `ant auth login`) once on the machine that runs the
-# daily job. See hack/i18n/run-daily.sh.
-auth: oauth
+# Auth: the maintainer's Claude subscription (Max), driven through the Claude
+# Agent SDK (`claude-agent-sdk`), which reads CLAUDE_CODE_OAUTH_TOKEN. The base
+# `anthropic` SDK can NOT use a subscription (metered API only), so translate.py
+# calls the Agent SDK. Setup once: `claude setup-token` -> export the token ->
+# `unset ANTHROPIC_API_KEY` (it would shadow the subscription). See run-daily.sh.
+auth: oauth-subscription
 
 # Cadence: run daily until the subscription's usage limits are hit. On a 429 /
 # rate-limit the pipeline stops cleanly (does not error the run) and resumes the

@@ -14,12 +14,14 @@ Per page, per language, the pipeline runs:
 A page is written ONLY after it clears the gate, so the published tree is always
 post-review and an interrupted daily run never leaves a half-done page.
 
-Auth: OAuth subscription (Max). Uses a bare anthropic.Anthropic() client — with
-no ANTHROPIC_API_KEY set it resolves the logged-in Claude / `ant auth login`
-credential. Run `claude setup-token` or `ant auth login` once on the runner.
+Auth: the Max subscription via the Claude Agent SDK (`claude-agent-sdk`), which
+reads CLAUDE_CODE_OAUTH_TOKEN — NOT the base `anthropic` SDK (that only does
+metered API billing). Run `claude setup-token` once and export the token; the
+run hard-fails if ANTHROPIC_API_KEY is set, since it would shadow the
+subscription and bill metered API.
 
-Daily-until-limit: on a rate-limit (429) the run stops cleanly (exit 0) and
-resumes next day; already-written pages are skipped via source_digest.
+Daily-until-limit: on a subscription usage limit the run stops cleanly (exit 0)
+and resumes next day; already-written pages are skipped via source_digest.
 
 Usage:
   translate.py [--lang ru] [--limit N] [--dry-run]
@@ -71,20 +73,44 @@ def render(template: str, lang_cfg: dict, glossary: dict) -> str:
             .replace("{{STYLE_GUIDE}}", style))
 
 
-def call(client, cfg, system, payload):
-    """One Opus call over the OAuth subscription. Translate RateLimited on 429."""
-    import anthropic
+# The Agent SDK's rate-limit exception type is version-dependent / undocumented,
+# so we match on the message text. Broaden this list if a limit slips through.
+_RATE_LIMIT_MARKERS = ("rate_limit", "429", "quota", "usage limit", "overloaded")
+
+
+async def _aquery(cfg, system, payload):
+    """One single-turn, tool-less completion via the Claude Agent SDK (subscription)."""
+    from claude_agent_sdk import query, ClaudeAgentOptions, AssistantMessage, TextBlock
+    opts = ClaudeAgentOptions(
+        model=cfg["model"]["default"],
+        system_prompt=system,
+        allowed_tools=[],   # pure text: no tools, no filesystem, no MCP, no approval prompts
+        max_turns=1,
+    )
+    out = []
+    async for message in query(prompt=payload, options=opts):
+        if isinstance(message, AssistantMessage):
+            for block in message.content:
+                if isinstance(block, TextBlock):
+                    out.append(block.text)
+    return "".join(out).strip()
+
+
+def call(cfg, system, payload):
+    """One Opus call over the Max subscription (Claude Agent SDK / CLAUDE_CODE_OAUTH_TOKEN).
+
+    Raises RateLimited when the subscription's usage limit is hit, so the daily
+    run stops cleanly and resumes tomorrow.
+    """
+    import asyncio
     try:
-        msg = client.messages.create(
-            model=cfg["model"]["default"],
-            max_tokens=cfg["model"]["max_output_tokens"],
-            temperature=cfg["model"]["temperature"],
-            system=system,
-            messages=[{"role": "user", "content": payload}],
-        )
-    except anthropic.RateLimitError as exc:
-        raise RateLimited(str(exc)) from exc
-    return "".join(b.text for b in msg.content if b.type == "text").strip()
+        return asyncio.run(_aquery(cfg, system, payload))
+    except RateLimited:
+        raise
+    except Exception as exc:
+        if any(m in str(exc).lower() for m in _RATE_LIMIT_MARKERS):
+            raise RateLimited(str(exc)) from exc
+        raise
 
 
 def _parse_verdict(raw: str) -> dict:
@@ -109,7 +135,7 @@ def _split_payload_response(out: str, store: dict) -> tuple[dict, str]:
     return tr_fm, lib.restore(body.strip(), store)
 
 
-def translate_page(client, cfg, glossary, lang_cfg, rel) -> str | None:
+def translate_page(cfg, glossary, lang_cfg, rel) -> str | None:
     """Run the full gate for one page. Returns file text, or None if it can't pass."""
     src = lib.source_path(cfg, rel)
     text = open(src, encoding="utf-8").read()
@@ -135,7 +161,7 @@ def translate_page(client, cfg, glossary, lang_cfg, rel) -> str | None:
         + "\n\n===FRONTMATTER===\n" + "\n".join(f"{k}: {v}" for k, v in fm_values.items())
         + "\n===BODY===\n" + masked_body
     )
-    tr_fm, tr_body = _split_payload_response(call(client, cfg, sys_translate, payload), store)
+    tr_fm, tr_body = _split_payload_response(call(cfg, sys_translate, payload), store)
 
     # --- Stages 2-4: gate with revise loop ---
     max_rounds = max(cfg["review"]["max_rounds"], cfg["back_translation"]["max_retries"])
@@ -145,10 +171,10 @@ def translate_page(client, cfg, glossary, lang_cfg, rel) -> str | None:
         # 2. back-translation round-trip
         if cfg["back_translation"]["enabled"]:
             masked_tr, tr_store = lib.protect(tr_body)
-            back_en = call(client, cfg,
+            back_en = call(cfg,
                            render(_read(os.path.join(PROMPT_DIR, "back-translate.md")), lang_cfg, glossary),
                            masked_tr)
-            cmp = _parse_verdict(call(client, cfg,
+            cmp = _parse_verdict(call(cfg,
                 render(_read(os.path.join(PROMPT_DIR, "back-translate-compare.md")), lang_cfg, glossary),
                 f"ORIGINAL:\n{body}\n\nBACK-TRANSLATION:\n{lib.restore(back_en, tr_store)}"))
             if cmp.get("verdict") == "revise":
@@ -158,7 +184,7 @@ def translate_page(client, cfg, glossary, lang_cfg, rel) -> str | None:
         for reviewer in cfg["review"]["reviewers"]:
             sys_r = render(_read(os.path.join(PROMPT_DIR, os.path.basename(reviewer["prompt"]))),
                            lang_cfg, glossary)
-            verdict = _parse_verdict(call(client, cfg, sys_r,
+            verdict = _parse_verdict(call(cfg, sys_r,
                 f"ENGLISH SOURCE:\n{body}\n\n{lang_cfg['name'].upper()} TRANSLATION:\n{tr_body}"))
             if verdict.get("verdict") == "revise":
                 findings += [{**f, "from": reviewer["id"]} for f in verdict.get("findings", [])]
@@ -176,7 +202,7 @@ def translate_page(client, cfg, glossary, lang_cfg, rel) -> str | None:
             + "\n===BODY===\n" + masked_body2
             + "\n\nFINDINGS:\n" + json.dumps(findings, ensure_ascii=False, indent=2)
         )
-        tr_fm, tr_body = _split_payload_response(call(client, cfg, sys_rev, rev_payload), store)
+        tr_fm, tr_body = _split_payload_response(call(cfg, sys_rev, rev_payload), store)
     else:
         # exhausted rounds with findings still open — publish-then-review model:
         # write it anyway (machine-reviewed, native humans ratify later), but do
@@ -217,19 +243,24 @@ def main() -> int:
         return 0
 
     try:
-        import anthropic  # noqa: F401
+        import claude_agent_sdk  # noqa: F401
     except ImportError:
-        print("::error::anthropic SDK not installed (pip install anthropic)", file=sys.stderr)
+        print("::error::claude-agent-sdk not installed (pip install claude-agent-sdk)", file=sys.stderr)
         return 1
+    # Subscription-only: an API key would shadow the OAuth token and silently bill
+    # metered API. Hard-fail rather than quietly spend money.
     if os.environ.get("ANTHROPIC_API_KEY"):
-        print("::warning::ANTHROPIC_API_KEY is set — this pipeline is meant to run on the "
-              "OAuth subscription. Unset it to avoid metered API billing.", file=sys.stderr)
-    client = anthropic.Anthropic()  # OAuth/subscription when no API key is set
+        print("::error::ANTHROPIC_API_KEY is set — it shadows the Max subscription and would "
+              "bill metered API. `unset ANTHROPIC_API_KEY` before running.", file=sys.stderr)
+        return 1
+    if not os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
+        print("::warning::CLAUDE_CODE_OAUTH_TOKEN not set — run `claude setup-token`, export it, "
+              "then rerun (the Agent SDK also accepts a prior `claude` login).", file=sys.stderr)
 
     done = 0
     for it in items:
         try:
-            result = translate_page(client, cfg, glossary, lang_by_code[it.lang], it.rel)
+            result = translate_page(cfg, glossary, lang_by_code[it.lang], it.rel)
         except RateLimited:
             print(f"\nrate limit reached after {done} page(s) — stopping cleanly, "
                   f"resume tomorrow.")

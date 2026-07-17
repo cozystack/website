@@ -37,20 +37,31 @@ always post-review and an interrupted daily run never leaves a half-done page.
 `translation_review: auto-reviewed` marks machine-gated pages; native human
 owners flip it to `ratified` after their pass.
 
-## Auth — OAuth subscription, not an API key
+## Auth — Max subscription via the Claude Agent SDK
 
-The pipeline runs on the maintainer's Claude subscription (Max) via OAuth, so
-there is no per-token API billing. Set it up once on the machine that runs the
-daily job:
+The pipeline runs on the maintainer's Claude subscription (Max), so there is no
+per-token API billing. Note: the **base `anthropic` SDK cannot use a
+subscription** (metered API only), so `translate.py` calls the **Claude Agent
+SDK** (`claude-agent-sdk`), which reads `CLAUDE_CODE_OAUTH_TOKEN`. Set it up once
+on the machine that runs the daily job:
 
 ```bash
-claude setup-token      # or: ant auth login
-unset ANTHROPIC_API_KEY # ensure the subscription is used, not a metered key
+npm install -g @anthropic-ai/claude-code   # if the `claude` CLI isn't installed
+claude setup-token                          # prints sk-ant-oat01-...  (~1-year token)
+export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+unset ANTHROPIC_API_KEY                      # it would shadow the subscription and bill metered API
 ```
 
-`translate.py` uses a bare `anthropic.Anthropic()` client, which resolves the
-logged-in credential when no API key is set. Cost is not the constraint — the
-daily usage limit is.
+The run hard-fails if `ANTHROPIC_API_KEY` is set. Cost is not the constraint —
+the daily subscription usage limit is; the run stops cleanly at the limit and
+resumes the next day.
+
+Verify the active credential before running:
+
+```bash
+[ -n "$ANTHROPIC_API_KEY" ] && echo "metered API (wrong)" || \
+{ [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] && echo "subscription (ok)" || echo "no credential"; }
+```
 
 ## Daily run
 
@@ -107,6 +118,6 @@ human merge instead.
 
 ## Secrets
 
-- **None required for translation** — auth is the OAuth subscription.
+- Translation auth: `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) — subscription, not metered. Local runner reads it from the env; the optional GitHub Action reads it from a repo secret of the same name.
 - `AHREFS_API_KEY` — optional (SEO keyword localization).
-- CI path only: `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) if running the optional GitHub Action instead of the local daily runner.
+- Never set `ANTHROPIC_API_KEY` for this pipeline — it shadows the subscription and bills metered API (the run hard-fails if it's present).

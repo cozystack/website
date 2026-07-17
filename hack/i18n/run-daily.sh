@@ -2,9 +2,12 @@
 #
 # run-daily.sh — daily translation run on the maintainer's Claude subscription.
 #
-# Auth is the logged-in Claude / OAuth subscription (Max), NOT an API key:
-# run `claude setup-token` (or `ant auth login`) ONCE on this machine, then this
-# script's bare `anthropic.Anthropic()` client picks up the subscription.
+# Auth is the maintainer's Claude subscription (Max) via the Claude Agent SDK,
+# NOT an API key. Setup once on this machine:
+#   npm install -g @anthropic-ai/claude-code   # if the CLI isn't present
+#   claude setup-token                          # prints sk-ant-oat01-...
+#   export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+# (put the export in your shell profile / the cron env so this script sees it).
 #
 # It translates + review-gates as many pages as the daily usage limit allows,
 # stops cleanly when the limit is hit, commits the day's output to a dated
@@ -18,12 +21,17 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-# Guard against metered billing: this pipeline is subscription-only.
+# Subscription-only. An API key would shadow the OAuth token and bill metered API.
 if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
-  echo "warning: ANTHROPIC_API_KEY is set; unset it so the run uses your OAuth subscription." >&2
+  echo "error: ANTHROPIC_API_KEY is set — unset it so the run uses your Max subscription." >&2
+  exit 1
+fi
+if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+  echo "error: CLAUDE_CODE_OAUTH_TOKEN not set — run 'claude setup-token' and export it." >&2
+  exit 1
 fi
 
-python3 -m pip install --quiet anthropic pyyaml 2>/dev/null || true
+python3 -m pip install --quiet claude-agent-sdk pyyaml 2>/dev/null || true
 
 echo "== i18n daily run $(date -u +%Y-%m-%dT%H:%MZ) =="
 python3 hack/i18n/worklist.py "$@" | head -3
