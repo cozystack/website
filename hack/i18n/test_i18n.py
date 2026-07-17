@@ -217,17 +217,31 @@ class TestRealContentScope(unittest.TestCase):
             if rel.startswith("docs/"):
                 self.assertTrue(rel.startswith(f"docs/{latest}/"), f"stale docs version: {rel}")
 
-    def test_pipeline_languages_match_hugo(self):
-        # A language translated but not declared in hugo.yaml produces a
-        # content tree Hugo never builds; declared but not translated produces
-        # empty indexable pages. Both are silent.
+    def _declared(self):
         import yaml as _yaml
         hugo = _yaml.safe_load(open(os.path.join(lib.REPO_ROOT, "hugo.yaml"), encoding="utf-8"))
-        declared = set(hugo["languages"]) - {self.cfg["source_lang"]}
+        return set(hugo["languages"]) - {self.cfg["source_lang"]}
+
+    def test_every_served_language_is_translated(self):
+        # The invariant is one-directional. Translated-but-not-declared is the
+        # normal way a language starts; declared-but-not-translated means the
+        # site serves a language nothing keeps up to date.
         configured = {l["code"] for l in self.cfg["languages"]}
-        self.assertEqual(configured, declared,
-                         "hack/i18n/config.yaml and hugo.yaml disagree on which "
-                         "languages are enabled")
+        orphaned = self._declared() - configured
+        self.assertEqual(orphaned, set(),
+                         f"hugo.yaml serves {sorted(orphaned)} but hack/i18n/config.yaml "
+                         f"does not translate them — they will never be created or refreshed")
+
+    def test_every_served_language_has_content(self):
+        # Declaring a language with an empty content tree does not build
+        # nothing: Hugo still emits /<code>/, /<code>/tags/, /<code>/categories/,
+        # /<code>/topics/ and /<code>/404.html, all `index, follow`.
+        for code in self._declared():
+            d = os.path.join(lib.REPO_ROOT, self.cfg["content_dir"], code)
+            self.assertTrue(
+                os.path.isdir(d) and os.listdir(d),
+                f"hugo.yaml declares '{code}' but content/{code}/ is empty or missing — "
+                f"that publishes empty indexable pages. Land the content first.")
 
     def test_no_unknown_user_visible_frontmatter_keys(self):
         # Guards against a new user-visible field (like `lede` was) being added

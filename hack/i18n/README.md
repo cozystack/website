@@ -152,19 +152,30 @@ this pipeline does not write it.
 
 ## Adding a language
 
-A language must be enabled in **two** places, in the PR that carries its content:
-`languages:` in `hack/i18n/config.yaml` (what gets translated) and `languages:`
-in `hugo.yaml` (what gets built and served).
+Two lists, two different questions:
 
-Order matters. Declaring a language in `hugo.yaml` before `content/<code>/`
-exists does not build nothing — Hugo emits `/<code>/`, `/<code>/tags/`,
-`/<code>/categories/`, `/<code>/topics/`, `/<code>/article_types/` and
-`/<code>/404.html` anyway, all `index, follow` and self-canonical: ~6 empty but
-indexable pages per language. So: translate first
-(`hack/i18n/run-daily.sh --lang es`), enable both blocks together, then ship.
+| | `languages:` in `hack/i18n/config.yaml` | `languages:` in `hugo.yaml` |
+|---|---|---|
+| Answers | what gets **translated** | what gets **built and served** |
+| Add it | as soon as you want the language | only once its content exists |
 
-`es` and `pt-br` have `i18n/*.toml` prepared and are commented out in both files
-for exactly this reason.
+They are allowed to differ in exactly one direction. **Translated but not
+declared** is the normal way a language starts — the pipeline fills
+`content/<code>/` while the site stays quiet about it. **Declared but not
+translated** is broken, and `test_i18n.py` fails on it.
+
+Order matters, because declaring a language in `hugo.yaml` before
+`content/<code>/` exists does not build nothing: Hugo emits `/<code>/`,
+`/<code>/tags/`, `/<code>/categories/`, `/<code>/topics/`,
+`/<code>/article_types/` and `/<code>/404.html` anyway, all `index, follow` and
+self-canonical — roughly six empty but indexable pages per language.
+
+So the sequence is: add to `config.yaml` → let the pipeline translate → add to
+`hugo.yaml` in the PR that lands the content.
+
+`es` and `pt-br` are at step one right now: they are translated, have their
+`i18n/*.toml` ready, and are commented out in `hugo.yaml` until their content
+lands.
 
 ## Reader-facing disclosure
 

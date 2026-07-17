@@ -169,16 +169,16 @@ languages:
     params:
       time_format_default: 2006-01-02
       time_format_blog: 2006-01-02
-  # es and pt-br are prepared (i18n/es.toml, i18n/pt-br.toml) but NOT declared
-  # yet: there is no content/es or content/pt-br. Declaring a language with no
-  # content does not produce nothing — Hugo still emits /es/, /es/tags/,
-  # /es/categories/, /es/topics/, /es/article_types/ and /es/404.html, all with
-  # `robots: index, follow` and self-canonical. That publishes ~6 empty but
-  # indexable pages per language, which is the thin content we are otherwise
-  # careful to avoid.
+  # es and pt-br are being translated (they are listed in hack/i18n/config.yaml)
+  # but are NOT declared here yet, because content/es and content/pt-br do not
+  # exist. Declaring a language with no content does not produce nothing — Hugo
+  # still emits /es/, /es/tags/, /es/categories/, /es/topics/,
+  # /es/article_types/ and /es/404.html, all `robots: index, follow` and
+  # self-canonical. That publishes ~6 empty but indexable pages per language,
+  # which is the thin content we are otherwise careful to avoid.
   #
-  # To enable a language: translate it (hack/i18n/run-daily.sh --lang es), then
-  # add the block below back in the same PR as the content.
+  # Un-comment each block in the same PR that lands that language's content —
+  # not before. hack/i18n/test_i18n.py enforces this.
   #
   # es:
   #   languageName: Español
