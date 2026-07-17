@@ -145,7 +145,7 @@ succeeds. A page that reproducibly fails is a signal to translate it by hand.
 
 ## Scope
 
-- **Docs:** latest version only; older versions stay English (they are `noindex`).
+- **Docs:** latest version only; older versions stay English (they are `noindex`). The version-picker landing (`docs/_index.md`) is version-agnostic and always in scope.
 - **Blog:** posts newer than `blog_since` in `config.yaml`.
 - **Never:** `docs/next/**`, `**/_include/**`.
 - Code, shortcodes, comments, inline code, URLs, CLI, YAML keys, and brand names are preserved structurally or via the glossary.

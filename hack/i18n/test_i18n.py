@@ -98,6 +98,14 @@ class TestScope(unittest.TestCase):
         self.assertTrue(lib._docs_out_of_scope("docs/v1.4/intro.md", "v1.5"))
         self.assertTrue(lib._docs_out_of_scope("docs/next/intro.md", "v1.5"))
 
+    def test_docs_version_picker_landing_in_scope(self):
+        # docs/_index.md is the version-picker, not a versioned page — it must
+        # stay in scope so the pipeline keeps its translations fresh.
+        self.assertFalse(lib._docs_out_of_scope("docs/_index.md", "v1.5"))
+        # A versioned landing still narrows to the latest version.
+        self.assertFalse(lib._docs_out_of_scope("docs/v1.5/_index.md", "v1.5"))
+        self.assertTrue(lib._docs_out_of_scope("docs/v1.4/_index.md", "v1.5"))
+
     def test_non_docs_paths_are_untouched(self):
         self.assertFalse(lib._docs_out_of_scope("blog/2026-06-01-post.md", "v1.5"))
 
@@ -237,7 +245,10 @@ class TestRealContentScope(unittest.TestCase):
         for rel in self.files:
             self.assertFalse(rel.startswith("oss-health/"), rel)
             self.assertNotIn("/_include/", f"/{rel}")
-            if rel.startswith("docs/"):
+            # Versioned docs pages (docs/<ver>/...) must be the latest version;
+            # the version-picker landing (docs/_index.md) sits directly under
+            # docs/ and is version-agnostic, so it is allowed.
+            if rel.startswith("docs/") and rel.count("/") >= 2:
                 self.assertTrue(rel.startswith(f"docs/{latest}/"), f"stale docs version: {rel}")
 
     def _declared(self):

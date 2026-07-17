@@ -114,10 +114,20 @@ def latest_docs_version(cfg: dict) -> str:
 
 
 def _docs_out_of_scope(rel: str, latest: str) -> bool:
-    """True for any docs page that is not in the latest version (incl. `next`)."""
-    if not rel.startswith("docs/"):
+    """True for any docs page that is not in the latest version (incl. `next`).
+
+    Pages that live directly under docs/ (the version-picker landing,
+    docs/_index.md) are not version-specific and stay in scope: they are
+    translated, indexed pages whose freshness hack/check-i18n.sh tracks, so the
+    pipeline must keep them fresh. Only the versioned subtrees (docs/<ver>/...)
+    are narrowed to the latest version.
+    """
+    parts = rel.split("/")
+    if parts[0] != "docs":
         return False
-    return not rel.startswith(f"docs/{latest}/")
+    if len(parts) < 3:
+        return False  # docs/<file> — version-agnostic, always in scope
+    return parts[1] != latest
 
 
 _BLOG_DATE_RE = re.compile(r"^blog/(\d{4}-\d{2}-\d{2})-")
