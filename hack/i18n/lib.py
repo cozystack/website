@@ -33,12 +33,18 @@ TRANSLATABLE_LIST_KEYS = ("taglines", "keywords")
 
 # Protected spans: replaced with opaque placeholders before the model sees the
 # text, restored afterwards. Order matters (fenced code before inline code).
-_PROTECT_PATTERNS = [
-    ("FENCE", re.compile(r"```.*?```", re.DOTALL)),
-    ("SHORTCODE", re.compile(r"\{\{[<%].*?[%>]\}\}", re.DOTALL)),
-    ("HTMLCOMMENT", re.compile(r"<!--.*?-->", re.DOTALL)),
-    ("INLINECODE", re.compile(r"`[^`\n]+`")),
-]
+# SHORTCODE is handled specially (see protect) so that visible-text attributes
+# inside it are still translated; the others are protected wholesale.
+_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
+_SHORTCODE_RE = re.compile(r"\{\{[<%].*?[%>]\}\}", re.DOTALL)
+_HTMLCOMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
+_INLINECODE_RE = re.compile(r"`[^`\n]+`")
+
+# Shortcode attributes whose VALUE renders as visible text and must be
+# translated: figure captions (shown under the image), alt text (screen readers
+# + SEO), and titles. Everything else in a shortcode (src, width, id, class,
+# link, the delimiters, the param names) is structure and stays verbatim.
+_VISIBLE_ATTR_RE = re.compile(r'\b(?:caption|alt|title)="([^"]*)"')
 
 
 def load_config() -> dict:
@@ -285,21 +291,46 @@ def merge_target_only_keys(out_fm: dict, existing_fm: dict | None) -> dict:
 
 
 def protect(text: str) -> tuple[str, dict[str, str]]:
-    """Replace code/shortcodes/comments with placeholders. Returns (masked, map)."""
+    """Replace code/shortcodes/comments with placeholders. Returns (masked, map).
+
+    Shortcodes are NOT protected wholesale: a `{{< figure >}}` carries a visible
+    `caption` (rendered under the image) and `alt` (screen readers, SEO). Masking
+    the whole shortcode left those in English on every localized page. Instead the
+    shortcode's structure is protected and its visible-text attribute values are
+    exposed between placeholders, so they translate like ordinary prose while
+    src/width/delimiters stay byte-for-byte.
+    """
     store: dict[str, str] = {}
     counter = 0
 
-    def _sub(kind):
-        def repl(match):
-            nonlocal counter
-            token = f"§§{kind}_{counter}§§"
-            store[token] = match.group(0)
-            counter += 1
-            return token
-        return repl
+    def _stash(s: str, kind: str) -> str:
+        nonlocal counter
+        token = f"§§{kind}_{counter}§§"
+        store[token] = s
+        counter += 1
+        return token
 
-    for kind, pat in _PROTECT_PATTERNS:
-        text = pat.sub(_sub(kind), text)
+    def _sub(kind):
+        return lambda m: _stash(m.group(0), kind)
+
+    # 1. Fenced code first (it may contain backticks/shortcode-like text).
+    text = _FENCE_RE.sub(_sub("FENCE"), text)
+
+    # 2. Shortcodes: protect structure, expose caption/alt/title values.
+    def _shortcode(m: "re.Match") -> str:
+        sc = m.group(0)
+        out, pos = [], 0
+        for a in _VISIBLE_ATTR_RE.finditer(sc):
+            out.append(_stash(sc[pos:a.start(1)], "SC"))  # structure up to the value
+            out.append(a.group(1))                        # visible text, left to translate
+            pos = a.end(1)
+        out.append(_stash(sc[pos:], "SC"))                # trailing structure
+        return "".join(out)
+    text = _SHORTCODE_RE.sub(_shortcode, text)
+
+    # 3. Comments, then inline code.
+    text = _HTMLCOMMENT_RE.sub(_sub("HTMLCOMMENT"), text)
+    text = _INLINECODE_RE.sub(_sub("INLINECODE"), text)
     return text, store
 
 

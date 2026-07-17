@@ -44,6 +44,29 @@ class TestProtectRestore(unittest.TestCase):
         self.assertEqual(len(store), 1)
         self.assertTrue(next(iter(store)).startswith("§§FENCE_"))
 
+    def test_figure_caption_and_alt_are_exposed_for_translation(self):
+        # The bug a virtual reviewer caught: captions render under the image and
+        # were staying English because the whole shortcode was masked.
+        sc = '{{< figure src="a.webp" alt="Dashboard view" width="720" caption="The new dashboard." >}}'
+        masked, store = lib.protect(sc)
+        self.assertIn("Dashboard view", masked)      # alt exposed
+        self.assertIn("The new dashboard.", masked)   # caption exposed
+        self.assertNotIn("a.webp", masked)            # src protected
+        self.assertNotIn("720", masked)               # width protected
+
+    def test_figure_structure_survives_translated_caption(self):
+        sc = '{{< figure src="a.webp" alt="A" width="720" caption="B" >}}'
+        masked, store = lib.protect(sc)
+        translated = masked.replace("A", "Я").replace("B", "Б")
+        self.assertEqual(
+            lib.restore(translated, store),
+            '{{< figure src="a.webp" alt="Я" width="720" caption="Б" >}}')
+
+    def test_shortcode_without_visible_attrs_is_masked_wholesale(self):
+        masked, store = lib.protect('{{< youtube id="abc123" >}}')
+        self.assertNotIn("abc123", masked)
+        self.assertEqual(len(store), 1)
+
 
 class TestGlobMatching(unittest.TestCase):
     def test_star_md_matches_basename_at_any_depth(self):
