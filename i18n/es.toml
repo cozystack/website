@@ -51,3 +51,18 @@ other = "Leer más"
 
 [warning]
 other = "Advertencia:"
+
+[translation_english_original]
+other = "original en inglés"
+
+[translation_machine_notice]
+other = "Esta página se tradujo automáticamente y aún no ha sido revisada por un hablante nativo."
+
+[translation_open_issue]
+other = "abre un issue"
+
+[translation_report_issue]
+other = "¿Has encontrado un error?"
+
+[translation_see_english]
+other = "Consulta el"

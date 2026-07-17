@@ -33,6 +33,13 @@ auth: oauth-subscription
 # Target languages. `code` must match the Hugo `languages:` key in hugo.yaml
 # and the i18n/<code>.toml filename. `hreflang` is the BCP-47 tag emitted in
 # <link rel="alternate" hreflang>.
+#
+# This list must stay in sync with the `languages:` block in hugo.yaml: a
+# language listed here but not declared there gets translated into a
+# content/<code>/ tree that Hugo ignores — quota spent on files nobody serves.
+# es and pt-br are commented out in BOTH for that reason (see hugo.yaml); to add
+# a language, translate it first (`run-daily.sh --lang es`), then enable it in
+# both files in the PR that carries the content.
 languages:
   - code: de
     name: Deutsch
@@ -46,12 +53,12 @@ languages:
   - code: hi
     name: हिन्दी
     hreflang: hi
-  - code: es
-    name: Español
-    hreflang: es
-  - code: pt-br
-    name: Português (Brasil)
-    hreflang: pt-BR
+  # - code: es
+  #   name: Español
+  #   hreflang: es
+  # - code: pt-br
+  #   name: Português (Brasil)
+  #   hreflang: pt-BR
 
 # Model. Every stage — translation, back-translation, both reviewers, revision —
 # runs on Opus for maximum quality (decision 2026-07-17). Max output tokens and

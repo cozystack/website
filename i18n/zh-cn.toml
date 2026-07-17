@@ -69,3 +69,17 @@ other = "最新（稳定版）"
 
 [docs_landing_status_previous]
 other = "旧版本"
+[translation_english_original]
+other = "英文原文"
+
+[translation_machine_notice]
+other = "本页面为机器翻译，尚未经过母语者审校。"
+
+[translation_open_issue]
+other = "提交 issue"
+
+[translation_report_issue]
+other = "发现错误？"
+
+[translation_see_english]
+other = "请参阅"

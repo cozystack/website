@@ -69,3 +69,17 @@ other = "नवीनतम (स्थिर)"
 
 [docs_landing_status_previous]
 other = "पिछली रिलीज़"
+[translation_english_original]
+other = "अंग्रेज़ी मूल"
+
+[translation_machine_notice]
+other = "यह पृष्ठ मशीन द्वारा अनूदित है और अभी तक किसी मूल वक्ता द्वारा जाँचा नहीं गया है।"
+
+[translation_open_issue]
+other = "issue बनाएँ"
+
+[translation_report_issue]
+other = "कोई त्रुटि मिली?"
+
+[translation_see_english]
+other = "देखें"

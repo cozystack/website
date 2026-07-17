@@ -303,8 +303,14 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool]:
         existing_fm, _, _ = lib.split_frontmatter(open(dest, encoding="utf-8").read())
         out_fm = lib.merge_target_only_keys(out_fm, existing_fm)
     out_fm["source_digest"] = f"sha256:{lib.sha256_file(src)}"
+    # `l10n` is the site's existing convention for HOW a page was localized
+    # (mt | transcreate). Whatever the page was before, this pipeline just
+    # machine-translated it, so say so — the disclaimer banner and any future
+    # native-review triage read this.
+    out_fm["l10n"] = "mt"
     # Stamp honestly: a page that ran out of revise rounds with findings still
-    # open is NOT the same as one that cleared the gate.
+    # open is NOT the same as one that cleared the gate. Neither is "ratified" —
+    # only a human sets that, and only that value drops the disclaimer banner.
     out_fm[cfg["review_status_field"]] = (
         cfg["review_status_value"] if gate_passed else f"{cfg['review_status_value']}-with-findings")
     fm_yaml = yaml.safe_dump(out_fm, allow_unicode=True, sort_keys=False,

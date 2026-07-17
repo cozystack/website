@@ -1,0 +1,39 @@
+{{- /* Machine-translation disclaimer.
+
+  Localized pages are published as soon as they clear the automated review gate
+  and are indexed immediately (publish-then-ratify) — readers get the docs now
+  rather than after a native review that may take months. The trade is that a
+  reader can land on a page no human has ratified, so the page must say so
+  plainly and link to the English source it was derived from.
+
+  The rule is fail-safe: every non-English page carries the disclaimer UNLESS it
+  is explicitly marked ratified. Keying off the presence of `translation_review`
+  instead would silently exempt the pages translated before this pipeline existed
+  (content/de, content/ru, content/hi, content/zh-cn from the i18n PoC) — exactly
+  the unratified machine output the disclaimer is for.
+
+  `translation_review` is written by hack/i18n/translate.py:
+    auto-reviewed                — cleared the machine gate
+    auto-reviewed-with-findings  — written with findings still open
+    ratified                     — a native speaker signed off; no banner
+  Set it to `ratified` on a page a native speaker has checked (or hand-wrote).
+*/ -}}
+{{- /* .Sites.Default is the defaultContentLanguage site (en). NOT .Site.Home —
+       on the Russian site that resolves to the Russian home page, so
+       `ne .Lang .Site.Home.Lang` is false everywhere and the banner never
+       renders on the very pages it exists for. */ -}}
+{{- $src := .Sites.Default.Language.Lang -}}
+{{- if and (ne .Lang $src) (ne .Params.translation_review "ratified") -}}
+{{- $en := "" -}}
+{{- range .AllTranslations -}}
+  {{- if eq .Lang $src }}{{ $en = .Permalink }}{{ end -}}
+{{- end -}}
+<div class="pageinfo pageinfo-warning">
+  <p>
+    {{ T "translation_machine_notice" }}
+    {{- with $en }} {{ T "translation_see_english" }} <a href="{{ . }}">{{ T "translation_english_original" }}</a>.{{ end }}
+    {{ T "translation_report_issue" }}
+    <a href="https://github.com/cozystack/website/issues/new">{{ T "translation_open_issue" }}</a>.
+  </p>
+</div>
+{{- end -}}

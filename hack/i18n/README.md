@@ -104,6 +104,8 @@ python3 hack/i18n/translate.py --dry-run # plan, no model calls
 | `worklist.py` | diff detector |
 | `translate.py` | translate + review-gate driver |
 | `run-daily.sh` | daily runner (subscription, until limit, commit + PR) |
+| `test_i18n.py` | tests for the pure functions (no network) — `python3 hack/i18n/test_i18n.py` |
+| `../../layouts/partials/translation-banner.html` | reader-facing machine-translation disclaimer |
 
 ## Scope
 
@@ -111,6 +113,83 @@ python3 hack/i18n/translate.py --dry-run # plan, no model calls
 - **Blog:** posts newer than `blog_since` in `config.yaml`.
 - **Never:** `docs/next/**`, `**/_include/**`.
 - Code, shortcodes, comments, inline code, URLs, CLI, YAML keys, and brand names are preserved structurally or via the glossary.
+
+## Front-matter fields
+
+| Field | Meaning | Read by |
+|-------|---------|---------|
+| `source_digest` | sha256 of the English source the translation was made from — the freshness signal | `hack/check-i18n.sh`, `worklist.py` |
+| `l10n` | *how* the page was localized: `mt` (machine) or `transcreate` | humans triaging review |
+| `translation_review` | *ratification state*: `auto-reviewed`, `auto-reviewed-with-findings`, or `ratified` | `translation-banner.html` |
+
+`translation_status: current` appears on pages from the i18n PoC. It is not
+written or read by anything — `source_digest` computes freshness properly — so
+this pipeline does not write it.
+
+## Adding a language
+
+A language must be enabled in **two** places, in the PR that carries its content:
+`languages:` in `hack/i18n/config.yaml` (what gets translated) and `languages:`
+in `hugo.yaml` (what gets built and served).
+
+Order matters. Declaring a language in `hugo.yaml` before `content/<code>/`
+exists does not build nothing — Hugo emits `/<code>/`, `/<code>/tags/`,
+`/<code>/categories/`, `/<code>/topics/`, `/<code>/article_types/` and
+`/<code>/404.html` anyway, all `index, follow` and self-canonical: ~6 empty but
+indexable pages per language. So: translate first
+(`hack/i18n/run-daily.sh --lang es`), enable both blocks together, then ship.
+
+`es` and `pt-br` have `i18n/*.toml` prepared and are commented out in both files
+for exactly this reason.
+
+## Reader-facing disclosure
+
+`layouts/partials/translation-banner.html` puts a machine-translation notice on
+every localized page and links to the English original. The rule is fail-safe:
+the banner shows on any non-English page **unless** its front matter says
+`translation_review: ratified`. Pages from the i18n PoC carry no
+`translation_review` at all, and they are machine output too — keying off the
+field's presence would silently exempt exactly the pages that need the notice.
+
+Localized pages are deliberately indexed from day one (no `noindex`): readers
+get the docs now rather than after a native review that may take months. The
+banner is what makes that trade honest.
+
+The banner is wired into the same four layouts as `version-banner.html`
+(`page/single`, `docs/baseof`, `blog/baseof`, `resources/list`), which covers
+docs, blog, and pages. The **homepage is deliberately not covered**: it is a
+short marketing hero rendered by the Docsy theme's own home layout, covering it
+would mean overriding that layout, and a warning across the hero costs more than
+it buys on the one page whose copy gets human eyes first.
+
+## Rollback / kill switch
+
+Ordered from cheapest to most drastic.
+
+**Stop translating** — remove the cron entry, or just stop running
+`run-daily.sh`. Nothing else runs on its own; there is no GitHub Action.
+
+**Stop a single language** — comment it out of `languages:` in `config.yaml`.
+Existing pages stay served.
+
+**Take a language out of the site without deleting it** — comment its block out
+of `languages:` in `hugo.yaml`. Hugo stops building `/<code>/` entirely; the
+`content/<code>/` tree stays in git and can be re-enabled with one edit. This is
+the right move if a language's quality is disputed: it de-indexes without losing
+the work.
+
+**De-index one page but keep it served** — add `robots: "noindex, follow"` to its
+front matter and have `layouts/partials/hooks/head-end.html` honour it, or delete
+the page (its English source is untouched, and `worklist.py` will simply see it
+as missing again).
+
+**Undo a bad run** — every run lands on one `i18n/week-<ISO week>` branch and is
+merged by a maintainer, so the revert is a normal `git revert` of the merge
+commit. Nothing reaches production without that merge.
+
+**Full stop** — revert the merge, comment the non-English languages out of
+`hugo.yaml`, and the site is English-only again. The pipeline touches nothing but
+`content/<lang>/`.
 
 ## Governance
 
@@ -124,6 +203,15 @@ machine gate and `auto-reviewed-with-findings` when the revise loop ran out of
 rounds with findings still open — the latter are the ones worth a human's
 attention first. Native owners flip either to `ratified` after their pass.
 
+**What the gate is and is not.** The two "native reviewers" are the same model as
+the translator, given different system prompts. That measures self-consistency
+and catches the obvious failures (meaning drift, mangled terminology, broken
+register); it is **not** native-speaker ratification, and `auto-reviewed` must
+not be read as "a human checked this". Only a human sets `ratified`, and only
+`ratified` removes the reader-facing disclaimer banner. The gate's real job is to
+make the machine output good enough to publish while native review happens
+asynchronously — not to replace it.
+
 ## Ownership and continuity
 
 The pipeline currently authenticates with a maintainer's Claude subscription
@@ -134,5 +222,6 @@ switch is a config change; no code changes.
 
 ## Secrets
 
-- Translation auth: `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) — subscription, not metered. Local runner reads it from the env; the optional GitHub Action reads it from a repo secret of the same name.
-- Never set `ANTHROPIC_API_KEY` for this pipeline — it shadows the subscription and bills metered API (the run hard-fails if it's present).
+- Translation auth: `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) — subscription, not metered. Only needed headless; if the `claude` CLI is logged in on the runner, the Agent SDK picks that credential up.
+- Under `auth: oauth-subscription`, never set `ANTHROPIC_API_KEY` — it shadows the subscription and silently bills metered API (the run hard-fails if it's present).
+- There is no GitHub Action and no CI-held credential: the pipeline runs from a maintainer's clone, by hand or by cron. That is deliberate — it keeps a personal subscription token out of repo secrets.
