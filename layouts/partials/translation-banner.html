@@ -1,4 +1,10 @@
-{{- /* Machine-translation disclaimer.
+{{- /* Machine-translation disclaimer. DOCS PAGES ONLY.
+
+  Wired into docs/baseof.html and nowhere else, by product decision: the notice
+  belongs where a wrong technical detail is costly (an operator following a
+  translated command), not on the blog, marketing pages, or the homepage hero.
+  To change coverage, add/remove the `{{ partial "translation-banner.html" . }}`
+  call in the relevant layout — the guard below is layout-agnostic.
 
   Localized pages are published as soon as they clear the automated review gate
   and are indexed immediately (publish-then-ratify) — readers get the docs now

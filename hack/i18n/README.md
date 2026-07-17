@@ -190,12 +190,13 @@ Localized pages are deliberately indexed from day one (no `noindex`): readers
 get the docs now rather than after a native review that may take months. The
 banner is what makes that trade honest.
 
-The banner is wired into the same four layouts as `version-banner.html`
-(`page/single`, `docs/baseof`, `blog/baseof`, `resources/list`), which covers
-docs, blog, and pages. The **homepage is deliberately not covered**: it is a
-short marketing hero rendered by the Docsy theme's own home layout, covering it
-would mean overriding that layout, and a warning across the hero costs more than
-it buys on the one page whose copy gets human eyes first.
+The banner is wired into **`docs/baseof.html` only** — documentation pages, by
+product decision. It is deliberately absent from the blog, marketing/`page`
+layouts, `resources`, and the homepage: the notice belongs where a wrong
+technical detail is costly (an operator running a translated command), not
+across a marketing hero. To change coverage, add or remove the
+`{{ partial "translation-banner.html" . }}` call in the relevant layout; the
+partial's own guard (non-English and not `ratified`) is layout-agnostic.
 
 ## Rollback / kill switch
 
