@@ -139,15 +139,32 @@ git push --quiet -u origin "$BRANCH"
 # Open a PR only if this week's branch has no OPEN one. `gh pr view` resolves the
 # branch's most recent PR regardless of state, so a merged PR would otherwise
 # look like "a PR exists" and the week's later work would sit on an orphan branch.
+PR_BODY="Automated translation run. Touches \`content/<lang>/\` only — no changes to code, layouts, config, or the English source.
+
+This PR collects **this week's** translations; the pipeline runs daily and pushes onto this branch, so please review and merge it at the end of the week.
+
+Each page went through the machine review gate: translation, a back-translation meaning check, and two virtual reviewers prompted as native speakers (technical editor + Cozystack maintainer). Pages that cleared it are stamped \`translation_review: auto-reviewed\`; pages where findings stayed open are stamped \`auto-reviewed-with-findings\` — review those first. The reviewers are the same model as the translator, so this gate measures self-consistency, not human ratification.
+
+Every localized page carries a machine-translation banner linking to the English original until a native speaker sets \`translation_review: ratified\`."
+
 PR_STATE="$(gh pr view "$BRANCH" --json state -q .state 2>/dev/null || echo NONE)"
 if [ "$PR_STATE" != "OPEN" ]; then
   gh pr create --base main --head "$BRANCH" \
     --title "i18n: translation update, week $(date -u +%G-W%V)" \
-    --body "Automated translation run. Touches \`content/<lang>/\` only — no changes to code, layouts, config, or the English source.
+    --body "$PR_BODY" || true
+fi
 
-This PR collects **this week's** translations; the pipeline runs daily and pushes onto this branch, so please review and merge it at the end of the week.
-
-Each page went through the machine review gate: translation, a back-translation meaning check, and two virtual reviewers prompted as native speakers (technical editor + Cozystack maintainer). Pages that cleared it are stamped \`translation_review: auto-reviewed\`; pages where findings stayed open are stamped \`auto-reviewed-with-findings\` — review those first. The reviewers are the same model as the translator, so this gate measures self-consistency, not human ratification." || true
+# Surface what the reviewers actually found. A "-with-findings" stamp with no
+# record of the finding is not something a maintainer can act on.
+#
+# This goes in a COMMENT, not the PR body: the body would have to be rewritten
+# every day, and each rewrite would drop the previous days' findings — the PR
+# accumulates a week of runs, but the report file only ever holds the last one.
+# Comments accumulate on their own, so the thread ends up being the week's log.
+FINDINGS="hack/i18n/last-run-findings.md"
+if [ -f "$FINDINGS" ]; then
+  { printf '#### Run %s\n\n' "$(date -u +%Y-%m-%d\ %H:%MZ)"; cat "$FINDINGS"; } \
+    | gh pr comment "$BRANCH" --body-file - || true
 fi
 
 PUBLISH_MODE="$(cfg publish_mode)"

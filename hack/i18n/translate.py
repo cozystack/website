@@ -42,6 +42,29 @@ import lib
 
 PROMPT_DIR = os.path.join(os.path.dirname(__file__), "prompts")
 STYLE_DIR = os.path.join(os.path.dirname(__file__), "style-guides")
+# Findings still open after the revise loop, for the weekly PR body. Gitignored:
+# it is a per-run artifact, not content.
+REPORT_PATH = os.path.join(os.path.dirname(__file__), "last-run-findings.md")
+
+
+def _format_report(report: list[dict]) -> str:
+    """Render open findings as the markdown that goes in the PR body."""
+    out = [f"### Pages with open findings ({len(report)})", "",
+           "The revise loop ran out of rounds with these findings still raised by at",
+           "least one reviewer, so the pages are stamped",
+           "`translation_review: auto-reviewed-with-findings`. They are published anyway",
+           "(publish-then-ratify) but are the ones worth a human's attention first.",
+           "",
+           "Findings come from the model reviewers, so some will be noise — that is",
+           "expected; they are listed rather than acted on automatically.", ""]
+    for entry in report:
+        out.append(f"**`{entry['lang']}: {entry['rel']}`**")
+        out.append("")
+        for f in entry["findings"]:
+            sev, who = f.get("severity", "?"), f.get("from", "?")
+            out.append(f"- _{sev}_ ({who}): {f.get('issue', f)}")
+        out.append("")
+    return "\n".join(out)
 
 
 class RateLimited(Exception):
@@ -197,13 +220,17 @@ def _split_payload_response(out: str, store: dict, expect: set[str]) -> tuple[di
     return tr_fm, lib.restore(body, store)
 
 
-def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool]:
+def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]:
     """Run the full gate for one page.
 
-    Returns (file_text, gate_passed). gate_passed is False when the revise loop
-    ran out of rounds with findings still open — the page is still written
-    (publish-then-review), but stamped honestly so it is distinguishable from a
-    page that actually cleared the gate.
+    Returns (file_text, gate_passed, findings). gate_passed is False when the
+    revise loop ran out of rounds with findings still open — the page is still
+    written (publish-then-review), but stamped honestly so it is distinguishable
+    from a page that actually cleared the gate.
+
+    `findings` are the ones still open on the final round. They are returned, not
+    swallowed: a page stamped `-with-findings` with no record of WHAT was found
+    tells a maintainer only that something is wrong, which is not reviewable.
     """
     src = lib.source_path(cfg, rel)
     text = open(src, encoding="utf-8").read()
@@ -240,8 +267,9 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool]:
     # --- Stages 2-4: gate with revise loop ---
     max_rounds = max(cfg["review"]["max_rounds"], cfg["back_translation"]["max_retries"])
     gate_passed = False
+    findings: list[dict] = []
     for _ in range(max_rounds + 1):
-        findings: list[dict] = []
+        findings = []
 
         # 2. back-translation round-trip
         if cfg["back_translation"]["enabled"]:
@@ -315,7 +343,7 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool]:
         cfg["review_status_value"] if gate_passed else f"{cfg['review_status_value']}-with-findings")
     fm_yaml = yaml.safe_dump(out_fm, allow_unicode=True, sort_keys=False,
                              default_flow_style=False, width=10 ** 9).strip()
-    return f"---\n{fm_yaml}\n---\n{tr_body}\n", gate_passed
+    return f"---\n{fm_yaml}\n---\n{tr_body}\n", gate_passed, findings
 
 
 def main() -> int:
@@ -365,9 +393,11 @@ def main() -> int:
     # token is only needed headless/CI; if neither exists the SDK raises.
 
     clean = with_findings = failed = 0
+    report: list[dict] = []
     for it in items:
         try:
-            result, gate_passed = translate_page(cfg, glossary, lang_by_code[it.lang], it.rel)
+            result, gate_passed, findings = translate_page(
+                cfg, glossary, lang_by_code[it.lang], it.rel)
         except RateLimited as exc:
             print(f"\nsubscription usage limit reached after "
                   f"{clean + with_findings} page(s) — stopping cleanly, resume tomorrow. ({exc})")
@@ -388,6 +418,20 @@ def main() -> int:
         else:
             with_findings += 1
             print(f"  ! findings open {it.lang}: {it.rel} (stamped -with-findings)")
+            for f in findings:
+                print(f"      [{f.get('severity', '?')}/{f.get('from', '?')}] "
+                      f"{f.get('issue', f)}")
+            report.append({"lang": it.lang, "rel": it.rel, "findings": findings})
+
+    if report:
+        # The reviewers' output is the only reason a maintainer can triage a
+        # `-with-findings` page; dropping it on the floor would make the stamp
+        # unactionable. run-daily.sh puts this in the PR body.
+        with open(REPORT_PATH, "w", encoding="utf-8") as fh:
+            fh.write(_format_report(report))
+        print(f"\nopen findings written to {REPORT_PATH}")
+    elif os.path.exists(REPORT_PATH):
+        os.unlink(REPORT_PATH)  # don't let a previous run's report go stale
 
     print(f"\nthis run: {clean} clean, {with_findings} written with open findings, "
           f"{failed} skipped on error")

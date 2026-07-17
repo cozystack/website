@@ -319,6 +319,27 @@ class TestPayloadProtocol(unittest.TestCase):
         self.assertIn("```\ncode\n```", body)
 
 
+class TestFindingsReport(unittest.TestCase):
+    def test_report_names_the_page_and_every_finding(self):
+        md = translate._format_report([{
+            "lang": "ru", "rel": "docs/v1.5/intro.md",
+            "findings": [
+                {"severity": "major", "from": "cozystack-maintainer",
+                 "issue": "'node pool' rendered as 'пул узлов' but glossary says 'узел'"},
+                {"severity": "minor", "from": "technical-editor", "issue": "register drifts formal"},
+            ]}])
+        self.assertIn("ru: docs/v1.5/intro.md", md)
+        self.assertIn("cozystack-maintainer", md)
+        self.assertIn("пул узлов", md)
+        self.assertIn("register drifts formal", md)
+
+    def test_report_survives_a_malformed_finding(self):
+        # Findings come from a model; a finding missing `issue`/`severity` must
+        # still reach the maintainer rather than crash the run after the work.
+        md = translate._format_report([{"lang": "de", "rel": "x.md", "findings": [{}]}])
+        self.assertIn("de: x.md", md)
+
+
 class TestRateLimitMarkers(unittest.TestCase):
     def test_real_limits_are_recognized(self):
         for msg in ("rate_limit_error: too many", "You have hit your usage limit",
