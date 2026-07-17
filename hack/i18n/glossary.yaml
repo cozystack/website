@@ -1,0 +1,114 @@
+# Cozystack translation glossary.
+#
+# Two lists:
+#   do_not_translate — terms kept verbatim in every language (brands, product
+#     names, protocols, CLIs, APIs). The translator is instructed to never
+#     translate, transliterate, or inflect these.
+#   preferred — for terms that DO get translated, the canonical rendering per
+#     language, so translations stay consistent across pages. Derived from the
+#     CNCF Cloud Native Glossary and kubernetes.io localization teams.
+#
+# Code blocks, inline `code`, Hugo shortcodes ({{< >}} / {{% %}}), URLs, and
+# front-matter keys are protected structurally by the pipeline (see lib.py),
+# not via this list.
+
+do_not_translate:
+  # Project / brand
+  - Cozystack
+  - Ænix
+  - Aenix
+  # CNCF ecosystem
+  - Kubernetes
+  - k8s
+  - KubeVirt
+  - Cilium
+  - LINSTOR
+  - Talos
+  - Talos Linux
+  - FluxCD
+  - Flux
+  - Argo CD
+  - VictoriaMetrics
+  - VictoriaLogs
+  - Helm
+  - Prometheus
+  - Grafana
+  - etcd
+  - containerd
+  - CNCF
+  # Vendors / external
+  - VMware
+  - vSphere
+  - Proxmox
+  - OpenStack
+  - AWS
+  - GCP
+  - Azure
+  - Broadcom
+  # Protocols / specs / formats
+  - CSI
+  - CNI
+  - CRI
+  - OCI
+  - API
+  - REST
+  - gRPC
+  - YAML
+  - JSON
+  - TLS
+  - DNS
+  - SBOM
+  - CSAF
+  - VEX
+  - SLSA
+  # Cozystack nouns kept as-is
+  - Package
+  - PackageSource
+  - ApplicationDefinition
+  - Tenant
+  - SchedulingClass
+
+# Preferred translations for translatable terms. Keys are the English term;
+# values are per-language canonical renderings. Omitted languages fall back to
+# the translator's judgement (still consistent within a run via glossary hint).
+preferred:
+  cluster:
+    ru: кластер
+    de: Cluster
+    es: clúster
+    pt-br: cluster
+  node:
+    ru: узел
+    de: Knoten
+    es: nodo
+    pt-br: nó
+  storage:
+    ru: хранилище
+    de: Speicher
+    es: almacenamiento
+    pt-br: armazenamento
+  workload:
+    ru: рабочая нагрузка
+    de: Workload
+    es: carga de trabajo
+    pt-br: carga de trabalho
+  deployment:
+    ru: развёртывание
+    de: Deployment
+    es: despliegue
+    pt-br: implantação
+  virtual machine:
+    ru: виртуальная машина
+    de: virtuelle Maschine
+    es: máquina virtual
+    pt-br: máquina virtual
+  bare metal:
+    ru: bare-metal
+    de: Bare-Metal
+    es: bare metal
+    pt-br: bare metal
+  tenant:
+    ru: тенант
+    de: Mandant
+    es: inquilino (tenant)
+    pt-br: tenant

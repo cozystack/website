@@ -91,6 +91,16 @@ module:
       lang: hi
       files:
         - '! **/_include/*'
+    - source: content/es
+      target: content
+      lang: es
+      files:
+        - '! **/_include/*'
+    - source: content/pt-br
+      target: content
+      lang: pt-br
+      files:
+        - '! **/_include/*'
     # Mount npm dependencies for Docsy
     - source: node_modules/bootstrap
       target: assets/vendor/bootstrap
@@ -156,6 +166,20 @@ languages:
     languageName: हिन्दी
     languageCode: hi
     weight: 5
+    params:
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  es:
+    languageName: Español
+    languageCode: es
+    weight: 6
+    params:
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  pt-br:
+    languageName: Português (Brasil)
+    languageCode: pt-BR
+    weight: 7
     params:
       time_format_default: 2006-01-02
       time_format_blog: 2006-01-02

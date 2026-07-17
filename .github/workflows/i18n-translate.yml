@@ -1,0 +1,87 @@
+name: i18n translate
+
+# Automated translation pipeline. Detects English pages that are new or whose
+# source changed (via source_digest), translates them into every configured
+# language with Claude, and publishes the result. Publish mode is set in
+# hack/i18n/config.yaml (auto_merge → opens a PR and enables auto-merge; content/
+# <lang>/ is exempt from CODEOWNERS so translations merge without a human gate,
+# while code/layouts stay protected).
+
+on:
+  schedule:
+    - cron: "0 3 * * *"          # nightly
+  workflow_dispatch:
+    inputs:
+      lang:
+        description: "Restrict to one language code (blank = all)"
+        required: false
+      limit:
+        description: "Max pages this run (blank = no limit)"
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: i18n-translate
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install anthropic pyyaml
+
+      - name: Refresh Ahrefs keyword maps
+        env:
+          AHREFS_API_KEY: ${{ secrets.AHREFS_API_KEY }}
+        run: python3 hack/i18n/ahrefs_keywords.py ${{ github.event.inputs.lang && format('--lang {0}', github.event.inputs.lang) || '' }}
+
+      - name: Translate missing / stale pages
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 hack/i18n/translate.py \
+            ${{ github.event.inputs.lang && format('--lang {0}', github.event.inputs.lang) || '' }} \
+            ${{ github.event.inputs.limit && format('--limit {0}', github.event.inputs.limit) || '' }}
+
+      - name: Verify i18n freshness & parity
+        run: ./hack/check-i18n.sh
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No translation changes — nothing to publish."
+            exit 0
+          fi
+          BRANCH="i18n/auto-$(git rev-parse --short HEAD)-${GITHUB_RUN_ID}"
+          git config user.name  "cozystack-i18n-bot"
+          git config user.email "noreply@cozystack.io"
+          git checkout -b "$BRANCH"
+          git add content/
+          git commit --signoff -m "i18n: automated translation update
+
+Machine-translated new/updated pages (publish-then-review). Native owners
+ratify asynchronously; source_digest tracks freshness against English."
+          git push origin "$BRANCH"
+          MODE=$(python3 -c "import sys;sys.path.insert(0,'hack/i18n');import lib;print(lib.load_config()['publish_mode'])")
+          gh pr create --base main --head "$BRANCH" \
+            --title "i18n: automated translation update" \
+            --body "Automated by the i18n translation pipeline. Only \`content/<lang>/\` is touched (CODEOWNERS-exempt). Freshness and key parity verified by \`check-i18n.sh\`."
+          if [ "$MODE" = "auto_merge" ]; then
+            gh pr merge "$BRANCH" --auto --squash || \
+              echo "::warning::auto-merge not enabled/allowed by branch protection — PR left open for a maintainer"
+          fi

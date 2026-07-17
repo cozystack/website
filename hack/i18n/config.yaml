@@ -1,0 +1,93 @@
+# Cozystack website translation pipeline — configuration.
+#
+# Single source of truth for the automated i18n pipeline: which languages
+# exist, which model translates which content, and which paths are in scope.
+# Consumed by hack/i18n/*.py and .github/workflows/i18n-translate.yml.
+
+source_lang: en
+content_dir: content
+
+# Target languages. `code` must match the Hugo `languages:` key in hugo.yaml
+# and the i18n/<code>.toml filename. `hreflang` is the BCP-47 tag emitted in
+# <link rel="alternate" hreflang>.
+languages:
+  - code: de
+    name: Deutsch
+    hreflang: de
+  - code: ru
+    name: Русский
+    hreflang: ru
+  - code: zh-cn
+    name: 简体中文
+    hreflang: zh-Hans
+  - code: hi
+    name: हिन्दी
+    hreflang: hi
+  - code: es
+    name: Español
+    hreflang: es
+  - code: pt-br
+    name: Português (Brasil)
+    hreflang: pt-BR
+
+# Model routing. All content is translated with Opus for maximum quality
+# (decision 2026-07-17). `hero_globs` may still be split onto a stronger tier
+# later; today both point at the same model so the routing is a no-op we can
+# tune without touching code.
+model:
+  default: claude-opus-4-8
+  hero: claude-opus-4-8
+  # Pages matched by these globs are "hero" pages (transcreation, not literal
+  # translation): landing, top-level docs indexes, blog announcements.
+  hero_globs:
+    - "_index.html"
+    - "_index.md"
+    - "blog/**/index.md"
+  max_output_tokens: 16000
+  temperature: 0.2
+
+# Scope: only the latest docs version is translated; older versions stay
+# English (they are noindex anyway). `next` (unreleased) is never translated.
+#
+# Blog: only recent posts are worth translating × 6 languages. `blog_since`
+# drops any blog post whose date-prefixed path (blog/YYYY-MM-DD-…) is older
+# than this cutoff. Bump it (or have the workflow compute now-60d) to roll the
+# window forward. Set to empty string to translate the entire blog archive.
+blog_since: "2026-05-17"
+translate_globs:
+  - "_index.html"
+  - "_index.md"
+  - "*.md"
+  - "docs/v1.4/**"
+  - "blog/**"
+  - "support.md"
+exclude_globs:
+  - "docs/v0/**"
+  - "docs/v1.0/**"
+  - "docs/v1.1/**"
+  - "docs/v1.2/**"
+  - "docs/v1.3/**"
+  - "docs/next/**"
+  - "**/_include/**"
+
+# Publish mode: the pipeline auto-merges translations because content/<lang>/
+# is exempt from CODEOWNERS (see .github/CODEOWNERS). Code/layouts stay gated.
+#   auto_merge: open a PR and enable GitHub auto-merge
+#   pr_only:    open a PR and stop (a human merges)
+publish_mode: auto_merge
+
+# Ahrefs SEO/GEO. Keyword maps localize SEO front matter (title/description/
+# keywords) via transcreation rather than literal translation. Regenerated on
+# demand; requires AHREFS_API_KEY. Absent a key, the pipeline falls back to
+# literal SEO translation and logs a warning (never hard-fails).
+ahrefs:
+  enabled: true
+  keyword_map_dir: hack/i18n/keyword-maps
+  # Ahrefs country codes per language, for volume/difficulty lookups.
+  country_by_lang:
+    de: de
+    ru: ru
+    zh-cn: cn
+    hi: in
+    es: es
+    pt-br: br

@@ -37,6 +37,19 @@
 <link rel="canonical" href="{{ .Permalink }}" />
 {{- end }}
 
+{{/* SEO: hreflang alternates. Emitted only when a page has translations, so
+     search engines and AI crawlers map the per-language versions to each other.
+     Language codes come from `languageCode` in hugo.yaml (proper BCP-47:
+     zh-Hans, pt-BR, …). English doubles as x-default. */}}
+{{- if gt (len .AllTranslations) 1 }}
+{{- range .AllTranslations }}
+<link rel="alternate" hreflang="{{ .Language.LanguageCode }}" href="{{ .Permalink }}" />
+{{- if eq .Language.Lang "en" }}
+<link rel="alternate" hreflang="x-default" href="{{ .Permalink }}" />
+{{- end }}
+{{- end }}
+{{- end }}
+
 {{/* JSON-LD Organization (every page) */}}
 <script type="application/ld+json">
 {
