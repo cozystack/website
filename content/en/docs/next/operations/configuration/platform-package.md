@@ -148,6 +148,12 @@ gateway:
 | --- | --- | --- |
 | `scheduling.globalAppTopologySpreadConstraints` | `""` | Global pod topology spread constraints applied to all managed applications. |
 
+#### Backup storage
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `backupStorage` | `{}` | S3 coordinates for the platform-managed `cozy-default` BackupClass. The whole block is forwarded into the `backupstrategy-controller` component and deep-merged over its chart defaults; keys include `provisionBucket`, `bucketName`, `endpoint`, `region`, `forcePathStyle`, `systemSecretName`, and `systemNamespaces`. See [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) for the knob-by-knob reference. |
+
 #### Branding
 
 | Value | Default | Description |
