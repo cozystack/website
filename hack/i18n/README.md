@@ -88,6 +88,30 @@ python3 hack/i18n/translate.py --dry-run # plan, no model calls
 ./hack/check-i18n.sh                      # freshness + i18n key parity
 ```
 
+### Throughput, measured
+
+The backlog is **183 pages × 4 languages = 720 jobs**. Each job is 5–15 Opus
+calls (translate, back-translate, compare, two reviewers, and a revise round per
+finding), so the backlog is on the order of 4k–11k model calls.
+
+Measured pilots on a subscription, both on the same ~2500-word release blog post:
+
+| Language | Wall clock | Outcome |
+|----------|-----------|---------|
+| de | 2m54s | cleared the gate on the first round |
+| ru | 11m24s | went through the revise loop, findings still open |
+
+So per-page cost is dominated by **whether the revise loop runs**, not by the
+page alone — a clean page is ~3 min, one that keeps failing review is ~4× that.
+Taking the range against 720 jobs puts the backlog at roughly 35–140 hours of
+wall clock, before daily usage limits enter the picture at all. That is weeks to
+months on a personal subscription, which is why the plan is to bootstrap the
+backlog with `auth: api-key` on an organization account and leave the
+daily/weekly cadence to handle only steady-state drift afterwards.
+
+Most docs pages are far shorter than a release blog post, so treat these as an
+upper bound rather than an average.
+
 ## Files
 
 | Path | Purpose |
