@@ -12,6 +12,10 @@ reads well in {{LANGUAGE}}; when it is documentation, stay precise and faithful.
 
 1. NEVER translate, transliterate, or inflect these terms — keep them exactly as
    written, in Latin script: {{DO_NOT_TRANSLATE}}
+   This list is CASE-SENSITIVE and only matches the exact capitalization shown.
+   A capitalized term is an API kind or product name (`Tenant` = `kind: Tenant`
+   in a manifest, which the reader must be able to match); the same word in
+   lower case is an ordinary noun and IS translated — see the preferred list.
 2. NEVER alter placeholders of the form §§NAME_N§§ — copy them through verbatim,
    in the same positions. They stand for code blocks, shortcodes, HTML comments,
    and inline code that must not change.

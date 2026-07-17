@@ -169,6 +169,93 @@ class TestNestedFrontMatter(unittest.TestCase):
         self.assertEqual(lib.merge_target_only_keys({"title": "T"}, None), {"title": "T"})
 
 
+class TestGlossary(unittest.TestCase):
+    def setUp(self):
+        self.g = lib.load_glossary()
+        self.cfg = lib.load_config()
+
+    def test_every_enabled_language_has_every_preferred_term(self):
+        # zh-cn and hi shipped with zero preferred terms while being live, so
+        # their translations had nothing keeping terminology consistent.
+        pref = self.g["preferred"]
+        for lang in (l["code"] for l in self.cfg["languages"]):
+            missing = sorted(t for t, p in pref.items() if lang not in p)
+            self.assertEqual(missing, [], f"{lang} has no preferred rendering for: {missing}")
+
+    def test_terms_in_both_lists_differ_only_by_case(self):
+        # `Tenant` (API kind, verbatim) vs `tenant` (ordinary noun, translated)
+        # is deliberate. Any OTHER overlap is a genuine contradiction: the
+        # translator would be told both to keep and to translate the same term.
+        dnt = {t.lower(): t for t in self.g["do_not_translate"]}
+        for term in self.g["preferred"]:
+            clash = dnt.get(term.lower())
+            if clash is not None:
+                self.assertNotEqual(
+                    clash, term,
+                    f"{term!r} is in do_not_translate AND preferred with identical case")
+
+    def test_do_not_translate_has_no_duplicates(self):
+        dnt = self.g["do_not_translate"]
+        self.assertEqual(len(dnt), len(set(dnt)))
+
+
+class TestRealContentScope(unittest.TestCase):
+    """Runs against the actual content tree, so drift in the site shows up here."""
+
+    def setUp(self):
+        self.cfg = lib.load_config()
+        self.files = lib.iter_source_files(self.cfg)
+
+    def test_scope_is_not_empty(self):
+        self.assertGreater(len(self.files), 50)
+
+    def test_no_out_of_scope_paths_leak_in(self):
+        latest = lib.latest_docs_version(self.cfg)
+        for rel in self.files:
+            self.assertFalse(rel.startswith("oss-health/"), rel)
+            self.assertNotIn("/_include/", f"/{rel}")
+            if rel.startswith("docs/"):
+                self.assertTrue(rel.startswith(f"docs/{latest}/"), f"stale docs version: {rel}")
+
+    def test_pipeline_languages_match_hugo(self):
+        # A language translated but not declared in hugo.yaml produces a
+        # content tree Hugo never builds; declared but not translated produces
+        # empty indexable pages. Both are silent.
+        import yaml as _yaml
+        hugo = _yaml.safe_load(open(os.path.join(lib.REPO_ROOT, "hugo.yaml"), encoding="utf-8"))
+        declared = set(hugo["languages"]) - {self.cfg["source_lang"]}
+        configured = {l["code"] for l in self.cfg["languages"]}
+        self.assertEqual(configured, declared,
+                         "hack/i18n/config.yaml and hugo.yaml disagree on which "
+                         "languages are enabled")
+
+    def test_no_unknown_user_visible_frontmatter_keys(self):
+        # Guards against a new user-visible field (like `lede` was) being added
+        # to content and silently shipping in English on every localized page.
+        known_visible = set(lib.TRANSLATABLE_FRONTMATTER_KEYS) | set(lib.TRANSLATABLE_LIST_KEYS)
+        # Structural or deliberately-untranslated keys.
+        allowed = {
+            "weight", "aliases", "date", "slug", "images", "author", "draft", "type",
+            "layout", "menu", "cascade", "taxonomyCloud", "source_digest",
+            "translation_status", "translation_review", "l10n",
+            # taxonomy terms: translating them would fork the taxonomy
+            "article_types", "topics",
+            # containers whose translatable children are reached by recursion
+            "benefits", "features",
+        }
+        seen = set()
+        for rel in self.files:
+            fm, _, _ = lib.split_frontmatter(
+                open(lib.source_path(self.cfg, rel), encoding="utf-8").read())
+            if isinstance(fm, dict):
+                seen |= set(fm)
+        unknown = seen - known_visible - allowed
+        self.assertEqual(unknown, set(),
+                         f"unrecognized front-matter key(s) {sorted(unknown)}: decide whether "
+                         f"they are user-visible (add to lib.TRANSLATABLE_* ) or structural "
+                         f"(add to `allowed` here)")
+
+
 class TestVerdictParsing(unittest.TestCase):
     def test_pass_and_revise(self):
         self.assertEqual(translate._parse_verdict('{"verdict": "pass"}', "r")["verdict"], "pass")

@@ -76,7 +76,7 @@ model:
 # version list has to be maintained. Everything under docs/ that is not the
 # latest version (including `next`) is skipped.
 #
-# Blog: only recent posts are worth translating × 6 languages. `blog_since`
+# Blog: only recent posts are worth translating × every language. `blog_since`
 # drops any blog post whose date-prefixed path (blog/YYYY-MM-DD-…) is older
 # than this cutoff. Bump it (or have the workflow compute now-60d) to roll the
 # window forward. Set to empty string to translate the entire blog archive.
@@ -92,6 +92,15 @@ translate_globs:
   - "blog/**"
 exclude_globs:
   - "**/_include/**"
+  # oss-health pages are shells: front matter plus `layout: oss-health-app`,
+  # which renders a dashboard client-side from live English data (devstats,
+  # OpenSSF, telemetry). Translating them localizes the page chrome around a
+  # dashboard that stays English — a half-translated page — and they are
+  # high-churn, low-search-value. They also carry the only `lede` front-matter
+  # field on the site; excluding them is what keeps the translatable-key list
+  # honest (see TRANSLATABLE_FRONTMATTER_KEYS in lib.py). Revisit if the
+  # dashboards ever get localized data.
+  - "oss-health/**"
 
 # Quality gate — runs on EVERY page (not just hero) before it is written.
 # Each page goes through: translate -> back-translate -> two native reviewers
