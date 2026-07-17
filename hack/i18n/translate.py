@@ -350,6 +350,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--lang")
     ap.add_argument("--limit", type=int)
+    ap.add_argument("--path", help="translate only this exact source rel "
+                                   "(e.g. docs/v1.5/getting-started/install-kubernetes.md)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -361,6 +363,12 @@ def main() -> int:
               f"{', '.join(lang_by_code)}", file=sys.stderr)
         return 1
     items = lib.build_worklist(cfg, only_lang=args.lang)
+    if args.path:
+        items = [it for it in items if it.rel == args.path]
+        if not items:
+            print(f"::error::--path '{args.path}' matched nothing in the worklist "
+                  f"(already translated, out of scope, or misspelled)", file=sys.stderr)
+            return 1
     if args.limit:
         items = items[: args.limit]
 
@@ -392,21 +400,38 @@ def main() -> int:
     # `claude` CLI is logged in on this machine — the Agent SDK picks that up. The
     # token is only needed headless/CI; if neither exists the SDK raises.
 
+    # A protocol error is usually the model non-deterministically dropping a
+    # placeholder on a placeholder-dense page (a long docs page can have 60+
+    # opaque §§ tokens). It tends to succeed on a fresh attempt, so retry within
+    # the run rather than only next day — otherwise such a page can fail every
+    # daily run forever, never publishing while re-spending quota each time.
+    PROTOCOL_ATTEMPTS = 3
+
     clean = with_findings = failed = 0
     report: list[dict] = []
     for it in items:
         try:
-            result, gate_passed, findings = translate_page(
-                cfg, glossary, lang_by_code[it.lang], it.rel)
+            for attempt in range(1, PROTOCOL_ATTEMPTS + 1):
+                try:
+                    result, gate_passed, findings = translate_page(
+                        cfg, glossary, lang_by_code[it.lang], it.rel)
+                    break
+                except ProtocolError as exc:
+                    if attempt == PROTOCOL_ATTEMPTS:
+                        raise
+                    print(f"  … retry {attempt}/{PROTOCOL_ATTEMPTS - 1} "
+                          f"{it.lang}: {it.rel} — {exc}", file=sys.stderr)
         except RateLimited as exc:
             print(f"\nsubscription usage limit reached after "
                   f"{clean + with_findings} page(s) — stopping cleanly, resume tomorrow. ({exc})")
             break
         except ProtocolError as exc:
-            # One bad page must not stall the run; it stays in the worklist and is
-            # retried tomorrow (nothing was written, so no digest was stamped).
+            # Still malformed after every attempt: skip it. It stays in the
+            # worklist (nothing written, no digest stamped) and is retried next
+            # run — but the daily run is not stalled on it.
             failed += 1
-            print(f"::warning::skipped {it.lang}: {it.rel} — {exc}", file=sys.stderr)
+            print(f"::warning::skipped {it.lang}: {it.rel} after {PROTOCOL_ATTEMPTS} "
+                  f"attempts — {exc}", file=sys.stderr)
             continue
         dest = lib.target_path(cfg, it.lang, it.rel)
         os.makedirs(os.path.dirname(dest), exist_ok=True)

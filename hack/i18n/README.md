@@ -112,6 +112,18 @@ daily/weekly cadence to handle only steady-state drift afterwards.
 Most docs pages are far shorter than a release blog post, so treat these as an
 upper bound rather than an average.
 
+### Placeholder-dense pages
+
+Code, shortcodes, and inline code are swapped for opaque `§§…§§` placeholders
+before translation and restored after (see `protect`/`restore` in `lib.py`). A
+long, code-heavy page can carry 60+ of them, and a model occasionally drops one.
+The gate refuses to write a page with a dropped or duplicated placeholder — a
+silently deleted code block is worse than a retry — so `translate.py` retries
+such a page a few times within the run (the loss is non-deterministic and
+usually clears). A page that still fails every attempt is skipped and stays in
+the worklist; it is not stalled on, but it also will not publish until an attempt
+succeeds. A page that reproducibly fails is a signal to translate it by hand.
+
 ## Files
 
 | Path | Purpose |
