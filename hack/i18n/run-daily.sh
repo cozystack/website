@@ -53,30 +53,60 @@ echo "== i18n daily run $(date -u +%Y-%m-%dT%H:%MZ) =="
 # Verify freshness + i18n key parity before publishing.
 ./hack/check-i18n.sh
 
-if git diff --quiet -- content/; then
+# `git diff --quiet` only sees TRACKED files — every brand-new translation is
+# untracked, so it would report "nothing to publish" forever. Use porcelain,
+# which covers untracked too, and scope it to the localized trees only so an
+# unrelated edit in content/en never rides along in the bot's PR.
+LANG_PATHS=()
+while IFS= read -r code; do LANG_PATHS+=("content/$code"); done < <(
+  "$PY" - <<'PY'
+import sys; sys.path.insert(0, "hack/i18n"); import lib
+print("\n".join(l["code"] for l in lib.load_config()["languages"]))
+PY
+)
+if [ -z "$(git status --porcelain -- "${LANG_PATHS[@]}")" ]; then
   echo "no new translations today — nothing to publish."
   exit 0
 fi
 
+# Always branch from a fresh origin/main; otherwise day 2 branches off day 1's
+# branch and carries its commits (and conflicts after day 1 squash-merges).
+git fetch --quiet origin main
 BRANCH="i18n/daily-$(date -u +%Y%m%d)"
 git config user.name  "$(git config user.name  || echo cozystack-i18n)"
 git config user.email "$(git config user.email || echo noreply@cozystack.io)"
-git checkout -B "$BRANCH"
-git add content/
+git stash push --include-untracked --quiet -- "${LANG_PATHS[@]}"
+git checkout -B "$BRANCH" origin/main
+git stash pop --quiet
+
+git add -- "${LANG_PATHS[@]}"
+if git diff --cached --quiet; then
+  echo "nothing staged after all — aborting publish."
+  exit 0
+fi
 git commit --signoff -m "i18n: daily machine-reviewed translation update ($(date -u +%Y-%m-%d))
 
-Translated + back-translation checked + reviewed by two native virtual
-reviewers (technical editor + Cozystack maintainer). Native human owners
-ratify asynchronously; source_digest tracks freshness."
+Machine review gate: translation, back-translation meaning check, and two
+native virtual reviewers (technical editor + Cozystack maintainer). Pages that
+did not clear the gate are stamped auto-reviewed-with-findings. Native human
+owners ratify asynchronously; source_digest tracks freshness."
 git push -u origin "$BRANCH"
 
-# Open the PR if it doesn't exist yet for today's branch.
+PUBLISH_MODE="$("$PY" - <<'PY'
+import sys; sys.path.insert(0, "hack/i18n"); import lib
+print(lib.load_config().get("publish_mode", "pr_only"))
+PY
+)"
+
 if ! gh pr view "$BRANCH" >/dev/null 2>&1; then
   gh pr create --base main --head "$BRANCH" \
     --title "i18n: daily translation update ($(date -u +%Y-%m-%d))" \
-    --body "Automated daily run on the maintainer's Claude subscription. Only \`content/<lang>/\` is touched (CODEOWNERS-exempt). Every page passed back-translation + two native reviewers (editor + maintainer). Freshness/parity verified by \`check-i18n.sh\`." || true
-  # content/<lang> is CODEOWNERS-exempt → auto-merge is allowed.
+    --body "Automated daily run on the maintainer's Claude subscription. Touches \`content/<lang>/\` only. Each page went through the machine review gate (back-translation meaning check + native technical-editor and Cozystack-maintainer reviewers); pages that did not clear it are stamped \`auto-reviewed-with-findings\`. Freshness/parity verified by \`check-i18n.sh\`." || true
+fi
+if [ "$PUBLISH_MODE" = "auto_merge" ]; then
   gh pr merge "$BRANCH" --auto --squash || \
     echo "auto-merge not enabled by branch protection — PR left for a maintainer."
+else
+  echo "publish_mode=$PUBLISH_MODE — PR left open for a maintainer to merge."
 fi
 echo "== done =="

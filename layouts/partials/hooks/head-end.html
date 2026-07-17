@@ -13,10 +13,10 @@
 {{/* SEO: canonical + noindex for legacy doc versions.
      Older non-latest doc versions (v0, v1.0, v1.1, …) duplicate content from
      the latest version (v1.2). Without dedup signals, search engines split
-     ranking signals across all five copies. We mark old versions as noindex
+     ranking signals across every copy. We mark old versions as noindex
      (still crawlable for users following links) and canonicalize current
      pages to themselves. */}}
-{{- $latestVersion := .Site.Params.latest_version_id | default "v1.2" -}}
+{{- $latestVersion := .Site.Params.latest_version_id -}}
 {{- $isOldDocsVersion := false -}}
 {{- range .Site.Params.versions -}}
   {{- if and .id (ne .id $latestVersion) (ne .id "next") -}}

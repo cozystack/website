@@ -7,11 +7,11 @@ already enforces, so the automated pipeline and the CI lint agree by constructio
 
 from __future__ import annotations
 
-import fnmatch
 import hashlib
 import os
 import re
 from dataclasses import dataclass
+from pathlib import PurePosixPath
 
 import yaml
 
@@ -53,7 +53,45 @@ def sha256_file(path: str) -> str:
 
 
 def _matches_any(rel: str, globs: list[str]) -> bool:
-    return any(fnmatch.fnmatch(rel, g) or fnmatch.fnmatch(rel, f"**/{g}") for g in globs)
+    """Match rel against glob patterns with sane path semantics.
+
+    `fnmatch` treats `*` as matching `/` too, so a bare `*.md` silently matches
+    `docs/v9/deep/page.md`. PurePosixPath.match gives proper segment semantics:
+    `*.md` matches the basename only, and `docs/**` matches the subtree.
+    """
+    p = PurePosixPath(rel)
+    for g in globs:
+        if p.match(g):
+            return True
+        # PurePosixPath.match has no `**` recursion; expand `a/**` to a prefix test.
+        if g.endswith("/**") and (rel == g[:-3] or rel.startswith(g[:-2])):
+            return True
+        if g.startswith("**/") and p.match(g[3:]):
+            return True
+    return False
+
+
+def latest_docs_version(cfg: dict) -> str | None:
+    """Read `params.latest_version_id` from hugo.yaml — the single source of truth.
+
+    Hardcoding the version in this pipeline's config guarantees it drifts on the
+    next release and quietly translates a noindex'd version.
+    """
+    path = os.path.join(REPO_ROOT, "hugo.yaml")
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        hugo = yaml.safe_load(fh) or {}
+    return ((hugo.get("params") or {}).get("latest_version_id")) or None
+
+
+def _docs_out_of_scope(rel: str, latest: str | None) -> bool:
+    """True for any docs page that is not in the latest version (incl. `next`)."""
+    if not rel.startswith("docs/"):
+        return False
+    if latest is None:
+        return False
+    return not rel.startswith(f"docs/{latest}/")
 
 
 _BLOG_DATE_RE = re.compile(r"^blog/(\d{4}-\d{2}-\d{2})-")
@@ -70,6 +108,7 @@ def _blog_too_old(rel: str, blog_since: str) -> bool:
 def iter_source_files(cfg: dict) -> list[str]:
     """Relative paths (under content/en) in scope for translation."""
     src_root = os.path.join(REPO_ROOT, cfg["content_dir"], cfg["source_lang"])
+    latest = latest_docs_version(cfg)
     out: list[str] = []
     for dirpath, _dirs, files in os.walk(src_root):
         for name in files:
@@ -80,6 +119,8 @@ def iter_source_files(cfg: dict) -> list[str]:
             if cfg.get("exclude_globs") and _matches_any(rel, cfg["exclude_globs"]):
                 continue
             if _blog_too_old(rel, cfg.get("blog_since", "")):
+                continue
+            if _docs_out_of_scope(rel, latest):
                 continue
             if _matches_any(rel, cfg["translate_globs"]):
                 out.append(rel)
@@ -94,10 +135,6 @@ def target_path(cfg: dict, lang: str, rel: str) -> str:
     return os.path.join(REPO_ROOT, cfg["content_dir"], lang, rel)
 
 
-def is_hero(cfg: dict, rel: str) -> bool:
-    return _matches_any(rel, cfg["model"].get("hero_globs", []))
-
-
 @dataclass
 class WorkItem:
     lang: str
@@ -109,8 +146,14 @@ def recorded_digest(path: str) -> str | None:
     """Read source_digest from a translated file's front matter, if present."""
     if not os.path.exists(path):
         return None
+    # Read the whole front matter, not a fixed prefix: a long front matter would
+    # push source_digest past a 4096-byte cut, the page would look permanently
+    # stale, and it would be re-translated every single day.
     with open(path, encoding="utf-8") as fh:
-        head = fh.read(4096)
+        head = fh.read()
+    fm_end = head.find("\n---", 4)
+    if fm_end != -1:
+        head = head[:fm_end]
     m = re.search(r"^source_digest:\s*\"?sha256:([0-9a-fA-F]+)\"?", head, re.MULTILINE)
     return m.group(1) if m else None
 

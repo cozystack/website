@@ -7,19 +7,28 @@
 source_lang: en
 content_dir: content
 
-# Auth: the maintainer's Claude subscription (Max), driven through the Claude
-# Agent SDK (`claude-agent-sdk`), which reads CLAUDE_CODE_OAUTH_TOKEN. The base
-# `anthropic` SDK can NOT use a subscription (metered API only), so translate.py
-# calls the Agent SDK. Setup once: `claude setup-token` -> export the token ->
-# `unset ANTHROPIC_API_KEY` (it would shadow the subscription). See run-daily.sh.
+# Auth. Two supported modes — pick one; switching is a config change only, the
+# code path is identical:
+#   oauth-subscription : a Claude subscription (Max) via the Claude Agent SDK.
+#                        No metered billing. Credential = a logged-in `claude`
+#                        CLI on the runner, or CLAUDE_CODE_OAUTH_TOKEN
+#                        (`claude setup-token`) for headless/CI. The run refuses
+#                        to start if ANTHROPIC_API_KEY is set, since that would
+#                        shadow the subscription and bill metered API.
+#   api-key            : metered Claude API billed to an organization account.
+#                        Requires ANTHROPIC_API_KEY. Prefer an org-owned key
+#                        (not a personal one) so the pipeline does not depend on
+#                        one individual.
+#
+# Current plan: bootstrap the backlog on a maintainer's subscription, then move
+# to an organization-owned API key once it is provisioned — see README
+# "Ownership and continuity".
 auth: oauth-subscription
 
-# Cadence: run daily until the subscription's usage limits are hit. On a 429 /
-# rate-limit the pipeline stops cleanly (does not error the run) and resumes the
-# next day — pages are written atomically (only after the full review gate
-# passes), so an interrupted run never leaves a half-processed page.
-rate_limit:
-  stop_on_limit: true
+# Cadence: run daily until the account's usage limit is hit. On a usage-limit
+# error the pipeline stops cleanly (exit 0) and resumes the next day. Pages are
+# written only after the review gate finishes, so an interrupted run never
+# leaves a half-processed page.
 
 # Target languages. `code` must match the Hugo `languages:` key in hugo.yaml
 # and the i18n/<code>.toml filename. `hreflang` is the BCP-47 tag emitted in
@@ -44,44 +53,37 @@ languages:
     name: Português (Brasil)
     hreflang: pt-BR
 
-# Model routing. All content is translated with Opus for maximum quality
-# (decision 2026-07-17). `hero_globs` may still be split onto a stronger tier
-# later; today both point at the same model so the routing is a no-op we can
-# tune without touching code.
+# Model. Every stage — translation, back-translation, both reviewers, revision —
+# runs on Opus for maximum quality (decision 2026-07-17). Max output tokens and
+# sampling are left at the Agent SDK defaults; the review gate, not a token cap,
+# is what bounds quality here.
 model:
   default: claude-opus-4-8
-  hero: claude-opus-4-8
-  # Pages matched by these globs are "hero" pages (transcreation, not literal
-  # translation): landing, top-level docs indexes, blog announcements.
-  hero_globs:
-    - "_index.html"
-    - "_index.md"
-    - "blog/**/index.md"
-  max_output_tokens: 16000
-  temperature: 0.2
 
-# Scope: only the latest docs version is translated; older versions stay
-# English (they are noindex anyway). `next` (unreleased) is never translated.
+# Scope.
+#
+# Docs: ONLY the latest version is translated — older versions are noindex, so
+# translating them burns the daily budget on pages search engines ignore. The
+# version is NOT hardcoded here: lib.py reads `params.latest_version_id` from
+# hugo.yaml, so a release bump moves the pipeline automatically and no stale
+# version list has to be maintained. Everything under docs/ that is not the
+# latest version (including `next`) is skipped.
 #
 # Blog: only recent posts are worth translating × 6 languages. `blog_since`
 # drops any blog post whose date-prefixed path (blog/YYYY-MM-DD-…) is older
 # than this cutoff. Bump it (or have the workflow compute now-60d) to roll the
 # window forward. Set to empty string to translate the entire blog archive.
 blog_since: "2026-05-17"
+# Patterns are matched with pathlib semantics (right-anchored): a bare "*.md"
+# means "any markdown page at any depth", "docs/**" means the docs subtree.
+# Effective scope = these globs, minus exclude_globs, minus non-latest docs
+# versions, minus blog posts older than blog_since.
 translate_globs:
   - "_index.html"
-  - "_index.md"
   - "*.md"
-  - "docs/v1.4/**"
+  - "docs/**"        # narrowed to the latest version by lib.py (see above)
   - "blog/**"
-  - "support.md"
 exclude_globs:
-  - "docs/v0/**"
-  - "docs/v1.0/**"
-  - "docs/v1.1/**"
-  - "docs/v1.2/**"
-  - "docs/v1.3/**"
-  - "docs/next/**"
   - "**/_include/**"
 
 # Quality gate — runs on EVERY page (not just hero) before it is written.

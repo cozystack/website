@@ -43,10 +43,17 @@ jobs:
         env:
           # Subscription OAuth token from `claude setup-token` — NOT an API key.
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Inputs go through env, never interpolated into the shell: a `${{ }}`
+          # expansion in `run:` lets anyone with write access inject commands and
+          # exfiltrate the token above.
+          LANG_INPUT: ${{ github.event.inputs.lang }}
+          LIMIT_INPUT: ${{ github.event.inputs.limit }}
         run: |
-          python3 hack/i18n/translate.py \
-            ${{ github.event.inputs.lang && format('--lang {0}', github.event.inputs.lang) || '' }} \
-            ${{ github.event.inputs.limit && format('--limit {0}', github.event.inputs.limit) || '' }}
+          set -euo pipefail
+          args=()
+          [ -n "$LANG_INPUT" ] && args+=(--lang "$LANG_INPUT")
+          [ -n "$LIMIT_INPUT" ] && args+=(--limit "$LIMIT_INPUT")
+          python3 hack/i18n/translate.py "${args[@]}"
 
       - name: Verify i18n freshness & parity
         run: ./hack/check-i18n.sh
