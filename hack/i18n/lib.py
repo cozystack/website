@@ -7,6 +7,7 @@ already enforces, so the automated pipeline and the CI lint agree by constructio
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import os
 import re
@@ -19,9 +20,16 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yaml")
 GLOSSARY_PATH = os.path.join(os.path.dirname(__file__), "glossary.yaml")
 
-# Front-matter values we translate. Everything else (slug, date, weight,
-# aliases, images, source_digest, params, …) is preserved verbatim.
+# Front-matter values we translate, AT ANY DEPTH. The landing page keeps
+# user-visible copy in nested structures (taglines[], benefits[].title,
+# features[].description, seo.title …) which Hugo renders into the hero and the
+# cards — translating only top-level keys would copy the English hero verbatim
+# into every locale and silently revert hand-translated pages.
+# Everything else (slug, date, weight, aliases, images, icon, source_digest, …)
+# is preserved verbatim.
 TRANSLATABLE_FRONTMATTER_KEYS = ("title", "linkTitle", "description", "summary")
+# Keys whose value is a list of user-visible strings, each translated.
+TRANSLATABLE_LIST_KEYS = ("taglines", "keywords")
 
 # Protected spans: replaced with opaque placeholders before the model sees the
 # text, restored afterwards. Order matters (fenced code before inline code).
@@ -53,11 +61,17 @@ def sha256_file(path: str) -> str:
 
 
 def _matches_any(rel: str, globs: list[str]) -> bool:
-    """Match rel against glob patterns with sane path semantics.
+    """Match rel against glob patterns with path (not string) semantics.
 
-    `fnmatch` treats `*` as matching `/` too, so a bare `*.md` silently matches
-    `docs/v9/deep/page.md`. PurePosixPath.match gives proper segment semantics:
-    `*.md` matches the basename only, and `docs/**` matches the subtree.
+    PurePosixPath.match is right-anchored and segment-aware: `*.md` matches the
+    BASENAME, so it matches a .md page at any depth (this is intended — see
+    `translate_globs` in config.yaml), while `docs/*` matches one level only
+    rather than silently swallowing the whole subtree the way fnmatch's `*`
+    does by matching `/` too.
+
+    Breadth here is deliberate: `*.md` casts wide and scope is then narrowed by
+    exclude_globs, _docs_out_of_scope, and _blog_too_old. Those are the checks
+    that bound the work, not this one.
     """
     p = PurePosixPath(rel)
     for g in globs:
@@ -71,25 +85,31 @@ def _matches_any(rel: str, globs: list[str]) -> bool:
     return False
 
 
-def latest_docs_version(cfg: dict) -> str | None:
+def latest_docs_version(cfg: dict) -> str:
     """Read `params.latest_version_id` from hugo.yaml — the single source of truth.
 
-    Hardcoding the version in this pipeline's config guarantees it drifts on the
-    next release and quietly translates a noindex'd version.
+    FAILS CLOSED: if hugo.yaml or the key is missing/renamed we raise rather than
+    return None. Returning None would make _docs_out_of_scope a no-op and quietly
+    pull every old, noindex'd docs version (and `next`) into scope — 7× the work,
+    burning quota on pages search engines ignore, and nobody would notice for
+    weeks. Hardcoding the version here would drift for the same reason.
     """
     path = os.path.join(REPO_ROOT, "hugo.yaml")
     if not os.path.exists(path):
-        return None
+        raise RuntimeError(f"hugo.yaml not found at {path}: cannot determine the latest "
+                           f"docs version, refusing to guess the translation scope")
     with open(path, encoding="utf-8") as fh:
         hugo = yaml.safe_load(fh) or {}
-    return ((hugo.get("params") or {}).get("latest_version_id")) or None
+    latest = (hugo.get("params") or {}).get("latest_version_id")
+    if not latest:
+        raise RuntimeError("hugo.yaml has no params.latest_version_id: cannot determine the "
+                           "latest docs version, refusing to guess the translation scope")
+    return str(latest)
 
 
-def _docs_out_of_scope(rel: str, latest: str | None) -> bool:
+def _docs_out_of_scope(rel: str, latest: str) -> bool:
     """True for any docs page that is not in the latest version (incl. `next`)."""
     if not rel.startswith("docs/"):
-        return False
-    if latest is None:
         return False
     return not rel.startswith(f"docs/{latest}/")
 
@@ -193,6 +213,74 @@ def split_frontmatter(text: str) -> tuple[dict | None, str, str]:
     return fm, m.group(2), raw
 
 
+# ---- nested front-matter extraction ----------------------------------------
+
+
+def extract_translatable(fm: dict) -> dict[str, str]:
+    """Walk front matter and return {path: text} for every translatable string.
+
+    Paths look like "title", "taglines[0]", "benefits[1].description", "seo.title"
+    — stable addresses we can send to the model and apply back without touching
+    anything structural (icons, dates, slugs, weights).
+    """
+    out: dict[str, str] = {}
+
+    def walk(node, path: str, key: str | None):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                walk(v, f"{path}.{k}" if path else k, k)
+        elif isinstance(node, list):
+            for i, v in enumerate(node):
+                if isinstance(v, str):
+                    if key in TRANSLATABLE_LIST_KEYS and v.strip():
+                        out[f"{path}[{i}]"] = v
+                else:
+                    walk(v, f"{path}[{i}]", key)
+        elif isinstance(node, str):
+            if key in TRANSLATABLE_FRONTMATTER_KEYS and node.strip():
+                out[path] = node
+
+    walk(fm, "", None)
+    return out
+
+
+_PATH_RE = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
+
+
+def apply_translations(fm: dict, values: dict[str, str]) -> dict:
+    """Return a deep copy of fm with `values` ({path: text}) applied by path."""
+    out = copy.deepcopy(fm)
+    for path, text in values.items():
+        tokens = [(m.group(1), m.group(2)) for m in _PATH_RE.finditer(path)]
+        node = out
+        for i, (name, idx) in enumerate(tokens):
+            last = i == len(tokens) - 1
+            key = name if name is not None else int(idx)
+            try:
+                if last:
+                    node[key] = text
+                else:
+                    node = node[key]
+            except (KeyError, IndexError, TypeError):
+                break  # path no longer exists (source changed) — skip it
+    return out
+
+
+def merge_target_only_keys(out_fm: dict, existing_fm: dict | None) -> dict:
+    """Preserve keys a human added to the translated page but that do not exist
+    in the English source (e.g. a locale-specific `seo:` block, `l10n:` notes).
+
+    Without this, regenerating a page from the English front matter silently
+    deletes work native reviewers did by hand.
+    """
+    if not existing_fm:
+        return out_fm
+    for k, v in existing_fm.items():
+        if k not in out_fm:
+            out_fm[k] = v
+    return out_fm
+
+
 # ---- protect / restore ------------------------------------------------------
 
 
@@ -221,12 +309,3 @@ def restore(text: str, store: dict[str, str]) -> str:
     return text
 
 
-def set_source_digest(front_lines: list[str], digest_hex: str) -> list[str]:
-    """Insert/replace source_digest line in a list of front-matter YAML lines."""
-    line = f'source_digest: "sha256:{digest_hex}"'
-    for i, l in enumerate(front_lines):
-        if l.startswith("source_digest:"):
-            front_lines[i] = line
-            return front_lines
-    front_lines.append(line)
-    return front_lines

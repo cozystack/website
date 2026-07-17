@@ -153,24 +153,47 @@ class ProtocolError(Exception):
     """The model did not answer in the ===FRONTMATTER===/===BODY=== protocol."""
 
 
-def _split_payload_response(out: str, store: dict) -> tuple[dict, str]:
+def _split_payload_response(out: str, store: dict, expect: set[str]) -> tuple[dict, str]:
     """Parse a translate/revise reply. Raises rather than treating a preamble
     ("Here's the translation:") as the page body, and verifies every protected
     placeholder survived — a dropped §§FENCE_n§§ would silently delete a code
-    block from the page."""
+    block from the page.
+
+    The front-matter half is JSON ({path: translated_text}), not `key: value`
+    lines: values are addressed by path so nested copy (taglines[0],
+    benefits[1].description) round-trips, and a multi-line description no longer
+    gets shredded by a line-oriented parser.
+    """
     if "===BODY===" not in out:
         raise ProtocolError(f"no ===BODY=== marker in reply: {out.strip()[:200]}")
     head, body = out.split("===BODY===", 1)
-    tr_fm = {}
-    for line in head.replace("===FRONTMATTER===", "").strip().splitlines():
-        if ":" in line:
-            k, _, v = line.partition(":")
-            tr_fm[k.strip()] = v.strip()
+    head = head.replace("===FRONTMATTER===", "").strip()
+    if expect:
+        m = re.search(r"\{.*\}", head, re.DOTALL)
+        if not m:
+            raise ProtocolError(f"front-matter half is not JSON: {head[:200]}")
+        try:
+            tr_fm = json.loads(m.group(0))
+        except json.JSONDecodeError as exc:
+            raise ProtocolError(f"front-matter JSON did not parse: {exc}") from exc
+        if not isinstance(tr_fm, dict):
+            raise ProtocolError("front-matter JSON is not an object")
+        # Missing keys mean the hero/cards would silently stay English on a page
+        # whose body IS translated — a half-translated page is worse than a retry.
+        missing = expect - set(tr_fm)
+        if missing:
+            raise ProtocolError(f"front-matter keys not returned: {sorted(missing)}")
+        tr_fm = {k: v for k, v in tr_fm.items() if k in expect and isinstance(v, str)}
+    else:
+        tr_fm = {}
     body = body.strip()
-    missing = [tok for tok in store if tok not in body]
-    if missing:
-        raise ProtocolError(f"{len(missing)} protected placeholder(s) lost by the model "
-                            f"(e.g. {missing[0]}) — refusing to write a page with dropped code")
+    bad = {tok: body.count(tok) for tok in store if body.count(tok) != 1}
+    if bad:
+        tok, n = next(iter(bad.items()))
+        what = "lost" if n == 0 else "duplicated"
+        raise ProtocolError(f"{len(bad)} protected placeholder(s) {what} by the model "
+                            f"(e.g. {tok} appears {n}×, expected 1) — refusing to write a page "
+                            f"with dropped or duplicated code")
     return tr_fm, lib.restore(body, store)
 
 
@@ -191,20 +214,28 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool]:
         raise ProtocolError(f"{rel}: could not parse YAML front matter in the English source")
     masked_body, store = lib.protect(body)
 
-    fm_values = {}
-    for k in lib.TRANSLATABLE_FRONTMATTER_KEYS:
-        if isinstance(fm.get(k), str):
-            fm_values[k] = fm[k]
+    # Every user-visible string in the front matter, at any depth, addressed by
+    # path. The landing page renders its hero and cards from taglines[]/
+    # benefits[]/features[]; a top-level-only walk would leave them English.
+    fm_values = lib.extract_translatable(fm)
+    expect = set(fm_values)
+
+    _FM_PROTOCOL = (
+        "Translate the FRONTMATTER values and the BODY below.\n"
+        "FRONTMATTER is a JSON object mapping an opaque path to the English text.\n"
+        "Return a JSON object with the SAME keys and translated values — do not add,\n"
+        "drop, or rename keys, and do not interpret the keys themselves.\n"
+        "Return EXACTLY:\n===FRONTMATTER===\n<json object>\n===BODY===\n<translated body>"
+    )
 
     # --- Stage 1: translate ---
     sys_translate = render(_read(os.path.join(PROMPT_DIR, "translate.md")), lang_cfg, glossary)
     payload = (
-        "Translate the FRONTMATTER values and the BODY below.\n"
-        "Return EXACTLY:\n===FRONTMATTER===\n<key: value per line>\n===BODY===\n<translated body>"
-        + "\n\n===FRONTMATTER===\n" + "\n".join(f"{k}: {v}" for k, v in fm_values.items())
+        _FM_PROTOCOL
+        + "\n\n===FRONTMATTER===\n" + json.dumps(fm_values, ensure_ascii=False, indent=2)
         + "\n===BODY===\n" + masked_body
     )
-    tr_fm, tr_body = _split_payload_response(call(cfg, sys_translate, payload), store)
+    tr_fm, tr_body = _split_payload_response(call(cfg, sys_translate, payload), store, expect)
 
     # --- Stages 2-4: gate with revise loop ---
     max_rounds = max(cfg["review"]["max_rounds"], cfg["back_translation"]["max_retries"])
@@ -223,7 +254,12 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool]:
                 f"ORIGINAL:\n{body}\n\nBACK-TRANSLATION:\n{lib.restore(back_en, tr_store)}"),
                 "back-translation")
             if cmp["verdict"] == "revise":
-                findings += [{**f, "from": "back-translation"} for f in cmp["findings"]]
+                # A "revise" with an empty findings list must still block the gate:
+                # deriving pass/fail from len(findings) would let an explicit
+                # "redo this" verdict through as auto-reviewed.
+                findings += ([{**f, "from": "back-translation"} for f in cmp["findings"]]
+                             or [{"severity": "major", "from": "back-translation",
+                                  "issue": "revise verdict with no findings listed"}])
 
         # 3. two native reviewers
         for reviewer in cfg["review"]["reviewers"]:
@@ -233,7 +269,9 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool]:
                 f"ENGLISH SOURCE:\n{body}\n\n{lang_cfg['name'].upper()} TRANSLATION:\n{tr_body}"),
                 reviewer["id"])
             if verdict["verdict"] == "revise":
-                findings += [{**f, "from": reviewer["id"]} for f in verdict["findings"]]
+                findings += ([{**f, "from": reviewer["id"]} for f in verdict["findings"]]
+                             or [{"severity": "major", "from": reviewer["id"],
+                                  "issue": "revise verdict with no findings listed"}])
 
         if not findings:
             gate_passed = True
@@ -243,19 +281,27 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool]:
         masked_body2, store = lib.protect(tr_body)
         sys_rev = render(_read(os.path.join(PROMPT_DIR, "revise.md")), lang_cfg, glossary)
         rev_payload = (
-            "ENGLISH SOURCE:\n" + body
+            _FM_PROTOCOL
+            + "\n\nENGLISH SOURCE:\n" + body
             + "\n\nCURRENT TRANSLATION:\n===FRONTMATTER===\n"
-            + "\n".join(f"{k}: {v}" for k, v in tr_fm.items())
+            + json.dumps(tr_fm, ensure_ascii=False, indent=2)
             + "\n===BODY===\n" + masked_body2
             + "\n\nFINDINGS:\n" + json.dumps(findings, ensure_ascii=False, indent=2)
         )
-        tr_fm, tr_body = _split_payload_response(call(cfg, sys_rev, rev_payload), store)
+        tr_fm, tr_body = _split_payload_response(call(cfg, sys_rev, rev_payload), store, expect)
 
     # --- assemble ---
-    out_fm = dict(fm)
-    for k in fm_values:
-        if tr_fm.get(k):
-            out_fm[k] = tr_fm[k]
+    # Apply by path onto a copy of the English front matter: structural keys
+    # (slug, date, weight, icon, aliases, images) are carried over untouched.
+    out_fm = lib.apply_translations(fm, tr_fm)
+    # Then re-attach keys a human added to the localized page that do not exist
+    # upstream (a locale-specific `seo:` block, `l10n:` notes). Deriving the page
+    # purely from the English front matter would delete native reviewers' work
+    # every time the source changed.
+    dest = lib.target_path(cfg, lang_cfg["code"], rel)
+    if os.path.exists(dest):
+        existing_fm, _, _ = lib.split_frontmatter(open(dest, encoding="utf-8").read())
+        out_fm = lib.merge_target_only_keys(out_fm, existing_fm)
     out_fm["source_digest"] = f"sha256:{lib.sha256_file(src)}"
     # Stamp honestly: a page that ran out of revise rounds with findings still
     # open is NOT the same as one that cleared the gate.
@@ -320,7 +366,7 @@ def main() -> int:
             print(f"\nsubscription usage limit reached after "
                   f"{clean + with_findings} page(s) — stopping cleanly, resume tomorrow. ({exc})")
             break
-        except (ProtocolError, FileNotFoundError) as exc:
+        except ProtocolError as exc:
             # One bad page must not stall the run; it stays in the worklist and is
             # retried tomorrow (nothing was written, so no digest was stamped).
             failed += 1
