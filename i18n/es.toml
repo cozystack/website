@@ -52,20 +52,14 @@ other = "Leer más"
 [warning]
 other = "Advertencia:"
 
-[translation_english_original]
-other = "original en inglés"
-
 [translation_machine_notice]
 other = "Esta página se tradujo automáticamente y aún no ha sido revisada por un hablante nativo."
 
-[translation_open_issue]
-other = "abre un issue"
+[translation_report_error]
+other = '¿Has encontrado un error? <a href="{{ .IssueURL }}">Abre un issue</a>.'
 
-[translation_report_issue]
-other = "¿Has encontrado un error?"
-
-[translation_see_english]
-other = "Consulta el"
+[translation_see_original]
+other = 'Consulta el <a href="{{ .Link }}">original en inglés</a>.'
 
 [docs_landing_new_users]
 other = "<strong>Nuevos usuarios:</strong> empiece con la <a href=\"{{ .url }}\">documentación de {{ .version }}</a>, la versión estable actual."

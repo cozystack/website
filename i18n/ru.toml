@@ -69,17 +69,11 @@ other = "Актуальная (стабильная)"
 
 [docs_landing_status_previous]
 other = "Предыдущий выпуск"
-[translation_english_original]
-other = "английский оригинал"
-
 [translation_machine_notice]
 other = "Эта страница переведена машинным способом и ещё не проверена носителем языка."
 
-[translation_open_issue]
-other = "создайте issue"
+[translation_report_error]
+other = 'Нашли ошибку? <a href="{{ .IssueURL }}">Создайте issue</a>.'
 
-[translation_report_issue]
-other = "Нашли ошибку?"
-
-[translation_see_english]
-other = "Смотрите"
+[translation_see_original]
+other = 'Смотрите <a href="{{ .Link }}">английский оригинал</a>.'
