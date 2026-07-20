@@ -268,7 +268,7 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
     max_rounds = max(cfg["review"]["max_rounds"], cfg["back_translation"]["max_retries"])
     gate_passed = False
     findings: list[dict] = []
-    for _ in range(max_rounds + 1):
+    for round_no in range(max_rounds + 1):
         findings = []
 
         # 2. back-translation round-trip
@@ -303,6 +303,14 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
 
         if not findings:
             gate_passed = True
+            break
+
+        # Out of rounds: publish what the reviewers last SAW, stamped
+        # `-with-findings`. Revising here instead would ship text that nothing
+        # re-checked, and the findings posted to the weekly PR would describe a
+        # version of the page that no longer exists — the stamp and the report
+        # must always refer to the text actually written.
+        if round_no == max_rounds:
             break
 
         # 4. revise addressing all findings, then re-check
@@ -362,6 +370,18 @@ def main() -> int:
         print(f"::error::unknown --lang '{args.lang}'; configured: "
               f"{', '.join(lang_by_code)}", file=sys.stderr)
         return 1
+    # Orphans first: a deleted English page must take its translations with it,
+    # or they outlive the source forever (the worklist only iterates English
+    # sources). Only `source_digest`-stamped (pipeline-managed) files qualify.
+    orphans = [] if args.path else lib.find_orphan_translations(cfg, only_lang=args.lang)
+    for path in orphans:
+        if args.dry_run:
+            print(f"  [orphan ] would remove {os.path.relpath(path, lib.REPO_ROOT)}")
+        else:
+            os.unlink(path)
+            print(f"  ✗ removed orphan {os.path.relpath(path, lib.REPO_ROOT)} "
+                  f"(English source deleted)")
+
     items = lib.build_worklist(cfg, only_lang=args.lang)
     if args.path:
         items = [it for it in items if it.rel == args.path]
