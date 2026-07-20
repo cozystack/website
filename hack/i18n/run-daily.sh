@@ -31,7 +31,9 @@ if [ ! -x "$VENV/bin/python" ]; then
   "$VENV/bin/pip" install --quiet --upgrade pip
 fi
 # Distro Pythons are PEP 668 "externally managed", so the pipeline runs from a venv.
-"$VENV/bin/pip" install --quiet claude-agent-sdk pyyaml
+# Versions are PINNED (requirements.txt): this install runs on every invocation on
+# a machine that holds maintainer credentials — it must not upgrade in place.
+"$VENV/bin/pip" install --quiet -r "$REPO_ROOT/hack/i18n/requirements.txt"
 PY="$VENV/bin/python"
 
 cfg() { "$PY" - "$1" <<'PY'
@@ -80,6 +82,26 @@ START_REF="$(git symbolic-ref --quiet --short HEAD || git rev-parse HEAD)"
 restore_branch() { git checkout --quiet "$START_REF" 2>/dev/null || true; }
 trap restore_branch EXIT
 
+# ------------------------------------------------- sync to the publish branch
+# The week branch is checked out BEFORE translating, not after. Translating on
+# whatever branch the clone happened to be on and switching only to publish
+# wedged the runner on its second run: the EXIT trap restored the start branch,
+# which removed day 1's translations from the working tree, so day 2 re-translated
+# them (the worklist reads the filesystem) and then collided with the very same
+# files as untracked on checkout. Working on the branch the commits belong to
+# keeps the worklist honest, kills the collision, and refreshes content/en in
+# the same move.
+#
+# One branch per ISO week. --prune matters: without it a remote-tracking ref for
+# a merged+deleted branch lingers, and we would resurrect it.
+git fetch --quiet --prune origin
+BRANCH="i18n/week-$(date -u +%G-W%V)"
+if git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then
+  git checkout --quiet -B "$BRANCH" "origin/$BRANCH"   # continue this week's branch
+else
+  git checkout --quiet -B "$BRANCH" origin/main        # first run of the week
+fi
+
 # ------------------------------------------------------------------- translate
 echo "== i18n run $(date -u +%Y-%m-%dT%H:%MZ) (auth=$AUTH_MODE) =="
 # `| head` closes the pipe and makes Python raise BrokenPipeError, which under
@@ -110,18 +132,9 @@ if ! ./hack/check-i18n.sh; then
 fi
 
 # ------------------------------------------------------------------- publish
-# One branch per ISO week. --prune matters: without it a remote-tracking ref for
-# a merged+deleted branch lingers, and we would resurrect it.
-git fetch --quiet --prune origin
-BRANCH="i18n/week-$(date -u +%G-W%V)"
+# Already on $BRANCH (checked out before translating) — commit in place.
 git config user.name  "$(git config user.name  || echo cozystack-i18n)"
 git config user.email "$(git config user.email || echo noreply@cozystack.io)"
-
-if git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then
-  git checkout --quiet -B "$BRANCH" "origin/$BRANCH"   # continue this week's branch
-else
-  git checkout --quiet -B "$BRANCH" origin/main        # first run of the week
-fi
 
 git add -- "${LANG_PATHS[@]}"
 if git diff --cached --quiet; then
@@ -149,9 +162,12 @@ Every localized page carries a machine-translation banner linking to the English
 
 PR_STATE="$(gh pr view "$BRANCH" --json state -q .state 2>/dev/null || echo NONE)"
 if [ "$PR_STATE" != "OPEN" ]; then
+  # No `|| true` here (or on the comment below): commits are already pushed, so a
+  # failed `gh` call must fail the run — a cron exit 0 with pushed commits and no
+  # PR would be indistinguishable from a good run.
   gh pr create --base main --head "$BRANCH" \
     --title "i18n: translation update, week $(date -u +%G-W%V)" \
-    --body "$PR_BODY" || true
+    --body "$PR_BODY"
 fi
 
 # Surface what the reviewers actually found. A "-with-findings" stamp with no
@@ -164,14 +180,11 @@ fi
 FINDINGS="hack/i18n/last-run-findings.md"
 if [ -f "$FINDINGS" ]; then
   { printf '#### Run %s\n\n' "$(date -u +%Y-%m-%d\ %H:%MZ)"; cat "$FINDINGS"; } \
-    | gh pr comment "$BRANCH" --body-file - || true
+    | gh pr comment "$BRANCH" --body-file -
 fi
 
-PUBLISH_MODE="$(cfg publish_mode)"
-if [ "$PUBLISH_MODE" = "auto_merge" ]; then
-  gh pr merge "$BRANCH" --auto --squash || \
-    echo "auto-merge not enabled by branch protection — PR left for a maintainer."
-else
-  echo "publish_mode=$PUBLISH_MODE — PR left open for a maintainer to merge (weekly)."
-fi
+# There is deliberately no auto-merge code path: "nothing reaches the production
+# site without a maintainer merging it" is a property of this script, not a
+# default that one config word away stops being true.
+echo "PR left open for a maintainer to review and merge (weekly)."
 echo "== done =="
