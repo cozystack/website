@@ -245,6 +245,11 @@ as missing again).
 merged by a maintainer, so the revert is a normal `git revert` of the merge
 commit. Nothing reaches production without that merge.
 
+**Discard a week entirely** — close the PR **and delete the branch**. The runner
+resumes on branch existence, not PR state: a surviving branch of a
+closed-without-merge PR would become the base of the next week and carry the
+rejected translations forward.
+
 **Full stop** — revert the merge, comment the non-English languages out of
 `hugo.yaml`, and the site is English-only again. The pipeline touches nothing but
 `content/<lang>/`.

@@ -100,6 +100,40 @@ trap restore_branch EXIT
 # a merged+deleted branch lingers, and we would resurrect it.
 git fetch --quiet --prune origin
 BRANCH="i18n/week-$(date -u +%G-W%V)"
+
+# First, re-push any week branch a failed push left stranded locally. Waiting
+# for new work to trigger the next push is not enough: with an empty backlog
+# the run exits before publishing, and at a week boundary the new branch bases
+# on origin refs — either way a locally-committed day would sit unpublished
+# (and, across weeks, be re-translated). Push failure here is a warning, not a
+# death: the commits stay local and the next run retries.
+for LOCAL in $(git for-each-ref --format='%(refname:short)' \
+                 'refs/heads/i18n/week-[0-9][0-9][0-9][0-9]-W[0-9][0-9]'); do
+  if ! git rev-parse --verify --quiet "origin/$LOCAL" >/dev/null; then
+    # Missing on origin means EITHER the first push failed (genuinely stranded)
+    # OR the branch was merged/closed upstream and deleted, while our local copy
+    # survived. Only the former may be pushed: re-pushing a merged branch
+    # resurrects it on origin every morning, and the new-week base selection
+    # below would then stack every later week on the zombie — freezing this
+    # clone's content/en at that week's snapshot forever. PR state is the
+    # discriminator (`gh pr view` resolves a branch's most recent PR regardless
+    # of state; a merge-base ancestor check would break under squash merges).
+    STATE="$(gh pr view "$LOCAL" --json state -q .state 2>/dev/null || echo NONE)"
+    if [ "$STATE" = "MERGED" ] || [ "$STATE" = "CLOSED" ]; then
+      # The work is on origin/main (merged) or was rejected (closed) — either
+      # way the local copy is a zombie. 2>/dev/null: deleting fails harmlessly
+      # if this branch happens to be checked out; the next run retries.
+      git branch --quiet -D "$LOCAL" 2>/dev/null || true
+      continue
+    fi
+    git push --quiet -u origin "refs/heads/$LOCAL:refs/heads/$LOCAL" \
+      || echo "warning: could not push stranded $LOCAL — its commits stay local, will retry" >&2
+  elif [ -n "$(git rev-list "origin/$LOCAL..refs/heads/$LOCAL" 2>/dev/null)" ]; then
+    git push --quiet -u origin "refs/heads/$LOCAL:refs/heads/$LOCAL" \
+      || echo "warning: could not push stranded $LOCAL — its commits stay local, will retry" >&2
+  fi
+done
+
 if git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then
   # Continue this week's branch — but never discard local commits that a failed
   # push left ahead of origin (a GitHub outage on day 1 must not cost day 1).
@@ -120,8 +154,10 @@ else
   # conflicts with the first. Stacking on the unmerged branch keeps the work;
   # once the older PR merges, this week's PR shrinks to its own commits.
   # `fetch --prune` above already dropped refs of merged-and-deleted branches.
+  # The glob is deliberately strict (YYYY-WNN): a stray alphabetic branch like
+  # i18n/week-test would sort above every dated branch and become the base.
   PREV_WEEK="$(git for-each-ref --format='%(refname:short)' --sort=-refname \
-                 'refs/remotes/origin/i18n/week-*' | head -1)"
+                 'refs/remotes/origin/i18n/week-[0-9][0-9][0-9][0-9]-W[0-9][0-9]' | head -1)"
   git checkout --quiet -B "$BRANCH" "${PREV_WEEK:-origin/main}"
 fi
 

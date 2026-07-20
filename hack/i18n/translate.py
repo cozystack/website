@@ -384,15 +384,21 @@ def main() -> int:
     # or they outlive the source forever (the worklist only iterates English
     # sources). Only `source_digest`-stamped (pipeline-managed) files qualify.
     orphans = [] if args.path else lib.find_orphan_translations(cfg, only_lang=args.lang)
-    # Mass-deletion floor: orphans normally appear one or two at a time. A large
-    # batch means the English tree moved out from under us (restructure, bad
-    # checkout), and deleting on that signal would commit a massacre. Threshold
+    # Mass-deletion floor: English pages normally disappear one or two at a
+    # time. A large batch means the English tree moved out from under us
+    # (restructure, bad checkout), and deleting on that signal would commit a
+    # massacre. The floor counts distinct English PAGES, not files — one
+    # deleted page fans out to one orphan per language, and a floor on files
+    # would trip on two legitimately deleted pages × six languages. Threshold
     # rather than never: a deliberate cleanup can delete the survivors by hand.
-    ORPHAN_FLOOR = 10
-    if len(orphans) > ORPHAN_FLOOR:
-        print(f"::warning::{len(orphans)} orphaned translations found (> {ORPHAN_FLOOR}) — "
-              f"refusing to mass-delete. If this is a deliberate restructure, remove "
-              f"them manually; first few: "
+    ORPHAN_PAGE_FLOOR = 5
+    content_root = os.path.join(lib.REPO_ROOT, cfg["content_dir"])
+    orphan_pages = {os.path.relpath(p, content_root).split(os.sep, 1)[1] for p in orphans}
+    if len(orphan_pages) > ORPHAN_PAGE_FLOOR:
+        print(f"::warning::{len(orphans)} orphaned translations of {len(orphan_pages)} "
+              f"English pages found (> {ORPHAN_PAGE_FLOOR} pages) — refusing to "
+              f"mass-delete. If this is a deliberate restructure, remove them "
+              f"manually; first few: "
               + ", ".join(os.path.relpath(p, lib.REPO_ROOT) for p in orphans[:3]),
               file=sys.stderr)
         orphans = []
