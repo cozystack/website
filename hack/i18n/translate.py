@@ -370,10 +370,32 @@ def main() -> int:
         print(f"::error::unknown --lang '{args.lang}'; configured: "
               f"{', '.join(lang_by_code)}", file=sys.stderr)
         return 1
+    # The English tree is the reference for BOTH the worklist and orphan
+    # detection. If it is missing (broken checkout, sparse clone, renamed dir),
+    # os.walk would silently yield nothing: the worklist would look "done" and
+    # every stamped translation would look orphaned. Refuse instead.
+    en_root = os.path.join(lib.REPO_ROOT, cfg["content_dir"], cfg["source_lang"])
+    if not os.path.isdir(en_root) or not os.listdir(en_root):
+        print(f"::error::English content root missing or empty: {en_root} — "
+              f"refusing to run against a broken checkout", file=sys.stderr)
+        return 1
+
     # Orphans first: a deleted English page must take its translations with it,
     # or they outlive the source forever (the worklist only iterates English
     # sources). Only `source_digest`-stamped (pipeline-managed) files qualify.
     orphans = [] if args.path else lib.find_orphan_translations(cfg, only_lang=args.lang)
+    # Mass-deletion floor: orphans normally appear one or two at a time. A large
+    # batch means the English tree moved out from under us (restructure, bad
+    # checkout), and deleting on that signal would commit a massacre. Threshold
+    # rather than never: a deliberate cleanup can delete the survivors by hand.
+    ORPHAN_FLOOR = 10
+    if len(orphans) > ORPHAN_FLOOR:
+        print(f"::warning::{len(orphans)} orphaned translations found (> {ORPHAN_FLOOR}) — "
+              f"refusing to mass-delete. If this is a deliberate restructure, remove "
+              f"them manually; first few: "
+              + ", ".join(os.path.relpath(p, lib.REPO_ROOT) for p in orphans[:3]),
+              file=sys.stderr)
+        orphans = []
     for path in orphans:
         if args.dry_run:
             print(f"  [orphan ] would remove {os.path.relpath(path, lib.REPO_ROOT)}")

@@ -75,6 +75,10 @@ fi
 # and an empty stash pops someone else's).
 if [ -n "$(git status --porcelain)" ]; then
   echo "error: working tree is not clean. Run this in a dedicated clone." >&2
+  echo "       If a previous run crashed mid-run, the leftovers are pages that" >&2
+  echo "       finished their gate but were never committed. Cheapest recovery:" >&2
+  echo "       discard them and let the next run redo those pages:" >&2
+  echo "         git checkout -- content/ && git clean -fd content/" >&2
   git status --short >&2
   exit 1
 fi
@@ -97,9 +101,28 @@ trap restore_branch EXIT
 git fetch --quiet --prune origin
 BRANCH="i18n/week-$(date -u +%G-W%V)"
 if git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then
-  git checkout --quiet -B "$BRANCH" "origin/$BRANCH"   # continue this week's branch
+  # Continue this week's branch — but never discard local commits that a failed
+  # push left ahead of origin (a GitHub outage on day 1 must not cost day 1).
+  if git rev-parse --verify --quiet "refs/heads/$BRANCH" >/dev/null && \
+     [ -n "$(git rev-list "origin/$BRANCH..refs/heads/$BRANCH" 2>/dev/null)" ]; then
+    git checkout --quiet "$BRANCH"
+  else
+    git checkout --quiet -B "$BRANCH" "origin/$BRANCH"
+  fi
+elif git rev-parse --verify --quiet "refs/heads/$BRANCH" >/dev/null; then
+  # origin never saw this branch (the very first push failed) — keep the local one.
+  git checkout --quiet "$BRANCH"
 else
-  git checkout --quiet -B "$BRANCH" origin/main        # first run of the week
+  # First run of a new week. Base on the NEWEST still-existing week branch, not
+  # origin/main: if last week's PR is not merged yet (maintainers do skip
+  # weeks), its translations are not on main — cutting from main would forget
+  # them, re-translate the lot on a day's quota, and open a second PR that
+  # conflicts with the first. Stacking on the unmerged branch keeps the work;
+  # once the older PR merges, this week's PR shrinks to its own commits.
+  # `fetch --prune` above already dropped refs of merged-and-deleted branches.
+  PREV_WEEK="$(git for-each-ref --format='%(refname:short)' --sort=-refname \
+                 'refs/remotes/origin/i18n/week-*' | head -1)"
+  git checkout --quiet -B "$BRANCH" "${PREV_WEEK:-origin/main}"
 fi
 
 # ------------------------------------------------------------------- translate

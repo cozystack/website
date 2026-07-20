@@ -157,7 +157,7 @@ succeeds. A page that reproducibly fails is a signal to translate it by hand.
 - **Docs:** latest version only; older versions stay English (they are `noindex`). The version-picker landing (`docs/_index.md`) is version-agnostic and always in scope.
 - **Blog:** posts newer than `blog_since` in `config.yaml` — normally a rolling window (`"60d"` = today − 60 days, resolved per run), so the cutoff doesn't rot as the site ages. Aged-out posts keep their existing translations; they just stop being refreshed.
 - **Never:** `docs/next/**`, `**/_include/**`.
-- **Deleted English pages:** their translations are removed on the next run (only `source_digest`-stamped, i.e. pipeline-managed files — hand-authored locale-only pages are never touched), so the weekly PR carries the deletion.
+- **Deleted English pages:** their translations are removed on the next run (only `source_digest`-stamped, i.e. pipeline-managed files — hand-authored locale-only pages are never touched), so the weekly PR carries the deletion. A mass-deletion floor refuses to remove more than 10 at once — a large batch means the English tree moved, not that ten pages died. Known limitation: only `.md`/`.html` files are removed; images of a deleted page bundle stay behind.
 - Code, shortcodes, comments, inline code, URLs, CLI, YAML keys, and brand names are preserved structurally or via the glossary.
 
 ## Front-matter fields
