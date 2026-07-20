@@ -8,6 +8,7 @@ already enforces, so the automated pipeline and the CI lint agree by constructio
 from __future__ import annotations
 
 import copy
+import datetime
 import hashlib
 import os
 import re
@@ -134,11 +135,24 @@ _BLOG_DATE_RE = re.compile(r"^blog/(\d{4}-\d{2}-\d{2})-")
 
 
 def _blog_too_old(rel: str, blog_since: str) -> bool:
-    """True if rel is a blog post dated before the blog_since cutoff."""
+    """True if rel is a blog post dated before the blog_since cutoff.
+
+    blog_since is either an ISO date ("2026-05-17") or a rolling window ("60d",
+    meaning today minus 60 days, resolved at scope-computation time). A fixed
+    date quietly rots into "no blog post is ever in scope" as the site ages;
+    the rolling form is what the config should normally use.
+    """
     if not blog_since:
         return False
     m = _BLOG_DATE_RE.match(rel)
-    return bool(m) and m.group(1) < blog_since
+    if not m:
+        return False
+    w = re.fullmatch(r"(\d+)d", blog_since.strip())
+    if w:
+        cutoff = (datetime.date.today() - datetime.timedelta(days=int(w.group(1)))).isoformat()
+    else:
+        cutoff = blog_since
+    return m.group(1) < cutoff
 
 
 def iter_source_files(cfg: dict) -> list[str]:
@@ -206,6 +220,36 @@ def build_worklist(cfg: dict, only_lang: str | None = None) -> list[WorkItem]:
             elif recorded_digest(tp) != cur:
                 items.append(WorkItem(lang, rel, "stale"))
     return items
+
+
+def find_orphan_translations(cfg: dict, only_lang: str | None = None) -> list[str]:
+    """Translated pages whose English source no longer exists.
+
+    Deleting an English page used to leave its translations behind forever:
+    the worklist iterates English sources, so nothing ever revisited the
+    leftovers, and check-i18n.sh could only report them. The pipeline removes
+    them instead (translate.py), so the weekly PR carries the deletion.
+
+    Only files carrying a `source_digest` stamp are considered — the stamp is
+    what marks a page as pipeline-managed. Hand-authored locale-only pages
+    (no stamp) are never touched. A page that merely LEFT the translation
+    scope (older docs version, aged-out blog post) is not an orphan: its
+    English source still exists.
+    """
+    orphans: list[str] = []
+    for lang in (l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])):
+        lang_root = os.path.join(REPO_ROOT, cfg["content_dir"], lang)
+        for dirpath, _dirs, files in os.walk(lang_root):
+            for name in files:
+                if not name.endswith((".md", ".html")):
+                    continue
+                tp = os.path.join(dirpath, name)
+                if recorded_digest(tp) is None:
+                    continue
+                rel = os.path.relpath(tp, lang_root).replace(os.sep, "/")
+                if not os.path.exists(source_path(cfg, rel)):
+                    orphans.append(tp)
+    return sorted(orphans)
 
 
 # ---- front matter -----------------------------------------------------------

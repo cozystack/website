@@ -119,6 +119,60 @@ class TestScope(unittest.TestCase):
     def test_undated_blog_paths_are_kept(self):
         self.assertFalse(lib._blog_too_old("blog/_index.md", "2026-05-17"))
 
+    def test_blog_rolling_window(self):
+        import datetime
+        recent = (datetime.date.today() - datetime.timedelta(days=10)).isoformat()
+        ancient = (datetime.date.today() - datetime.timedelta(days=90)).isoformat()
+        self.assertFalse(lib._blog_too_old(f"blog/{recent}-post.md", "60d"))
+        self.assertTrue(lib._blog_too_old(f"blog/{ancient}-post.md", "60d"))
+        # An undated path is kept regardless of the window form.
+        self.assertFalse(lib._blog_too_old("blog/_index.md", "60d"))
+
+
+class TestOrphanTranslations(unittest.TestCase):
+    """A deleted English page must take its pipeline-managed translations with
+    it — and ONLY those: a hand-authored locale-only page has no source_digest
+    and must never be swept up."""
+
+    CFG = {"content_dir": "content", "source_lang": "en",
+           "languages": [{"code": "ru"}, {"code": "de"}]}
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self._old_root = lib.REPO_ROOT
+        lib.REPO_ROOT = self._tmp.name
+        self.addCleanup(lambda: setattr(lib, "REPO_ROOT", self._old_root))
+
+    def _write(self, rel, text):
+        path = os.path.join(self._tmp.name, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        return path
+
+    STAMPED = '---\ntitle: x\nsource_digest: "sha256:abc"\n---\nbody\n'
+    UNSTAMPED = "---\ntitle: x\n---\nbody\n"
+
+    def test_translation_of_deleted_source_is_an_orphan(self):
+        orphan = self._write("content/ru/docs/gone.md", self.STAMPED)
+        self.assertEqual(lib.find_orphan_translations(self.CFG), [orphan])
+
+    def test_translation_with_live_source_is_kept(self):
+        self._write("content/en/docs/page.md", "---\ntitle: x\n---\nhello\n")
+        self._write("content/ru/docs/page.md", self.STAMPED)
+        self.assertEqual(lib.find_orphan_translations(self.CFG), [])
+
+    def test_hand_authored_page_without_stamp_is_never_touched(self):
+        self._write("content/ru/docs/handmade.md", self.UNSTAMPED)
+        self.assertEqual(lib.find_orphan_translations(self.CFG), [])
+
+    def test_only_lang_filter(self):
+        ru = self._write("content/ru/docs/gone.md", self.STAMPED)
+        de = self._write("content/de/docs/gone.md", self.STAMPED)
+        self.assertEqual(lib.find_orphan_translations(self.CFG, only_lang="ru"), [ru])
+        self.assertEqual(sorted(lib.find_orphan_translations(self.CFG)), sorted([ru, de]))
+
 
 class TestRecordedDigest(unittest.TestCase):
     def _write(self, text):
