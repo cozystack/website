@@ -24,18 +24,26 @@ content/en/**  ──▶ worklist.py        (missing | stale, via source_digest)
           • technical editor    → fluency / register / terminology
           • Cozystack maintainer → technical correctness vs source
                        │
-                 findings? ──yes──▶ revise ──▶ (re-check, ≤ max_rounds)
-                       │ no
-                       ▼
-             write content/<lang>/**   (source_digest + translation_review stamp)
-                       │
+                 findings? ──yes──▶ revise ──▶ re-check (≤ max_rounds)
+                       │ no                          │ rounds exhausted,
+                       │                             │ findings still open
+                       ▼                             ▼
+        write content/<lang>/**            write content/<lang>/** anyway
+        stamped `auto-reviewed`            stamped `auto-reviewed-with-findings`
+                       │                             │
+                       └──────────────┬──────────────┘
+                                      ▼
                    check-i18n.sh  →  weekly PR  →  merged by a maintainer
 ```
 
-A page is written **only after it clears the gate**, so the published tree is
-always post-review and an interrupted daily run never leaves a half-done page.
-`translation_review: auto-reviewed` marks machine-gated pages; native human
-owners flip it to `ratified` after their pass.
+The gate **triages, it does not block**: a page that clears it is stamped
+`auto-reviewed`; one that exhausts the revise rounds with findings still open
+is published anyway, stamped `auto-reviewed-with-findings`, and its findings
+are posted to the weekly PR — those pages are the ones worth a human's
+attention first. What the gate does guarantee is *atomicity*: nothing is
+written until the review finishes, so an interrupted daily run never leaves a
+half-done page, and the text written is always exactly the text the reviewers
+last saw. Native human owners flip either stamp to `ratified` after their pass.
 
 ## Auth — Max subscription via the Claude Agent SDK
 
@@ -90,9 +98,9 @@ python3 hack/i18n/translate.py --dry-run # plan, no model calls
 
 ### Throughput, measured
 
-The backlog is **183 pages × 4 languages = 720 jobs**. Each job is 5–15 Opus
-calls (translate, back-translate, compare, two reviewers, and a revise round per
-finding), so the backlog is on the order of 4k–11k model calls.
+The backlog is **183 pages × 6 configured languages ≈ 1100 jobs**. Each job is
+5–15 Opus calls (translate, back-translate, compare, two reviewers, and a
+revise round per finding), so the backlog is on the order of 5k–16k model calls.
 
 Measured pilots on a subscription, both on the same ~2500-word release blog post:
 
@@ -103,7 +111,7 @@ Measured pilots on a subscription, both on the same ~2500-word release blog post
 
 So per-page cost is dominated by **whether the revise loop runs**, not by the
 page alone — a clean page is ~3 min, one that keeps failing review is ~4× that.
-Taking the range against 720 jobs puts the backlog at roughly 35–140 hours of
+Taking the range against ~1100 jobs puts the backlog at roughly 55–220 hours of
 wall clock, before daily usage limits enter the picture at all. That is weeks to
 months on a personal subscription, which is why the plan is to bootstrap the
 backlog with `auth: api-key` on an organization account and leave the
@@ -128,7 +136,8 @@ succeeds. A page that reproducibly fails is a signal to translate it by hand.
 
 | Path | Purpose |
 |------|---------|
-| `config.yaml` | languages, scope, blog cutoff, auth mode, back-translation + review config, publish mode |
+| `config.yaml` | languages, scope, blog cutoff, auth mode, back-translation + review config |
+| `requirements.txt` | pinned Python deps — the runner installs on every invocation, so versions must not float |
 | `glossary.yaml` | do-not-translate terms + preferred per-language terms |
 | `prompts/translate.md` | translation system prompt |
 | `prompts/back-translate.md` / `back-translate-compare.md` | round-trip meaning-drift check |
@@ -138,7 +147,7 @@ succeeds. A page that reproducibly fails is a signal to translate it by hand.
 | `style-guides/<lang>.md` | per-language tone/register conventions |
 | `lib.py` | shared helpers (config, discovery, digest, front matter, protect/restore) |
 | `worklist.py` | diff detector |
-| `translate.py` | translate + review-gate driver |
+| `translate.py` | translate + review-gate driver; also removes orphaned translations |
 | `run-daily.sh` | daily runner (subscription, until limit, commit + PR) |
 | `test_i18n.py` | tests for the pure functions (no network) — `python3 hack/i18n/test_i18n.py` |
 | `../../layouts/partials/translation-banner.html` | reader-facing machine-translation disclaimer |
@@ -146,8 +155,9 @@ succeeds. A page that reproducibly fails is a signal to translate it by hand.
 ## Scope
 
 - **Docs:** latest version only; older versions stay English (they are `noindex`). The version-picker landing (`docs/_index.md`) is version-agnostic and always in scope.
-- **Blog:** posts newer than `blog_since` in `config.yaml`.
+- **Blog:** posts newer than `blog_since` in `config.yaml` — normally a rolling window (`"60d"` = today − 60 days, resolved per run), so the cutoff doesn't rot as the site ages. Aged-out posts keep their existing translations; they just stop being refreshed.
 - **Never:** `docs/next/**`, `**/_include/**`.
+- **Deleted English pages:** their translations are removed on the next run (only `source_digest`-stamped, i.e. pipeline-managed files — hand-authored locale-only pages are never touched), so the weekly PR carries the deletion.
 - Code, shortcodes, comments, inline code, URLs, CLI, YAML keys, and brand names are preserved structurally or via the glossary.
 
 ## Front-matter fields
@@ -241,10 +251,12 @@ commit. Nothing reaches production without that merge.
 
 ## Governance
 
-Nothing here changes CODEOWNERS or branch protection. `publish_mode: pr_only`
-means the pipeline only ever opens a PR touching `content/<lang>/`; a
-maintainer reviews and merges it weekly. Code, layouts, config, the English
-source, and this pipeline itself remain maintainer-owned as before.
+Nothing here changes CODEOWNERS or branch protection. The pipeline only ever
+opens a PR touching `content/<lang>/`; a maintainer reviews and merges it
+weekly. There is deliberately **no auto-merge code path** — "nothing reaches
+the production site without a maintainer merging it" is a property of the
+runner, not a config default. Code, layouts, config, the English source, and
+this pipeline itself remain maintainer-owned as before.
 
 Pages are stamped `translation_review: auto-reviewed` when they clear the
 machine gate and `auto-reviewed-with-findings` when the revise loop ran out of
@@ -255,8 +267,11 @@ attention first. Native owners flip either to `ratified` after their pass.
 the translator, given different system prompts. That measures self-consistency
 and catches the obvious failures (meaning drift, mangled terminology, broken
 register); it is **not** native-speaker ratification, and `auto-reviewed` must
-not be read as "a human checked this". Only a human sets `ratified`, and only
-`ratified` removes the reader-facing disclaimer banner. The gate's real job is to
+not be read as "a human checked this". Nor does it ever block publication — it
+is a triage classifier, not a gatekeeper: every page that survives the
+placeholder checks is published, and the stamp says how it fared. Only a human
+sets `ratified`, and only `ratified` removes the reader-facing disclaimer
+banner. The gate's real job is to
 make the machine output good enough to publish while native review happens
 asynchronously — not to replace it.
 

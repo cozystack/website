@@ -33,4 +33,3 @@ static/docs/*/cozystack-api/
 
 # i18n pipeline: per-run artifacts, not content
 hack/i18n/last-run-findings.md
-.venv-i18n/
