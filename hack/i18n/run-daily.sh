@@ -23,6 +23,28 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
+# -------------------------------------------------------------------- run lock
+# One run per clone at a time: a manual invocation overlapping a slow cron run
+# passes the clean-tree preflight and then races the cron run on checkout,
+# commit and push — silently, until the second push fails. A pidfile makes the
+# second invocation fail fast and loudly instead. Pidfile rather than flock(1):
+# the runner may be a macOS/launchd machine, where flock does not exist.
+# Keyed by clone path so two DIFFERENT clones on one machine don't block
+# each other. Cleaned by the EXIT trap; a lock whose pid is dead is stale
+# (crash, power loss) and is taken over rather than wedging every later run.
+LOCK_FILE="${TMPDIR:-/tmp}/cozystack-i18n-$(printf '%s' "$REPO_ROOT" | cksum | cut -d' ' -f1).pid"
+if ! (set -o noclobber; echo "$$" > "$LOCK_FILE") 2>/dev/null; then
+  OTHER_PID="$(cat "$LOCK_FILE" 2>/dev/null || true)"
+  if [ -n "$OTHER_PID" ] && kill -0 "$OTHER_PID" 2>/dev/null; then
+    echo "error: another run-daily.sh (pid $OTHER_PID) is already running against" >&2
+    echo "       this clone — refusing to race it. (lock: $LOCK_FILE)" >&2
+    exit 1
+  fi
+  echo "warning: stale lock from pid ${OTHER_PID:-?} (not running) — taking over." >&2
+  echo "$$" > "$LOCK_FILE"
+fi
+trap 'rm -f "$LOCK_FILE"' EXIT
+
 # ---------------------------------------------------------------- environment
 VENV="${I18N_VENV:-$REPO_ROOT/.venv-i18n}"
 if [ ! -x "$VENV/bin/python" ]; then
@@ -84,7 +106,9 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 START_REF="$(git symbolic-ref --quiet --short HEAD || git rev-parse HEAD)"
 restore_branch() { git checkout --quiet "$START_REF" 2>/dev/null || true; }
-trap restore_branch EXIT
+# Single EXIT trap: bash keeps only the last one, so fold the lock cleanup in
+# rather than losing it here.
+trap 'restore_branch; rm -f "$LOCK_FILE"' EXIT
 
 # ------------------------------------------------- sync to the publish branch
 # The week branch is checked out BEFORE translating, not after. Translating on

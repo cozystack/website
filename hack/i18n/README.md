@@ -88,6 +88,24 @@ keeps review to one deliberate merge instead of a stream of them.
 Over time this clears the backlog, then just keeps translations fresh against
 the English source.
 
+### Capture the output — two conditions report ONLY to stdout/stderr
+
+The daily-quota stop ("usage limit reached — stopping cleanly") and a page
+skipped after repeated protocol errors both surface only in the run's output:
+there is no GitHub Action and no other durable channel. If cron/launchd
+discards output, a page that fails every single day is invisible. Point the
+job at an append-only log:
+
+```bash
+0 9 * * * cd ~/cozystack-website-i18n && ./hack/i18n/run-daily.sh >> ~/i18n-run.log 2>&1
+```
+
+and glance at two health signals weekly: `grep -c '::warning::skipped' ~/i18n-run.log`
+(a page stuck on protocol errors) and `python3 hack/i18n/worklist.py | head -3`
+(the backlog must trend to zero, then hover near it). A second invocation while
+one is still running exits immediately — the script takes a per-clone pidfile
+lock in `$TMPDIR`, so an overlapping manual run cannot race a slow cron run.
+
 Manual/dry inspection:
 
 ```bash
