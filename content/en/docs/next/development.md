@@ -344,23 +344,22 @@ Feel free to look inside each Makefile to better understand the logic.
 
 ### Testing
 
-The platform includes an [`e2e.sh`](https://github.com/cozystack/cozystack/blob/main/hack/e2e.sh) script that performs the following tasks:
+End-to-end tests run inside a self-contained **sandbox container** that boots three QEMU virtual machines, configures Talos Linux, installs Cozystack, waits for all HelmReleases to become ready, and then exercises the platform. The suite has two parts:
 
-- Runs three QEMU virtual machines
-- Configures Talos Linux
-- Installs Cozystack
-- Waits for all HelmReleases to be installed
-- Performs additional checks to ensure that components are up and running
+- **Application tests** — [Kyverno Chainsaw](https://kyverno.github.io/chainsaw/) suites under [`hack/e2e-chainsaw/`](https://github.com/cozystack/cozystack/tree/main/hack/e2e-chainsaw), one directory per application, each with a `chainsaw-test.yaml`.
+- **Bootstrap and API tests** — BATS scripts (`hack/e2e-install-cozystack.bats`, `hack/e2e-test-openapi.bats`) that bring the cluster up and check the aggregated API.
 
-You can run e2e.sh either locally or directly within a Kubernetes container.
+Conventions for writing and stabilising these tests live in the [E2E testing guide](https://github.com/cozystack/cozystack/blob/main/docs/agents/e2e-testing.md).
 
-To run tests in a Kubernetes cluster, navigate to the `packages/core/testing` directory and execute the following commands:
+To run the tests in a Kubernetes cluster, navigate to the `packages/core/testing` directory and execute the following commands:
 
 ```shell
-make apply    # Create testing sandbox in Kubernetes cluster
-make test     # Run the end-to-end tests in existing sandbox
-make delete   # Remove testing sandbox from Kubernetes cluster
+make apply    # Create the testing sandbox in the Kubernetes cluster
+make e2e      # Run the end-to-end tests (OpenAPI + Chainsaw) in the sandbox
+make delete   # Remove the testing sandbox from the Kubernetes cluster
 ```
+
+Alternatively, from the repository root `make test` runs `apply` followed by `e2e` in one step.
 
 {{% alert color="warning" %}}
 :warning: To run e2e tests in a Kubernetes cluster, your nodes must have sufficient free resources to create 3 VMs and store the data for the deployed applications.
@@ -370,14 +369,8 @@ It is recommended to use bare-metal nodes of the parent Cozystack cluster.
 
 ### Dynamic Development Environment
 
-If you prefer to develop Cozystack in virtual machines instead of modifying the existing cluster, you can utilize the same sandbox from testing environment. The Makefile in the `packages/core/testing` includes additional options:
+If you prefer to develop Cozystack against the sandbox instead of modifying the existing cluster, open an interactive shell inside the sandbox container:
 
 ```shell
 make exec     # Opens an interactive shell in the sandbox container.
-make login    # Downloads the kubeconfig into a temporary directory and runs a shell with the sandbox environment; mirrord must be installed.
-make proxy    # Enable a SOCKS5 proxy server; mirrord and gost must be installed.
 ```
-
-Socks5 proxy can be configured in a browser to access services of a cluster running in sandbox. Firefox has a handy extension for toogling proxy on/off:
-
-- [Proxy Toggle](https://addons.mozilla.org/en-US/firefox/addon/proxy-toggle/)
