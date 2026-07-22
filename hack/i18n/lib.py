@@ -394,3 +394,66 @@ def restore(text: str, store: dict[str, str]) -> str:
     return text
 
 
+# Hugo `ref`/`relref` shortcodes. Both argument shapes Hugo accepts:
+#   positional: {{% ref "/docs/v1.5/getting-started/install-talos" %}}
+#               {{< relref "install-cozystack#section" >}}
+#   named:      {{% ref path="/docs/v1.5/x" lang="de" %}}
+# The whole call is captured (args blob between `ref` and the closing delimiter),
+# then `_ref_target` pulls the target out of either shape.
+_REF_SHORTCODE = re.compile(r'\{\{[%<]\s*(?:rel)?ref\s+([^%>]*?)\s*[%>]\}\}')
+_REF_PATH_NAMED = re.compile(r'\bpath\s*=\s*"([^"]+)"')
+# Any residual ref/relref shortcode at all — used for the fail-closed check.
+_ANY_REF_SHORTCODE = re.compile(r'\{\{[%<]\s*(?:rel)?ref\b')
+
+
+def _ref_target(args: str) -> str | None:
+    """Extract the link target from a ref/relref args blob, or None if it cannot
+    be determined (an unsupported shape — the caller then fails closed)."""
+    named = _REF_PATH_NAMED.search(args)
+    if named:
+        return named.group(1)
+    args = args.strip()
+    if not args:
+        return None
+    first = args.split()[0].strip('"').strip("'")
+    # A leftover `=` means this was a named form we do not understand (not `path`).
+    return first or None if "=" not in first else None
+
+
+def has_ref_shortcode(text: str) -> bool:
+    """True if any ref/relref shortcode remains — a build-breaking hazard."""
+    return bool(_ANY_REF_SHORTCODE.search(text))
+
+
+def deref_shortcodes(text: str, page_rel: str) -> str:
+    """Rewrite Hugo ref/relref shortcodes to plain absolute links.
+
+    `ref`/`relref` are resolved at build time WITHIN the current language and
+    hard-fail (REF_NOT_FOUND) when the target page has not been translated into
+    that language yet — the normal state of a partially-translated site, which
+    would break the entire Hugo build. Plain links do not: the render-link hook
+    (`layouts/_default/_markup/render-link.html`) resolves them to the in-language
+    page when it exists and otherwise falls back to the unprefixed English page.
+    This mirrors the convention established in commit 5ca8e55.
+
+    A shortcode whose target cannot be extracted is left untouched on purpose, so
+    `has_ref_shortcode` can catch it and the caller can fail closed rather than
+    ship a page that may break the build."""
+    def _sub(m: "re.Match[str]") -> str:
+        target = _ref_target(m.group(1))
+        if target is None:
+            return m.group(0)
+        path, _, frag = target.partition("#")
+        if not path:
+            # Anchor-only ref (`#section`) means "the current page".
+            path = "/" + page_rel
+        elif not path.startswith("/"):
+            # Relative target: resolve against the current page's directory.
+            path = os.path.normpath(os.path.join("/" + os.path.dirname(page_rel), path))
+        path = path.rstrip("/")
+        if path.endswith(".md"):
+            path = path[:-3]
+        return path + "/" + (f"#{frag}" if frag else "")
+    return _REF_SHORTCODE.sub(_sub, text)
+
+

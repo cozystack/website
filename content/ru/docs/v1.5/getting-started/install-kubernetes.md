@@ -9,14 +9,14 @@ translation_review: auto-reviewed
 ---
 ## Цели
 
-Этот шаг руководства начинается с того, что у вас есть [три узла с установленным Talos Linux]({{% ref "/docs/v1.5/getting-started/install-talos" %}}).
+Этот шаг руководства начинается с того, что у вас есть [три узла с установленным Talos Linux](/docs/v1.5/getting-started/install-talos/).
 
 По результатам этого шага у вас будет установленный и настроенный кластер Kubernetes, готовый к установке Cozystack.
 Также вы получите `kubeconfig` для этого кластера и выполните базовые проверки кластера.
 
 ## Установка Kubernetes
 
-Установите и инициализируйте кластер Kubernetes с помощью [Talm]({{% ref "/docs/v1.5/install/kubernetes/talm" %}}) — декларативного CLI-инструмента для конфигурации с готовыми пресетами для Cozystack.
+Установите и инициализируйте кластер Kubernetes с помощью [Talm](/docs/v1.5/install/kubernetes/talm/) — декларативного CLI-инструмента для конфигурации с готовыми пресетами для Cozystack.
 
 {{% alert color="info" %}}
 Эта часть руководства перерабатывается.
@@ -26,7 +26,7 @@ translation_review: auto-reviewed
 
 ## Следующий шаг
 
-Продолжите руководство по Cozystack — [установите и настройте Cozystack]({{% ref "/docs/v1.5/getting-started/install-cozystack" %}}).
+Продолжите руководство по Cozystack — [установите и настройте Cozystack](/docs/v1.5/getting-started/install-cozystack/).
 
 Дополнительные задачи:
 

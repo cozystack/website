@@ -9,14 +9,14 @@ translation_review: auto-reviewed
 ---
 ## Ziele
 
-Wir beginnen diesen Schritt des Tutorials mit [drei Knoten, auf denen Talos Linux installiert ist]({{% ref "/docs/v1.5/getting-started/install-talos" %}}).
+Wir beginnen diesen Schritt des Tutorials mit [drei Knoten, auf denen Talos Linux installiert ist](/docs/v1.5/getting-started/install-talos/).
 
 Am Ende dieses Schritts haben wir einen Kubernetes-Cluster, der installiert, konfiguriert und bereit für die Installation von Cozystack ist.
 Außerdem verfügen wir über eine `kubeconfig` für diesen Cluster und haben grundlegende Prüfungen des Clusters durchgeführt.
 
 ## Kubernetes installieren
 
-Installieren Sie einen Kubernetes-Cluster und führen Sie den Bootstrap durch – mit [Talm]({{% ref "/docs/v1.5/install/kubernetes/talm" %}}), einem deklarativen CLI-Konfigurationswerkzeug mit fertigen Konfigurationsvoreinstellungen für Cozystack.
+Installieren Sie einen Kubernetes-Cluster und führen Sie den Bootstrap durch – mit [Talm](/docs/v1.5/install/kubernetes/talm/), einem deklarativen CLI-Konfigurationswerkzeug mit fertigen Konfigurationsvoreinstellungen für Cozystack.
 
 {{% alert color="info" %}}
 Dieser Teil des Tutorials wird derzeit überarbeitet.
@@ -26,7 +26,7 @@ Er wird eine vereinfachte Anleitung zur Talm-Installation enthalten – ohne all
 
 ## Nächster Schritt
 
-Setzen Sie das Cozystack-Tutorial fort, indem Sie [Cozystack installieren und konfigurieren]({{% ref "/docs/v1.5/getting-started/install-cozystack" %}}).
+Setzen Sie das Cozystack-Tutorial fort, indem Sie [Cozystack installieren und konfigurieren](/docs/v1.5/getting-started/install-cozystack/).
 
 Zusatzaufgaben:
 
