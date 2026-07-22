@@ -455,5 +455,131 @@ class TestRateLimitMarkers(unittest.TestCase):
             self.assertFalse(any(m in msg.lower() for m in translate._RATE_LIMIT_MARKERS), msg)
 
 
+class TestDerefShortcodes(unittest.TestCase):
+    def test_absolute_ref_becomes_plain_link(self):
+        # The exact break shipped in the sample pages: a ref to a sibling not yet
+        # translated into this language hard-fails the Hugo build.
+        t = '[x]({{% ref "/docs/v1.5/getting-started/install-talos" %}})'
+        self.assertEqual(
+            lib.deref_shortcodes(t, "docs/v1.5/getting-started/install-kubernetes.md"),
+            "[x](/docs/v1.5/getting-started/install-talos/)")
+
+    def test_angle_relref_and_fragment_are_preserved(self):
+        t = '{{< relref "/docs/v1.5/x#section" >}}'
+        self.assertEqual(lib.deref_shortcodes(t, "docs/v1.5/p.md"), "/docs/v1.5/x/#section")
+
+    def test_relative_ref_resolves_against_page_dir(self):
+        t = '[y]({{% ref "install-cozystack" %}})'
+        self.assertEqual(
+            lib.deref_shortcodes(t, "docs/v1.5/getting-started/install-kubernetes.md"),
+            "[y](/docs/v1.5/getting-started/install-cozystack/)")
+
+    def test_md_suffix_is_stripped(self):
+        self.assertEqual(
+            lib.deref_shortcodes('{{% ref "/docs/v1.5/x.md" %}}', "docs/v1.5/p.md"),
+            "/docs/v1.5/x/")
+
+    def test_named_parameter_ref_is_rewritten(self):
+        t = '[a]({{% ref path="/docs/v1.5/x" %}})'
+        self.assertEqual(lib.deref_shortcodes(t, "docs/p.md"), "[a](/docs/v1.5/x/)")
+        t2 = '{{< relref path="/docs/v1.5/y#s" lang="de" >}}'
+        self.assertEqual(lib.deref_shortcodes(t2, "docs/p.md"), "/docs/v1.5/y/#s")
+
+    def test_anchor_only_ref_targets_the_current_page(self):
+        t = 'See [this]({{% ref "#tenant-system" %}}).'
+        self.assertEqual(
+            lib.deref_shortcodes(t, "docs/v1.5/guides/concepts.md"),
+            "See [this](/docs/v1.5/guides/concepts/#tenant-system).")
+
+    def test_text_without_shortcodes_is_untouched(self):
+        t = "no shortcodes here, just [a link](/docs/x/) and `code`."
+        self.assertEqual(lib.deref_shortcodes(t, "docs/p.md"), t)
+
+    def test_has_ref_shortcode_detects_every_form(self):
+        self.assertTrue(lib.has_ref_shortcode('x {{% ref "/a" %}} y'))
+        self.assertTrue(lib.has_ref_shortcode('{{< relref path="/a" >}}'))
+        self.assertFalse(lib.has_ref_shortcode("plain [a](/a/) and `code`"))
+
+    def test_unsupported_ref_shape_survives_and_is_detectable(self):
+        # No positional target, no path= — left intact so the fail-closed guard fires.
+        t = '{{% ref foo="bar" %}}'
+        self.assertTrue(lib.has_ref_shortcode(lib.deref_shortcodes(t, "docs/p.md")))
+
+
+class TestRunStatus(unittest.TestCase):
+    def test_clean_run_produces_no_status(self):
+        self.assertEqual(translate._format_run_status(False, "", 5, [], 3), "")
+
+    def test_early_stop_is_recorded(self):
+        md = translate._format_run_status(True, "usage limit", 7, [], 3)
+        self.assertIn("Run status", md)
+        self.assertIn("usage limit", md)
+        self.assertIn("7 page(s)", md)
+
+    def test_skipped_pages_are_named(self):
+        md = translate._format_run_status(
+            False, "", 4,
+            [{"lang": "ru", "rel": "docs/v1.5/intro.md", "error": "no ===BODY==="}], 3)
+        self.assertIn("ru: docs/v1.5/intro.md", md)
+        self.assertIn("no ===BODY===", md)
+
+    def test_skipped_survives_a_missing_error_field(self):
+        md = translate._format_run_status(False, "", 0, [{"lang": "de", "rel": "x.md"}], 3)
+        self.assertIn("de: x.md", md)
+
+
+class TestOrphanFloor(unittest.TestCase):
+    def test_floor_value_is_pinned(self):
+        self.assertEqual(translate.ORPHAN_PAGE_FLOOR, 5)
+
+    def test_distinct_pages_dedup_across_languages(self):
+        root = "/repo/content"
+        orphans = ["/repo/content/de/docs/x.md", "/repo/content/ru/docs/x.md",
+                   "/repo/content/de/docs/y.md"]
+        self.assertEqual(translate._distinct_orphan_pages(orphans, root),
+                         {"docs/x.md", "docs/y.md"})
+
+    def test_floor_gates_on_distinct_pages_not_files(self):
+        root = "/repo/content"
+        one_page = [f"/repo/content/{lc}/docs/x.md"
+                    for lc in ("de", "ru", "hi", "zh-cn", "es", "pt-br")]
+        self.assertLessEqual(
+            len(translate._distinct_orphan_pages(one_page, root)),
+            translate.ORPHAN_PAGE_FLOOR)
+        six_pages = [f"/repo/content/de/docs/p{i}.md" for i in range(6)]
+        self.assertGreater(
+            len(translate._distinct_orphan_pages(six_pages, root)),
+            translate.ORPHAN_PAGE_FLOOR)
+
+
+class TestStaleReportCleanup(unittest.TestCase):
+    def test_empty_worklist_clears_a_prior_run_report(self):
+        # Once the backlog drains, build_worklist() is empty and main() returns
+        # early. A report left by an earlier run must still be cleared, or
+        # run-daily.sh reposts stale findings stamped with today's date.
+        orig_wl, orig_orph, orig_argv = (
+            lib.build_worklist, lib.find_orphan_translations, sys.argv)
+        existed = os.path.exists(translate.REPORT_PATH)
+        backup = open(translate.REPORT_PATH).read() if existed else None
+        try:
+            lib.build_worklist = lambda *a, **k: []
+            lib.find_orphan_translations = lambda *a, **k: []
+            sys.argv = ["translate.py"]
+            with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
+                fh.write("### stale findings from a previous run\n- something\n")
+            rc = translate.main()
+            self.assertEqual(rc, 0)
+            self.assertFalse(os.path.exists(translate.REPORT_PATH),
+                             "stale report was not cleared on an empty worklist")
+        finally:
+            lib.build_worklist, lib.find_orphan_translations, sys.argv = (
+                orig_wl, orig_orph, orig_argv)
+            if backup is not None:
+                with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
+                    fh.write(backup)
+            elif os.path.exists(translate.REPORT_PATH):
+                os.unlink(translate.REPORT_PATH)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

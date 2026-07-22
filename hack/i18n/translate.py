@@ -45,6 +45,10 @@ STYLE_DIR = os.path.join(os.path.dirname(__file__), "style-guides")
 # Findings still open after the revise loop, for the weekly PR body. Gitignored:
 # it is a per-run artifact, not content.
 REPORT_PATH = os.path.join(os.path.dirname(__file__), "last-run-findings.md")
+# Orphan mass-deletion floor: refuse to auto-delete translations of more than
+# this many distinct English pages in one run (a large batch means the English
+# tree moved, not that N pages died). Module-level so it is pinned by a test.
+ORPHAN_PAGE_FLOOR = 5
 
 
 def _format_report(report: list[dict]) -> str:
@@ -351,7 +355,52 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
         cfg["review_status_value"] if gate_passed else f"{cfg['review_status_value']}-with-findings")
     fm_yaml = yaml.safe_dump(out_fm, allow_unicode=True, sort_keys=False,
                              default_flow_style=False, width=10 ** 9).strip()
+    # Rewrite ref/relref cross-links to plain links: a link to a sibling page not
+    # yet translated into this language would otherwise hard-fail the Hugo build
+    # (REF_NOT_FOUND). See lib.deref_shortcodes.
+    tr_body = lib.deref_shortcodes(tr_body, rel)
+    # Fail closed: if any ref/relref survived (an unsupported shortcode shape),
+    # refuse to write the page rather than ship one that can break the build.
+    if lib.has_ref_shortcode(tr_body):
+        raise ProtocolError(
+            f"{rel}: a ref/relref shortcode survived deref (unsupported shape) — "
+            f"refusing to write a page that could break the Hugo build")
     return f"---\n{fm_yaml}\n---\n{tr_body}\n", gate_passed, findings
+
+
+def _format_run_status(stopped_early: bool, rate_limit_reason: str,
+                       done: int, skipped: list[dict], attempts: int) -> str:
+    """Render an early-stop / skipped-page summary for the weekly PR comment.
+
+    Open findings already have a durable home (the PR comment via last-run-findings.md),
+    but a run that stopped on the usage limit or skipped a page after repeated
+    protocol errors did not — it was only ever visible in the run's stdout/stderr,
+    which a cron/launchd job discards unless the operator captured it. Surfacing it
+    here gives a maintainer the same durable, actionable record in-band."""
+    if not stopped_early and not skipped:
+        return ""
+    out = ["### Run status", ""]
+    if stopped_early:
+        reason = f" ({rate_limit_reason})" if rate_limit_reason else ""
+        out.append(f"- Stopped early on the subscription usage limit after {done} "
+                   f"page(s){reason}. Remaining pages stay in the worklist and resume "
+                   f"next run.")
+    if skipped:
+        out.append(f"- {len(skipped)} page(s) skipped after {attempts} protocol "
+                   f"attempts (left in the worklist, retried next run):")
+        for s in skipped:
+            out.append(f"  - `{s['lang']}: {s['rel']}` — {s.get('error', '?')}")
+    out.append("")
+    return "\n".join(out)
+
+
+def _distinct_orphan_pages(orphans: list[str], content_root: str) -> set[str]:
+    """Collapse orphan translation FILES to distinct English PAGE paths.
+
+    One deleted English page fans out to one orphan per language, so the
+    mass-deletion floor must count pages, not files (`content/<lang>/<page>` →
+    `<page>`). Pulled out of main() so the gating comparison is unit-testable."""
+    return {os.path.relpath(p, content_root).split(os.sep, 1)[1] for p in orphans}
 
 
 def main() -> int:
@@ -391,9 +440,8 @@ def main() -> int:
     # deleted page fans out to one orphan per language, and a floor on files
     # would trip on two legitimately deleted pages × six languages. Threshold
     # rather than never: a deliberate cleanup can delete the survivors by hand.
-    ORPHAN_PAGE_FLOOR = 5
     content_root = os.path.join(lib.REPO_ROOT, cfg["content_dir"])
-    orphan_pages = {os.path.relpath(p, content_root).split(os.sep, 1)[1] for p in orphans}
+    orphan_pages = _distinct_orphan_pages(orphans, content_root)
     if len(orphan_pages) > ORPHAN_PAGE_FLOOR:
         print(f"::warning::{len(orphans)} orphaned translations of {len(orphan_pages)} "
               f"English pages found (> {ORPHAN_PAGE_FLOOR} pages) — refusing to "
@@ -426,6 +474,11 @@ def main() -> int:
             print(f"  [{it.reason:7}] {it.lang}: {it.rel}")
         return 0
     if not items:
+        # An empty worklist still has to clear any report a prior run left behind,
+        # or run-daily.sh reposts stale findings stamped with today's date. This
+        # is the pipeline's normal steady state once the backlog drains.
+        if os.path.exists(REPORT_PATH):
+            os.unlink(REPORT_PATH)
         return 0
 
     try:
@@ -456,7 +509,10 @@ def main() -> int:
     PROTOCOL_ATTEMPTS = 3
 
     clean = with_findings = failed = 0
+    stopped_early = False
+    rate_limit_reason = ""
     report: list[dict] = []
+    skipped: list[dict] = []
     for it in items:
         try:
             for attempt in range(1, PROTOCOL_ATTEMPTS + 1):
@@ -470,6 +526,8 @@ def main() -> int:
                     print(f"  … retry {attempt}/{PROTOCOL_ATTEMPTS - 1} "
                           f"{it.lang}: {it.rel} — {exc}", file=sys.stderr)
         except RateLimited as exc:
+            stopped_early = True
+            rate_limit_reason = str(exc)
             print(f"\nsubscription usage limit reached after "
                   f"{clean + with_findings} page(s) — stopping cleanly, resume tomorrow. ({exc})")
             break
@@ -478,6 +536,7 @@ def main() -> int:
             # worklist (nothing written, no digest stamped) and is retried next
             # run — but the daily run is not stalled on it.
             failed += 1
+            skipped.append({"lang": it.lang, "rel": it.rel, "error": str(exc)})
             print(f"::warning::skipped {it.lang}: {it.rel} after {PROTOCOL_ATTEMPTS} "
                   f"attempts — {exc}", file=sys.stderr)
             continue
@@ -496,13 +555,17 @@ def main() -> int:
                       f"{f.get('issue', f)}")
             report.append({"lang": it.lang, "rel": it.rel, "findings": findings})
 
-    if report:
-        # The reviewers' output is the only reason a maintainer can triage a
-        # `-with-findings` page; dropping it on the floor would make the stamp
-        # unactionable. run-daily.sh puts this in the PR body.
+    # The report is the pipeline's only durable, maintainer-facing channel
+    # (run-daily.sh posts it as a PR comment). It carries open findings AND an
+    # early-stop / skipped-page summary — dropping either on the floor leaves a
+    # `-with-findings` stamp or a stalled page unactionable.
+    status_md = _format_run_status(stopped_early, rate_limit_reason,
+                                   clean + with_findings, skipped, PROTOCOL_ATTEMPTS)
+    sections = [s for s in (status_md, _format_report(report) if report else "") if s]
+    if sections:
         with open(REPORT_PATH, "w", encoding="utf-8") as fh:
-            fh.write(_format_report(report))
-        print(f"\nopen findings written to {REPORT_PATH}")
+            fh.write("\n".join(sections))
+        print(f"\nrun report written to {REPORT_PATH}")
     elif os.path.exists(REPORT_PATH):
         os.unlink(REPORT_PATH)  # don't let a previous run's report go stale
 
