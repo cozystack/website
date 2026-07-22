@@ -25,6 +25,13 @@ content_dir: content
 # "Ownership and continuity".
 auth: oauth-subscription
 
+# How translated output reaches the site. Only `pr_only` is implemented: the
+# runner pushes to a weekly branch and opens a PR for a maintainer to merge —
+# nothing reaches production without that merge, and CODEOWNERS / branch
+# protection are untouched. There is deliberately no auto-merge mode; run-daily.sh
+# fails closed on any other value rather than silently doing something unsafe.
+publish_mode: pr_only
+
 # Cadence: run daily until the account's usage limit is hit. On a usage-limit
 # error the pipeline stops cleanly (exit 0) and resumes the next day. Pages are
 # written only after the review gate finishes, so an interrupted run never

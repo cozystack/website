@@ -45,6 +45,26 @@ if ! (set -o noclobber; echo "$$" > "$LOCK_FILE") 2>/dev/null; then
 fi
 trap 'rm -f "$LOCK_FILE"' EXIT
 
+# ------------------------------------------------------------ durable run log
+# A run that stops early on the usage limit or skips every page writes a report,
+# but the only GitHub-facing channel for it is a PR comment — and on the first
+# run of a week no PR exists yet. Keep a durable, dated copy OUTSIDE the repo
+# tree (inside it would trip the next run's clean-tree preflight) so the record
+# never depends on the operator having wired up cron log capture.
+STATE_DIR="${I18N_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/cozystack-i18n}"
+persist_report() {
+  [ -f "$1" ] || return 0
+  local dest
+  dest="$STATE_DIR/run-$(date -u +%Y-%m-%dT%H%M%SZ).md"
+  if mkdir -p "$STATE_DIR" 2>/dev/null && cp "$1" "$dest" 2>/dev/null; then
+    echo "run report saved to $dest"
+  else
+    # This is the log-capture-independent record; if it fails, say so loudly
+    # rather than reproducing the silent-failure class it exists to close.
+    echo "warning: could not persist run report to $STATE_DIR — see stdout above" >&2
+  fi
+}
+
 # ---------------------------------------------------------------- environment
 VENV="${I18N_VENV:-$REPO_ROOT/.venv-i18n}"
 if [ ! -x "$VENV/bin/python" ]; then
@@ -88,6 +108,15 @@ elif [ "$AUTH_MODE" = "api-key" ]; then
   fi
 else
   echo "error: unknown auth mode '$AUTH_MODE' in config.yaml" >&2
+  exit 1
+fi
+
+# Publish mode: only pr_only is implemented (push a weekly branch, open a PR for a
+# maintainer to merge). Fail closed on anything else rather than fall through to
+# some unintended behaviour — there is no auto-merge path in this script.
+PUBLISH_MODE="$(cfg publish_mode)"
+if [ "$PUBLISH_MODE" != "pr_only" ]; then
+  echo "error: publish_mode='$PUBLISH_MODE' in config.yaml is not supported (only 'pr_only')." >&2
   exit 1
 fi
 
@@ -204,6 +233,18 @@ done < <(cfg langs)
 
 if [ ${#LANG_PATHS[@]} -eq 0 ] || [ -z "$(git status --porcelain -- "${LANG_PATHS[@]}")" ]; then
   echo "no new translations this run — nothing to publish."
+  # Nothing to publish still isn't nothing to report: the run may have stopped
+  # early on the usage limit or skipped pages on error. Persist the report to the
+  # durable state dir unconditionally, and also post it to this week's PR when one
+  # is already open. On the first run of a week (no PR yet) the state-dir copy is
+  # the record — no dependence on the operator having wired up cron log capture.
+  FINDINGS="hack/i18n/last-run-findings.md"
+  persist_report "$FINDINGS"
+  if [ -f "$FINDINGS" ] && \
+     [ "$(gh pr view "$BRANCH" --json state -q .state 2>/dev/null || echo NONE)" = "OPEN" ]; then
+    { printf '#### Run %s (no new pages published)\n\n' "$(date -u +%Y-%m-%d\ %H:%MZ)"; cat "$FINDINGS"; } \
+      | gh pr comment "$BRANCH" --body-file -
+  fi
   exit 0
 fi
 
@@ -261,6 +302,7 @@ fi
 # accumulates a week of runs, but the report file only ever holds the last one.
 # Comments accumulate on their own, so the thread ends up being the week's log.
 FINDINGS="hack/i18n/last-run-findings.md"
+persist_report "$FINDINGS"
 if [ -f "$FINDINGS" ]; then
   { printf '#### Run %s\n\n' "$(date -u +%Y-%m-%d\ %H:%MZ)"; cat "$FINDINGS"; } \
     | gh pr comment "$BRANCH" --body-file -
