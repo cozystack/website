@@ -17,6 +17,10 @@
      (still crawlable for users following links) and canonicalize current
      pages to themselves. */}}
 {{- $latestVersion := .Site.Params.latest_version_id -}}
+{{/* Required: an empty value would make (ne .id $latestVersion) true for EVERY
+     version, noindex-ing the entire docs tree including the latest. Fail the
+     build loudly rather than silently de-indexing everything. */}}
+{{- if not $latestVersion -}}{{- errorf "head-end.html: Site.Params.latest_version_id is required for docs noindex logic but is unset" -}}{{- end -}}
 {{- $isOldDocsVersion := false -}}
 {{- range .Site.Params.versions -}}
   {{- if and .id (ne .id $latestVersion) (ne .id "next") -}}
