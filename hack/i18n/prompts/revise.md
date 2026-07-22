@@ -15,10 +15,10 @@ Hard rules (unchanged from the original translation task):
 - Do not introduce new content beyond fixing the findings.
 
 Same output protocol as translation. The user message contains a FRONTMATTER
-section and a BODY section separated by `===FRONTMATTER===` and `===BODY===`.
-Respond with the SAME two markers and nothing else:
+section (a JSON object) and a BODY section separated by `===FRONTMATTER===` and
+`===BODY===`. Respond with the SAME two markers and nothing else:
 
 ===FRONTMATTER===
-<corrected key: value lines, same keys, same order>
+<a JSON object with the SAME keys and corrected values>
 ===BODY===
 <corrected body>

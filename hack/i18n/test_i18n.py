@@ -505,6 +505,25 @@ class TestDerefShortcodes(unittest.TestCase):
         t = '{{% ref foo="bar" %}}'
         self.assertTrue(lib.has_ref_shortcode(lib.deref_shortcodes(t, "docs/p.md")))
 
+    def test_backtick_raw_string_target_is_rewritten(self):
+        # Hugo accepts backtick raw-string args; strip them, don't leave a broken link.
+        t = "{{< ref `/docs/v1.5/x` >}}"
+        self.assertEqual(lib.deref_shortcodes(t, "docs/p.md"), "/docs/v1.5/x/")
+
+    def test_section_index_target_maps_to_parent(self):
+        # `_index.md`/`index.md` are served at the parent URL, not `.../_index/`.
+        self.assertEqual(
+            lib.deref_shortcodes('{{% ref "/docs/v1.5/section/_index.md" %}}', "docs/p.md"),
+            "/docs/v1.5/section/")
+        self.assertEqual(
+            lib.deref_shortcodes('{{% ref "/docs/v1.5/section/index" %}}', "docs/p.md"),
+            "/docs/v1.5/section/")
+
+    def test_malformed_target_fails_closed(self):
+        # A shape whose target can't be cleanly extracted must survive detection.
+        self.assertTrue(lib.has_ref_shortcode(
+            lib.deref_shortcodes('{{% ref bogus="x" other=1 %}}', "docs/p.md")))
+
 
 class TestRunStatus(unittest.TestCase):
     def test_clean_run_produces_no_status(self):

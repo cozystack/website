@@ -415,9 +415,14 @@ def _ref_target(args: str) -> str | None:
     args = args.strip()
     if not args:
         return None
-    first = args.split()[0].strip('"').strip("'")
-    # A leftover `=` means this was a named form we do not understand (not `path`).
-    return first or None if "=" not in first else None
+    first = args.split()[0].strip('"').strip("'").strip("`")
+    # If a quote/backtick/`=`/space survived stripping, this is a shape we do not
+    # understand (unbalanced quoting, an unhandled named param): return None so
+    # has_ref_shortcode fires and translate_page fails closed rather than ship a
+    # silently-broken link.
+    if not first or any(c in first for c in '"\'`= '):
+        return None
+    return first
 
 
 def has_ref_shortcode(text: str) -> bool:
@@ -453,6 +458,12 @@ def deref_shortcodes(text: str, page_rel: str) -> str:
         path = path.rstrip("/")
         if path.endswith(".md"):
             path = path[:-3]
+        # A section index (`.../_index` or `.../index`) is served at the parent
+        # URL, not at `.../_index/`.
+        for suffix in ("/_index", "/index"):
+            if path.endswith(suffix):
+                path = path[: -len(suffix)]
+                break
         return path + "/" + (f"#{frag}" if frag else "")
     return _REF_SHORTCODE.sub(_sub, text)
 

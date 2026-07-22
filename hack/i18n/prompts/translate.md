@@ -36,12 +36,14 @@ reads well in {{LANGUAGE}}; when it is documentation, stay precise and faithful.
 
 ## Output protocol
 
-The user message contains a FRONTMATTER section (a few `key: value` lines) and a
-BODY section, separated by the exact markers `===FRONTMATTER===` and
-`===BODY===`. Respond with the SAME two markers and nothing else:
+The user message contains a FRONTMATTER section (a JSON object mapping an opaque
+path to the English text) and a BODY section, separated by the exact markers
+`===FRONTMATTER===` and `===BODY===`. Respond with the SAME two markers and
+nothing else:
 
 ===FRONTMATTER===
-<the translated values, one `key: value` per line, same keys, same order>
+<a JSON object with the SAME keys and translated values — do not add, drop, or
+rename keys, and do not interpret the keys themselves>
 ===BODY===
 <the translated body>
 
