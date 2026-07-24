@@ -1,0 +1,80 @@
+[caution]
+other = "Cuidado:"
+
+[home_screenshots]
+other = "Capturas de tela"
+
+[home_benefits]
+other = "Benefícios"
+
+[home_features]
+other = "Recursos"
+
+[home_cncf_sandbox]
+other = "O Cozystack é um projeto Sandbox da <a href=\"https://cncf.io\">Cloud Native Computing Foundation</a>"
+
+[join_community]
+other = "Junte-se à comunidade"
+
+[docs_create_issue]
+other = "Criar issue de documentação"
+
+[docs_create_project_issue]
+other = "Criar issue do projeto"
+
+[docs_edit]
+other = "Editar esta página"
+
+[docs_last_mod]
+other = "Última modificação"
+
+[docs_table_of_contents]
+other = "Sumário"
+
+[note]
+other = "Nota:"
+
+[outdated_blog__message]
+other = "Este artigo tem mais de um ano. Artigos mais antigos podem conter conteúdo desatualizado. Verifique se as informações da página não se tornaram incorretas desde a sua publicação."
+
+[ui_minute_read]
+other = "minutos de leitura"
+
+[ui_pager_next]
+other = "Próximo"
+
+[ui_pager_prev]
+other = "Anterior"
+
+[ui_read_more]
+other = "Leia mais"
+
+[warning]
+other = "Aviso:"
+
+[translation_machine_notice]
+other = "Esta página foi traduzida automaticamente e ainda não foi revisada por um falante nativo."
+
+[translation_report_error]
+other = 'Encontrou um erro? <a href="{{ .IssueURL }}">Abra uma issue</a>.'
+
+[translation_see_original]
+other = 'Consulte o <a href="{{ .Link }}">original em inglês</a>.'
+
+[docs_landing_new_users]
+other = "<strong>Novos usuários:</strong> comece pela <a href=\"{{ .url }}\">documentação da {{ .version }}</a> — a versão estável atual."
+
+[docs_landing_available_versions]
+other = "Versões disponíveis"
+
+[docs_landing_col_version]
+other = "Versão"
+
+[docs_landing_col_status]
+other = "Status"
+
+[docs_landing_status_latest]
+other = "Mais recente (estável)"
+
+[docs_landing_status_previous]
+other = "Versão anterior"

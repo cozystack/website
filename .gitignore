@@ -27,3 +27,9 @@ static/docs/*/cozystack-api/
 
 # Claude Code local settings
 .claude/
+
+# i18n pipeline venv (bootstrapped by hack/i18n/run-daily.sh)
+.venv-i18n/
+
+# i18n pipeline: per-run artifacts, not content
+hack/i18n/last-run-findings.md

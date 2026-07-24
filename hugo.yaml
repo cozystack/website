@@ -91,6 +91,16 @@ module:
       lang: hi
       files:
         - '! **/_include/*'
+    - source: content/es
+      target: content
+      lang: es
+      files:
+        - '! **/_include/*'
+    - source: content/pt-br
+      target: content
+      lang: pt-br
+      files:
+        - '! **/_include/*'
     # Mount npm dependencies for Docsy
     - source: node_modules/bootstrap
       target: assets/vendor/bootstrap
@@ -159,6 +169,31 @@ languages:
     params:
       time_format_default: 2006-01-02
       time_format_blog: 2006-01-02
+  # es and pt-br are being translated (they are listed in hack/i18n/config.yaml)
+  # but are NOT declared here yet, because content/es and content/pt-br do not
+  # exist. Declaring a language with no content does not produce nothing — Hugo
+  # still emits /es/, /es/tags/, /es/categories/, /es/topics/,
+  # /es/article_types/ and /es/404.html, all `robots: index, follow` and
+  # self-canonical. That publishes ~6 empty but indexable pages per language,
+  # which is the thin content we are otherwise careful to avoid.
+  #
+  # Un-comment each block in the same PR that lands that language's content —
+  # not before. hack/i18n/test_i18n.py enforces this.
+  #
+  # es:
+  #   languageName: Español
+  #   languageCode: es
+  #   weight: 6
+  #   params:
+  #     time_format_default: 2006-01-02
+  #     time_format_blog: 2006-01-02
+  # pt-br:
+  #   languageName: Português (Brasil)
+  #   languageCode: pt-BR
+  #   weight: 7
+  #   params:
+  #     time_format_default: 2006-01-02
+  #     time_format_blog: 2006-01-02
 
 permalinks:
   blog: /:section/:year/:month/:slug/

@@ -1,0 +1,52 @@
+{{- /* Machine-translation disclaimer. DOCS PAGES ONLY.
+
+  Wired into docs/baseof.html and nowhere else, by product decision: the notice
+  belongs where a wrong technical detail is costly (an operator following a
+  translated command), not on the blog, marketing pages, or the homepage hero.
+  To change coverage, add/remove the `{{ partial "translation-banner.html" . }}`
+  call in the relevant layout — the guard below is layout-agnostic.
+
+  Localized pages are published as soon as they clear the automated review gate
+  and are indexed immediately (publish-then-ratify) — readers get the docs now
+  rather than after a native review that may take months. The trade is that a
+  reader can land on a page no human has ratified, so the page must say so
+  plainly and link to the English source it was derived from.
+
+  The rule is fail-safe: every non-English page carries the disclaimer UNLESS it
+  is explicitly marked ratified. Keying off the presence of `translation_review`
+  instead would silently exempt the pages translated before this pipeline existed
+  (content/de, content/ru, content/hi, content/zh-cn from the i18n PoC) — exactly
+  the unratified machine output the disclaimer is for.
+
+  `translation_review` is written by hack/i18n/translate.py:
+    auto-reviewed                — cleared the machine gate
+    auto-reviewed-with-findings  — written with findings still open
+    ratified                     — a native speaker signed off; no banner
+  Set it to `ratified` on a page a native speaker has checked (or hand-wrote).
+*/ -}}
+{{- /* .Sites.Default is the defaultContentLanguage site (en). NOT .Site.Home —
+       on the Russian site that resolves to the Russian home page, so
+       `ne .Lang .Site.Home.Lang` is false everywhere and the banner never
+       renders on the very pages it exists for. */ -}}
+{{- $src := .Sites.Default.Language.Lang -}}
+{{- if and (ne .Lang $src) (ne .Params.translation_review "ratified") -}}
+{{- $en := "" -}}
+{{- range .AllTranslations -}}
+  {{- if eq .Lang $src }}{{ $en = .Permalink }}{{ end -}}
+{{- end -}}
+{{- /* One i18n key per SENTENCE, with the link as a template placeholder.
+       Assembling a sentence from fragments ("See the" + <a>…</a> + ".")
+       hardcodes English word order and punctuation into the layout: Hindi is
+       verb-final ("अंग्रेज़ी मूल देखें", not "देखें अंग्रेज़ी मूल"), and a fragment
+       that continues after "?" cannot know it must start a new sentence.
+       Sentence-level keys let each translator place the link and punctuation
+       where the language needs them. These UI strings never pass through the
+       pipeline's review gate (only content/ does) — they are reviewed by hand. */ -}}
+<div class="pageinfo pageinfo-warning">
+  <p>
+    {{ T "translation_machine_notice" }}
+    {{- with $en }} {{ i18n "translation_see_original" (dict "Link" .) | safeHTML }}{{ end }}
+    {{ i18n "translation_report_error" (dict "IssueURL" "https://github.com/cozystack/website/issues/new") | safeHTML }}
+  </p>
+</div>
+{{- end -}}
