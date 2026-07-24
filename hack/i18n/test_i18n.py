@@ -625,6 +625,101 @@ class TestLinkDestinationMasking(unittest.TestCase):
         self.assertEqual(lib.restore(masked, store), 'A [link](/a/b "Read this") here.')
 
 
+class TestRawHtmlMasking(unittest.TestCase):
+    """`.html` pages produced zero protected spans, so the placeholder guard had
+    nothing to fail closed on and markup reached the model verbatim."""
+
+    def test_html_tags_are_masked_but_their_text_is_not(self):
+        masked, store = lib.protect('<h2 class="section-label">Our roadmap</h2>')
+        self.assertNotIn("section-label", masked)
+        self.assertIn("Our roadmap", masked)  # visible text stays translatable
+        self.assertEqual(lib.restore(masked, store),
+                         '<h2 class="section-label">Our roadmap</h2>')
+
+    def test_anchor_attributes_are_masked(self):
+        text = '<a href="/docs/install" target="_blank">Install guide</a>'
+        masked, store = lib.protect(text)
+        self.assertNotIn("/docs/install", masked)
+        self.assertNotIn("_blank", masked)
+        self.assertIn("Install guide", masked)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_self_closing_and_closing_tags(self):
+        text = "line one<br />line two</div>"
+        masked, store = lib.protect(text)
+        self.assertNotIn("<br />", masked)
+        self.assertNotIn("</div>", masked)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_html_page_now_produces_protected_spans(self):
+        # The regression lexfrei reported: this used to be 0.
+        _masked, store = lib.protect('<div class="hero">\n<p>Hello</p>\n</div>')
+        self.assertGreater(len(store), 0)
+
+    def test_autolink_is_not_swallowed_by_the_tag_pattern(self):
+        text = "See <https://cozystack.io> for more."
+        masked, store = lib.protect(text)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_a_less_than_sign_in_prose_is_not_a_tag(self):
+        text = "Use a value < 10 for this."
+        masked, store = lib.protect(text)
+        self.assertEqual(masked, text)
+        self.assertEqual(store, {})
+
+
+class TestHandLocalizedPagesArePreserved(unittest.TestCase):
+    """`l10n: transcreate` marks a page a human wrote by hand. Regenerating it
+    would overwrite that with machine output, and `translate_page` used to stamp
+    `l10n: mt` unconditionally."""
+
+    def _page(self, tmp, l10n, digest="deadbeef"):
+        p = os.path.join(tmp, "page.md")
+        with open(p, "w", encoding="utf-8") as fh:
+            fh.write(f'---\ntitle: T\nl10n: {l10n}\nsource_digest: "sha256:{digest}"\n---\nbody\n')
+        return p
+
+    def test_recorded_l10n_reads_the_marker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(lib.recorded_l10n(self._page(tmp, "transcreate")), "transcreate")
+
+    def test_is_hand_localized(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertTrue(lib.is_hand_localized(self._page(tmp, "transcreate")))
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertFalse(lib.is_hand_localized(self._page(tmp, "mt")))
+
+    def test_missing_marker_is_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = os.path.join(tmp, "p.md")
+            with open(p, "w", encoding="utf-8") as fh:
+                fh.write("---\ntitle: T\n---\nbody\n")
+            self.assertIsNone(lib.recorded_l10n(p))
+            self.assertFalse(lib.is_hand_localized(p))
+
+    def test_transcreated_page_is_kept_out_of_the_worklist(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            en = os.path.join(tmp, "content", "en")
+            ru = os.path.join(tmp, "content", "ru")
+            os.makedirs(en); os.makedirs(ru)
+            with open(os.path.join(en, "_index.html"), "w", encoding="utf-8") as fh:
+                fh.write("---\ntitle: Home\n---\n<div>hi</div>\n")
+            # Target exists, is hand-localized, and its digest is deliberately stale.
+            with open(os.path.join(ru, "_index.html"), "w", encoding="utf-8") as fh:
+                fh.write('---\ntitle: Главная\nl10n: transcreate\nsource_digest: "sha256:stale"\n---\n<div>привет</div>\n')
+            cfg = {"content_dir": "content", "source_lang": "en",
+                   "languages": [{"code": "ru"}], "translate_globs": ["_index.html"],
+                   "exclude_globs": [], "blog_since": ""}
+            orig_root, orig_latest = lib.REPO_ROOT, lib.latest_docs_version
+            try:
+                lib.REPO_ROOT = tmp
+                lib.latest_docs_version = lambda _cfg: "v1.5"
+                self.assertEqual(lib.build_worklist(cfg), [])
+                self.assertEqual(lib.find_hand_localized(cfg), [("ru", "_index.html")])
+            finally:
+                lib.REPO_ROOT, lib.latest_docs_version = orig_root, orig_latest
+
+
 class TestIntegrityFindings(unittest.TestCase):
     def test_clean_translation_has_no_findings(self):
         self.assertEqual(

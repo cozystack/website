@@ -57,6 +57,17 @@ _VISIBLE_ATTR_RE = re.compile(r'\b(?:caption|alt|title)="([^"]*)"')
 #   refdef:   [id]: https://example.com
 _LINKDEST_RE = re.compile(r'(?<=\])\((?P<dest><[^>]*>|[^)\s]*)(?P<title>\s+"[^"]*")?\)')
 _AUTOLINK_RE = re.compile(r'<(?:https?|mailto):[^>\s]+>')
+
+# Raw HTML tags. `.html` pages are mostly markup, and Goldmark runs with
+# `unsafe: true`, so Markdown pages carry raw HTML too. Nothing masked it before:
+# `docs/*/roadmap.html` produced ZERO protected spans, so every `<a href>`,
+# `target="_blank"` and `<br />` reached the model verbatim — and because the
+# placeholder guard in translate.py counts `§§…§§` tokens, a page with no tokens
+# had nothing to fail closed on. A translated `class=` or a dropped `</div>`
+# would ship silently: the gate does not inspect markup, check-i18n.sh only
+# compares digests, and Hugo renders broken HTML without complaint.
+# Only the TAG is masked; the text between tags stays exposed for translation.
+_HTMLTAG_RE = re.compile(r'</?[a-zA-Z][^>\n]*/?>')
 _REFDEF_RE = re.compile(r'(?m)^(?P<label>\[[^\]]+\]:[ \t]*)(?P<dest>\S+)')
 
 
@@ -220,6 +231,35 @@ def recorded_digest(path: str) -> str | None:
     return m.group(1) if m else None
 
 
+# `l10n` values that mark a page as HAND-localized. The pipeline must never
+# regenerate such a page: `translate_page` sets `l10n: mt` unconditionally, so a
+# single edit to the English source would turn a hand-crafted transcreation into
+# literal machine translation — and the disclaimer banner is wired into the docs
+# layout only, so a localized homepage would carry that output with no disclosure
+# at all. Today this protects the four localized `_index.html` homepages and four
+# blog posts from the proof of concept.
+PRESERVED_L10N_VALUES = ("transcreate",)
+
+_L10N_RE = re.compile(r'^l10n:\s*"?([A-Za-z-]+)"?', re.MULTILINE)
+
+
+def recorded_l10n(path: str) -> str | None:
+    """Read the `l10n` marker from a translated page's front matter, if present."""
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        head = fh.read()
+    fm_end = head.find("\n---", 4)
+    if fm_end != -1:
+        head = head[:fm_end]
+    m = _L10N_RE.search(head)
+    return m.group(1) if m else None
+
+
+def is_hand_localized(path: str) -> bool:
+    return recorded_l10n(path) in PRESERVED_L10N_VALUES
+
+
 def build_worklist(cfg: dict, only_lang: str | None = None) -> list[WorkItem]:
     items: list[WorkItem] = []
     langs = [l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])]
@@ -229,9 +269,29 @@ def build_worklist(cfg: dict, only_lang: str | None = None) -> list[WorkItem]:
             tp = target_path(cfg, lang, rel)
             if not os.path.exists(tp):
                 items.append(WorkItem(lang, rel, "missing"))
+            elif is_hand_localized(tp):
+                continue  # hand-crafted: never regenerate (see PRESERVED_L10N_VALUES)
             elif recorded_digest(tp) != cur:
                 items.append(WorkItem(lang, rel, "stale"))
     return items
+
+
+def find_hand_localized(cfg: dict, only_lang: str | None = None) -> list[tuple[str, str]]:
+    """(lang, rel) for pages skipped because a human localized them by hand.
+
+    Skipping them silently would be its own failure: the page then drifts from an
+    English source nobody is tracking. They are reported in the weekly PR so a
+    human can refresh the transcreation deliberately.
+    """
+    out: list[tuple[str, str]] = []
+    langs = [l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])]
+    for rel in iter_source_files(cfg):
+        cur = sha256_file(source_path(cfg, rel))
+        for lang in langs:
+            tp = target_path(cfg, lang, rel)
+            if os.path.exists(tp) and is_hand_localized(tp) and recorded_digest(tp) != cur:
+                out.append((lang, rel))
+    return sorted(out)
 
 
 def find_orphan_translations(cfg: dict, only_lang: str | None = None) -> list[str]:
@@ -401,7 +461,10 @@ def protect(text: str) -> tuple[str, dict[str, str]]:
     # 4. Link destinations LAST, so URLs already inside code/shortcodes are
     #    covered by their own placeholders and are not double-masked. Link TEXT
     #    stays exposed and still gets translated; only the target is opaque.
+    #    Autolinks go before raw HTML tags: `<https://…>` starts with a letter and
+    #    would otherwise be swallowed by the tag pattern.
     text = _AUTOLINK_RE.sub(_sub("URL"), text)
+    text = _HTMLTAG_RE.sub(_sub("HTMLTAG"), text)
     text = _LINKDEST_RE.sub(
         lambda m: "(" + _stash(m.group("dest"), "URL") + (m.group("title") or "") + ")", text)
     text = _REFDEF_RE.sub(

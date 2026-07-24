@@ -355,7 +355,12 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
     # (mt | transcreate). Whatever the page was before, this pipeline just
     # machine-translated it, so say so — the disclaimer banner and any future
     # native-review triage read this.
-    out_fm["l10n"] = "mt"
+    # Belt and braces: build_worklist already skips hand-localized pages, but this
+    # assignment used to run unconditionally AFTER merge_target_only_keys, so it
+    # was exactly what clobbered the marker a human set. Never downgrade a
+    # transcreation to `mt` — if we somehow got here, keep what the human wrote.
+    existing_l10n = lib.recorded_l10n(dest)
+    out_fm["l10n"] = existing_l10n if existing_l10n in lib.PRESERVED_L10N_VALUES else "mt"
     # Stamp honestly: a page that ran out of revise rounds with findings still
     # open is NOT the same as one that cleared the gate. Neither is "ratified" —
     # only a human sets that, and only that value drops the disclaimer banner.
@@ -569,7 +574,22 @@ def main() -> int:
     # `-with-findings` stamp or a stalled page unactionable.
     status_md = _format_run_status(stopped_early, rate_limit_reason,
                                    clean + with_findings, skipped, PROTOCOL_ATTEMPTS)
-    sections = [s for s in (status_md, _format_report(report) if report else "") if s]
+    # Hand-localized pages whose English source moved on. The pipeline refuses to
+    # regenerate them (it would overwrite a transcreation with machine output), so
+    # the only way they get refreshed is a human deciding to — which requires
+    # telling the human they have drifted.
+    hand = lib.find_hand_localized(cfg, only_lang=args.lang)
+    hand_md = ""
+    if hand:
+        hand_md = "\n".join(
+            [f"### Hand-localized pages that drifted ({len(hand)})", "",
+             "These carry `l10n: transcreate`, so the pipeline leaves them alone — "
+             "regenerating would replace a human transcreation with machine output. "
+             "Their English source has changed since they were written; refresh them "
+             "by hand if the change matters.", ""]
+            + [f"- `{lang}: {rel}`" for lang, rel in hand] + [""])
+    sections = [s for s in (status_md, hand_md,
+                            _format_report(report) if report else "") if s]
     if sections:
         with open(REPORT_PATH, "w", encoding="utf-8") as fh:
             fh.write("\n".join(sections))
