@@ -293,6 +293,14 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
                              or [{"severity": "major", "from": "back-translation",
                                   "issue": "revise verdict with no findings listed"}])
 
+        # 2b. deterministic checks — cheap, objective, and not subject to the
+        # reviewers' mood. Masking already guarantees code/shortcodes/URLs; these
+        # cover what legitimately lives in prose (versions, bare flags, brands)
+        # and the per-language typography the style guides mandate but nothing
+        # previously verified. They feed the same revise loop as the reviewers.
+        findings += lib.integrity_findings(body, tr_body, glossary.get("do_not_translate"))
+        findings += lib.check_typography(tr_body, lang_cfg["code"])
+
         # 3. two native reviewers
         for reviewer in cfg["review"]["reviewers"]:
             sys_r = render(_read(os.path.join(PROMPT_DIR, os.path.basename(reviewer["prompt"]))),
