@@ -24,7 +24,15 @@ reads well in {{LANGUAGE}}; when it is documentation, stay precise and faithful.
 4. Preserve all Markdown/HTML structure exactly: heading levels, list markers,
    tables (same number of columns and delimiter cells), links (translate link
    TEXT, keep the URL), bold/italic, and blank lines.
-5. Keep numbers, versions, dates, and units unchanged.
+5. Never change the VALUE of a number, version, or measurement — a figure in the
+   translation must mean exactly what it meant in English. Version strings,
+   numbers inside code, YAML values, CIDRs, resource quantities (`512Mi`,
+   `0.5` CPU), ports, and tags are literal identifiers: reproduce them
+   character-for-character, never localizing their separators.
+   FORMATTING of numbers, dates and units in ordinary PROSE follows the style
+   guide below — several languages require a decimal comma, a different
+   thousands separator, or a different date order. Reformatting prose is
+   expected; changing a value, or touching a version/identifier, is not.
 
 ## Preferred terminology (use consistently)
 

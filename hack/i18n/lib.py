@@ -47,6 +47,29 @@ _INLINECODE_RE = re.compile(r"`[^`\n]+`")
 # link, the delimiters, the param names) is structure and stays verbatim.
 _VISIBLE_ATTR_RE = re.compile(r'\b(?:caption|alt|title)="([^"]*)"')
 
+# Link DESTINATIONS. Only backticked code was structurally protected before, so a
+# URL sitting in ordinary prose (`[text](https://…)`) was defended by a prompt rule
+# alone — the model could silently mutate, localize or "fix" it and nothing would
+# catch it. Masking the destination makes URL integrity a guarantee instead of a
+# hope, while leaving the link TEXT exposed so it still gets translated.
+#   inline:   [text](/docs/install "Optional title")  -> destination only
+#   autolink: <https://example.com>
+#   refdef:   [id]: https://example.com
+_LINKDEST_RE = re.compile(r'(?<=\])\((?P<dest><[^>]*>|[^)\s]*)(?P<title>\s+"[^"]*")?\)')
+_AUTOLINK_RE = re.compile(r'<(?:https?|mailto):[^>\s]+>')
+
+# Raw HTML tags. `.html` pages are mostly markup, and Goldmark runs with
+# `unsafe: true`, so Markdown pages carry raw HTML too. Nothing masked it before:
+# `docs/*/roadmap.html` produced ZERO protected spans, so every `<a href>`,
+# `target="_blank"` and `<br />` reached the model verbatim — and because the
+# placeholder guard in translate.py counts `§§…§§` tokens, a page with no tokens
+# had nothing to fail closed on. A translated `class=` or a dropped `</div>`
+# would ship silently: the gate does not inspect markup, check-i18n.sh only
+# compares digests, and Hugo renders broken HTML without complaint.
+# Only the TAG is masked; the text between tags stays exposed for translation.
+_HTMLTAG_RE = re.compile(r'</?[a-zA-Z][^>\n]*/?>')
+_REFDEF_RE = re.compile(r'(?m)^(?P<label>\[[^\]]+\]:[ \t]*)(?P<dest>\S+)')
+
 
 def load_config() -> dict:
     with open(CONFIG_PATH, encoding="utf-8") as fh:
@@ -208,6 +231,35 @@ def recorded_digest(path: str) -> str | None:
     return m.group(1) if m else None
 
 
+# `l10n` values that mark a page as HAND-localized. The pipeline must never
+# regenerate such a page: `translate_page` sets `l10n: mt` unconditionally, so a
+# single edit to the English source would turn a hand-crafted transcreation into
+# literal machine translation — and the disclaimer banner is wired into the docs
+# layout only, so a localized homepage would carry that output with no disclosure
+# at all. Today this protects the four localized `_index.html` homepages and four
+# blog posts from the proof of concept.
+PRESERVED_L10N_VALUES = ("transcreate",)
+
+_L10N_RE = re.compile(r'^l10n:\s*"?([A-Za-z-]+)"?', re.MULTILINE)
+
+
+def recorded_l10n(path: str) -> str | None:
+    """Read the `l10n` marker from a translated page's front matter, if present."""
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        head = fh.read()
+    fm_end = head.find("\n---", 4)
+    if fm_end != -1:
+        head = head[:fm_end]
+    m = _L10N_RE.search(head)
+    return m.group(1) if m else None
+
+
+def is_hand_localized(path: str) -> bool:
+    return recorded_l10n(path) in PRESERVED_L10N_VALUES
+
+
 def build_worklist(cfg: dict, only_lang: str | None = None) -> list[WorkItem]:
     items: list[WorkItem] = []
     langs = [l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])]
@@ -217,9 +269,29 @@ def build_worklist(cfg: dict, only_lang: str | None = None) -> list[WorkItem]:
             tp = target_path(cfg, lang, rel)
             if not os.path.exists(tp):
                 items.append(WorkItem(lang, rel, "missing"))
+            elif is_hand_localized(tp):
+                continue  # hand-crafted: never regenerate (see PRESERVED_L10N_VALUES)
             elif recorded_digest(tp) != cur:
                 items.append(WorkItem(lang, rel, "stale"))
     return items
+
+
+def find_hand_localized(cfg: dict, only_lang: str | None = None) -> list[tuple[str, str]]:
+    """(lang, rel) for pages skipped because a human localized them by hand.
+
+    Skipping them silently would be its own failure: the page then drifts from an
+    English source nobody is tracking. They are reported in the weekly PR so a
+    human can refresh the transcreation deliberately.
+    """
+    out: list[tuple[str, str]] = []
+    langs = [l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])]
+    for rel in iter_source_files(cfg):
+        cur = sha256_file(source_path(cfg, rel))
+        for lang in langs:
+            tp = target_path(cfg, lang, rel)
+            if os.path.exists(tp) and is_hand_localized(tp) and recorded_digest(tp) != cur:
+                out.append((lang, rel))
+    return sorted(out)
 
 
 def find_orphan_translations(cfg: dict, only_lang: str | None = None) -> list[str]:
@@ -385,6 +457,18 @@ def protect(text: str) -> tuple[str, dict[str, str]]:
     # 3. Comments, then inline code.
     text = _HTMLCOMMENT_RE.sub(_sub("HTMLCOMMENT"), text)
     text = _INLINECODE_RE.sub(_sub("INLINECODE"), text)
+
+    # 4. Link destinations LAST, so URLs already inside code/shortcodes are
+    #    covered by their own placeholders and are not double-masked. Link TEXT
+    #    stays exposed and still gets translated; only the target is opaque.
+    #    Autolinks go before raw HTML tags: `<https://…>` starts with a letter and
+    #    would otherwise be swallowed by the tag pattern.
+    text = _AUTOLINK_RE.sub(_sub("URL"), text)
+    text = _HTMLTAG_RE.sub(_sub("HTMLTAG"), text)
+    text = _LINKDEST_RE.sub(
+        lambda m: "(" + _stash(m.group("dest"), "URL") + (m.group("title") or "") + ")", text)
+    text = _REFDEF_RE.sub(
+        lambda m: m.group("label") + _stash(m.group("dest"), "URL"), text)
     return text, store
 
 
@@ -428,6 +512,139 @@ def _ref_target(args: str) -> str | None:
 def has_ref_shortcode(text: str) -> bool:
     """True if any ref/relref shortcode remains — a build-breaking hazard."""
     return bool(_ANY_REF_SHORTCODE.search(text))
+
+
+# ---- deterministic integrity & typography checks ----------------------------
+#
+# The masking in protect() guarantees that code, shortcodes and URLs survive
+# byte-for-byte. What it CANNOT guarantee is the material that legitimately sits
+# in ordinary prose: a bare `--flag`, a `kind: Tenant` written without backticks,
+# a version number, a brand from do_not_translate. Those are defended only by
+# prompt rules, which is to say softly. These checks turn "the model was told
+# not to" into "we looked". They return FINDINGS (fed to the same revise loop as
+# the reviewers) rather than raising: a false positive should cost one revise
+# round, never a hard-failed page.
+
+_CODEISH_RE = re.compile(
+    r"```.*?```"                 # fenced code
+    r"|`[^`\n]+`"                # inline code
+    r"|§§[A-Z]+_\d+§§"           # pipeline placeholders
+    r"|\{\{[<%].*?[%>]\}\}"      # Hugo shortcodes (params are not prose)
+    r"|<!--.*?-->"               # HTML comments
+    r"|<[^>\n]+>"                # HTML tags with their attributes
+    r"|\]\([^)\s]*\)"            # markdown link/image destinations
+    r"|^\[[^\]]+\]:[ \t]*\S+",   # reference-link definitions
+    re.DOTALL | re.MULTILINE)
+
+
+def _prose_only(text: str) -> str:
+    """Drop everything that is markup or code, so the checks see prose alone.
+
+    Without this the typography rules fire on things that are *correctly* written
+    with ASCII punctuation — an HTML attribute (`class="hero"`), a shortcode
+    param, a file path — and a check that cries wolf is a check reviewers learn
+    to ignore.
+    """
+    return _CODEISH_RE.sub(" ", text)
+
+
+# Version-ish tokens: v1.5, 1.2.3, v1.2.5. Localizing the separator (1,2,3) or
+# bumping a digit changes documented behaviour, so counts must match the source.
+_VERSION_RE = re.compile(r"\bv?\d+\.\d+(?:\.\d+)?\b")
+# Bare long CLI flags in prose.
+_FLAG_RE = re.compile(r"(?<![\w-])--[a-z][a-z0-9-]{2,}\b")
+
+
+def integrity_findings(src_body: str, tr_body: str, dnt_terms: list[str] | None = None,
+                       who: str = "integrity-check") -> list[dict]:
+    """Compare source and translation for material that must survive verbatim.
+
+    Checks, all on prose only (masked spans are already guaranteed):
+      * version tokens      — same multiset
+      * bare CLI flags      — same multiset
+      * do_not_translate    — a term present in the source must not vanish
+    """
+    out: list[dict] = []
+    src, tr = _prose_only(src_body), _prose_only(tr_body)
+
+    def _counts(rx, s):
+        d: dict[str, int] = {}
+        for m in rx.finditer(s):
+            d[m.group(0)] = d.get(m.group(0), 0) + 1
+        return d
+
+    for label, rx in (("version", _VERSION_RE), ("CLI flag", _FLAG_RE)):
+        a, b = _counts(rx, src), _counts(rx, tr)
+        for tok, n in a.items():
+            got = b.get(tok, 0)
+            if got < n:
+                out.append({"severity": "major", "from": who,
+                            "issue": f"{label} '{tok}' appears {n}× in the English source but "
+                                     f"{got}× in the translation — it must be carried over "
+                                     f"unchanged"})
+        for tok in b:
+            if tok not in a:
+                out.append({"severity": "minor", "from": who,
+                            "issue": f"{label} '{tok}' appears in the translation but not in "
+                                     f"the source — do not invent versions or flags"})
+
+    for term in (dnt_terms or []):
+        n = src.count(term)
+        if n and tr.count(term) < n:
+            out.append({"severity": "major", "from": who,
+                        "issue": f"do-not-translate term '{term}' appears {n}× in the source "
+                                 f"but only {tr.count(term)}× in the translation — it must be "
+                                 f"kept verbatim, not translated or transliterated"})
+    return out
+
+
+# Per-language typography. The style guides state these rules; nothing checked
+# them, so a page could read fine and still be typeset like English. Findings are
+# advisory-but-real: they are the cheapest quality signal we have per language.
+_TYPO_RULES: dict[str, list[tuple[str, str]]] = {
+    "ru": [
+        (r'"[^"\n]{1,80}"', 'ASCII double quotes in Russian prose — use «ёлочки»'),
+        (r'[“”][^\n]{0,80}[“”]', 'English curly quotes in Russian prose — use «ёлочки»'),
+        # A hyphen doing a dash's job — but NOT a list marker ("\n- item"), which
+        # is why a non-space character is required immediately before it.
+        (r'(?<=[^\s])[ ]-[ ](?=\S)', 'hyphen used as a dash — use the em dash «—»'),
+    ],
+    "de": [
+        (r'"[^"\n]{1,80}"', 'ASCII double quotes in German prose — use „…“'),
+        (r'[“][^\n]{0,80}[”]', 'English curly quotes in German prose — use „…“'),
+    ],
+    "es": [
+        (r'(?<![¿])\b[A-ZÁÉÍÓÚÑ][^.!?\n]{5,120}\?', 'question without an opening ¿'),
+        (r'(?<![¡])\b[A-ZÁÉÍÓÚÑ][^.!?\n]{5,120}!', 'exclamation without an opening ¡'),
+    ],
+    "pt-br": [
+        (r'\b(ficheiro|utilizador|ecrã|rato|autocarro|telemóvel|casa de banho)\b',
+         'European Portuguese vocabulary leaked into pt-BR'),
+        (r'\bestá a [a-zçãéêó]+r\b', 'European Portuguese "está a fazer" — pt-BR uses the gerund'),
+    ],
+    "zh-cn": [
+        (r'[一-鿿]\s*[,;:!?]', 'half-width punctuation after a Chinese character — use ，；：！？'),
+        (r'[,;:!?]\s*[一-鿿]', 'half-width punctuation before a Chinese character — use ，；：！？'),
+        (r'[一-鿿]\.(?=\s|$)', 'half-width period ending a Chinese sentence — use 。'),
+        (r'[Ａ-Ｚａ-ｚ０-９]', 'full-width Latin letters or digits — use half-width'),
+    ],
+    "hi": [
+        (r'[०-९]', 'Devanagari digits — use Western Arabic numerals in technical content'),
+    ],
+}
+
+
+def check_typography(text: str, lang: str, who: str = "typography-check") -> list[dict]:
+    """Per-language typography findings (prose only; code spans are exempt)."""
+    prose = _prose_only(text)
+    out: list[dict] = []
+    for pattern, message in _TYPO_RULES.get(lang, []):
+        hits = re.findall(pattern, prose)
+        if hits:
+            sample = hits[0] if isinstance(hits[0], str) else str(hits[0])
+            out.append({"severity": "minor", "from": who,
+                        "issue": f"{message} ({len(hits)}×, e.g. {sample.strip()[:60]!r})"})
+    return out
 
 
 def deref_shortcodes(text: str, page_rel: str) -> str:
