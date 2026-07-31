@@ -549,6 +549,7 @@ _CODEISH_RE = re.compile(
     r"|<!--.*?-->"               # HTML comments
     r"|<[^>\n]+>"                # HTML tags with their attributes
     r"|\]\([^)\s]*\)"            # markdown link/image destinations
+    r"|!\["                      # image marker — its `!` is syntax, not prose
     r"|^\[[^\]]+\]:[ \t]*\S+",   # reference-link definitions
     re.DOTALL | re.MULTILINE)
 

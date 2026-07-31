@@ -942,6 +942,16 @@ class TestTypographyChecks(unittest.TestCase):
         # Straight quotes inside code are correct and must not be flagged.
         self.assertEqual(lib.check_typography('Запустите `echo "hi"` сейчас.', "ru"), [])
 
+    def test_image_marker_is_not_prose(self):
+        # The `!` of `![alt](src)` is syntax. Without stripping it, a heading
+        # ending in a CJK ideograph followed by an image reads as "half-width
+        # punctuation after a Chinese character", and an inline image in
+        # Spanish prose reads as an exclamation without ¡.
+        self.assertEqual(lib.check_typography("## 架构图\n\n![架构](/img/arch.png)", "zh-cn"), [])
+        self.assertEqual(
+            lib.check_typography("Vea la imagen ![diagrama](/img/d.png) para más detalles.", "es"),
+            [])
+
     def test_unknown_language_is_a_no_op(self):
         self.assertEqual(lib.check_typography('Anything "here".', "xx"), [])
 
