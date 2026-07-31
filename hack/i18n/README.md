@@ -20,6 +20,10 @@ content/en/**  ──▶ worklist.py        (missing | stale, via source_digest)
                 back-translate ─▶ compare vs original   (meaning-drift check)
                        │
                        ▼
+     deterministic checks (version/flag/do-not-translate integrity,
+                per-language typography — lib.py, no model calls)
+                       │
+                       ▼
         review ×2 (native speakers of the target language)
           • technical editor    → fluency / register / terminology
           • Cozystack maintainer → technical correctness vs source
@@ -163,7 +167,8 @@ succeeds. A page that reproducibly fails is a signal to translate it by hand.
 | `prompts/review-maintainer.md` | native Cozystack-maintainer reviewer (technical correctness) |
 | `prompts/revise.md` | revise a translation against reviewer findings |
 | `style-guides/<lang>.md` | per-language tone/register conventions |
-| `lib.py` | shared helpers (config, discovery, digest, front matter, protect/restore) |
+| `lib.py` | shared helpers (config, discovery, digest, front matter, protect/restore, integrity + typography checks) |
+| `lint_translations.py` | typography lint for already-published translations (advisory; `--strict` to gate) |
 | `worklist.py` | diff detector |
 | `translate.py` | translate + review-gate driver; also removes orphaned translations |
 | `run-daily.sh` | daily runner (subscription, until limit, commit + PR) |
