@@ -285,8 +285,9 @@ def find_hand_localized(cfg: dict, only_lang: str | None = None) -> list[tuple[s
     """(lang, rel) for pages skipped because a human localized them by hand.
 
     Skipping them silently would be its own failure: the page then drifts from an
-    English source nobody is tracking. They are reported in the weekly PR so a
-    human can refresh the transcreation deliberately.
+    English source nobody is tracking. They are surfaced in the run report (and
+    from there in the weekly PR comment, when one is open) so a human can
+    refresh the transcreation deliberately.
     """
     out: list[tuple[str, str]] = []
     langs = [l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])]

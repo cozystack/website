@@ -4,9 +4,17 @@
 #
 # Subcommands:
 #   check           (default) Run every guard; exit non-zero on any gap.
-#   update-digests  Recompute and rewrite `source_digest` in every translated
-#                   page from its English source. Run this after editing an
-#                   English source or after adding/refreshing a translation.
+#                   Hand-localized pages (l10n: transcreate) get a ::warning::
+#                   instead of an error when they drift: the pipeline never
+#                   regenerates them, so drift is a report for a human, not a
+#                   build failure.
+#   update-digests [file...]
+#                   Recompute and rewrite `source_digest` in translated pages
+#                   from their English source. Run after editing an English
+#                   source or after adding/refreshing a translation. Without
+#                   arguments, hand-localized pages are SKIPPED (a wholesale
+#                   re-stamp would silence their drift report); pass the file
+#                   explicitly to re-stamp one you refreshed by hand.
 #
 # Guards run by `check`:
 #   1. i18n key parity  — every i18n/<lang>.toml must define exactly the same
@@ -65,6 +73,14 @@ translated_digest_files() {
   grep -rlE '^source_digest:' "$CONTENT_DIR" \
     | grep -vE "^$CONTENT_DIR/$DEFAULT_LANG/" \
     | sort
+}
+
+# A page a human localized by hand (l10n: transcreate). The pipeline never
+# regenerates these, so a stale digest here is a drift REPORT, not a build
+# failure — and re-stamping it wholesale would silence the report while the
+# drift persists.
+is_transcreate() {
+  grep -m1 -E '^l10n:' "$1" 2>/dev/null | grep -qE 'transcreate'
 }
 
 # Map content/<lang>/<rel> -> content/en/<rel>
@@ -129,12 +145,20 @@ check_digest_freshness() {
     actual="$(grep -m1 -E '^source_digest:' "$f" | sed -E 's/.*sha256:([0-9a-fA-F]+).*/\1/')"
     checked=$((checked + 1))
     if [ "$actual" != "$expected" ]; then
-      rc=1
-      echo "::error::stale translation: $f"
-      echo "    English source: $src"
-      echo "    recorded digest: sha256:${actual}"
-      echo "    current  digest: sha256:${expected}"
-      echo "    fix: refresh the translation, then run 'hack/check-i18n.sh update-digests'"
+      if is_transcreate "$f"; then
+        # Advisory by design: a drifted transcreation is refreshed when a
+        # human decides to, and must not block unrelated PRs meanwhile.
+        echo "::warning::hand-localized page drifted from its English source: $f"
+        echo "    refresh the transcreation by hand, then re-stamp it with:"
+        echo "    hack/check-i18n.sh update-digests $f"
+      else
+        rc=1
+        echo "::error::stale translation: $f"
+        echo "    English source: $src"
+        echo "    recorded digest: sha256:${actual}"
+        echo "    current  digest: sha256:${expected}"
+        echo "    fix: refresh the translation, then run 'hack/check-i18n.sh update-digests'"
+      fi
     fi
   done < <(translated_digest_files)
   [ "$rc" -eq 0 ] && echo "translation freshness: OK ($checked translated pages match their English source)"
@@ -142,9 +166,20 @@ check_digest_freshness() {
 }
 
 update_digests() {
+  # With explicit files, re-stamp exactly those — the escape hatch for a
+  # transcreation a human just refreshed. With no arguments, re-stamp every
+  # machine-translated page but SKIP hand-localized ones: their stale digest
+  # is the only signal that the transcreation drifted, and a wholesale
+  # re-stamp would silence it while the drift persists.
   local f
-  while IFS= read -r f; do
+  {
+    if [ "$#" -gt 0 ]; then printf '%s\n' "$@"; else translated_digest_files; fi
+  } | while IFS= read -r f; do
     [ -z "$f" ] && continue
+    if [ "$#" -eq 0 ] && is_transcreate "$f"; then
+      echo "skip $f — hand-localized (l10n: transcreate); refresh it by hand, then: hack/check-i18n.sh update-digests $f"
+      continue
+    fi
     local src expected tmp
     src="$(en_source_for "$f")"
     if [ ! -f "$src" ]; then
@@ -159,7 +194,7 @@ update_digests() {
     ' "$f" > "$tmp"
     mv "$tmp" "$f"
     echo "updated $f -> sha256:${expected}"
-  done < <(translated_digest_files)
+  done
 }
 
 cmd="${1:-check}"
@@ -171,10 +206,11 @@ case "$cmd" in
     exit "$rc"
     ;;
   update-digests)
-    update_digests
+    shift
+    update_digests "$@"
     ;;
   *)
-    echo "usage: $0 [check|update-digests]" >&2
+    echo "usage: $0 [check|update-digests [file...]]" >&2
     exit 2
     ;;
 esac

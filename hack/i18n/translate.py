@@ -416,8 +416,10 @@ def _format_hand_drift(cfg: dict, only_lang: str | None) -> str:
         [f"### Hand-localized pages that drifted ({len(hand)})", "",
          "These carry `l10n: transcreate`, so the pipeline leaves them alone — "
          "regenerating would replace a human transcreation with machine output. "
-         "Their English source has changed since they were written; refresh them "
-         "by hand if the change matters.", ""]
+         "Their English source has changed since they were written. CI warns "
+         "(but does not fail) while the drift persists; refresh each "
+         "transcreation by hand, then re-stamp it with "
+         "`hack/check-i18n.sh update-digests <file>`.", ""]
         + [f"- `{lang}: {rel}`" for lang, rel in hand] + [""])
 
 
