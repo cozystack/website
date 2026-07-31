@@ -250,6 +250,16 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
         # Unparseable / absent YAML front matter: writing the page would silently
         # drop slug/date/aliases/images. Refuse instead.
         raise ProtocolError(f"{rel}: could not parse YAML front matter in the English source")
+    # Belt and braces: build_worklist already skips hand-localized pages, so
+    # arriving here with a preserved marker means the worklist filter was
+    # bypassed. Writing would replace a human transcreation with machine output
+    # while the marker still promises a human wrote it — refuse before spending
+    # a single model call.
+    existing_l10n = lib.recorded_l10n(lib.target_path(cfg, lang_cfg["code"], rel))
+    if existing_l10n in lib.PRESERVED_L10N_VALUES:
+        raise ProtocolError(
+            f"{rel}: target is hand-localized (l10n: {existing_l10n}) — refusing to "
+            f"overwrite a human transcreation with machine output")
     masked_body, store = lib.protect(body)
 
     # Every user-visible string in the front matter, at any depth, addressed by
@@ -364,12 +374,7 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
     # (mt | transcreate). Whatever the page was before, this pipeline just
     # machine-translated it, so say so — the disclaimer banner and any future
     # native-review triage read this.
-    # Belt and braces: build_worklist already skips hand-localized pages, but this
-    # assignment used to run unconditionally AFTER merge_target_only_keys, so it
-    # was exactly what clobbered the marker a human set. Never downgrade a
-    # transcreation to `mt` — if we somehow got here, keep what the human wrote.
-    existing_l10n = lib.recorded_l10n(dest)
-    out_fm["l10n"] = existing_l10n if existing_l10n in lib.PRESERVED_L10N_VALUES else "mt"
+    out_fm["l10n"] = "mt"
     # Stamp honestly: a page that ran out of revise rounds with findings still
     # open is NOT the same as one that cleared the gate. Neither is "ratified" —
     # only a human sets that, and only that value drops the disclaimer banner.

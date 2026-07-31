@@ -743,6 +743,27 @@ class TestHandLocalizedPagesArePreserved(unittest.TestCase):
             self.assertIsNone(lib.recorded_l10n(p))
             self.assertFalse(lib.is_hand_localized(p))
 
+    def test_translate_page_refuses_hand_localized_target(self):
+        # Belt and braces behind the worklist filter: if translate_page is ever
+        # reached for a hand-localized target, it must refuse before spending a
+        # model call, not overwrite the transcreation.
+        with tempfile.TemporaryDirectory() as tmp:
+            en = os.path.join(tmp, "content", "en")
+            ru = os.path.join(tmp, "content", "ru")
+            os.makedirs(en); os.makedirs(ru)
+            with open(os.path.join(en, "page.md"), "w", encoding="utf-8") as fh:
+                fh.write("---\ntitle: T\n---\nbody\n")
+            with open(os.path.join(ru, "page.md"), "w", encoding="utf-8") as fh:
+                fh.write("---\ntitle: Т\nl10n: transcreate\n---\nтело\n")
+            cfg = {"content_dir": "content", "source_lang": "en"}
+            orig_root = lib.REPO_ROOT
+            try:
+                lib.REPO_ROOT = tmp
+                with self.assertRaises(translate.ProtocolError):
+                    translate.translate_page(cfg, {}, {"code": "ru"}, "page.md")
+            finally:
+                lib.REPO_ROOT = orig_root
+
     def test_transcreated_page_is_kept_out_of_the_worklist(self):
         with tempfile.TemporaryDirectory() as tmp:
             en = os.path.join(tmp, "content", "en")
