@@ -173,7 +173,9 @@ update_digests() {
   # re-stamp would silence it while the drift persists.
   local f
   {
-    if [ "$#" -gt 0 ]; then printf '%s\n' "$@"; else translated_digest_files; fi
+    # `|| true`: with zero stamped translations the underlying grep exits 1,
+    # which under `set -euo pipefail` would silently kill the whole script.
+    if [ "$#" -gt 0 ]; then printf '%s\n' "$@"; else translated_digest_files || true; fi
   } | while IFS= read -r f; do
     [ -z "$f" ] && continue
     if [ "$#" -eq 0 ] && is_transcreate "$f"; then
