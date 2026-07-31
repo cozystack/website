@@ -942,6 +942,15 @@ class TestTypographyChecks(unittest.TestCase):
         # Straight quotes inside code are correct and must not be flagged.
         self.assertEqual(lib.check_typography('Запустите `echo "hi"` сейчас.', "ru"), [])
 
+    def test_link_title_quotes_are_not_prose(self):
+        # A link title's ASCII quotes are CommonMark delimiters. Flagging them
+        # would have the revise loop «localize» them into guillemets, breaking
+        # the link — the exact integrity this pipeline exists to guarantee.
+        self.assertEqual(
+            lib.check_typography(
+                'Смотрите [руководство](/docs/install "Руководство по установке") здесь.', "ru"),
+            [])
+
     def test_image_marker_is_not_prose(self):
         # The `!` of `![alt](src)` is syntax. Without stripping it, a heading
         # ending in a CJK ideograph followed by an image reads as "half-width

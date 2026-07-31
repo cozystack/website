@@ -548,7 +548,10 @@ _CODEISH_RE = re.compile(
     r"|\{\{[<%].*?[%>]\}\}"      # Hugo shortcodes (params are not prose)
     r"|<!--.*?-->"               # HTML comments
     r"|<[^>\n]+>"                # HTML tags with their attributes
-    r"|\]\([^)\s]*\)"            # markdown link/image destinations
+    # Link/image destinations, with the optional "title". The title's ASCII
+    # quotes are CommonMark delimiters — flagging them would send the revise
+    # loop to «localize» them into a form that no longer parses as a link.
+    r'|\]\([^)\s]*(?:\s+"[^"]*")?\)'
     r"|!\["                      # image marker — its `!` is syntax, not prose
     r"|^\[[^\]]+\]:[ \t]*\S+",   # reference-link definitions
     re.DOTALL | re.MULTILINE)
