@@ -838,6 +838,18 @@ class TestIntegrityFindings(unittest.TestCase):
             lib.integrity_findings("The Go toolchain is part of Google.",
                                    "Der Go-Toolchain gehört zu Alphabet.", ["Go"]), [])
 
+    def test_localized_date_is_not_an_invented_version(self):
+        # The de guide mandates 24.07.2026 for numeric dates in prose; the bare
+        # three-component branch must not read it as an invented version.
+        self.assertEqual(
+            lib.integrity_findings("Released on 07/24/2026.",
+                                   "Veröffentlicht am 24.07.2026."), [])
+
+    def test_localized_thousands_grouping_is_not_an_invented_version(self):
+        self.assertEqual(
+            lib.integrity_findings("It holds 10,000,000 records.",
+                                   "Es hält 10.000.000 Einträge."), [])
+
 
 class TestTypographyChecks(unittest.TestCase):
     def test_russian_ascii_quotes_flagged(self):
@@ -861,6 +873,25 @@ class TestTypographyChecks(unittest.TestCase):
         # The rule must anchor at sentence start; matching at any capitalized
         # word would re-match from the brand inside a correctly opened «¿…?».
         self.assertEqual(lib.check_typography("¿Qué es Cozystack?", "es"), [])
+
+    def test_spanish_mid_sentence_marks_pass(self):
+        # The es guide's own ✓ forms: the mark goes where the question or
+        # exclamation actually starts, which may be mid-sentence.
+        self.assertEqual(
+            lib.check_typography("Si el nodo falla, ¿qué pasa con los datos?", "es"), [])
+        self.assertEqual(
+            lib.check_typography("Listo, ¡ya tienes un clúster!", "es"), [])
+
+    def test_russian_nested_quotes_pass(self):
+        # „лапки“ close with U+201C; two nested pairs on one line must not read
+        # as an English “…” pair.
+        self.assertEqual(
+            lib.check_typography("Задайте параметры „replicas“ и „selector“ в манифесте.", "ru"),
+            [])
+
+    def test_russian_english_curly_pair_still_flagged(self):
+        f = lib.check_typography("Это “cluster” здесь.", "ru")
+        self.assertTrue(any("ёлочки" in x["issue"] for x in f))
 
     def test_spanish_unopened_question_flagged(self):
         f = lib.check_typography("Cómo funciona esto exactamente?", "es")

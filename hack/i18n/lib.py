@@ -67,6 +67,9 @@ _AUTOLINK_RE = re.compile(r'<(?:https?|mailto):[^>\s]+>')
 # would ship silently: the gate does not inspect markup, check-i18n.sh only
 # compares digests, and Hugo renders broken HTML without complaint.
 # Only the TAG is masked; the text between tags stays exposed for translation.
+# Known ceiling: a tag whose attributes wrap across lines is not matched (the
+# class excludes \n) and reaches the model unprotected. No in-scope page has
+# one; extend to re.DOTALL-style matching if that ever changes.
 _HTMLTAG_RE = re.compile(r'</?[a-zA-Z][^>\n]*/?>')
 # `(?!\^)` keeps footnote definitions (`[^1]: prose`) out: their "destination"
 # is the first word of translatable prose, not a URL.
@@ -569,6 +572,12 @@ def _prose_only(text: str) -> str:
 # finding every revise round, and permanently block the gate. Bare two-part
 # decimals are the reviewers' job.
 _VERSION_RE = re.compile(r"\bv\d+\.\d+(?:\.\d+)?\b|\b\d+\.\d+\.\d+\b")
+# Correctly LOCALIZED numbers that the bare three-component branch would
+# misread as invented versions: numeric dates (24.07.2026 — a component has
+# 4 digits) and period-grouped thousands (10.000.000). Both are formats the
+# style guides mandate for translated prose, so their appearance in the
+# translation alone is expected, not an invention.
+_LOCALIZED_NUMBER_RE = re.compile(r"\d+\.\d+\.\d{4}|\d{1,3}(?:\.\d{3}){2,}")
 # Bare long CLI flags in prose.
 _FLAG_RE = re.compile(r"(?<![\w-])--[a-z][a-z0-9-]{2,}\b")
 
@@ -601,7 +610,7 @@ def integrity_findings(src_body: str, tr_body: str, dnt_terms: list[str] | None 
                                      f"{got}× in the translation — it must be carried over "
                                      f"unchanged"})
         for tok in b:
-            if tok not in a:
+            if tok not in a and not _LOCALIZED_NUMBER_RE.fullmatch(tok):
                 out.append({"severity": "minor", "from": who,
                             "issue": f"{label} '{tok}' appears in the translation but not in "
                                      f"the source — do not invent versions or flags"})
@@ -627,7 +636,10 @@ def integrity_findings(src_body: str, tr_body: str, dnt_terms: list[str] | None 
 _TYPO_RULES: dict[str, list[tuple[str, str]]] = {
     "ru": [
         (r'"[^"\n]{1,80}"', 'ASCII double quotes in Russian prose — use «ёлочки»'),
-        (r'[“”][^\n]{0,80}[“”]', 'English curly quotes in Russian prose — use «ёлочки»'),
+        # The English pair is “…” (U+201C…U+201D). U+201C alone must not count:
+        # it CLOSES the nested „лапки“ the guide mandates, so a line with two
+        # nested pairs («…„replicas“ и „selector“…») would otherwise match.
+        (r'“[^\n]{0,80}”', 'English curly quotes in Russian prose — use «ёлочки»'),
         # A hyphen doing a dash's job — but NOT a list marker ("\n- item"), which
         # is why a non-space character is required immediately before it.
         (r'(?<=[^\s])[ ]-[ ](?=\S)', 'hyphen used as a dash — use the em dash «—»'),
@@ -640,11 +652,12 @@ _TYPO_RULES: dict[str, list[tuple[str, str]]] = {
         # Anchored to sentence START (line start or after end punctuation), not
         # to any capitalized word — otherwise every brand name inside a
         # correctly opened «¿…?» re-matches from the brand and flags correct
-        # text. A properly opened sentence begins with ¿/¡, which the anchor
-        # classes exclude.
-        (r'(?m)(?:^|(?<=[.!?:] ))[A-ZÁÉÍÓÚÑ][^.!?\n]{5,120}\?',
+        # text. The span also stops at a mid-sentence ¿/¡: the guide mandates
+        # the mark where the question actually starts («Si el nodo falla,
+        # ¿qué pasa?» is the ✓ form and must not be flagged).
+        (r'(?m)(?:^|(?<=[.!?:] ))[A-ZÁÉÍÓÚÑ][^.!?¿\n]{5,120}\?',
          'question without an opening ¿'),
-        (r'(?m)(?:^|(?<=[.!?:] ))[A-ZÁÉÍÓÚÑ][^.!?\n]{5,120}!',
+        (r'(?m)(?:^|(?<=[.!?:] ))[A-ZÁÉÍÓÚÑ][^.!?¡\n]{5,120}!',
          'exclamation without an opening ¡'),
     ],
     "pt-br": [
