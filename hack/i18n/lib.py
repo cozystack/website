@@ -55,6 +55,10 @@ _VISIBLE_ATTR_RE = re.compile(r'\b(?:caption|alt|title)="([^"]*)"')
 #   inline:   [text](/docs/install "Optional title")  -> destination only
 #   autolink: <https://example.com>
 #   refdef:   [id]: https://example.com
+# Known ceiling: a destination with unescaped parens (`/wiki/Foo_(bar)`) masks
+# only up to the first `)`, leaving a stray paren exposed to the model. Restore
+# still round-trips; the risk is the model "tidying" the stray paren. No
+# in-scope page has one; extend to balanced-paren matching if that changes.
 _LINKDEST_RE = re.compile(r'(?<=\])\((?P<dest><[^>]*>|[^)\s]*)(?P<title>\s+"[^"]*")?\)')
 _AUTOLINK_RE = re.compile(r'<(?:https?|mailto):[^>\s]+>')
 

@@ -80,7 +80,7 @@ translated_digest_files() {
 # failure — and re-stamping it wholesale would silence the report while the
 # drift persists.
 is_transcreate() {
-  grep -m1 -E '^l10n:' "$1" 2>/dev/null | grep -qE 'transcreate'
+  grep -m1 -E '^l10n:' "$1" 2>/dev/null | grep -qE '^l10n:[[:space:]]*"?transcreate"?[[:space:]]*$'
 }
 
 # Map content/<lang>/<rel> -> content/en/<rel>
@@ -186,6 +186,12 @@ update_digests() {
     src="$(en_source_for "$f")"
     if [ ! -f "$src" ]; then
       echo "::warning::skip $f — English source missing: $src"
+      continue
+    fi
+    # The awk below only REWRITES an existing line; without this check a page
+    # missing the field would pass through untouched yet be reported "updated".
+    if ! grep -qE '^source_digest:' "$f"; then
+      echo "::warning::skip $f — no source_digest line in the front matter; add one, then re-run"
       continue
     fi
     expected="$(sha256 "$src")"
