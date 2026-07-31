@@ -402,6 +402,25 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
     return f"---\n{fm_yaml}\n---\n{tr_body}\n", gate_passed, findings
 
 
+def _format_hand_drift(cfg: dict, only_lang: str | None) -> str:
+    """Report hand-localized pages whose English source moved on.
+
+    The pipeline refuses to regenerate them (it would overwrite a transcreation
+    with machine output), so the only way they get refreshed is a human deciding
+    to — which requires telling the human they have drifted. Empty string when
+    nothing drifted."""
+    hand = lib.find_hand_localized(cfg, only_lang=only_lang)
+    if not hand:
+        return ""
+    return "\n".join(
+        [f"### Hand-localized pages that drifted ({len(hand)})", "",
+         "These carry `l10n: transcreate`, so the pipeline leaves them alone — "
+         "regenerating would replace a human transcreation with machine output. "
+         "Their English source has changed since they were written; refresh them "
+         "by hand if the change matters.", ""]
+        + [f"- `{lang}: {rel}`" for lang, rel in hand] + [""])
+
+
 def _format_run_status(stopped_early: bool, rate_limit_reason: str,
                        done: int, skipped: list[dict], attempts: int) -> str:
     """Render an early-stop / skipped-page summary for the weekly PR comment.
@@ -510,8 +529,16 @@ def main() -> int:
     if not items:
         # An empty worklist still has to clear any report a prior run left behind,
         # or run-daily.sh reposts stale findings stamped with today's date. This
-        # is the pipeline's normal steady state once the backlog drains.
-        if os.path.exists(REPORT_PATH):
+        # is the pipeline's normal steady state once the backlog drains — which
+        # is exactly when hand-localized drift must KEEP being reported: the
+        # pipeline will never touch those pages, so going silent here would hide
+        # the drift until a human happens to look.
+        hand_md = _format_hand_drift(cfg, args.lang)
+        if hand_md:
+            with open(REPORT_PATH, "w", encoding="utf-8") as fh:
+                fh.write(hand_md)
+            print(f"hand-localized drift report written to {REPORT_PATH}")
+        elif os.path.exists(REPORT_PATH):
             os.unlink(REPORT_PATH)
         return 0
 
@@ -595,21 +622,7 @@ def main() -> int:
     # `-with-findings` stamp or a stalled page unactionable.
     status_md = _format_run_status(stopped_early, rate_limit_reason,
                                    clean + with_findings, skipped, PROTOCOL_ATTEMPTS)
-    # Hand-localized pages whose English source moved on. The pipeline refuses to
-    # regenerate them (it would overwrite a transcreation with machine output), so
-    # the only way they get refreshed is a human deciding to — which requires
-    # telling the human they have drifted.
-    hand = lib.find_hand_localized(cfg, only_lang=args.lang)
-    hand_md = ""
-    if hand:
-        hand_md = "\n".join(
-            [f"### Hand-localized pages that drifted ({len(hand)})", "",
-             "These carry `l10n: transcreate`, so the pipeline leaves them alone — "
-             "regenerating would replace a human transcreation with machine output. "
-             "Their English source has changed since they were written; refresh them "
-             "by hand if the change matters.", ""]
-            + [f"- `{lang}: {rel}`" for lang, rel in hand] + [""])
-    sections = [s for s in (status_md, hand_md,
+    sections = [s for s in (status_md, _format_hand_drift(cfg, args.lang),
                             _format_report(report) if report else "") if s]
     if sections:
         with open(REPORT_PATH, "w", encoding="utf-8") as fh:

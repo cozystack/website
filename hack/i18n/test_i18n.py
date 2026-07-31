@@ -588,13 +588,15 @@ class TestStaleReportCleanup(unittest.TestCase):
         # Once the backlog drains, build_worklist() is empty and main() returns
         # early. A report left by an earlier run must still be cleared, or
         # run-daily.sh reposts stale findings stamped with today's date.
-        orig_wl, orig_orph, orig_argv = (
-            lib.build_worklist, lib.find_orphan_translations, sys.argv)
+        orig_wl, orig_orph, orig_hand, orig_argv = (
+            lib.build_worklist, lib.find_orphan_translations,
+            lib.find_hand_localized, sys.argv)
         existed = os.path.exists(translate.REPORT_PATH)
         backup = open(translate.REPORT_PATH).read() if existed else None
         try:
             lib.build_worklist = lambda *a, **k: []
             lib.find_orphan_translations = lambda *a, **k: []
+            lib.find_hand_localized = lambda *a, **k: []
             sys.argv = ["translate.py"]
             with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
                 fh.write("### stale findings from a previous run\n- something\n")
@@ -605,6 +607,38 @@ class TestStaleReportCleanup(unittest.TestCase):
         finally:
             lib.build_worklist, lib.find_orphan_translations, sys.argv = (
                 orig_wl, orig_orph, orig_argv)
+            lib.find_hand_localized = orig_hand
+            if backup is not None:
+                with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
+                    fh.write(backup)
+            elif os.path.exists(translate.REPORT_PATH):
+                os.unlink(translate.REPORT_PATH)
+
+    def test_empty_worklist_still_reports_hand_localized_drift(self):
+        # The steady state (empty worklist) is exactly when hand-localized
+        # drift must keep being reported: the pipeline will never touch those
+        # pages, so a run that goes silent hides the drift indefinitely.
+        orig_wl, orig_orph, orig_hand, orig_argv = (
+            lib.build_worklist, lib.find_orphan_translations,
+            lib.find_hand_localized, sys.argv)
+        existed = os.path.exists(translate.REPORT_PATH)
+        backup = open(translate.REPORT_PATH).read() if existed else None
+        try:
+            lib.build_worklist = lambda *a, **k: []
+            lib.find_orphan_translations = lambda *a, **k: []
+            lib.find_hand_localized = lambda *a, **k: [("ru", "_index.html")]
+            sys.argv = ["translate.py"]
+            rc = translate.main()
+            self.assertEqual(rc, 0)
+            self.assertTrue(os.path.exists(translate.REPORT_PATH),
+                            "drift report was not written on an empty worklist")
+            report = open(translate.REPORT_PATH, encoding="utf-8").read()
+            self.assertIn("ru: _index.html", report)
+            self.assertIn("transcreate", report)
+        finally:
+            lib.build_worklist, lib.find_orphan_translations, sys.argv = (
+                orig_wl, orig_orph, orig_argv)
+            lib.find_hand_localized = orig_hand
             if backup is not None:
                 with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
                     fh.write(backup)
