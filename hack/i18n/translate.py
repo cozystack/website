@@ -180,11 +180,17 @@ class ProtocolError(Exception):
     """The model did not answer in the ===FRONTMATTER===/===BODY=== protocol."""
 
 
-def _split_payload_response(out: str, store: dict, expect: set[str]) -> tuple[dict, str]:
+def _split_payload_response(out: str, store: dict, expect: set[str],
+                            masked_src: str) -> tuple[dict, str]:
     """Parse a translate/revise reply. Raises rather than treating a preamble
     ("Here's the translation:") as the page body, and verifies every protected
     placeholder survived — a dropped §§FENCE_n§§ would silently delete a code
     block from the page.
+
+    Only placeholders that actually occur in `masked_src` (the text the model
+    was sent) are required back: masking passes may stash a span that itself
+    contains an earlier placeholder (inline code wrapping a shortcode), and the
+    model can only ever return the OUTER token. restore() unwinds the nesting.
 
     The front-matter half is JSON ({path: translated_text}), not `key: value`
     lines: values are addressed by path so nested copy (taglines[0],
@@ -214,7 +220,8 @@ def _split_payload_response(out: str, store: dict, expect: set[str]) -> tuple[di
     else:
         tr_fm = {}
     body = body.strip()
-    bad = {tok: body.count(tok) for tok in store if body.count(tok) != 1}
+    bad = {tok: body.count(tok) for tok in store
+           if tok in masked_src and body.count(tok) != 1}
     if bad:
         tok, n = next(iter(bad.items()))
         what = "lost" if n == 0 else "duplicated"
@@ -266,7 +273,8 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
         + "\n\n===FRONTMATTER===\n" + json.dumps(fm_values, ensure_ascii=False, indent=2)
         + "\n===BODY===\n" + masked_body
     )
-    tr_fm, tr_body = _split_payload_response(call(cfg, sys_translate, payload), store, expect)
+    tr_fm, tr_body = _split_payload_response(call(cfg, sys_translate, payload), store, expect,
+                                             masked_body)
 
     # --- Stages 2-4: gate with revise loop ---
     max_rounds = max(cfg["review"]["max_rounds"], cfg["back_translation"]["max_retries"])
@@ -336,7 +344,8 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
             + "\n===BODY===\n" + masked_body2
             + "\n\nFINDINGS:\n" + json.dumps(findings, ensure_ascii=False, indent=2)
         )
-        tr_fm, tr_body = _split_payload_response(call(cfg, sys_rev, rev_payload), store, expect)
+        tr_fm, tr_body = _split_payload_response(call(cfg, sys_rev, rev_payload), store, expect,
+                                                 masked_body2)
 
     # --- assemble ---
     # Apply by path onto a copy of the English front matter: structural keys
@@ -378,6 +387,13 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
         raise ProtocolError(
             f"{rel}: a ref/relref shortcode survived deref (unsupported shape) — "
             f"refusing to write a page that could break the Hugo build")
+    # Last line of defense: no masking token may ever reach a published page.
+    # The per-reply guard covers the translate/revise protocol, but restore()
+    # runs in more places than that guard does, so check the final artifact.
+    if "§§" in tr_body:
+        raise ProtocolError(
+            f"{rel}: a §§…§§ placeholder survived restore — refusing to write a "
+            f"page with masking tokens in the body")
     return f"---\n{fm_yaml}\n---\n{tr_body}\n", gate_passed, findings
 
 

@@ -68,7 +68,9 @@ _AUTOLINK_RE = re.compile(r'<(?:https?|mailto):[^>\s]+>')
 # compares digests, and Hugo renders broken HTML without complaint.
 # Only the TAG is masked; the text between tags stays exposed for translation.
 _HTMLTAG_RE = re.compile(r'</?[a-zA-Z][^>\n]*/?>')
-_REFDEF_RE = re.compile(r'(?m)^(?P<label>\[[^\]]+\]:[ \t]*)(?P<dest>\S+)')
+# `(?!\^)` keeps footnote definitions (`[^1]: prose`) out: their "destination"
+# is the first word of translatable prose, not a URL.
+_REFDEF_RE = re.compile(r'(?m)^(?P<label>\[(?!\^)[^\]]+\]:[ \t]*)(?P<dest>\S+)')
 
 
 def load_config() -> dict:
@@ -463,17 +465,27 @@ def protect(text: str) -> tuple[str, dict[str, str]]:
     #    stays exposed and still gets translated; only the target is opaque.
     #    Autolinks go before raw HTML tags: `<https://…>` starts with a letter and
     #    would otherwise be swallowed by the tag pattern.
+    #    A destination that already carries a placeholder (a `{{< ref >}}` link,
+    #    a masked autolink) must NOT be stashed again: the model never sees the
+    #    inner token of a nested stash, so the placeholder guard fails the page
+    #    on every attempt.
     text = _AUTOLINK_RE.sub(_sub("URL"), text)
     text = _HTMLTAG_RE.sub(_sub("HTMLTAG"), text)
     text = _LINKDEST_RE.sub(
-        lambda m: "(" + _stash(m.group("dest"), "URL") + (m.group("title") or "") + ")", text)
+        lambda m: m.group(0) if "§§" in m.group("dest") else
+        "(" + _stash(m.group("dest"), "URL") + (m.group("title") or "") + ")", text)
     text = _REFDEF_RE.sub(
-        lambda m: m.group("label") + _stash(m.group("dest"), "URL"), text)
+        lambda m: m.group(0) if "§§" in m.group("dest") else
+        m.group("label") + _stash(m.group("dest"), "URL"), text)
     return text, store
 
 
 def restore(text: str, store: dict[str, str]) -> str:
-    for token, original in store.items():
+    # Reverse insertion order: a later stash can only ever reference EARLIER
+    # tokens, so unwinding back-to-front resolves any nesting a masking pass
+    # may have produced. Forward order would leave the inner token literal in
+    # the output — its replacement round is already over when it appears.
+    for token, original in reversed(store.items()):
         text = text.replace(token, original)
     return text
 

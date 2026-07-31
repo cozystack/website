@@ -382,27 +382,27 @@ class TestPayloadProtocol(unittest.TestCase):
     def test_parses_json_frontmatter_and_body(self):
         _, store = lib.protect("x")
         fm, body = translate._split_payload_response(
-            '===FRONTMATTER===\n{"title": "Заголовок"}\n===BODY===\nтело', {}, {"title"})
+            '===FRONTMATTER===\n{"title": "Заголовок"}\n===BODY===\nтело', {}, {"title"}, "")
         self.assertEqual(fm, {"title": "Заголовок"})
         self.assertEqual(body, "тело")
 
     def test_preamble_without_marker_is_rejected(self):
         # Otherwise "Here's the translation:" gets written into the page.
         with self.assertRaises(translate.ProtocolError):
-            translate._split_payload_response("Here's the translation!", {}, set())
+            translate._split_payload_response("Here's the translation!", {}, set(), "")
 
     def test_missing_frontmatter_key_is_rejected(self):
         # A page whose body is translated but whose hero silently stayed English
         # is worse than a retry tomorrow.
         with self.assertRaises(translate.ProtocolError):
             translate._split_payload_response(
-                '===FRONTMATTER===\n{"title": "T"}\n===BODY===\nb', {}, {"title", "taglines[0]"})
+                '===FRONTMATTER===\n{"title": "T"}\n===BODY===\nb', {}, {"title", "taglines[0]"}, "")
 
     def test_dropped_placeholder_is_rejected(self):
         masked, store = lib.protect("a\n```\ncode\n```\nb")
         with self.assertRaises(translate.ProtocolError) as cm:
             translate._split_payload_response(
-                '===FRONTMATTER===\n{}\n===BODY===\ntranslated, fence gone', store, set())
+                '===FRONTMATTER===\n{}\n===BODY===\ntranslated, fence gone', store, set(), masked)
         self.assertIn("lost", str(cm.exception))
 
     def test_duplicated_placeholder_is_rejected(self):
@@ -410,15 +410,27 @@ class TestPayloadProtocol(unittest.TestCase):
         tok = next(iter(store))
         with self.assertRaises(translate.ProtocolError) as cm:
             translate._split_payload_response(
-                f'===FRONTMATTER===\n{{}}\n===BODY===\n{tok}\n{tok}', store, set())
+                f'===FRONTMATTER===\n{{}}\n===BODY===\n{tok}\n{tok}', store, set(), masked)
         self.assertIn("duplicated", str(cm.exception))
 
     def test_placeholders_are_restored(self):
         masked, store = lib.protect("a\n```\ncode\n```\nb")
         tok = next(iter(store))
         _, body = translate._split_payload_response(
-            f'===FRONTMATTER===\n{{}}\n===BODY===\nпереведено\n{tok}', store, set())
+            f'===FRONTMATTER===\n{{}}\n===BODY===\nпереведено\n{tok}', store, set(), masked)
         self.assertIn("```\ncode\n```", body)
+
+    def test_inner_token_of_a_nested_stash_is_not_required(self):
+        # Inline code wrapping a shortcode nests stashes: the model only ever
+        # sees the OUTER token, so requiring the inner one would fail every
+        # reply. restore() unwinds the nesting instead.
+        masked, store = lib.protect("Use `{{< param version >}}` here.")
+        outer = [t for t in store if t in masked]
+        self.assertEqual(len(outer), 1)
+        _, body = translate._split_payload_response(
+            f'===FRONTMATTER===\n{{}}\n===BODY===\nВставьте {outer[0]} сюда.',
+            store, set(), masked)
+        self.assertIn("`{{< param version >}}`", body)
 
 
 class TestFindingsReport(unittest.TestCase):
@@ -623,6 +635,40 @@ class TestLinkDestinationMasking(unittest.TestCase):
         self.assertIn('"Read this"', masked)
         self.assertNotIn("/a/b", masked)
         self.assertEqual(lib.restore(masked, store), 'A [link](/a/b "Read this") here.')
+
+    def test_ref_shortcode_destination_is_not_double_masked(self):
+        # The shortcode pass runs first, so the destination is already a
+        # placeholder when the link-destination pass sees it. Re-stashing it
+        # would nest placeholders: the model never sees the inner token and the
+        # reply guard fails the page on every attempt.
+        text = 'Read the [install guide]({{% ref "/docs/install" %}}) first.'
+        masked, store = lib.protect(text)
+        for value in store.values():
+            self.assertNotIn("§§", value)
+        for token in store:
+            self.assertEqual(masked.count(token), 1)  # what the reply guard needs
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_angle_bracket_destination_roundtrip(self):
+        text = "See [docs](<https://example.com>) now.\n\n[id]: <https://example.org>\n"
+        masked, store = lib.protect(text)
+        for value in store.values():
+            self.assertNotIn("§§", value)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_footnote_definition_is_not_masked(self):
+        # `[^1]: prose` is a footnote, not a reference link — its first word is
+        # translatable text, not a URL.
+        text = "[^1]: Some note here."
+        masked, store = lib.protect(text)
+        self.assertEqual(masked, text)
+        self.assertEqual(store, {})
+
+    def test_restore_unwinds_nested_store_values(self):
+        # Defense in depth: even if a pass ever nests again, reverse-order
+        # restore resolves it (a later stash only references earlier tokens).
+        store = {"§§A_0§§": "inner", "§§B_1§§": "§§A_0§§"}
+        self.assertEqual(lib.restore("x §§B_1§§ y", store), "x inner y")
 
 
 class TestRawHtmlMasking(unittest.TestCase):
