@@ -560,9 +560,15 @@ def _prose_only(text: str) -> str:
     return _CODEISH_RE.sub(" ", text)
 
 
-# Version-ish tokens: v1.5, 1.2.3, v1.2.5. Localizing the separator (1,2,3) or
+# Version tokens: v1.5, v1.2.5, 1.2.3. Localizing the separator (1,2,3) or
 # bumping a digit changes documented behaviour, so counts must match the source.
-_VERSION_RE = re.compile(r"\bv?\d+\.\d+(?:\.\d+)?\b")
+# Only UNAMBIGUOUS shapes are enforced — a `v` prefix or three components. A
+# bare `2.5` in prose is usually a quantity, and the style guides mandate the
+# decimal comma for those ("0.5 vCPU" → "0,5 vCPU"); enforcing byte-for-byte
+# survival there would flag every correctly localized number, refire the same
+# finding every revise round, and permanently block the gate. Bare two-part
+# decimals are the reviewers' job.
+_VERSION_RE = re.compile(r"\bv\d+\.\d+(?:\.\d+)?\b|\b\d+\.\d+\.\d+\b")
 # Bare long CLI flags in prose.
 _FLAG_RE = re.compile(r"(?<![\w-])--[a-z][a-z0-9-]{2,}\b")
 
@@ -601,11 +607,16 @@ def integrity_findings(src_body: str, tr_body: str, dnt_terms: list[str] | None 
                                      f"the source — do not invent versions or flags"})
 
     for term in (dnt_terms or []):
-        n = src.count(term)
-        if n and tr.count(term) < n:
+        # Word-boundary matching, not substring: `Go` must not count inside
+        # `Google`. `(?!\w)` still allows hyphenated compounds ("Cozystack-
+        # Plattform" is how German writes it) and possessives.
+        term_rx = re.compile(rf"(?<!\w){re.escape(term)}(?!\w)")
+        n = len(term_rx.findall(src))
+        got = len(term_rx.findall(tr))
+        if n and got < n:
             out.append({"severity": "major", "from": who,
                         "issue": f"do-not-translate term '{term}' appears {n}× in the source "
-                                 f"but only {tr.count(term)}× in the translation — it must be "
+                                 f"but only {got}× in the translation — it must be "
                                  f"kept verbatim, not translated or transliterated"})
     return out
 
@@ -626,8 +637,15 @@ _TYPO_RULES: dict[str, list[tuple[str, str]]] = {
         (r'[“][^\n]{0,80}[”]', 'English curly quotes in German prose — use „…“'),
     ],
     "es": [
-        (r'(?<![¿])\b[A-ZÁÉÍÓÚÑ][^.!?\n]{5,120}\?', 'question without an opening ¿'),
-        (r'(?<![¡])\b[A-ZÁÉÍÓÚÑ][^.!?\n]{5,120}!', 'exclamation without an opening ¡'),
+        # Anchored to sentence START (line start or after end punctuation), not
+        # to any capitalized word — otherwise every brand name inside a
+        # correctly opened «¿…?» re-matches from the brand and flags correct
+        # text. A properly opened sentence begins with ¿/¡, which the anchor
+        # classes exclude.
+        (r'(?m)(?:^|(?<=[.!?:] ))[A-ZÁÉÍÓÚÑ][^.!?\n]{5,120}\?',
+         'question without an opening ¿'),
+        (r'(?m)(?:^|(?<=[.!?:] ))[A-ZÁÉÍÓÚÑ][^.!?\n]{5,120}!',
+         'exclamation without an opening ¡'),
     ],
     "pt-br": [
         (r'\b(ficheiro|utilizador|ecrã|rato|autocarro|telemóvel|casa de banho)\b',

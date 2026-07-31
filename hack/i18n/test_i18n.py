@@ -795,6 +795,28 @@ class TestIntegrityFindings(unittest.TestCase):
         # it must not be double-reported here.
         self.assertEqual(lib.integrity_findings("Run `helm install v1.5`.", "Führen Sie aus."), [])
 
+    def test_prose_decimal_reformat_is_allowed(self):
+        # The style guides MANDATE the decimal comma in prose; a bare two-part
+        # decimal is a quantity, not a version, and must not be enforced
+        # byte-for-byte (the finding would refire every revise round and block
+        # the gate forever).
+        self.assertEqual(lib.integrity_findings("It is 3.14 wide.", "Es ist 3,14 breit."), [])
+
+    def test_thousands_separator_reformat_is_allowed(self):
+        self.assertEqual(
+            lib.integrity_findings("It runs 10,000 pods.", "Es betreibt 10.000 Pods."), [])
+
+    def test_three_component_bare_version_is_still_caught(self):
+        f = lib.integrity_findings("Upgrade to 1.2.3 now.", "Jetzt aktualisieren.")
+        self.assertTrue(any(x["severity"] == "major" and "1.2.3" in x["issue"] for x in f))
+
+    def test_dnt_term_is_not_counted_inside_larger_words(self):
+        # Substring counting would see 'Go' inside 'Google' and demand a third
+        # occurrence the translation never had.
+        self.assertEqual(
+            lib.integrity_findings("The Go toolchain is part of Google.",
+                                   "Der Go-Toolchain gehört zu Alphabet.", ["Go"]), [])
+
 
 class TestTypographyChecks(unittest.TestCase):
     def test_russian_ascii_quotes_flagged(self):
@@ -813,6 +835,19 @@ class TestTypographyChecks(unittest.TestCase):
     def test_pt_pt_vocabulary_leak_flagged(self):
         f = lib.check_typography("Abra o ficheiro de configuração.", "pt-br")
         self.assertTrue(any("European Portuguese" in x["issue"] for x in f))
+
+    def test_spanish_opened_question_with_brand_passes(self):
+        # The rule must anchor at sentence start; matching at any capitalized
+        # word would re-match from the brand inside a correctly opened «¿…?».
+        self.assertEqual(lib.check_typography("¿Qué es Cozystack?", "es"), [])
+
+    def test_spanish_unopened_question_flagged(self):
+        f = lib.check_typography("Cómo funciona esto exactamente?", "es")
+        self.assertTrue(any("¿" in x["issue"] for x in f))
+
+    def test_spanish_unopened_question_mid_paragraph_flagged(self):
+        f = lib.check_typography("Listo. Cómo funciona esto exactamente?", "es")
+        self.assertTrue(any("¿" in x["issue"] for x in f))
 
     def test_devanagari_digits_flagged(self):
         self.assertTrue(lib.check_typography("क्लस्टर में ३ नोड हैं।", "hi"))
