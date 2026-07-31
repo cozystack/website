@@ -35,7 +35,7 @@ Brazilian Portuguese (pt-BR), never European Portuguese. Follow kubernetes.io pt
 ## 5. Numbers, dates, units
 
 - **Decimal comma in prose**: "3.14" → ✓ "3,14"; "0.5 vCPU of overhead" → ✓ "0,5 vCPU de overhead". Thousands separator is a period: "1,000 nodes" → ✓ "1.000 nós"; "12,500" → ✓ "12.500".
-- **Never** convert inside code, CLI output, YAML values, resource quantities, CIDRs or version numbers: `v1.2.3`, `0.5`, `500m`, `10.0.0.0/8` stay exactly as written — including when quoted in prose.
+- **Never** convert inside code, CLI output, YAML values, Kubernetes quantities, CIDRs or version numbers: `v1.2.3`, `500m`, `10.0.0.0/8` stay exactly as written — including when quoted in prose. A bare decimal in ordinary prose (the "0.5 vCPU" case above) follows the prose rule, not this one.
 - Dates: "July 24, 2026" → ✓ "24 de julho de 2026" (month lowercase); numeric 24/07/2026; ranges "de 2024 a 2026". 24-hour clock: "9 AM UTC" → ✓ "9h UTC" / "09:00 UTC".
 - Units: space between number and unit (10 GB, 500 ms, 2 vCPU, 4 GiB); no space before `%` (50%); keep byte/rate units in standard casing (GiB, TiB, Mbps).
 
