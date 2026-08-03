@@ -1,0 +1,53 @@
+name: Validate blog content
+
+# Runs the same checks the publishing tools apply, so a hand-written post is
+# held to the same rules as a generated one.
+#
+# The site is built first: with a build present, link checking resolves against
+# the paths the site actually serves instead of inferring them from the content
+# tree.
+
+on:
+  pull_request:
+    paths:
+      - 'content/**'
+      - 'data/taxonomy.yaml'
+      - 'data/community-links.yaml'
+      - 'hack/mcp/**'
+      - '.github/workflows/validate-content.yaml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      HUGO_VERSION: 0.164.0
+    steps:
+      - name: Install Hugo CLI
+        run: |
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
+          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
+      - name: Install Dart Sass
+        run: sudo snap install dart-sass
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          npm install
+          python3 -m pip install --quiet PyYAML Pillow
+      - name: Run publishing tool tests
+        run: python3 hack/mcp/test_mcp.py
+      - name: Build site
+        run: ./hack/download_openapi.sh && hugo --gc --minify
+      - name: Validate content
+        run: python3 hack/mcp/server.py --check
