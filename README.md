@@ -34,3 +34,24 @@ brew install hugo
 ```bash
 hugo serve
 ```
+
+## Publishing tools
+
+`hack/mcp/` holds two tools for the blog: one that creates a post, one that
+checks posts. They share a single implementation, so a generated post and a
+hand-written one are held to the same rules — closed taxonomy vocabularies,
+resolvable internal links, a present description, and an Open Graph card social
+parsers can actually render.
+
+Check content before opening a pull request:
+
+```bash
+python3 hack/mcp/server.py --check
+```
+
+The same command runs in CI. `.mcp.json` registers the tools as an MCP server,
+so an MCP-capable client picks them up from a checkout with no separate
+installation.
+
+See [`hack/mcp/README.md`](hack/mcp/README.md) for the tool reference, what the
+checks cover, and what the tools deliberately leave alone.
