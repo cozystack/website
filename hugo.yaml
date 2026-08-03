@@ -24,6 +24,26 @@ enableMissingTranslationPlaceholders: true
 # Provide .LastMod values
 enableGitInfo: true
 
+# Hugo's default content policy is `! ^text/html$`, i.e. everything except HTML,
+# so from 0.161 onwards an .html file is refused as a page source. This site's
+# landing pages are exactly that — content/<lang>/_index.html in all five
+# locales — so a newer Hugo fails on the first one it reaches, before rendering
+# anything, with a message that never mentions a version. Allow every content
+# type back, so `hugo server` and a plain `hugo` build work on any version.
+#
+# Do NOT narrow this to '^text/html$': the list is an allowlist, so that value
+# permits HTML and nothing else, and every markdown page then fails instead.
+#
+# This does not make the pinned version optional. A production build
+# (`hugo --gc --minify`) still requires 0.160.1: from 0.161 Hugo runs PostCSS
+# under Node's permission model, and Docsy's SCSS is read from the module cache
+# outside the project directory, so the transform fails with "Access to this API
+# has been restricted". Neither security.node.permissions.allowRead nor an
+# in-project cacheDir resolved it here; that migration is its own piece of work.
+security:
+  allowContent:
+    - '.*'
+
 module:
   proxy: direct
   hugoVersion:
