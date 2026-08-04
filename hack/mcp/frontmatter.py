@@ -62,11 +62,25 @@ def load(text: str) -> tuple[dict, str]:
     return data, body
 
 
+class _Dumper(yaml.SafeDumper):
+    """Indents sequences, so lists match the style of the existing posts."""
+
+    def increase_indent(self, flow=False, indentless=False):
+        return super().increase_indent(flow, False)
+
+
+# Written unquoted so Hugo parses them as dates rather than strings.
+_UNQUOTED_KEYS = {"date"}
+
+
 def dump(data: dict, body: str) -> str:
     """Render front matter and body back into a content file.
 
-    Ordering follows KEY_ORDER so that generated posts stay diff-friendly
-    against the hand-written ones.
+    The output is shaped to match the hand-written posts: keys in the usual
+    order, double-quoted scalars, indented lists, and no line wrapping. That
+    last one matters beyond aesthetics — a wrapped title reaches the templates
+    with the fold in it, which then shows up in og:title and in the JSON-LD
+    headline.
     """
     ordered = {}
     for key in KEY_ORDER:
@@ -76,11 +90,26 @@ def dump(data: dict, body: str) -> str:
         if key not in ordered:
             ordered[key] = data[key]
 
-    fm = yaml.safe_dump(
-        ordered,
-        sort_keys=False,
-        allow_unicode=True,
-        default_flow_style=False,
-    )
+    lines = []
+    for key, value in ordered.items():
+        if isinstance(value, list):
+            lines.append(f"{key}:")
+            for item in value:
+                lines.append(f"  - {_scalar(item)}")
+        elif key in _UNQUOTED_KEYS:
+            lines.append(f"{key}: {value}")
+        else:
+            lines.append(f"{key}: {_scalar(value)}")
+
+    fm = "\n".join(lines)
     body = body.rstrip("\n")
-    return f"{DELIMITER}\n{fm}{DELIMITER}\n\n{body}\n"
+    return f"{DELIMITER}\n{fm}\n{DELIMITER}\n\n{body}\n"
+
+
+def _scalar(value) -> str:
+    """Render one scalar as a double-quoted YAML string on a single line."""
+    if isinstance(value, bool) or value is None or isinstance(value, (int, float)):
+        return yaml.safe_dump(value, default_flow_style=True).strip().rstrip("...").strip()
+    text = str(value)
+    escaped = text.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'

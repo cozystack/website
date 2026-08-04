@@ -114,6 +114,29 @@ def test_frontmatter_missing_delimiter():
     raise AssertionError("expected FrontMatterError")
 
 
+def test_frontmatter_never_wraps_long_scalars():
+    """A wrapped title reaches the templates with the fold in it, which then
+    shows up in og:title and in the JSON-LD headline."""
+    long_title = (
+        "Blockstor: a LINSTOR-compatible storage system for Kubernetes, "
+        "written from scratch in Go"
+    )
+    out = frontmatter.dump({"title": long_title, "date": "2026-08-04"}, "body")
+    assert f'title: "{long_title}"' in out, out
+    # The date must stay unquoted so Hugo parses it as a date.
+    assert "date: 2026-08-04\n" in out, out
+    # And it must survive a round trip unchanged.
+    data, _ = frontmatter.load(out)
+    assert data["title"] == long_title, data
+
+
+def test_frontmatter_indents_lists():
+    out = frontmatter.dump({"topics": ["storage", "platform"]}, "body")
+    assert '  - "storage"' in out, out
+    data, _ = frontmatter.load(out)
+    assert data["topics"] == ["storage", "platform"], data
+
+
 def test_frontmatter_key_order():
     out = frontmatter.dump({"topics": ["a"], "title": "T", "zzz": 1}, "body")
     lines = [l for l in out.splitlines() if l and not l.startswith("-")]
