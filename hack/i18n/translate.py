@@ -214,21 +214,25 @@ def _split_payload_response(out: str, store: dict, expect: set[str]) -> tuple[di
     else:
         tr_fm = {}
     body = body.strip()
-    # Only TOP-LEVEL placeholders are sent to the model and must survive verbatim.
-    # A nested token (e.g. an SC shortcode stashed inside an INLINECODE span —
-    # `` `{{< version-pin "x" >}}` ``) lives inside another entry's stored value,
-    # never appears in the masked text the model sees, and is unwound transitively
-    # by restore()'s fixed-point loop. Counting it here would report 0× and raise
-    # on every page that nests, making such pages permanently untranslatable.
+    # A token the model was actually SENT must survive exactly once; a token it was
+    # never sent must not appear at all. A token is sent iff it is TOP-LEVEL — not
+    # contained in another entry's stored value. A nested token (e.g. an SC shortcode
+    # stashed inside an INLINECODE span — `` `{{< version-pin "x" >}}` ``) never
+    # appears in the masked text the model sees and is unwound transitively by
+    # restore()'s fixed-point loop, so it must be 0× here: if it shows up the model
+    # injected it, and reverse restore would expand it into duplicated content the
+    # residual check can no longer see.
     top_level = {tok for tok in store
                  if not any(tok in val for other, val in store.items() if other != tok)}
-    bad = {tok: body.count(tok) for tok in top_level if body.count(tok) != 1}
+    bad = {tok: body.count(tok) for tok in store
+           if body.count(tok) != (1 if tok in top_level else 0)}
     if bad:
         tok, n = next(iter(bad.items()))
-        what = "lost" if n == 0 else "duplicated"
+        expected = 1 if tok in top_level else 0
+        what = "injected" if expected == 0 else "lost" if n == 0 else "duplicated"
         raise ProtocolError(f"{len(bad)} protected placeholder(s) {what} by the model "
-                            f"(e.g. {tok} appears {n}×, expected 1) — refusing to write a page "
-                            f"with dropped or duplicated code")
+                            f"(e.g. {tok} appears {n}×, expected {expected}) — refusing to write a "
+                            f"page with dropped, duplicated or injected code")
     return tr_fm, lib.restore(body, store)
 
 
