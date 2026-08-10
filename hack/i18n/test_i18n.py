@@ -432,6 +432,20 @@ class TestPayloadProtocol(unittest.TestCase):
             store, set(), masked)
         self.assertIn("`{{< param version >}}`", body)
 
+    def test_inner_token_the_model_never_saw_is_rejected(self):
+        # The mirror of the case above: the model may OMIT an inner token, but
+        # it must never EMIT one. A reply carrying the legit outer token plus a
+        # hallucinated inner token would otherwise restore the nested content
+        # twice — silent duplication the residual check can no longer catch.
+        masked, store = lib.protect("Use `{{< param version >}}` here.")
+        outer = next(t for t in store if t in masked)
+        inner = next(t for t in store if t not in masked)
+        with self.assertRaises(translate.ProtocolError) as cm:
+            translate._split_payload_response(
+                f'===FRONTMATTER===\n{{}}\n===BODY===\n{outer} и {inner}',
+                store, set(), masked)
+        self.assertIn("injected", str(cm.exception))
+
 
 class TestFindingsReport(unittest.TestCase):
     def test_report_names_the_page_and_every_finding(self):

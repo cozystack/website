@@ -188,8 +188,14 @@ succeeds. A page that reproducibly fails is a signal to translate it by hand.
 | Field | Meaning | Read by |
 |-------|---------|---------|
 | `source_digest` | sha256 of the English source the translation was made from — the freshness signal | `hack/check-i18n.sh`, `worklist.py` |
-| `l10n` | *how* the page was localized: `mt` (machine) or `transcreate` | humans triaging review |
+| `l10n` | *how* the page was localized: `mt` (machine) or `transcreate` | `worklist.py`, `translate.py`, `hack/check-i18n.sh`, plus humans triaging review |
 | `translation_review` | *ratification state*: `auto-reviewed`, `auto-reviewed-with-findings`, or `ratified` | `translation-banner.html` |
+
+`l10n: transcreate` is load-bearing for the pipeline, not just a review hint:
+mark a page `transcreate` → `worklist.py` skips it and `translate.py` refuses to
+overwrite it → `check-i18n.sh` downgrades its source drift to a warning instead
+of failing CI → you refresh the wording by hand → run `update-digests <file>` to
+re-stamp `source_digest` so the warning clears.
 
 `translation_status: current` appears on pages from the i18n PoC. It is not
 written or read by anything — `source_digest` computes freshness properly — so

@@ -220,14 +220,19 @@ def _split_payload_response(out: str, store: dict, expect: set[str],
     else:
         tr_fm = {}
     body = body.strip()
+    # A token the model was actually sent must survive exactly once; a token it
+    # was never sent (an inner token of a nested stash, or a hallucination) must
+    # not appear at all — otherwise reverse restore expands it into duplicated
+    # content that the final residual check can no longer see.
     bad = {tok: body.count(tok) for tok in store
-           if tok in masked_src and body.count(tok) != 1}
+           if body.count(tok) != (1 if tok in masked_src else 0)}
     if bad:
         tok, n = next(iter(bad.items()))
-        what = "lost" if n == 0 else "duplicated"
+        expected = 1 if tok in masked_src else 0
+        what = "injected" if expected == 0 else "lost" if n == 0 else "duplicated"
         raise ProtocolError(f"{len(bad)} protected placeholder(s) {what} by the model "
-                            f"(e.g. {tok} appears {n}×, expected 1) — refusing to write a page "
-                            f"with dropped or duplicated code")
+                            f"(e.g. {tok} appears {n}×, expected {expected}) — refusing to write a "
+                            f"page with dropped, duplicated or injected code")
     return tr_fm, lib.restore(body, store)
 
 
