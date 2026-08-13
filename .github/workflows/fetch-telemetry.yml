@@ -1,9 +1,17 @@
 name: Fetch Telemetry Data
 
 on:
-  # Keep this as a manual telemetry-only backfill path. The monthly OSS Health
-  # refresh intentionally does not update telemetry while /api/overview differs
-  # from the Grafana-backed source of truth.
+  # Runs on the 3rd so the month it publishes is closed and the server has a
+  # final snapshot of it. This stays its own workflow rather than joining the
+  # monthly OSS Health job: those datasets come from public APIs, this one from
+  # our own telemetry server, and a failure there should not hold back the rest.
+  #
+  # The /api/overview undercount that kept this manual is fixed — the server
+  # counts over the period window instead of at an instant (telemetry-server
+  # 43617cc, 2026-06-30), and its numbers now match what was published by hand
+  # from Grafana for June.
+  schedule:
+    - cron: '0 5 3 * *'
   workflow_dispatch:
 
 permissions:
@@ -28,7 +36,22 @@ jobs:
         with:
           python-version: '3.12'
 
+      # Always the previous month: the current one is still open, and the
+      # server marks a snapshot final only once the month has closed.
+      - name: Resolve the month to publish
+        id: period
+        run: |
+          # The day before the 1st of this month, rather than "last month":
+          # that phrasing resolves to the same day number and silently skips a
+          # month when run on a 29th, 30th or 31st.
+          previous=$(date -u -d "$(date -u +%Y-%m-01) -1 day" +%Y-%m)
+          echo "year=${previous%-*}" >> "$GITHUB_OUTPUT"
+          echo "month=${previous#*-}" >> "$GITHUB_OUTPUT"
+
       - name: Fetch and transform telemetry data
+        env:
+          TELEMETRY_YEAR: ${{ steps.period.outputs.year }}
+          TELEMETRY_MONTH: ${{ steps.period.outputs.month }}
         run: python3 hack/fetch_telemetry.py
 
       - name: Check for changes
@@ -48,7 +71,7 @@ jobs:
           git add static/oss-health-data/telemetry.json
           git branch -D update-telemetry || true
           git checkout -b update-telemetry
-          git commit --signoff -m "[oss-health] Update telemetry snapshot $(date -u +'%Y-%m-%d %H:%M:%S')"
+          git commit --signoff -m "[oss-health] Update telemetry snapshot for ${{ steps.period.outputs.year }}-${{ steps.period.outputs.month }}"
           git push --force --set-upstream origin update-telemetry
 
       - name: Open pull request if not exists

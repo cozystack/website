@@ -16,7 +16,7 @@ What it does:
 5. Emit the payload in the shape consumed by `oss-health-app.html` +
    `renderTelemetry`, including `summary_cards`, `apps`, `range`.
 
-Used by the manual telemetry workflow and by developers who need to refresh or
+Used by the monthly telemetry workflow and by developers who need to refresh or
 backfill the seed file locally.
 """
 from __future__ import annotations
