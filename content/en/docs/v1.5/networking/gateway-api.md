@@ -51,7 +51,7 @@ The controller:
 - Watches `HTTPRoute` and `TLSRoute` resources cluster-wide. For each route attached to its Gateway, it picks up the hostnames and (in HTTP-01 mode) appends a per-app HTTPS listener + a per-app `Certificate`.
 - In DNS-01 mode, extends the wildcard `Certificate` with `<child-apex>` + `*.<child-apex>` SANs for every tenant inheriting through this Gateway (discovered by listing namespaces with `namespace.cozystack.io/gateway = <owner>` and reading their `namespace.cozystack.io/host`), and adds one `*.<child-apex>` HTTPS listener per inheriting child.
 - Patches `namespace.cozystack.io/gateway = <owner>` onto every namespace in `TenantGateway.spec.attachedNamespaces` (the cozy-* system namespaces published through the Gateway). The patch is annotated with `cozystack.io/gateway-attached-by` so the controller knows which labels it wrote and which are owned by the `apps/tenant` chart — labels written by the chart are never touched. Labels written by the controller are garbage-collected when the namespace is removed from `attachedNamespaces`.
-- Resolves cross-namespace hostname conflicts: `cozy-*` namespaces (cluster-admin-managed platform services) win over tenant namespaces; the loser receives a `HostnameConflict` condition under the controller's name in `Status.Parents`.
+- In HTTP-01 mode, resolves cross-namespace hostname conflicts: `cozy-*` namespaces (cluster-admin-managed platform services) win over tenant namespaces; the loser receives a `HostnameConflict` condition under the controller's name in `Status.Parents`. The other modes gather no claims, so nothing is resolved and no route condition is written.
 - Refuses to silently take over pre-existing `Gateway`, `Issuer`, `Certificate`, or redirect `HTTPRoute` objects that share the controller-derived name but carry no `OwnerReference` back to the TenantGateway. Operators see an explicit `Ready=False/ReconcileError` condition instead of having their hand-pinned config rewritten.
 
 ### Traffic path
@@ -366,7 +366,7 @@ Combined with Layer 3, a tenant user cannot establish or change their host throu
 
 A pair of `ValidatingAdmissionPolicy` objects sharing the same CEL expression. `cozystack-route-hostname-policy` targets `gateway.networking.k8s.io` `HTTPRoute` (`v1` and `v1beta1`) CREATE/UPDATE; `cozystack-route-hostname-policy-tls` targets `TLSRoute` at `v1alpha2`. Both are scoped to `tenant-*` namespaces (cozy-* are cluster-admin-managed and trusted to publish under any apex) and reject any `spec.hostnames` entry that is not equal to the namespace's `namespace.cozystack.io/host` label or a subdomain of it. **Fail-closed when the label is absent** — a `tenant-*` namespace without `namespace.cozystack.io/host` is rejected, not silently allowed. Operators querying `kubectl get validatingadmissionpolicy` will see both objects. Neither policy pins the version a client submits: `matchConstraints.matchPolicy` is unset on both, so it defaults to `Equivalent` and the apiserver converts a request made under another served version of the same resource into one the rule does name before the policy evaluates it.
 
-Defense-in-depth against an app chart bug or supply-chain compromise that emits Gateway API resources outside the tenant's apex — tenants in Cozystack do not hold `gateway.networking.k8s.io/*` RBAC by design, so this is not a tenant-user defense. The within-apex cross-namespace case (a tenant chart claiming a hostname owned by a `cozy-*` app) is handled by the controller at reconcile time — see [HostnameConflict resolution](#hostnameconflict-resolution) below.
+Defense-in-depth against an app chart bug or supply-chain compromise that emits Gateway API resources outside the tenant's apex — tenants in Cozystack do not hold `gateway.networking.k8s.io/*` RBAC by design, so this is not a tenant-user defense. The within-apex cross-namespace case (a tenant chart claiming a hostname owned by a `cozy-*` app) is handled by the controller at reconcile time **in HTTP-01 mode only** — see [HostnameConflict resolution](#hostnameconflict-resolution) below for which modes resolve it and which leave it to the class controller.
 
 The allowed host suffix is always the value of the namespace's own `namespace.cozystack.io/host` label — Layer 5 has no special case for `tenant-root` and no hardcoded derivation rule. Whatever the apps/tenant chart wrote into that label (derived `<name>.<parent apex>` for inheriting children, the cluster's `publishing.host` for `tenant-root`, the operator-set `tenant.spec.host` for custom-apex tenants) is what every route in that namespace must end with. A tenant with an independent apex (`customer1.example` instead of a subdomain) is handled correctly because the VAP reads the label rather than assuming a subdomain hierarchy.
 
@@ -378,6 +378,8 @@ When two routes from different namespaces claim the same hostname, the controlle
 - Within the same priority tier, the route with the lexicographically smallest `<namespace>/<name>` pair wins.
 
 The losing route receives `Accepted=False` with `Reason=HostnameConflict` in `Status.Parents` under the controller's name (`gateway.cozystack.io/tenantgateway-controller`). Other controllers' status entries (Cilium etc.) are left untouched.
+
+This runs in **HTTP-01 mode only**. `collectHostnameClaims` returns nothing for the modes that serve every hostname off apex-wide listeners — DNS-01 and `existingSecret` — so in those two no claims are gathered, no winner is picked, and no route status is written or removed. A cluster moved off HTTP-01 therefore keeps whatever `HostnameConflict` conditions the controller wrote under the old mode. Two routes in different namespaces claiming the same hostname are simply both admitted, and which one answers is the class controller's business.
 
 ### Foreign-takeover guards
 
@@ -592,7 +594,7 @@ If the Challenge's `HTTPRoute` has `Accepted=False`, the HTTP listener's `allowe
 kubectl -n <tenant-ns> describe httproute <route-name>
 ```
 
-Look for an entry under `Status.Parents` with `controllerName: gateway.cozystack.io/tenantgateway-controller` and `Reason: HostnameConflict`. The message names the conflicting hostname(s) and the route that owns them. Within-apex conflicts are resolved with `cozy-*` priority; the loser must use a different hostname.
+Look for an entry under `Status.Parents` with `controllerName: gateway.cozystack.io/tenantgateway-controller` and `Reason: HostnameConflict`. The message names the conflicting hostname(s) and the route that owns them. Within-apex conflicts are resolved with `cozy-*` priority; the loser must use a different hostname. This applies in HTTP-01 mode only — in the other modes the controller writes no such condition, so an absent `HostnameConflict` entry means the mechanism did not run, not that there is no collision.
 
 ### Admission denied: "Gateway listener hostname must equal..."
 
