@@ -93,7 +93,7 @@ A tenant Gateway always materialises an HTTP listener:
 
 Plus HTTPS listeners that depend on cert mode:
 
-- **HTTP-01 mode (default):** one HTTPS listener per attached HTTPRoute hostname, named `https-<first-label>-<8-hex>`. The hex suffix is the first 32 bits of `sha256(hostname)` so two different hostnames sharing the same first label (`harbor.foo.example.com` vs `harbor.alice.example.com`) get distinct listener names. Each listener's `tls.certificateRefs` points at a per-listener `Certificate` named `<tgw>-<first-label>-<8-hex>-tls`, also auto-issued.
+- **HTTP-01 mode (default):** one HTTPS listener per attached route hostname — `HTTPRoute` and `TLSRoute` alike, because the controller collects hostnames from both kinds without distinguishing them — named `https-<first-label>-<8-hex>`. Every claimed hostname gets exactly one listener and one certificate, owned by the route that wins it; a route that loses a cross-namespace race is marked `Accepted=False` by [conflict resolution](#hostnameconflict-resolution) rather than rejected, and the hostname itself is still served. The hex suffix is the first 32 bits of `sha256` over the **lower-cased** hostname, so two different hostnames sharing the same first label (`harbor.foo.example.com` vs `harbor.alice.example.com`) get distinct listener names. Each listener's `tls.certificateRefs` points at a per-listener `Certificate` named `<tgw>-<first-label>-<8-hex>-tls`, also auto-issued.
 - **DNS-01 mode (opt-in):** `https` (`*.<owner apex>`) and `https-apex` (`<owner apex>`) listeners consuming a single wildcard Certificate, plus one `https-child-<first-label>-<8-hex>` listener per inheriting child apex (referencing the same wildcard cert, whose dnsNames are extended with `<child-apex>` + `*.<child-apex>` SANs).
 - **existingSecret mode (operator-provided wildcard):** the same listener set as DNS-01 — `https` (`*.<owner apex>`), `https-apex` (`<owner apex>`), and one `https-child-<first-label>-<8-hex>` per inheriting child apex — except that every `tls.certificateRefs` points at the operator-supplied Secret named by `publishing.certificates.wildcardSecretName`, and no `Certificate` is issued for any of them.
 
@@ -232,7 +232,7 @@ A tenant that opts into its own Gateway becomes a separate boundary: separate `G
 Out of the box, no extra config required. The controller:
 
 - Renders an ACME `Issuer` in the tenant namespace with an `http01.gatewayHTTPRoute` solver pointing at the tenant's own Gateway / `http` listener.
-- Watches HTTPRoutes / TLSRoutes attached to the Gateway (parentRefs pointing at it). For each unique hostname seen, it adds a per-app HTTPS listener and a per-app `Certificate` (dnsNames containing exactly that hostname).
+- Watches HTTPRoutes / TLSRoutes attached to the Gateway (parentRefs pointing at it), collecting hostnames from both kinds without distinguishing them. For each unique hostname claimed it adds one per-app HTTPS listener and one per-app `Certificate` (dnsNames containing exactly that hostname), owned by the route that wins that hostname.
 - Per-app listener naming: `https-<first-label>-<8-hex>` (e.g. `https-harbor-deadbeef`).
 - Per-app cert naming: `<tgw>-<first-label>-<8-hex>-tls`.
 
@@ -255,7 +255,7 @@ DNS-01 mode renders a single wildcard `Certificate` covering `<owner apex>` and 
 
 The platform chart writes the provider config into `_cluster.dns01-*` keys consumed by both the per-tenant gateway chart (rendering the TenantGateway CR) and the cluster-wide `letsencrypt-prod` / `letsencrypt-stage` ClusterIssuers used by the legacy ingress flow. Both paths agree on which provider is active.
 
-Pick DNS-01 when you specifically want a wildcard cert — a long-lived cluster with many apps under one apex, deep inheritance trees, or tight Let's Encrypt rate limits. Gateway API caps `Gateway.spec.listeners` at 64; HTTP-01 adds one HTTPS listener per published hostname (plus the mandatory `http` listener and the TLS-passthrough listeners) so a single-tenant deployment approaching 60+ published apps on HTTP-01 will hit the cap and the rendered `Gateway` will fail admission. DNS-01 collapses every hostname under the apex into a small fixed number of listeners.
+Pick DNS-01 when you specifically want a wildcard cert — a long-lived cluster with many apps under one apex, deep inheritance trees, or tight Let's Encrypt rate limits. Gateway API caps `Gateway.spec.listeners` at 64, and HTTP-01 spends that budget fastest: one HTTPS listener per published hostname, plus the mandatory `http` listener, plus one passthrough listener per TLS-passthrough service. Budget those passthrough services at **two** slots each, not one — the controller collects hostnames from `TLSRoute` as well as `HTTPRoute`, so each passthrough FQDN also claims an HTTPS listener of its own. With the three default passthrough services that is `1 + N + 6`, and a single-tenant deployment approaching 60 published apps on HTTP-01 will hit the cap, at which point the rendered `Gateway` fails admission. DNS-01 collapses every hostname under the apex into a small fixed number of listeners.
 
 ### existingSecret (operator-provided wildcard)
 
@@ -429,7 +429,7 @@ Let's Encrypt enforces per-account and per-registered-domain quotas:
 - 5 duplicate certificates per week for the same hostname set
 - 300 new orders per account per 3 hours
 
-Setting `publishing.certificates.wildcardSecretName` sidesteps the quotas entirely — that mode issues no ACME certificates at all — at the cost of the caveats in [Certificates](#certificates). A cluster where many tenants share the same apex domain can exhaust these quickly, especially in HTTP-01 mode where each published app contributes one certificate. Mitigations:
+Setting `publishing.certificates.wildcardSecretName` sidesteps the quotas entirely — that mode issues no ACME certificates at all — at the cost of the caveats in [Certificates](#certificates). A cluster where many tenants share the same apex domain can exhaust these quickly, especially in HTTP-01 mode where each published app contributes one certificate — and so does each TLS-passthrough service, since its hostname is claimed the same way even though the backend, not the Gateway, terminates its TLS. Mitigations:
 
 - `publishing.certificates.issuerName: letsencrypt-stage` for non-production clusters (staging quotas do not affect prod).
 - `tenant.spec.resourceQuotas.count/certificates.cert-manager.io` to cap per-tenant certificate creations.
