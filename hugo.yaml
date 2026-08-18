@@ -329,6 +329,14 @@ menus:
     url: /compliance/pci-dss/
     parent: compliance
     weight: 1
+  - name: CIS Benchmark
+    url: /compliance/cis-benchmark/
+    parent: compliance
+    weight: 2
+  - name: Kubernetes Conformance
+    url: /compliance/kubernetes-conformance/
+    parent: compliance
+    weight: 3
   - name: Community
     url: /community/
     weight: 30

@@ -22,3 +22,9 @@ command you can run against your own cluster.
 - **[PCI DSS](/compliance/pci-dss/)** — a requirement-by-requirement mapping of what
   Cozystack enforces by default, what is opt-in, and what stays with you, with commands to
   verify each control on your own cluster.
+- **[CIS Benchmark](/compliance/cis-benchmark/)** — a full kube-bench run against Cozystack
+  on Talos Linux, with every failure sorted into real deviations, controls met another way,
+  and checks that do not apply.
+- **[Kubernetes Conformance](/compliance/kubernetes-conformance/)** — what CNCF conformance
+  proves, where Cozystack-based clusters appear in the CNCF results, and how to run the
+  suite yourself.

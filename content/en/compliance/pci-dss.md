@@ -243,9 +243,12 @@ the platform for workloads — but shipping the API audit log into them is not w
 default, and Requirement 10.3.3 expects audit logs to reach a separate, centrally managed
 server promptly.
 
-Two more things to check rather than assume. The contents of the audit policy: a
-`Metadata`-level policy will not produce the per-event detail Requirement 10.2.1 expects, so
-sensitive resources need `RequestResponse`. And protection of the trail itself: 10.3.2
+Two more things to check rather than assume. The contents of the audit policy. A `Metadata`-level
+policy will not produce the per-event detail Requirement 10.2.1 expects — but raising
+everything to `RequestResponse` is the wrong correction, because request bodies carry Secret
+values and personal data, and the audit log then becomes another store of the data you are
+protecting. Split it by resource: `RequestResponse` for role bindings and admission
+configuration, `Metadata` for Secrets. And protection of the trail itself: 10.3.2
 through 10.3.4 require the log to be unmodifiable and watched by a change-detection
 mechanism, neither of which the platform provides.
 
