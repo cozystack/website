@@ -403,27 +403,27 @@ class TestPayloadProtocol(unittest.TestCase):
     def test_parses_json_frontmatter_and_body(self):
         _, store = lib.protect("x")
         fm, body = translate._split_payload_response(
-            '===FRONTMATTER===\n{"title": "Заголовок"}\n===BODY===\nтело', {}, {"title"})
+            '===FRONTMATTER===\n{"title": "Заголовок"}\n===BODY===\nтело', {}, {"title"}, "")
         self.assertEqual(fm, {"title": "Заголовок"})
         self.assertEqual(body, "тело")
 
     def test_preamble_without_marker_is_rejected(self):
         # Otherwise "Here's the translation:" gets written into the page.
         with self.assertRaises(translate.ProtocolError):
-            translate._split_payload_response("Here's the translation!", {}, set())
+            translate._split_payload_response("Here's the translation!", {}, set(), "")
 
     def test_missing_frontmatter_key_is_rejected(self):
         # A page whose body is translated but whose hero silently stayed English
         # is worse than a retry tomorrow.
         with self.assertRaises(translate.ProtocolError):
             translate._split_payload_response(
-                '===FRONTMATTER===\n{"title": "T"}\n===BODY===\nb', {}, {"title", "taglines[0]"})
+                '===FRONTMATTER===\n{"title": "T"}\n===BODY===\nb', {}, {"title", "taglines[0]"}, "")
 
     def test_dropped_placeholder_is_rejected(self):
         masked, store = lib.protect("a\n```\ncode\n```\nb")
         with self.assertRaises(translate.ProtocolError) as cm:
             translate._split_payload_response(
-                '===FRONTMATTER===\n{}\n===BODY===\ntranslated, fence gone', store, set())
+                '===FRONTMATTER===\n{}\n===BODY===\ntranslated, fence gone', store, set(), masked)
         self.assertIn("lost", str(cm.exception))
 
     def test_duplicated_placeholder_is_rejected(self):
@@ -431,15 +431,41 @@ class TestPayloadProtocol(unittest.TestCase):
         tok = next(iter(store))
         with self.assertRaises(translate.ProtocolError) as cm:
             translate._split_payload_response(
-                f'===FRONTMATTER===\n{{}}\n===BODY===\n{tok}\n{tok}', store, set())
+                f'===FRONTMATTER===\n{{}}\n===BODY===\n{tok}\n{tok}', store, set(), masked)
         self.assertIn("duplicated", str(cm.exception))
 
     def test_placeholders_are_restored(self):
         masked, store = lib.protect("a\n```\ncode\n```\nb")
         tok = next(iter(store))
         _, body = translate._split_payload_response(
-            f'===FRONTMATTER===\n{{}}\n===BODY===\nпереведено\n{tok}', store, set())
+            f'===FRONTMATTER===\n{{}}\n===BODY===\nпереведено\n{tok}', store, set(), masked)
         self.assertIn("```\ncode\n```", body)
+
+    def test_inner_token_of_a_nested_stash_is_not_required(self):
+        # Inline code wrapping a shortcode nests stashes: the model only ever
+        # sees the OUTER token, so requiring the inner one would fail every
+        # reply. restore() unwinds the nesting instead.
+        masked, store = lib.protect("Use `{{< param version >}}` here.")
+        outer = [t for t in store if t in masked]
+        self.assertEqual(len(outer), 1)
+        _, body = translate._split_payload_response(
+            f'===FRONTMATTER===\n{{}}\n===BODY===\nВставьте {outer[0]} сюда.',
+            store, set(), masked)
+        self.assertIn("`{{< param version >}}`", body)
+
+    def test_inner_token_the_model_never_saw_is_rejected(self):
+        # The mirror of the case above: the model may OMIT an inner token, but
+        # it must never EMIT one. A reply carrying the legit outer token plus a
+        # hallucinated inner token would otherwise restore the nested content
+        # twice — silent duplication the residual check can no longer catch.
+        masked, store = lib.protect("Use `{{< param version >}}` here.")
+        outer = next(t for t in store if t in masked)
+        inner = next(t for t in store if t not in masked)
+        with self.assertRaises(translate.ProtocolError) as cm:
+            translate._split_payload_response(
+                f'===FRONTMATTER===\n{{}}\n===BODY===\n{outer} и {inner}',
+                store, set(), masked)
+        self.assertIn("injected", str(cm.exception))
 
 
 class TestFindingsReport(unittest.TestCase):
@@ -597,13 +623,15 @@ class TestStaleReportCleanup(unittest.TestCase):
         # Once the backlog drains, build_worklist() is empty and main() returns
         # early. A report left by an earlier run must still be cleared, or
         # run-daily.sh reposts stale findings stamped with today's date.
-        orig_wl, orig_orph, orig_argv = (
-            lib.build_worklist, lib.find_orphan_translations, sys.argv)
+        orig_wl, orig_orph, orig_hand, orig_argv = (
+            lib.build_worklist, lib.find_orphan_translations,
+            lib.find_hand_localized, sys.argv)
         existed = os.path.exists(translate.REPORT_PATH)
         backup = open(translate.REPORT_PATH).read() if existed else None
         try:
             lib.build_worklist = lambda *a, **k: []
             lib.find_orphan_translations = lambda *a, **k: []
+            lib.find_hand_localized = lambda *a, **k: []
             sys.argv = ["translate.py"]
             with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
                 fh.write("### stale findings from a previous run\n- something\n")
@@ -614,11 +642,362 @@ class TestStaleReportCleanup(unittest.TestCase):
         finally:
             lib.build_worklist, lib.find_orphan_translations, sys.argv = (
                 orig_wl, orig_orph, orig_argv)
+            lib.find_hand_localized = orig_hand
             if backup is not None:
                 with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
                     fh.write(backup)
             elif os.path.exists(translate.REPORT_PATH):
                 os.unlink(translate.REPORT_PATH)
+
+    def test_empty_worklist_still_reports_hand_localized_drift(self):
+        # The steady state (empty worklist) is exactly when hand-localized
+        # drift must keep being reported: the pipeline will never touch those
+        # pages, so a run that goes silent hides the drift indefinitely.
+        orig_wl, orig_orph, orig_hand, orig_argv = (
+            lib.build_worklist, lib.find_orphan_translations,
+            lib.find_hand_localized, sys.argv)
+        existed = os.path.exists(translate.REPORT_PATH)
+        backup = open(translate.REPORT_PATH).read() if existed else None
+        try:
+            lib.build_worklist = lambda *a, **k: []
+            lib.find_orphan_translations = lambda *a, **k: []
+            lib.find_hand_localized = lambda *a, **k: [("ru", "_index.html")]
+            sys.argv = ["translate.py"]
+            rc = translate.main()
+            self.assertEqual(rc, 0)
+            self.assertTrue(os.path.exists(translate.REPORT_PATH),
+                            "drift report was not written on an empty worklist")
+            report = open(translate.REPORT_PATH, encoding="utf-8").read()
+            self.assertIn("ru: _index.html", report)
+            self.assertIn("transcreate", report)
+        finally:
+            lib.build_worklist, lib.find_orphan_translations, sys.argv = (
+                orig_wl, orig_orph, orig_argv)
+            lib.find_hand_localized = orig_hand
+            if backup is not None:
+                with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
+                    fh.write(backup)
+            elif os.path.exists(translate.REPORT_PATH):
+                os.unlink(translate.REPORT_PATH)
+
+
+class TestLinkDestinationMasking(unittest.TestCase):
+    """URLs used to be defended by a prompt rule only. They are masked now, so a
+    model that "fixes" or localizes a link cannot silently ship a broken one."""
+
+    def test_inline_link_destination_is_masked_but_text_is_not(self):
+        masked, store = lib.protect("See the [install guide](/docs/v1.5/install) for details.")
+        self.assertNotIn("/docs/v1.5/install", masked)
+        self.assertIn("install guide", masked)  # link text stays translatable
+        self.assertEqual(lib.restore(masked, store),
+                         "See the [install guide](/docs/v1.5/install) for details.")
+
+    def test_autolink_and_refdef_are_masked(self):
+        text = "Visit <https://cozystack.io> now.\n\n[ref]: https://example.com/a?b=c\n"
+        masked, store = lib.protect(text)
+        self.assertNotIn("cozystack.io", masked)
+        self.assertNotIn("example.com", masked)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_link_title_is_left_translatable(self):
+        masked, store = lib.protect('A [link](/a/b "Read this") here.')
+        self.assertIn('"Read this"', masked)
+        self.assertNotIn("/a/b", masked)
+        self.assertEqual(lib.restore(masked, store), 'A [link](/a/b "Read this") here.')
+
+    def test_ref_shortcode_destination_is_not_double_masked(self):
+        # The shortcode pass runs first, so the destination is already a
+        # placeholder when the link-destination pass sees it. Re-stashing it
+        # would nest placeholders: the model never sees the inner token and the
+        # reply guard fails the page on every attempt.
+        text = 'Read the [install guide]({{% ref "/docs/install" %}}) first.'
+        masked, store = lib.protect(text)
+        for value in store.values():
+            self.assertNotIn("§§", value)
+        for token in store:
+            self.assertEqual(masked.count(token), 1)  # what the reply guard needs
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_angle_bracket_destination_roundtrip(self):
+        text = "See [docs](<https://example.com>) now.\n\n[id]: <https://example.org>\n"
+        masked, store = lib.protect(text)
+        for value in store.values():
+            self.assertNotIn("§§", value)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_footnote_definition_is_not_masked(self):
+        # `[^1]: prose` is a footnote, not a reference link — its first word is
+        # translatable text, not a URL.
+        text = "[^1]: Some note here."
+        masked, store = lib.protect(text)
+        self.assertEqual(masked, text)
+        self.assertEqual(store, {})
+
+    def test_restore_unwinds_nested_store_values(self):
+        # Defense in depth: even if a pass ever nests again, reverse-order
+        # restore resolves it (a later stash only references earlier tokens).
+        store = {"§§A_0§§": "inner", "§§B_1§§": "§§A_0§§"}
+        self.assertEqual(lib.restore("x §§B_1§§ y", store), "x inner y")
+
+
+class TestRawHtmlMasking(unittest.TestCase):
+    """`.html` pages produced zero protected spans, so the placeholder guard had
+    nothing to fail closed on and markup reached the model verbatim."""
+
+    def test_html_tags_are_masked_but_their_text_is_not(self):
+        masked, store = lib.protect('<h2 class="section-label">Our roadmap</h2>')
+        self.assertNotIn("section-label", masked)
+        self.assertIn("Our roadmap", masked)  # visible text stays translatable
+        self.assertEqual(lib.restore(masked, store),
+                         '<h2 class="section-label">Our roadmap</h2>')
+
+    def test_anchor_attributes_are_masked(self):
+        text = '<a href="/docs/install" target="_blank">Install guide</a>'
+        masked, store = lib.protect(text)
+        self.assertNotIn("/docs/install", masked)
+        self.assertNotIn("_blank", masked)
+        self.assertIn("Install guide", masked)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_self_closing_and_closing_tags(self):
+        text = "line one<br />line two</div>"
+        masked, store = lib.protect(text)
+        self.assertNotIn("<br />", masked)
+        self.assertNotIn("</div>", masked)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_html_page_now_produces_protected_spans(self):
+        # The regression lexfrei reported: this used to be 0.
+        _masked, store = lib.protect('<div class="hero">\n<p>Hello</p>\n</div>')
+        self.assertGreater(len(store), 0)
+
+    def test_autolink_is_not_swallowed_by_the_tag_pattern(self):
+        text = "See <https://cozystack.io> for more."
+        masked, store = lib.protect(text)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_a_less_than_sign_in_prose_is_not_a_tag(self):
+        text = "Use a value < 10 for this."
+        masked, store = lib.protect(text)
+        self.assertEqual(masked, text)
+        self.assertEqual(store, {})
+
+
+class TestHandLocalizedPagesArePreserved(unittest.TestCase):
+    """`l10n: transcreate` marks a page a human wrote by hand. Regenerating it
+    would overwrite that with machine output, and `translate_page` used to stamp
+    `l10n: mt` unconditionally."""
+
+    def _page(self, tmp, l10n, digest="deadbeef"):
+        p = os.path.join(tmp, "page.md")
+        with open(p, "w", encoding="utf-8") as fh:
+            fh.write(f'---\ntitle: T\nl10n: {l10n}\nsource_digest: "sha256:{digest}"\n---\nbody\n')
+        return p
+
+    def test_recorded_l10n_reads_the_marker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(lib.recorded_l10n(self._page(tmp, "transcreate")), "transcreate")
+
+    def test_is_hand_localized(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertTrue(lib.is_hand_localized(self._page(tmp, "transcreate")))
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertFalse(lib.is_hand_localized(self._page(tmp, "mt")))
+
+    def test_missing_marker_is_none(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = os.path.join(tmp, "p.md")
+            with open(p, "w", encoding="utf-8") as fh:
+                fh.write("---\ntitle: T\n---\nbody\n")
+            self.assertIsNone(lib.recorded_l10n(p))
+            self.assertFalse(lib.is_hand_localized(p))
+
+    def test_translate_page_refuses_hand_localized_target(self):
+        # Belt and braces behind the worklist filter: if translate_page is ever
+        # reached for a hand-localized target, it must refuse before spending a
+        # model call, not overwrite the transcreation.
+        with tempfile.TemporaryDirectory() as tmp:
+            en = os.path.join(tmp, "content", "en")
+            ru = os.path.join(tmp, "content", "ru")
+            os.makedirs(en); os.makedirs(ru)
+            with open(os.path.join(en, "page.md"), "w", encoding="utf-8") as fh:
+                fh.write("---\ntitle: T\n---\nbody\n")
+            with open(os.path.join(ru, "page.md"), "w", encoding="utf-8") as fh:
+                fh.write("---\ntitle: Т\nl10n: transcreate\n---\nтело\n")
+            cfg = {"content_dir": "content", "source_lang": "en"}
+            orig_root = lib.REPO_ROOT
+            try:
+                lib.REPO_ROOT = tmp
+                with self.assertRaises(translate.ProtocolError):
+                    translate.translate_page(cfg, {}, {"code": "ru"}, "page.md")
+            finally:
+                lib.REPO_ROOT = orig_root
+
+    def test_transcreated_page_is_kept_out_of_the_worklist(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            en = os.path.join(tmp, "content", "en")
+            ru = os.path.join(tmp, "content", "ru")
+            os.makedirs(en); os.makedirs(ru)
+            with open(os.path.join(en, "_index.html"), "w", encoding="utf-8") as fh:
+                fh.write("---\ntitle: Home\n---\n<div>hi</div>\n")
+            # Target exists, is hand-localized, and its digest is deliberately stale.
+            with open(os.path.join(ru, "_index.html"), "w", encoding="utf-8") as fh:
+                fh.write('---\ntitle: Главная\nl10n: transcreate\nsource_digest: "sha256:stale"\n---\n<div>привет</div>\n')
+            cfg = {"content_dir": "content", "source_lang": "en",
+                   "languages": [{"code": "ru"}], "translate_globs": ["_index.html"],
+                   "exclude_globs": [], "blog_since": ""}
+            orig_root, orig_latest = lib.REPO_ROOT, lib.latest_docs_version
+            try:
+                lib.REPO_ROOT = tmp
+                lib.latest_docs_version = lambda _cfg: "v1.5"
+                self.assertEqual(lib.build_worklist(cfg), [])
+                self.assertEqual(lib.find_hand_localized(cfg), [("ru", "_index.html")])
+            finally:
+                lib.REPO_ROOT, lib.latest_docs_version = orig_root, orig_latest
+
+
+class TestIntegrityFindings(unittest.TestCase):
+    def test_clean_translation_has_no_findings(self):
+        self.assertEqual(
+            lib.integrity_findings("Cozystack v1.5 uses --dry-run.",
+                                   "Cozystack v1.5 verwendet --dry-run.", ["Cozystack"]), [])
+
+    def test_dropped_version_is_major(self):
+        f = lib.integrity_findings("Upgrade to v1.5 now.", "Jetzt aktualisieren.")
+        self.assertTrue(any(x["severity"] == "major" and "v1.5" in x["issue"] for x in f))
+
+    def test_localized_decimal_in_a_version_is_caught(self):
+        # "v1.5" rewritten as "v1,5" — the token no longer matches the source.
+        f = lib.integrity_findings("Use v1.5.", "Nutze v1,5.")
+        self.assertTrue(any("v1.5" in x["issue"] for x in f))
+
+    def test_dropped_flag_is_major(self):
+        f = lib.integrity_findings("Pass --dry-run to preview.", "Zum Testen übergeben.")
+        self.assertTrue(any(x["severity"] == "major" and "--dry-run" in x["issue"] for x in f))
+
+    def test_translated_brand_is_caught(self):
+        f = lib.integrity_findings("Cozystack is a platform.", "Козистек — это платформа.",
+                                   ["Cozystack"])
+        self.assertTrue(any("Cozystack" in x["issue"] for x in f))
+
+    def test_code_spans_are_exempt(self):
+        # A version that only lives inside code is already guaranteed by masking;
+        # it must not be double-reported here.
+        self.assertEqual(lib.integrity_findings("Run `helm install v1.5`.", "Führen Sie aus."), [])
+
+    def test_prose_decimal_reformat_is_allowed(self):
+        # The style guides MANDATE the decimal comma in prose; a bare two-part
+        # decimal is a quantity, not a version, and must not be enforced
+        # byte-for-byte (the finding would refire every revise round and block
+        # the gate forever).
+        self.assertEqual(lib.integrity_findings("It is 3.14 wide.", "Es ist 3,14 breit."), [])
+
+    def test_thousands_separator_reformat_is_allowed(self):
+        self.assertEqual(
+            lib.integrity_findings("It runs 10,000 pods.", "Es betreibt 10.000 Pods."), [])
+
+    def test_three_component_bare_version_is_still_caught(self):
+        f = lib.integrity_findings("Upgrade to 1.2.3 now.", "Jetzt aktualisieren.")
+        self.assertTrue(any(x["severity"] == "major" and "1.2.3" in x["issue"] for x in f))
+
+    def test_dnt_term_is_not_counted_inside_larger_words(self):
+        # Substring counting would see 'Go' inside 'Google' and demand a third
+        # occurrence the translation never had.
+        self.assertEqual(
+            lib.integrity_findings("The Go toolchain is part of Google.",
+                                   "Der Go-Toolchain gehört zu Alphabet.", ["Go"]), [])
+
+    def test_localized_date_is_not_an_invented_version(self):
+        # The de guide mandates 24.07.2026 for numeric dates in prose; the bare
+        # three-component branch must not read it as an invented version.
+        self.assertEqual(
+            lib.integrity_findings("Released on 07/24/2026.",
+                                   "Veröffentlicht am 24.07.2026."), [])
+
+    def test_localized_thousands_grouping_is_not_an_invented_version(self):
+        self.assertEqual(
+            lib.integrity_findings("It holds 10,000,000 records.",
+                                   "Es hält 10.000.000 Einträge."), [])
+
+
+class TestTypographyChecks(unittest.TestCase):
+    def test_russian_ascii_quotes_flagged(self):
+        f = lib.check_typography('Это "кластер" здесь.', "ru")
+        self.assertTrue(any("ёлочки" in x["issue"] for x in f))
+
+    def test_russian_guillemets_pass(self):
+        self.assertEqual(lib.check_typography("Это «кластер» здесь.", "ru"), [])
+
+    def test_chinese_halfwidth_punctuation_flagged(self):
+        self.assertTrue(lib.check_typography("这是集群, 然后部署", "zh-cn"))
+
+    def test_chinese_fullwidth_punctuation_passes(self):
+        self.assertEqual(lib.check_typography("这是集群，然后部署。", "zh-cn"), [])
+
+    def test_pt_pt_vocabulary_leak_flagged(self):
+        f = lib.check_typography("Abra o ficheiro de configuração.", "pt-br")
+        self.assertTrue(any("European Portuguese" in x["issue"] for x in f))
+
+    def test_spanish_opened_question_with_brand_passes(self):
+        # The rule must anchor at sentence start; matching at any capitalized
+        # word would re-match from the brand inside a correctly opened «¿…?».
+        self.assertEqual(lib.check_typography("¿Qué es Cozystack?", "es"), [])
+
+    def test_spanish_mid_sentence_marks_pass(self):
+        # The es guide's own ✓ forms: the mark goes where the question or
+        # exclamation actually starts, which may be mid-sentence.
+        self.assertEqual(
+            lib.check_typography("Si el nodo falla, ¿qué pasa con los datos?", "es"), [])
+        self.assertEqual(
+            lib.check_typography("Listo, ¡ya tienes un clúster!", "es"), [])
+
+    def test_russian_nested_quotes_pass(self):
+        # „лапки“ close with U+201C; two nested pairs on one line must not read
+        # as an English “…” pair.
+        self.assertEqual(
+            lib.check_typography("Задайте параметры „replicas“ и „selector“ в манифесте.", "ru"),
+            [])
+
+    def test_russian_english_curly_pair_still_flagged(self):
+        f = lib.check_typography("Это “cluster” здесь.", "ru")
+        self.assertTrue(any("ёлочки" in x["issue"] for x in f))
+
+    def test_spanish_unopened_question_flagged(self):
+        f = lib.check_typography("Cómo funciona esto exactamente?", "es")
+        self.assertTrue(any("¿" in x["issue"] for x in f))
+
+    def test_spanish_unopened_question_mid_paragraph_flagged(self):
+        f = lib.check_typography("Listo. Cómo funciona esto exactamente?", "es")
+        self.assertTrue(any("¿" in x["issue"] for x in f))
+
+    def test_devanagari_digits_flagged(self):
+        self.assertTrue(lib.check_typography("क्लस्टर में ३ नोड हैं।", "hi"))
+
+    def test_code_spans_are_exempt_from_typography(self):
+        # Straight quotes inside code are correct and must not be flagged.
+        self.assertEqual(lib.check_typography('Запустите `echo "hi"` сейчас.', "ru"), [])
+
+    def test_link_title_quotes_are_not_prose(self):
+        # A link title's ASCII quotes are CommonMark delimiters. Flagging them
+        # would have the revise loop «localize» them into guillemets, breaking
+        # the link — the exact integrity this pipeline exists to guarantee.
+        self.assertEqual(
+            lib.check_typography(
+                'Смотрите [руководство](/docs/install "Руководство по установке") здесь.', "ru"),
+            [])
+
+    def test_image_marker_is_not_prose(self):
+        # The `!` of `![alt](src)` is syntax. Without stripping it, a heading
+        # ending in a CJK ideograph followed by an image reads as "half-width
+        # punctuation after a Chinese character", and an inline image in
+        # Spanish prose reads as an exclamation without ¡.
+        self.assertEqual(lib.check_typography("## 架构图\n\n![架构](/img/arch.png)", "zh-cn"), [])
+        self.assertEqual(
+            lib.check_typography("Vea la imagen ![diagrama](/img/d.png) para más detalles.", "es"),
+            [])
+
+    def test_unknown_language_is_a_no_op(self):
+        self.assertEqual(lib.check_typography('Anything "here".', "xx"), [])
 
 
 if __name__ == "__main__":

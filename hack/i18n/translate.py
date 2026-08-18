@@ -180,11 +180,17 @@ class ProtocolError(Exception):
     """The model did not answer in the ===FRONTMATTER===/===BODY=== protocol."""
 
 
-def _split_payload_response(out: str, store: dict, expect: set[str]) -> tuple[dict, str]:
+def _split_payload_response(out: str, store: dict, expect: set[str],
+                            masked_src: str) -> tuple[dict, str]:
     """Parse a translate/revise reply. Raises rather than treating a preamble
     ("Here's the translation:") as the page body, and verifies every protected
     placeholder survived — a dropped §§FENCE_n§§ would silently delete a code
     block from the page.
+
+    Only placeholders that actually occur in `masked_src` (the text the model
+    was sent) are required back: masking passes may stash a span that itself
+    contains an earlier placeholder (inline code wrapping a shortcode), and the
+    model can only ever return the OUTER token. restore() unwinds the nesting.
 
     The front-matter half is JSON ({path: translated_text}), not `key: value`
     lines: values are addressed by path so nested copy (taglines[0],
@@ -214,13 +220,19 @@ def _split_payload_response(out: str, store: dict, expect: set[str]) -> tuple[di
     else:
         tr_fm = {}
     body = body.strip()
-    bad = {tok: body.count(tok) for tok in store if body.count(tok) != 1}
+    # A token the model was actually sent must survive exactly once; a token it
+    # was never sent (an inner token of a nested stash, or a hallucination) must
+    # not appear at all — otherwise reverse restore expands it into duplicated
+    # content that the final residual check can no longer see.
+    bad = {tok: body.count(tok) for tok in store
+           if body.count(tok) != (1 if tok in masked_src else 0)}
     if bad:
         tok, n = next(iter(bad.items()))
-        what = "lost" if n == 0 else "duplicated"
+        expected = 1 if tok in masked_src else 0
+        what = "injected" if expected == 0 else "lost" if n == 0 else "duplicated"
         raise ProtocolError(f"{len(bad)} protected placeholder(s) {what} by the model "
-                            f"(e.g. {tok} appears {n}×, expected 1) — refusing to write a page "
-                            f"with dropped or duplicated code")
+                            f"(e.g. {tok} appears {n}×, expected {expected}) — refusing to write a "
+                            f"page with dropped, duplicated or injected code")
     return tr_fm, lib.restore(body, store)
 
 
@@ -243,6 +255,16 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
         # Unparseable / absent YAML front matter: writing the page would silently
         # drop slug/date/aliases/images. Refuse instead.
         raise ProtocolError(f"{rel}: could not parse YAML front matter in the English source")
+    # Belt and braces: build_worklist already skips hand-localized pages, so
+    # arriving here with a preserved marker means the worklist filter was
+    # bypassed. Writing would replace a human transcreation with machine output
+    # while the marker still promises a human wrote it — refuse before spending
+    # a single model call.
+    existing_l10n = lib.recorded_l10n(lib.target_path(cfg, lang_cfg["code"], rel))
+    if existing_l10n in lib.PRESERVED_L10N_VALUES:
+        raise ProtocolError(
+            f"{rel}: target is hand-localized (l10n: {existing_l10n}) — refusing to "
+            f"overwrite a human transcreation with machine output")
     masked_body, store = lib.protect(body)
 
     # Every user-visible string in the front matter, at any depth, addressed by
@@ -266,7 +288,8 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
         + "\n\n===FRONTMATTER===\n" + json.dumps(fm_values, ensure_ascii=False, indent=2)
         + "\n===BODY===\n" + masked_body
     )
-    tr_fm, tr_body = _split_payload_response(call(cfg, sys_translate, payload), store, expect)
+    tr_fm, tr_body = _split_payload_response(call(cfg, sys_translate, payload), store, expect,
+                                             masked_body)
 
     # --- Stages 2-4: gate with revise loop ---
     max_rounds = max(cfg["review"]["max_rounds"], cfg["back_translation"]["max_retries"])
@@ -292,6 +315,14 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
                 findings += ([{**f, "from": "back-translation"} for f in cmp["findings"]]
                              or [{"severity": "major", "from": "back-translation",
                                   "issue": "revise verdict with no findings listed"}])
+
+        # 2b. deterministic checks — cheap, objective, and not subject to the
+        # reviewers' mood. Masking already guarantees code/shortcodes/URLs; these
+        # cover what legitimately lives in prose (versions, bare flags, brands)
+        # and the per-language typography the style guides mandate but nothing
+        # previously verified. They feed the same revise loop as the reviewers.
+        findings += lib.integrity_findings(body, tr_body, glossary.get("do_not_translate"))
+        findings += lib.check_typography(tr_body, lang_cfg["code"])
 
         # 3. two native reviewers
         for reviewer in cfg["review"]["reviewers"]:
@@ -328,7 +359,8 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
             + "\n===BODY===\n" + masked_body2
             + "\n\nFINDINGS:\n" + json.dumps(findings, ensure_ascii=False, indent=2)
         )
-        tr_fm, tr_body = _split_payload_response(call(cfg, sys_rev, rev_payload), store, expect)
+        tr_fm, tr_body = _split_payload_response(call(cfg, sys_rev, rev_payload), store, expect,
+                                                 masked_body2)
 
     # --- assemble ---
     # Apply by path onto a copy of the English front matter: structural keys
@@ -365,7 +397,35 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
         raise ProtocolError(
             f"{rel}: a ref/relref shortcode survived deref (unsupported shape) — "
             f"refusing to write a page that could break the Hugo build")
+    # Last line of defense: no masking token may ever reach a published page.
+    # The per-reply guard covers the translate/revise protocol, but restore()
+    # runs in more places than that guard does, so check the final artifact.
+    if "§§" in tr_body:
+        raise ProtocolError(
+            f"{rel}: a §§…§§ placeholder survived restore — refusing to write a "
+            f"page with masking tokens in the body")
     return f"---\n{fm_yaml}\n---\n{tr_body}\n", gate_passed, findings
+
+
+def _format_hand_drift(cfg: dict, only_lang: str | None) -> str:
+    """Report hand-localized pages whose English source moved on.
+
+    The pipeline refuses to regenerate them (it would overwrite a transcreation
+    with machine output), so the only way they get refreshed is a human deciding
+    to — which requires telling the human they have drifted. Empty string when
+    nothing drifted."""
+    hand = lib.find_hand_localized(cfg, only_lang=only_lang)
+    if not hand:
+        return ""
+    return "\n".join(
+        [f"### Hand-localized pages that drifted ({len(hand)})", "",
+         "These carry `l10n: transcreate`, so the pipeline leaves them alone — "
+         "regenerating would replace a human transcreation with machine output. "
+         "Their English source has changed since they were written. CI warns "
+         "(but does not fail) while the drift persists; refresh each "
+         "transcreation by hand, then re-stamp it with "
+         "`hack/check-i18n.sh update-digests <file>`.", ""]
+        + [f"- `{lang}: {rel}`" for lang, rel in hand] + [""])
 
 
 def _format_run_status(stopped_early: bool, rate_limit_reason: str,
@@ -479,8 +539,16 @@ def main() -> int:
     if not items:
         # An empty worklist still has to clear any report a prior run left behind,
         # or run-daily.sh reposts stale findings stamped with today's date. This
-        # is the pipeline's normal steady state once the backlog drains.
-        if os.path.exists(REPORT_PATH):
+        # is the pipeline's normal steady state once the backlog drains — which
+        # is exactly when hand-localized drift must KEEP being reported: the
+        # pipeline will never touch those pages, so going silent here would hide
+        # the drift until a human happens to look.
+        hand_md = _format_hand_drift(cfg, args.lang)
+        if hand_md:
+            with open(REPORT_PATH, "w", encoding="utf-8") as fh:
+                fh.write(hand_md)
+            print(f"hand-localized drift report written to {REPORT_PATH}")
+        elif os.path.exists(REPORT_PATH):
             os.unlink(REPORT_PATH)
         return 0
 
@@ -564,7 +632,8 @@ def main() -> int:
     # `-with-findings` stamp or a stalled page unactionable.
     status_md = _format_run_status(stopped_early, rate_limit_reason,
                                    clean + with_findings, skipped, PROTOCOL_ATTEMPTS)
-    sections = [s for s in (status_md, _format_report(report) if report else "") if s]
+    sections = [s for s in (status_md, _format_hand_drift(cfg, args.lang),
+                            _format_report(report) if report else "") if s]
     if sections:
         with open(REPORT_PATH, "w", encoding="utf-8") as fh:
             fh.write("\n".join(sections))
