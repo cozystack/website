@@ -232,10 +232,23 @@ def find_orphan_translations(cfg: dict, only_lang: str | None = None) -> list[st
 
     Only files carrying a `source_digest` stamp are considered — the stamp is
     what marks a page as pipeline-managed. Hand-authored locale-only pages
-    (no stamp) are never touched. A page that merely LEFT the translation
-    scope (older docs version, aged-out blog post) is not an orphan: its
-    English source still exists.
+    (no stamp) are never touched.
+
+    A stamped translation is an orphan in two cases: its English source no
+    longer exists, or it is a superseded docs version — a `docs/<ver>/...` page
+    whose version is not the latest. Superseded versions are noindex on the
+    English side and never enter the worklist, so a stamped translation of an
+    old version is refreshed by nothing and removed by nothing; it drifts from
+    English forever and is unreachable from navigation. Removing it is what
+    keeps `content/<lang>/docs/v1.4/...` from rotting after the site moves to
+    v1.6.
+
+    Aged-out blog posts are deliberately NOT treated as orphans: the English
+    post stays as an indexed historical record, and its existing translations
+    are kept (frozen, and shown with the not-ratified banner) rather than
+    deleted, so a reader who follows an old link still gets a translation.
     """
+    latest = latest_docs_version(cfg)
     orphans: list[str] = []
     for lang in (l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])):
         lang_root = os.path.join(REPO_ROOT, cfg["content_dir"], lang)
@@ -247,7 +260,7 @@ def find_orphan_translations(cfg: dict, only_lang: str | None = None) -> list[st
                 if recorded_digest(tp) is None:
                     continue
                 rel = os.path.relpath(tp, lang_root).replace(os.sep, "/")
-                if not os.path.exists(source_path(cfg, rel)):
+                if not os.path.exists(source_path(cfg, rel)) or _docs_out_of_scope(rel, latest):
                     orphans.append(tp)
     return sorted(orphans)
 

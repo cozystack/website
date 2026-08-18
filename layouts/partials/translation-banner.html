@@ -24,11 +24,12 @@
     ratified                     — a native speaker signed off; no banner
   Set it to `ratified` on a page a native speaker has checked (or hand-wrote).
 */ -}}
-{{- /* .Sites.Default is the defaultContentLanguage site (en). NOT .Site.Home —
+{{- /* $src is the default content language (en). .Site.DefaultContentLanguage
+       is the documented, version-stable way to get it. NOT .Site.Home.Lang —
        on the Russian site that resolves to the Russian home page, so
        `ne .Lang .Site.Home.Lang` is false everywhere and the banner never
        renders on the very pages it exists for. */ -}}
-{{- $src := .Sites.Default.Language.Lang -}}
+{{- $src := .Site.DefaultContentLanguage -}}
 {{- if and (ne .Lang $src) (ne .Params.translation_review "ratified") -}}
 {{- $en := "" -}}
 {{- range .AllTranslations -}}

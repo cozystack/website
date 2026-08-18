@@ -143,6 +143,10 @@ class TestOrphanTranslations(unittest.TestCase):
         self._old_root = lib.REPO_ROOT
         lib.REPO_ROOT = self._tmp.name
         self.addCleanup(lambda: setattr(lib, "REPO_ROOT", self._old_root))
+        # Orphan detection now consults the latest docs version to sweep
+        # superseded translations, so the fixture needs a hugo.yaml to read it
+        # from — the same single source of truth the pipeline uses.
+        self._write("hugo.yaml", "params:\n  latest_version_id: v1.6\n")
 
     def _write(self, rel, text):
         path = os.path.join(self._tmp.name, rel)
@@ -172,6 +176,23 @@ class TestOrphanTranslations(unittest.TestCase):
         de = self._write("content/de/docs/gone.md", self.STAMPED)
         self.assertEqual(lib.find_orphan_translations(self.CFG, only_lang="ru"), [ru])
         self.assertEqual(sorted(lib.find_orphan_translations(self.CFG)), sorted([ru, de]))
+
+    def test_superseded_docs_version_is_an_orphan_even_with_live_source(self):
+        # An old docs version has a live English source but is noindex and never
+        # refreshed; its stamped translation would rot forever, so it must be
+        # swept. The latest version, with the same live source, is kept.
+        self._write("content/en/docs/v1.4/x.md", "---\ntitle: x\n---\nhi\n")
+        self._write("content/en/docs/v1.6/x.md", "---\ntitle: x\n---\nhi\n")
+        old = self._write("content/ru/docs/v1.4/x.md", self.STAMPED)
+        self._write("content/ru/docs/v1.6/x.md", self.STAMPED)
+        self.assertEqual(lib.find_orphan_translations(self.CFG, only_lang="ru"), [old])
+
+    def test_version_agnostic_docs_landing_is_never_an_orphan(self):
+        # docs/_index.md sits directly under docs/ (no version) and stays in
+        # scope; a live source keeps its translation.
+        self._write("content/en/docs/_index.md", "---\ntitle: x\n---\nhi\n")
+        self._write("content/ru/docs/_index.md", self.STAMPED)
+        self.assertEqual(lib.find_orphan_translations(self.CFG, only_lang="ru"), [])
 
 
 class TestRecordedDigest(unittest.TestCase):

@@ -451,12 +451,15 @@ def main() -> int:
               file=sys.stderr)
         orphans = []
     for path in orphans:
+        rel = os.path.relpath(path, content_root).split(os.sep, 1)[1]
+        reason = ("English source deleted"
+                  if not os.path.exists(lib.source_path(cfg, rel))
+                  else "superseded docs version")
         if args.dry_run:
-            print(f"  [orphan ] would remove {os.path.relpath(path, lib.REPO_ROOT)}")
+            print(f"  [orphan ] would remove {os.path.relpath(path, lib.REPO_ROOT)} ({reason})")
         else:
             os.unlink(path)
-            print(f"  ✗ removed orphan {os.path.relpath(path, lib.REPO_ROOT)} "
-                  f"(English source deleted)")
+            print(f"  ✗ removed orphan {os.path.relpath(path, lib.REPO_ROOT)} ({reason})")
 
     items = lib.build_worklist(cfg, only_lang=args.lang)
     if args.path:
