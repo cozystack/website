@@ -176,14 +176,15 @@ succeeds. A page that reproducibly fails is a signal to translate it by hand.
 - **Blog:** posts newer than `blog_since` in `config.yaml` — normally a rolling window (`"60d"` = today − 60 days, resolved per run), so the cutoff doesn't rot as the site ages. Aged-out posts keep their existing translations; they just stop being refreshed.
 - **Never:** `docs/next/**`, `**/_include/**`.
 - **Deleted English pages:** their translations are removed on the next run (only `source_digest`-stamped, i.e. pipeline-managed files — hand-authored locale-only pages are never touched), so the weekly PR carries the deletion. A mass-deletion floor refuses to remove translations of more than 5 distinct English pages at once — a large batch means the English tree moved, not that a handful of pages died. Known limitation: only `.md`/`.html` files are removed; images of a deleted page bundle stay behind.
-- Code, shortcodes, comments, inline code, URLs, CLI, YAML keys, and brand names are preserved structurally or via the glossary.
+- **Hand-written pages (`l10n: transcreate`)** are never re-translated, even once their English source moves. Overwriting one would replace a person's work with literal machine output and clobber the `transcreate` marker in the same write, so the loss would be silent and unrepeatable. The run reports them in the weekly PR under *Hand-written pages skipped* instead; rework them by hand if the English change matters, then refresh `source_digest`.
+- Code, shortcodes, comments, inline code, raw HTML tags, URLs, CLI, YAML keys, and brand names are preserved structurally or via the glossary. HTML tags are masked with their visible `alt`/`title`/`caption` values left exposed, so markup survives byte-for-byte while the text a reader sees is still translated.
 
 ## Front-matter fields
 
 | Field | Meaning | Read by |
 |-------|---------|---------|
 | `source_digest` | sha256 of the English source the translation was made from — the freshness signal | `hack/check-i18n.sh`, `worklist.py` |
-| `l10n` | *how* the page was localized: `mt` (machine) or `transcreate` | humans triaging review |
+| `l10n` | *how* the page was localized: `mt` (machine) or `transcreate` | `build_worklist`, humans triaging review |
 | `translation_review` | *ratification state*: `auto-reviewed`, `auto-reviewed-with-findings`, or `ratified` | `translation-banner.html` |
 
 `translation_status: current` appears on pages from the i18n PoC. It is not

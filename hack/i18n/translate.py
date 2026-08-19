@@ -394,6 +394,24 @@ def _format_run_status(stopped_early: bool, rate_limit_reason: str,
     return "\n".join(out)
 
 
+def _format_transcreated(pairs: list[tuple[str, str]]) -> str:
+    """Render the hand-written pages the run deliberately left alone.
+
+    These are the only pages that fall out of scope while their English source
+    keeps moving, so without a line in the weekly PR they drift silently and
+    nobody learns the translation needs reworking."""
+    if not pairs:
+        return ""
+    out = [f"### Hand-written pages skipped ({len(pairs)})", "",
+           "Their English source changed, but they carry `l10n: transcreate` and were",
+           "written by a person. The pipeline does not touch them — rework them by hand",
+           "if the change matters, then refresh `source_digest`.", ""]
+    for lang, rel in pairs:
+        out.append(f"- `{lang}: {rel}`")
+    out.append("")
+    return "\n".join(out)
+
+
 def _distinct_orphan_pages(orphans: list[str], content_root: str) -> set[str]:
     """Collapse orphan translation FILES to distinct English PAGE paths.
 
@@ -564,7 +582,10 @@ def main() -> int:
     # `-with-findings` stamp or a stalled page unactionable.
     status_md = _format_run_status(stopped_early, rate_limit_reason,
                                    clean + with_findings, skipped, PROTOCOL_ATTEMPTS)
-    sections = [s for s in (status_md, _format_report(report) if report else "") if s]
+    transcreated_md = _format_transcreated(
+        [] if args.path else lib.find_transcreated(cfg, only_lang=args.lang))
+    sections = [s for s in (status_md, transcreated_md,
+                            _format_report(report) if report else "") if s]
     if sections:
         with open(REPORT_PATH, "w", encoding="utf-8") as fh:
             fh.write("\n".join(sections))

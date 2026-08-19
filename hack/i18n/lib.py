@@ -40,6 +40,14 @@ _FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 _SHORTCODE_RE = re.compile(r"\{\{[<%].*?[%>]\}\}", re.DOTALL)
 _HTMLCOMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 _INLINECODE_RE = re.compile(r"`[^`\n]+`")
+# Raw HTML tags. `.html` pages are mostly markup, and Markdown pages embed it
+# freely, so without this the model receives `<div class="hero">`, `<br />` and
+# `<a href="...">` verbatim and is free to translate an attribute, drop a
+# closing tag or mangle a URL. Hugo renders the damage without complaining and
+# the digest check only compares the English source, so nothing downstream
+# catches it. Matching the tag name conservatively (a letter, then name
+# characters, then a boundary) keeps prose like `x <y` from being swallowed.
+_HTMLTAG_RE = re.compile(r"</?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*?)?/?>", re.DOTALL)
 
 # Shortcode attributes whose VALUE renders as visible text and must be
 # translated: figure captions (shown under the image), alt text (screen readers
@@ -208,6 +216,44 @@ def recorded_digest(path: str) -> str | None:
     return m.group(1) if m else None
 
 
+_L10N_RE = re.compile(r"^l10n:\s*\"?([A-Za-z-]+)\"?", re.MULTILINE)
+
+
+def l10n_mode(path: str) -> str | None:
+    """Read the `l10n` front-matter field of a translated page, if present.
+
+    `transcreate` marks a page a human wrote or reworked by hand, as opposed to
+    `mt` which the pipeline stamps on its own output.
+    """
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        head = fh.read()
+    fm_end = head.find("\n---", 4)
+    if fm_end != -1:
+        head = head[:fm_end]
+    m = _L10N_RE.search(head)
+    return m.group(1) if m else None
+
+
+def find_transcreated(cfg: dict, only_lang: str | None = None) -> list[tuple[str, str]]:
+    """(lang, rel) pairs the pipeline must not overwrite, and why they came up.
+
+    Only pages that the worklist would otherwise have picked up — a hand-written
+    page whose English source has not moved needs no reporting.
+    """
+    out: list[tuple[str, str]] = []
+    langs = [l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])]
+    for rel in iter_source_files(cfg):
+        cur = sha256_file(source_path(cfg, rel))
+        for lang in langs:
+            tp = target_path(cfg, lang, rel)
+            if (os.path.exists(tp) and l10n_mode(tp) == "transcreate"
+                    and recorded_digest(tp) != cur):
+                out.append((lang, rel))
+    return sorted(out)
+
+
 def build_worklist(cfg: dict, only_lang: str | None = None) -> list[WorkItem]:
     items: list[WorkItem] = []
     langs = [l["code"] for l in cfg["languages"] if only_lang in (None, l["code"])]
@@ -218,6 +264,15 @@ def build_worklist(cfg: dict, only_lang: str | None = None) -> list[WorkItem]:
             if not os.path.exists(tp):
                 items.append(WorkItem(lang, rel, "missing"))
             elif recorded_digest(tp) != cur:
+                # A page marked `l10n: transcreate` was written or reworked by a
+                # human. Re-translating it replaces that work with literal
+                # machine output AND overwrites the marker with `mt`, so the
+                # loss is silent and unrepeatable — the signal that the page was
+                # hand-made is the first thing destroyed. Leave it alone and let
+                # the weekly PR report it, so a human decides whether the
+                # English change is worth reworking the translation for.
+                if l10n_mode(tp) == "transcreate":
+                    continue
                 items.append(WorkItem(lang, rel, "stale"))
     return items
 
@@ -398,12 +453,44 @@ def protect(text: str) -> tuple[str, dict[str, str]]:
     # 3. Comments, then inline code.
     text = _HTMLCOMMENT_RE.sub(_sub("HTMLCOMMENT"), text)
     text = _INLINECODE_RE.sub(_sub("INLINECODE"), text)
+
+    # 4. Raw HTML tags, last so that a tag written inside backticks or a fence
+    # is already a placeholder and is not matched twice. Visible attribute
+    # values are exposed between placeholders exactly as they are for
+    # shortcodes: masking a tag wholesale would leave alt and title text in
+    # English on every localized page.
+    def _htmltag(m: "re.Match") -> str:
+        tag = m.group(0)
+        out, pos = [], 0
+        for a in _VISIBLE_ATTR_RE.finditer(tag):
+            out.append(_stash(tag[pos:a.start(1)], "HTMLTAG"))
+            out.append(a.group(1))
+            pos = a.end(1)
+        out.append(_stash(tag[pos:], "HTMLTAG"))
+        return "".join(out)
+    text = _HTMLTAG_RE.sub(_htmltag, text)
     return text, store
 
 
 def restore(text: str, store: dict[str, str]) -> str:
-    for token, original in store.items():
-        text = text.replace(token, original)
+    """Substitute placeholders back, repeatedly, until none are left.
+
+    A single pass is not enough because protected spans nest: a shortcode
+    written inside inline code (`` `{{< version-pin "x" >}}` ``) is stashed as
+    SC first, and the inline-code pass then stashes the text that already
+    contains that token. Restoring in insertion order reveals the SC token only
+    after its own turn has passed, so the published page kept a literal
+    `§§SC_23§§`. Iterating to a fixed point handles any nesting depth; the loop
+    is bounded by the number of placeholders, and stops early once a pass
+    changes nothing.
+    """
+    for _ in range(len(store) + 1):
+        before = text
+        for token, original in store.items():
+            if token in text:
+                text = text.replace(token, original)
+        if text == before:
+            break
     return text
 
 

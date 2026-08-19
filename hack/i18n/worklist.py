@@ -6,6 +6,7 @@ Usage:
   worklist.py --json          # machine-readable
   worklist.py --lang ru       # restrict to one language
   worklist.py --limit 3       # only the first N items (mirrors translate.py)
+  worklist.py --path blog/x.md  # restrict to one source page
 
 "Missing" = no translated file exists. "Stale" = the translated file's
 source_digest no longer matches the current sha256 of its English source.
@@ -30,6 +31,8 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="emit JSON")
     ap.add_argument("--lang", help="restrict to one language code")
     ap.add_argument("--limit", type=int, help="only the first N items")
+    ap.add_argument("--path", help="restrict to this exact source rel "
+                                   "(e.g. docs/v1.5/getting-started/install-kubernetes.md)")
     ap.add_argument("--dry-run", action="store_true",
                     help="accepted for parity with translate.py; this script never writes")
     args = ap.parse_args()
@@ -43,6 +46,8 @@ def main() -> int:
               file=sys.stderr)
         return 1
     items = lib.build_worklist(cfg, only_lang=args.lang)
+    if args.path:
+        items = [i for i in items if i.rel == args.path]
     if args.limit:
         items = items[: args.limit]
 

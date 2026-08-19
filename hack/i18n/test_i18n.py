@@ -68,6 +68,53 @@ class TestProtectRestore(unittest.TestCase):
         self.assertEqual(len(store), 1)
 
 
+class TestHtmlProtection(unittest.TestCase):
+    """`.html` pages are mostly markup, and Markdown embeds it freely. An
+    unprotected tag reaches the model, which is free to translate an attribute
+    or drop a closing tag — damage Hugo renders without complaint."""
+
+    def test_raw_tags_are_hidden_from_the_model(self):
+        masked, _ = lib.protect('<div class="hero-gitops">text</div>')
+        self.assertNotIn("hero-gitops", masked)
+        self.assertNotIn("<div", masked)
+        self.assertIn("text", masked)  # prose still reaches the model
+
+    def test_html_page_yields_placeholders_to_validate(self):
+        # With no placeholders at all there is nothing for the payload check to
+        # fail closed on, which is how markup damage used to ship silently.
+        _, store = lib.protect('<a href="/x" target="_blank">Read</a><br />')
+        self.assertTrue(store)
+
+    def test_visible_attributes_still_translate(self):
+        # Masking a tag wholesale would freeze alt/title text in English.
+        masked, _ = lib.protect('<img src="a.png" alt="A running cluster" />')
+        self.assertIn("A running cluster", masked)
+        self.assertNotIn("a.png", masked)
+
+    def test_prose_comparison_is_not_swallowed(self):
+        text = "when x <y it holds"
+        masked, store = lib.protect(text)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_tag_inside_inline_code_is_protected_once(self):
+        text = "use `<div>` here"
+        masked, store = lib.protect(text)
+        self.assertEqual(lib.restore(masked, store), text)
+
+
+class TestNestedPlaceholders(unittest.TestCase):
+    """Protected spans nest, and restoring in insertion order used to reveal an
+    inner token only after its own turn had passed — publishing a literal
+    `§§SC_0§§` into the page."""
+
+    def test_shortcode_inside_inline_code_survives(self):
+        text = '| `{{< version-pin "cozystack_version" >}}` | pin it |'
+        masked, store = lib.protect(text)
+        restored = lib.restore(masked, store)
+        self.assertEqual(restored, text)
+        self.assertNotIn("§§", restored)
+
+
 class TestGlobMatching(unittest.TestCase):
     def test_star_md_matches_basename_at_any_depth(self):
         # Intended breadth: config.yaml's `*.md` means "a markdown page anywhere".
@@ -127,6 +174,61 @@ class TestScope(unittest.TestCase):
         self.assertTrue(lib._blog_too_old(f"blog/{ancient}-post.md", "60d"))
         # An undated path is kept regardless of the window form.
         self.assertFalse(lib._blog_too_old("blog/_index.md", "60d"))
+
+
+class TestTranscreatedPages(unittest.TestCase):
+    """A page marked `l10n: transcreate` was written by a person. Re-translating
+    it replaces that work with literal machine output AND overwrites the marker
+    with `mt`, so the loss is silent and unrepeatable."""
+
+    CFG = {"content_dir": "content", "source_lang": "en",
+           "languages": [{"code": "ru"}, {"code": "de"}],
+           "translate_globs": ["*.md", "*.html"]}
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self._old_root = lib.REPO_ROOT
+        lib.REPO_ROOT = self._tmp.name
+        self.addCleanup(lambda: setattr(lib, "REPO_ROOT", self._old_root))
+        self._write("hugo.yaml", "params:\n  latest_version_id: v1.6\n")
+        self._write("content/en/_index.html", "<h1>Cozystack</h1>\n")
+
+    def _write(self, rel, text):
+        path = os.path.join(self._tmp.name, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        return path
+
+    STALE_MT = '---\nl10n: mt\nsource_digest: "sha256:stale"\n---\nbody\n'
+    STALE_HUMAN = '---\nl10n: transcreate\nsource_digest: "sha256:stale"\n---\nbody\n'
+
+    def test_machine_page_with_moved_source_is_retranslated(self):
+        self._write("content/ru/_index.html", self.STALE_MT)
+        rels = [(i.lang, i.rel) for i in lib.build_worklist(self.CFG, only_lang="ru")]
+        self.assertIn(("ru", "_index.html"), rels)
+
+    def test_hand_written_page_is_left_alone(self):
+        self._write("content/ru/_index.html", self.STALE_HUMAN)
+        rels = [(i.lang, i.rel) for i in lib.build_worklist(self.CFG, only_lang="ru")]
+        self.assertNotIn(("ru", "_index.html"), rels)
+
+    def test_hand_written_page_is_reported_instead(self):
+        self._write("content/ru/_index.html", self.STALE_HUMAN)
+        self.assertIn(("ru", "_index.html"),
+                      lib.find_transcreated(self.CFG, only_lang="ru"))
+
+    def test_missing_translation_is_still_created(self):
+        # Nothing to protect when the page does not exist yet.
+        rels = [(i.lang, i.rel) for i in lib.build_worklist(self.CFG, only_lang="de")]
+        self.assertIn(("de", "_index.html"), rels)
+
+    def test_up_to_date_hand_written_page_is_not_reported(self):
+        digest = lib.sha256_file(os.path.join(self._tmp.name, "content/en/_index.html"))
+        self._write("content/ru/_index.html",
+                    f'---\nl10n: transcreate\nsource_digest: "sha256:{digest}"\n---\nx\n')
+        self.assertEqual(lib.find_transcreated(self.CFG, only_lang="ru"), [])
 
 
 class TestOrphanTranslations(unittest.TestCase):
