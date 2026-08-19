@@ -69,3 +69,11 @@ other = "नवीनतम (स्थिर)"
 
 [docs_landing_status_previous]
 other = "पिछली रिलीज़"
+[translation_machine_notice]
+other = "यह पृष्ठ मशीन द्वारा अनूदित है और अभी तक किसी मूल वक्ता द्वारा जाँचा नहीं गया है।"
+
+[translation_report_error]
+other = 'कोई त्रुटि मिली? <a href="{{ .IssueURL }}">Issue बनाएँ</a>।'
+
+[translation_see_original]
+other = '<a href="{{ .Link }}">अंग्रेज़ी मूल</a> देखें।'

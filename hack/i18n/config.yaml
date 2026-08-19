@@ -1,0 +1,168 @@
+# Cozystack website translation pipeline — configuration.
+#
+# Single source of truth for the automated i18n pipeline: which languages
+# exist, which model translates which content, and which paths are in scope.
+# Consumed by hack/i18n/*.py and hack/i18n/run-daily.sh.
+
+source_lang: en
+content_dir: content
+
+# Auth. Two supported modes — pick one; switching is a config change only, the
+# code path is identical:
+#   oauth-subscription : a Claude subscription (Max) via the Claude Agent SDK.
+#                        No metered billing. Credential = a logged-in `claude`
+#                        CLI on the runner, or CLAUDE_CODE_OAUTH_TOKEN
+#                        (`claude setup-token`) for headless/CI. The run refuses
+#                        to start if ANTHROPIC_API_KEY is set, since that would
+#                        shadow the subscription and bill metered API.
+#   api-key            : metered Claude API billed to an organization account.
+#                        Requires ANTHROPIC_API_KEY. Prefer an org-owned key
+#                        (not a personal one) so the pipeline does not depend on
+#                        one individual.
+#
+# Current plan: bootstrap the backlog on a maintainer's subscription, then move
+# to an organization-owned API key once it is provisioned — see README
+# "Ownership and continuity".
+auth: oauth-subscription
+
+# How translated output reaches the site. Only `pr_only` is implemented: the
+# runner pushes to a weekly branch and opens a PR for a maintainer to merge —
+# nothing reaches production without that merge, and CODEOWNERS / branch
+# protection are untouched. There is deliberately no auto-merge mode; run-daily.sh
+# fails closed on any other value rather than silently doing something unsafe.
+publish_mode: pr_only
+
+# Cadence: run daily until the account's usage limit is hit. On a usage-limit
+# error the pipeline stops cleanly (exit 0) and resumes the next day. Pages are
+# written only after the review gate finishes, so an interrupted run never
+# leaves a half-processed page.
+
+# Target languages. `code` must match the Hugo `languages:` key in hugo.yaml
+# and the i18n/<code>.toml filename. `hreflang` is the BCP-47 tag emitted in
+# <link rel="alternate" hreflang>.
+#
+# This list is what gets TRANSLATED. `languages:` in hugo.yaml is what gets
+# BUILT AND SERVED. They are deliberately allowed to differ, in one direction:
+#
+#   here but not in hugo.yaml  = being translated, not shipped yet. Correct and
+#                                expected — this is how a new language starts.
+#   in hugo.yaml but not here  = shipped but never translated or kept fresh.
+#                                Broken; hack/i18n/test_i18n.py fails on it.
+#
+# A language is declared in hugo.yaml in the same PR that lands its first
+# content, never before: Hugo builds /<code>/, /<code>/tags/, /<code>/categories/
+# and more for a declared language even with an empty content tree, all
+# `index, follow` — publishing empty pages to the index. See hugo.yaml.
+languages:
+  - code: de
+    name: Deutsch
+    hreflang: de
+  - code: ru
+    name: Русский
+    hreflang: ru
+  - code: zh-cn
+    name: 简体中文
+    hreflang: zh-Hans
+  - code: hi
+    name: हिन्दी
+    hreflang: hi
+  # Translated now, not yet declared in hugo.yaml — they ship once their content
+  # lands (see "Adding a language" in README.md).
+  - code: es
+    name: Español
+    hreflang: es
+  - code: pt-br
+    name: Português (Brasil)
+    hreflang: pt-BR
+
+# Model. Every stage — translation, back-translation, both reviewers, revision —
+# runs on Opus for maximum quality (decision 2026-07-17). Max output tokens and
+# sampling are left at the Agent SDK defaults; the review gate, not a token cap,
+# is what bounds quality here.
+model:
+  default: claude-opus-4-8
+
+# Scope.
+#
+# Docs: ONLY the latest version is translated — older versions are noindex, so
+# translating them burns the daily budget on pages search engines ignore. The
+# version is NOT hardcoded here: lib.py reads `params.latest_version_id` from
+# hugo.yaml, so a release bump moves the pipeline automatically and no stale
+# version list has to be maintained. Everything under docs/ that is not the
+# latest version (including `next`) is skipped.
+#
+# Blog: only recent posts are worth translating × every language. `blog_since`
+# drops any blog post whose date-prefixed path (blog/YYYY-MM-DD-…) is older
+# than the cutoff. "<N>d" is a rolling window (today − N days, resolved per
+# run) — the normal setting, because a fixed ISO date quietly rots into "no
+# blog post is ever in scope". A fixed date ("2026-05-17") and "" (entire
+# archive) are also accepted. Already-translated posts that age out are NOT
+# deleted; they just stop being refreshed.
+blog_since: "60d"
+# Patterns are matched with pathlib semantics (right-anchored): a bare "*.md"
+# means "any markdown page at any depth", "docs/**" means the docs subtree.
+# Effective scope = these globs, minus exclude_globs, minus non-latest docs
+# versions, minus blog posts older than blog_since.
+translate_globs:
+  - "_index.html"
+  - "*.md"
+  - "docs/**"        # narrowed to the latest version by lib.py (see above)
+  - "blog/**"
+exclude_globs:
+  - "**/_include/**"
+  # oss-health pages are shells: front matter plus `layout: oss-health-app`,
+  # which renders a dashboard client-side from live English data (devstats,
+  # OpenSSF, telemetry). Translating them localizes the page chrome around a
+  # dashboard that stays English — a half-translated page — and they are
+  # high-churn, low-search-value. They also carry the only `lede` front-matter
+  # field on the site; excluding them is what keeps the translatable-key list
+  # honest (see TRANSLATABLE_FRONTMATTER_KEYS in lib.py). Revisit if the
+  # dashboards ever get localized data.
+  - "oss-health/**"
+
+# Quality gate — runs on EVERY page (not just hero) before it is written.
+# Each page goes through: translate -> back-translate -> two native reviewers
+# -> revise-if-needed. The gate never blocks publication — it triages: a page
+# that clears it is stamped `auto-reviewed`, one that exhausts the revise
+# rounds with findings still open is written anyway and stamped
+# `auto-reviewed-with-findings` (review those first). Nothing is written until
+# the gate FINISHES, so an interrupted run never leaves a half-processed page.
+# All stages use Opus via the OAuth subscription.
+back_translation:
+  enabled: true
+  # Round-trip check: translate the localized page back to English and compare
+  # to the original. If meaning drifted (added/dropped/changed claims, numbers,
+  # or technical facts), the page is revised and re-checked. max_retries bounds
+  # the revise loop per page.
+  max_retries: 2
+
+review:
+  # Two virtual native reviewers per target language, each with a distinct remit.
+  # Both must pass (or the page is revised addressing their findings and
+  # re-reviewed, up to max_rounds). Reviewers are prompted AS native speakers of
+  # the target language.
+  max_rounds: 2
+  reviewers:
+    - id: technical-editor
+      prompt: prompts/review-editor.md      # literary quality / fluency / register
+    - id: cozystack-maintainer
+      prompt: prompts/review-maintainer.md  # technical correctness (k8s/Cozystack)
+
+# Front-matter stamp written on pages that clear the machine gate. Native
+# human owners flip this to "ratified" after their pass; the site can badge or
+# prioritize by it. Machine gate never sets "ratified".
+review_status_field: translation_review
+review_status_value: auto-reviewed
+
+# Publishing: the runner always opens/updates a weekly PR and stops — a
+# maintainer merges it. There is deliberately NO auto-merge option: "no machine
+# output reaches the production site without a maintainer merging it" is meant
+# as a property of the pipeline, not a default. Nothing about CODEOWNERS or
+# branch protection changes. The runner translates DAILY (to use each day's
+# quota) but accumulates into ONE branch per ISO week, so maintainers review
+# and merge a single translation PR per week instead of a stream of them.
+
+# SEO note: there is deliberately no keyword-research step here. The English
+# source is already SEO-optimized during authoring, so the translation carries
+# that intent over — the translate prompt transcreates title/description to read
+# naturally in the target language rather than translating them literally.

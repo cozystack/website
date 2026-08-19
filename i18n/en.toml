@@ -69,3 +69,11 @@ other = "Latest (stable)"
 
 [docs_landing_status_previous]
 other = "Previous release"
+[translation_machine_notice]
+other = "This page was machine-translated and has not yet been reviewed by a native speaker."
+
+[translation_report_error]
+other = 'Spotted a mistake? <a href="{{ .IssueURL }}">Open an issue</a>.'
+
+[translation_see_original]
+other = 'See the <a href="{{ .Link }}">English original</a>.'

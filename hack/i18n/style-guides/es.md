@@ -1,0 +1,5 @@
+- Neutral international Spanish (usable across Spain and Latin America); avoid region-specific slang.
+- Address the reader with "tú" for docs/marketing (industry-accepted, friendly-professional) — consistent throughout.
+- Follow kubernetes.io Spanish localization conventions.
+- Keep English infra loanwords common in the ecosystem (pod, deployment, cluster→clúster, workload→carga de trabajo).
+- Use inverted punctuation (¿ ¡) correctly.
