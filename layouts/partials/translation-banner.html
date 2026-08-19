@@ -24,12 +24,19 @@
     ratified                     — a native speaker signed off; no banner
   Set it to `ratified` on a page a native speaker has checked (or hand-wrote).
 */ -}}
-{{- /* $src is the default content language (en). .Site.DefaultContentLanguage
-       is the documented, version-stable way to get it. NOT .Site.Home.Lang —
-       on the Russian site that resolves to the Russian home page, so
-       `ne .Lang .Site.Home.Lang` is false everywhere and the banner never
-       renders on the very pages it exists for. */ -}}
-{{- $src := .Site.DefaultContentLanguage -}}
+{{- /* $src is the default content language (en). `site.Sites.Default` is the
+       documented way to reach the default site from any of them; its
+       `.Language.Lang` is the code we compare against.
+
+       NOT .Site.DefaultContentLanguage — that field does not exist on
+       page.Site, and referencing it aborts the whole build with
+       "can't evaluate field DefaultContentLanguage in type page.Site".
+       Verified against Hugo 0.160.1 (the pinned version) and 0.163.
+
+       NOT .Site.Home.Lang either — on the Russian site that resolves to the
+       Russian home page, so `ne .Lang .Site.Home.Lang` is false everywhere and
+       the banner never renders on the very pages it exists for. */ -}}
+{{- $src := site.Sites.Default.Language.Lang -}}
 {{- if and (ne .Lang $src) (ne .Params.translation_review "ratified") -}}
 {{- $en := "" -}}
 {{- range .AllTranslations -}}

@@ -4,6 +4,14 @@ enableRobotsTXT: true
 enableEmoji: true
 
 security:
+  # Localized homepages are `_index.html`. Hugo 0.163 gates HTML page
+  # sources behind this policy and refuses to assemble the site without
+  # it; the default list covers Markdown only. Harmless on the pinned
+  # 0.160.1, which ignores the key — set now so the next Hugo bump does
+  # not break the build.
+  allowContent:
+    - 'text/markdown'
+    - 'text/html'
   node:
     permissions:
       allowRead:
