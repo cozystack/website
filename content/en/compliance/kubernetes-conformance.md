@@ -30,8 +30,11 @@ runs took place on 19 August 2026 against a Cozystack v1.6.1 installation.
 | v1.34.9 | **424** | 0 | 7144 |
 | v1.33.13 | **419** | 0 | 6741 |
 | v1.32.13 | **411** | 0 | 6624 |
+| v1.31.14 | **404** | 0 | 6607 |
 
-Results for v1.35, v1.34 and v1.33 have been submitted to the CNCF conformance repository.
+Results for v1.35 and v1.34 are submitted to the CNCF conformance repository. The programme
+accepts the current Kubernetes release and the two before it, and with v1.36 current those are
+the newest releases the platform offers.
 
 ### Hikube, a hosted platform built on Cozystack
 
@@ -50,10 +53,10 @@ The distinction between a listing and a run is worth keeping straight. A CNCF li
 a named product at a named version. A conformance run tells you the software behaves as
 Kubernetes should — and that is what most evaluations actually need to know.
 
-Note the older releases. Conformance holds on v1.32 as it does on v1.35, which matters if you
+Note the older releases. Conformance holds on v1.31 as it does on v1.35, which matters if you
 are migrating from an existing platform: you can move onto Cozystack at the Kubernetes version
 you run today and upgrade afterwards, on your own schedule, rather than doing both at once.
-That said, v1.32 and older no longer receive upstream patches — only the three most recent
+That said, v1.33 and older no longer receive upstream patches — only the three most recent
 minor releases do — so treat them as a migration path, not a destination.
 
 ## The self-hosted run
@@ -158,10 +161,10 @@ them.
 
 ### Is Cozystack certified Kubernetes?
 
-Clusters created by Cozystack pass the conformance suite in full — across five Kubernetes
-releases in the runs published here, and in the CNCF's own record for v1.33, v1.34 and v1.35
-through a hosted platform built on it. Submissions for the self-hosted runs are filed with the
-CNCF. The Certified Kubernetes mark itself is granted to a named product at a named version, so
+Clusters created by Cozystack pass the conformance suite in full — across all five Kubernetes
+releases the platform offers, in the runs published here, and in the CNCF's own record for v1.33, v1.34 and v1.35
+through a hosted platform built on it. Submissions for the self-hosted v1.35 and v1.34 runs are
+filed with the CNCF. The Certified Kubernetes mark itself is granted to a named product at a named version, so
 listings appear under the names of the entities that submitted them rather than under the
 project name.
 
@@ -169,8 +172,9 @@ project name.
 
 Tenant clusters can be created on v1.31 through v1.35. Each version is a separate conformance
 run against its own cluster, and the results are in the table above. Only the three most recent
-releases can be submitted to the CNCF — the programme accepts the current release and the two
-before it — so the older runs are published here rather than filed.
+Kubernetes releases can be submitted to the CNCF — the programme accepts the current release and
+the two before it — so with v1.36 current, v1.35 and v1.34 are filed and the rest are published
+here.
 
 ### Does a hosted platform's certification transfer to our installation?
 
@@ -182,7 +186,7 @@ above is published separately, with its own artifacts.
 
 Yes. A conformance submission consists of `e2e.log` and `junit_01.xml` from the run. Both are
 preserved for the Hikube entries in the CNCF repository, and both accompany the self-hosted
-submissions for v1.35, v1.34 and v1.33. Artifacts for the older runs are available on request.
+submissions for v1.35 and v1.34. Artifacts for the older runs are available on request.
 
 ## Notes
 
@@ -191,7 +195,7 @@ using Sonobuoy v0.57.5 in `certified-conformance` mode with the `e2e` plugin, on
 Kubernetes version against its own tenant cluster. Passed and failed counts are taken from the
 Ginkgo summary in `e2e.log`.
 
-Submissions for v1.35, v1.34 and v1.33 are filed with the CNCF conformance repository. Until
+Submissions for v1.35 and v1.34 are filed with the CNCF conformance repository. Until
 they are accepted and published there, this page reports conformance runs rather than a
 completed certification, and makes no claim to the mark.
 
