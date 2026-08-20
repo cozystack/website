@@ -27,3 +27,7 @@ static/docs/*/cozystack-api/
 
 # Claude Code local settings
 .claude/
+
+# Python bytecode from hack/ tooling
+__pycache__/
+*.pyc
