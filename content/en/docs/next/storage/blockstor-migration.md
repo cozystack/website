@@ -88,6 +88,14 @@ Read the warnings. Resources that LINSTOR has marked for deletion are skipped an
 
 ## 5. Switch the backend
 
+Stop the CSI provisioner first:
+
+```bash
+kubectl -n cozy-linstor scale deploy/linstor-csi-controller --replicas=0
+```
+
+It keeps reconciling while the control plane is being replaced, and a volume it cannot find is a volume it re-provisions. It creates a fresh resource definition through the LINSTOR-compatible API — with newly allocated DRBD minors and ports and a different node ID — for a volume that already exists and still holds data. Those definitions also lack `spec.initialized`, so the satellite treats them as new and queues them for `create-md`. Leaving the provisioner running is how a migration quietly acquires duplicate definitions that disagree with the live mesh.
+
 Set the storage backend on the platform Package, as described in [Choose a Storage Backend]({{% ref "/docs/next/install/cozystack/platform#23-choose-a-storage-backend" %}}):
 
 ```yaml
@@ -137,6 +145,12 @@ kubectl exec -n cozy-linstor ds/blockstor-satellite -- drbdsetup status
 ```
 
 A resource that starts a full resync after adoption means it was treated as new rather than adopted. Stop and investigate before letting it run.
+
+Once the replicas check out, bring the CSI provisioner back:
+
+```bash
+kubectl -n cozy-linstor scale deploy/linstor-csi-controller --replicas=1
+```
 
 ## Rolling back
 
