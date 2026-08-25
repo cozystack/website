@@ -24,9 +24,14 @@ You need:
 - `linstor-migrate`, the converter shipped with Blockstor. Build it from the Blockstor repository with `make build` or take it from a release.
 - A Blockstor release that can register your storage pools. This is not optional and it is the first thing to check — see the box below.
 - Enough of a maintenance window that CSI cannot attach or detach volumes for its duration. Running workloads keep their volumes; new pods that need an attach will wait.
+- Room in the storage pool for what adoption will provision. Two separate things claim space: Blockstor brings replica counts up to each resource group's `placeCount`, and on a thick pool it reserves the full size of every volume it adopts. Both are covered below — check them against your free space before you switch, not after.
 
 {{% alert color="warning" %}}
 **Check the Blockstor version before anything else.** Registering a storage pool that LINSTOR created requires reading the pool name from `StorDriver/StorPoolName`, which is where LINSTOR stores it. A Blockstor build without that support logs `unknown storage pool "<name>"` on every reconcile and adopts nothing. The failure is safe — Blockstor refuses before touching the data plane — but the migration cannot proceed. Support landed after `v0.1.17`; confirm your build has it before switching anything.
+{{% /alert %}}
+
+{{% alert color="warning" %}}
+**A thick pool holding sparse volumes will not survive adoption unchanged.** LINSTOR lets a pool be declared thick (`driver=ZFS`) while `StorDriver/ZfscreateOptions: -s` makes every volume sparse. Blockstor has no equivalent state: its thick provider reserves the full size of each volume it adopts, so a pool that was comfortably oversubscribed under LINSTOR can fill up during the migration and leave the last volumes unadoptable. Nothing is lost — a reservation is reversible — but check `zfs list -o name,used,avail` against the sum of your volume sizes first.
 {{% /alert %}}
 
 ## 1. Back up LINSTOR's metadata
@@ -145,6 +150,8 @@ kubectl exec -n cozy-linstor ds/blockstor-satellite -- drbdsetup status
 ```
 
 A resource that starts a full resync after adoption means it was treated as new rather than adopted. Stop and investigate before letting it run.
+
+Expect the controller to create replicas for any volume LINSTOR left under-replicated. Blockstor reconciles replica count against the resource group's `placeCount` continuously, where LINSTOR only places on request, so a volume sitting at one replica under a three-replica storage class gets two more — each a full sync. This is correct behaviour, not a migration fault, but it is worth knowing before it happens on a pool with no room for it.
 
 Once the replicas check out, bring the CSI provisioner back:
 
