@@ -137,12 +137,12 @@ spec:
         storage:
           backend: blockstor
 ```
+{{% /tab %}}
+{{< /tabs >}}
 
 {{% alert color="warning" %}}
 Blockstor is **experimental**. Use it on clusters where you can tolerate storage-layer problems, and prefer LINSTOR for production until this notice is removed.
 {{% /alert %}}
-{{% /tab %}}
-{{< /tabs >}}
 
 An unrecognised value fails the render rather than falling back to a default, so a typo cannot quietly deploy the storage control plane you did not ask for.
 
