@@ -113,9 +113,9 @@ It may include a complete guide for your provider that you can use to deploy a p
 
 Cozystack runs one of two storage control planes. Both are driven by the same CSI driver and expose the same StorageClasses, so the choice does not change how workloads request volumes — only what manages them underneath.
 
-{{< tabs name="storage_backend" >}}
-{{% tab name="LINSTOR (default)" %}}
-LINSTOR is the default and the backend every existing cluster runs. Nothing needs to be set: omitting `storage` selects it.
+{{< tabs name="storage_backend" sync="storage-backend" >}}
+{{% tab name="LINSTOR" %}}
+The default, and the backend every existing cluster runs. Nothing needs to be set: omitting `storage` selects it.
 
 ```yaml
 spec:
@@ -126,8 +126,8 @@ spec:
           backend: linstor
 ```
 {{% /tab %}}
-{{% tab name="Blockstor (experimental)" %}}
-Blockstor is a LINSTOR-API-compatible control plane that stores its state in Kubernetes custom resources instead of an in-cluster database.
+{{% tab name="Blockstor" %}}
+Experimental. A LINSTOR-API-compatible control plane that stores its state in Kubernetes custom resources instead of an in-cluster database.
 
 ```yaml
 spec:
@@ -241,65 +241,91 @@ Cozystack provides [LINSTOR](https://github.com/LINBIT/linstor-server) as a stor
 
 In the following steps, we'll access the storage interface, create storage pools, and define storage classes.
 
-{{% alert color="warning" %}}
-Steps 3.1 and 3.2 below are written for the **LINSTOR** backend. They run through `linstor-controller`, which exists only there — on `backend: blockstor` the control plane runs in external mode and that Deployment is never created, so every `linstor` command in them fails with `NotFound`. If you chose Blockstor in [step 2.3](#23-choose-a-storage-backend), follow [3.4](#34-configure-storage-on-the-blockstor-backend) instead. Step 3.3 is the same for both.
-{{% /alert %}}
+Both backends speak the same command grammar, so the steps below differ only in which client you run. The backend tabs on this page are linked: pick one in [step 2.3](#23-choose-a-storage-backend) or in any step below, and the rest switch with it.
 
 
 ### 3.1. Check Storage Devices
 
-1.  Set up an alias to access LINSTOR:
+{{< tabs name="devices_client" sync="storage-backend" >}}
+{{% tab name="LINSTOR" %}}
+The client lives inside the controller pod, so reach it with an alias:
 
-    ```bash
-    alias linstor='kubectl exec -n cozy-linstor deploy/linstor-controller -- linstor'
-    ```
+```bash
+alias linstor='kubectl exec -n cozy-linstor deploy/linstor-controller -- linstor'
+```
 
-1.  List your nodes and check their readiness:
+List your nodes and check their readiness:
 
-    ```bash
-    linstor node list
-    ```
+```bash
+linstor node list
+```
 
-    Example output shows node names and state:
+```console
++-------------------------------------------------------+
+| Node | NodeType  | Addresses                 | State  |
+|=======================================================|
+| srv1 | SATELLITE | 192.168.100.11:3367 (SSL) | Online |
+| srv2 | SATELLITE | 192.168.100.12:3367 (SSL) | Online |
+| srv3 | SATELLITE | 192.168.100.13:3367 (SSL) | Online |
++-------------------------------------------------------+
+```
 
-    ```console
-    +-------------------------------------------------------+
-    | Node | NodeType  | Addresses                 | State  |
-    |=======================================================|
-    | srv1 | SATELLITE | 192.168.100.11:3367 (SSL) | Online |
-    | srv2 | SATELLITE | 192.168.100.12:3367 (SSL) | Online |
-    | srv3 | SATELLITE | 192.168.100.13:3367 (SSL) | Online |
-    +-------------------------------------------------------+
-    ```
+List available empty devices:
 
-1.  List available empty devices:
+```bash
+linstor physical-storage list
+```
 
-    ```bash
-    linstor physical-storage list
-    ```
+```console
++--------------------------------------------+
+| Size         | Rotational | Nodes          |
+|============================================|
+| 107374182400 | True       | srv3[/dev/sdb] |
+|              |            | srv1[/dev/sdb] |
+|              |            | srv2[/dev/sdb] |
++--------------------------------------------+
+```
+{{% /tab %}}
+{{% tab name="Blockstor" %}}
+`blockstor` is a standalone client that talks to the Kubernetes API directly, so there is no controller pod to exec into and no alias to set — it reads your kubeconfig the way `kubectl` does. Build it from the [Blockstor repository](https://github.com/cozystack/blockstor) with `make build`, or take it from a release. The command grammar is LINSTOR's, short forms included.
 
-    Example output shows the same node names:
+Check the client reaches the cluster:
 
-    ```console
-    +--------------------------------------------+
-    | Size         | Rotational | Nodes          |
-    |============================================|
-    | 107374182400 | True       | srv3[/dev/sdb] |
-    |              |            | srv1[/dev/sdb] |
-    |              |            | srv2[/dev/sdb] |
-    +--------------------------------------------+
-    ```
+```bash
+blockstor controller version
+```
 
+List your nodes and check their readiness:
 
+```bash
+blockstor node list
+```
+
+```console
++-------+-----------+--------------+--------+
+| Node  | NodeType  | Addresses    | State  |
++=======+===========+==============+========+
+| srv1  | SATELLITE | 10.20.0.11   | ONLINE |
+| srv2  | SATELLITE | 10.20.0.12   | ONLINE |
+| srv3  | SATELLITE | 10.20.0.13   | ONLINE |
++-------+-----------+--------------+--------+
+```
+
+List available empty devices:
+
+```bash
+blockstor physical-storage list
+```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### 3.2. Create Storage Pools
 
-1.  Create storage pools using ZFS or LVM.
+Create storage pools using ZFS or LVM. The same commands restore a pool after a node reset.
 
-    You can also restore previously created storage pools after a node reset.
-
-    {{< tabs name="create_storage_pools" >}}
-    {{% tab name="ZFS" %}}
+{{< tabs name="pools_client" sync="storage-backend" >}}
+{{% tab name="LINSTOR" %}}
+**ZFS:**
 
 ```bash
 linstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
@@ -307,8 +333,7 @@ linstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
 linstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
 ```
 
-It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020)
-to set `failmode=continue` on ZFS storage pools to allow DRBD to handle disk failures instead of ZFS.
+It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020) to set `failmode=continue` on ZFS storage pools, so DRBD handles a disk failure rather than ZFS:
 
 ```bash
 kubectl exec -ti -n cozy-linstor pod/linstor-satellite.srv1 -- zpool set failmode=continue data
@@ -316,8 +341,7 @@ kubectl exec -ti -n cozy-linstor pod/linstor-satellite.srv2 -- zpool set failmod
 kubectl exec -ti -n cozy-linstor pod/linstor-satellite.srv3 -- zpool set failmode=continue data
 ```
 
-    {{% /tab %}}
-    {{% tab name="LVM" %}}
+**LVM:**
 
 ```bash
 linstor ps cdp lvm srv1 /dev/sdb --pool-name data --storage-pool data
@@ -325,40 +349,76 @@ linstor ps cdp lvm srv2 /dev/sdb --pool-name data --storage-pool data
 linstor ps cdp lvm srv3 /dev/sdb --pool-name data --storage-pool data
 ```
 
-    {{% /tab %}}
-    {{% tab name="Restore ZFS/LVM storage-pool on nodes after reset" %}}
+**Restore after a node reset:**
 
 ```bash
 for node in $(kubectl get nodes --no-headers -o custom-columns=":metadata.name"); do
   echo "linstor storage-pool create zfs $node data data"
 done
-# linstor storage-pool create zfs <node> data data
 ```
 
-    {{% /tab %}}
-    {{< /tabs >}}
+Check the result:
 
-1.  Check the results by listing the storage pools:
+```bash
+linstor sp l
+```
 
-    ```bash
-    linstor sp l
-    ```
+```console
++-------------------------------------------------------------------------------------------------------+
+| StoragePool          | Node | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State |
+|=======================================================================================================|
+| DfltDisklessStorPool | srv1 | DISKLESS |          |              |               | False        | Ok    |
+| data                 | srv1 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    |
++-------------------------------------------------------------------------------------------------------+
+```
+{{% /tab %}}
+{{% tab name="Blockstor" %}}
+**ZFS:**
 
-    Example output:
+```bash
+blockstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
+blockstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
+blockstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
+```
 
-    ```console
-    +-------------------------------------------------------------------------------------------------------------------------------------+
-    | StoragePool          | Node | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State | SharedName                |
-    |=====================================================================================================================================|
-    | DfltDisklessStorPool | srv1 | DISKLESS |          |              |               | False        | Ok    | srv1;DfltDisklessStorPool |
-    | DfltDisklessStorPool | srv2 | DISKLESS |          |              |               | False        | Ok    | srv2;DfltDisklessStorPool |
-    | DfltDisklessStorPool | srv3 | DISKLESS |          |              |               | False        | Ok    | srv3;DfltDisklessStorPool |
-    | data                 | srv1 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv1;data                 |
-    | data                 | srv2 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv2;data                 |
-    | data                 | srv3 | ZFS      | data     |    96.41 GiB |     99.50 GiB | True         | Ok    | srv3;data                 |
-    +-------------------------------------------------------------------------------------------------------------------------------------+
-    ```
+Set `failmode=continue` for the same reason as on LINSTOR. The satellite carries the ZFS tooling:
 
+```bash
+kubectl exec -ti -n cozy-linstor <blockstor-satellite-pod> -- zpool set failmode=continue data
+```
+
+**LVM:**
+
+```bash
+blockstor ps cdp lvm srv1 /dev/sdb --pool-name data --storage-pool data
+blockstor ps cdp lvm srv2 /dev/sdb --pool-name data --storage-pool data
+blockstor ps cdp lvm srv3 /dev/sdb --pool-name data --storage-pool data
+```
+
+**Restore after a node reset:**
+
+```bash
+for node in $(kubectl get nodes --no-headers -o custom-columns=":metadata.name"); do
+  echo "blockstor storage-pool create zfs $node data data"
+done
+```
+
+Check the result:
+
+```bash
+blockstor sp l
+```
+
+```console
++----------------------+-------+----------+----------+--------------+---------------+--------------+-------+
+| StoragePool          | Node  | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State |
++======================+=======+==========+==========+==============+===============+==============+=======+
+| DfltDisklessStorPool | srv1  | DISKLESS |          |              |               | False        | Ok    |
+| data                 | srv1  | ZFS_THIN | data     | 237.80 GiB   | 254 GiB       | True         | Ok    |
++----------------------+-------+----------+----------+--------------+---------------+--------------+-------+
+```
+{{% /tab %}}
+{{< /tabs >}}
 
 ### 3.3. Create Storage Classes
 
@@ -425,73 +485,6 @@ Create storage classes, one of which should be the default class.
     ```
 
 
-
-### 3.4. Configure Storage on the Blockstor Backend
-
-Skip this step on the LINSTOR backend — 3.1 and 3.2 cover it there.
-
-Blockstor speaks the same command grammar as LINSTOR, short forms included, so the steps below mirror 3.1 and 3.2 one for one. What differs is the client: `blockstor` is a standalone binary that talks to the Kubernetes API directly. There is no controller pod to exec into and no alias to set — it reads your kubeconfig the way `kubectl` does. Build it from the [Blockstor repository](https://github.com/cozystack/blockstor) with `make build`, or take it from a release.
-
-1.  Check the client reaches the cluster:
-
-    ```bash
-    blockstor controller version
-    ```
-
-1.  List your nodes and check their readiness:
-
-    ```bash
-    blockstor node list
-    ```
-
-    ```console
-    +-------+-----------+--------------+--------+
-    | Node  | NodeType  | Addresses    | State  |
-    +=======+===========+==============+========+
-    | srv1  | SATELLITE | 10.20.0.11   | ONLINE |
-    | srv2  | SATELLITE | 10.20.0.12   | ONLINE |
-    | srv3  | SATELLITE | 10.20.0.13   | ONLINE |
-    +-------+-----------+--------------+--------+
-    ```
-
-1.  List available empty devices:
-
-    ```bash
-    blockstor physical-storage list
-    ```
-
-1.  Create the storage pools. The verb and its flags are the same as on LINSTOR:
-
-    ```bash
-    blockstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
-    blockstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
-    blockstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
-    ```
-
-    It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020) to set `failmode=continue` on ZFS storage pools, so DRBD handles a disk failure rather than ZFS:
-
-    ```bash
-    kubectl exec -ti -n cozy-linstor blockstor-satellite-<pod> -- zpool set failmode=continue data
-    ```
-
-    Use `lvm` in place of `zfs` for an LVM pool.
-
-1.  Check the result:
-
-    ```bash
-    blockstor sp l
-    ```
-
-    ```console
-    +----------------------+-------+----------+----------+--------------+---------------+--------------+-------+
-    | StoragePool          | Node  | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State |
-    +======================+=======+==========+==========+==============+===============+==============+=======+
-    | DfltDisklessStorPool | srv1  | DISKLESS |          |              |               | False        | Ok    |
-    | data                 | srv1  | ZFS_THIN | data     | 237.80 GiB   | 254 GiB       | True         | Ok    |
-    +----------------------+-------+----------+----------+--------------+---------------+--------------+-------+
-    ```
-
-Then continue with [3.3](#33-create-storage-classes) — storage classes are the same on both backends.
 
 ## 4. Configure Networking
 
