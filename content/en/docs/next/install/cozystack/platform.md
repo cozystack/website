@@ -237,9 +237,13 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 ## 3. Configure Storage
 
 Kubernetes needs a storage subsystem to provide persistent volumes to applications, but it doesn't include one of its own.
-Cozystack provides [LINSTOR](https://github.com/LINBIT/linstor-server) as a storage subsystem.
+Cozystack provides [LINSTOR](https://github.com/LINBIT/linstor-server) as a storage subsystem, and [Blockstor](https://github.com/cozystack/blockstor) as an experimental alternative.
 
-In the following steps, we'll access LINSTOR interface, create storage pools, and define storage classes.
+In the following steps, we'll access the storage interface, create storage pools, and define storage classes.
+
+{{% alert color="warning" %}}
+Steps 3.1 and 3.2 below are written for the **LINSTOR** backend. They run through `linstor-controller`, which exists only there — on `backend: blockstor` the control plane runs in external mode and that Deployment is never created, so every `linstor` command in them fails with `NotFound`. If you chose Blockstor in [step 2.3](#23-choose-a-storage-backend), follow [3.4](#34-configure-storage-on-the-blockstor-backend) instead. Step 3.3 is the same for both.
+{{% /alert %}}
 
 
 ### 3.1. Check Storage Devices
@@ -421,6 +425,60 @@ Create storage classes, one of which should be the default class.
     ```
 
 
+
+### 3.4. Configure Storage on the Blockstor Backend
+
+Skip this step on the LINSTOR backend — 3.1 and 3.2 cover it there.
+
+Blockstor keeps its state in Kubernetes custom resources rather than in a database behind a controller pod, so its storage pools are configured with `kubectl` rather than through a CLI inside the cluster. There is no `linstor-controller` to exec into.
+
+1.  List the nodes Blockstor knows about:
+
+    ```bash
+    kubectl get nodes.blockstor.cozystack.io
+    ```
+
+1.  Create the ZFS pool on the backing device of each storage node. The satellite image carries the ZFS tooling, so run it there:
+
+    ```bash
+    kubectl exec -n cozy-linstor ds/blockstor-satellite -- \
+      zpool create -o failmode=continue data /dev/sdb
+    ```
+
+    Repeat per node, addressing the satellite pod on that node. `failmode=continue` is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020) for the same reason as on LINSTOR: it lets DRBD handle a disk failure rather than ZFS.
+
+1.  Register each pool with Blockstor. The object name is `<pool>.<node>` in lower case — a validation rule on the custom resource pins that, so a mismatch is refused rather than stored:
+
+    ```yaml
+    apiVersion: blockstor.cozystack.io/v1alpha1
+    kind: StoragePool
+    metadata:
+      name: data.srv1
+    spec:
+      nodeName: srv1
+      poolName: data
+      providerKind: ZFS_THIN
+      props:
+        StorDriver/StorPoolName: data
+    ```
+
+    Use `ZFS` instead of `ZFS_THIN` for a thick pool, where every volume reserves its full size on creation.
+
+1.  Check the result:
+
+    ```bash
+    kubectl get storagepools.blockstor.cozystack.io
+    ```
+
+    ```console
+    NAME                         AGE
+    data.srv1                    1m
+    data.srv2                    1m
+    data.srv3                    1m
+    dfltdisklessstorpool.srv1    1m
+    ```
+
+Then continue with [3.3](#33-create-storage-classes) — storage classes are the same on both backends.
 
 ## 4. Configure Networking
 
