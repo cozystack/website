@@ -430,52 +430,65 @@ Create storage classes, one of which should be the default class.
 
 Skip this step on the LINSTOR backend — 3.1 and 3.2 cover it there.
 
-Blockstor keeps its state in Kubernetes custom resources rather than in a database behind a controller pod, so its storage pools are configured with `kubectl` rather than through a CLI inside the cluster. There is no `linstor-controller` to exec into.
+Blockstor speaks the same command grammar as LINSTOR, short forms included, so the steps below mirror 3.1 and 3.2 one for one. What differs is the client: `blockstor` is a standalone binary that talks to the Kubernetes API directly. There is no controller pod to exec into and no alias to set — it reads your kubeconfig the way `kubectl` does. Build it from the [Blockstor repository](https://github.com/cozystack/blockstor) with `make build`, or take it from a release.
 
-1.  List the nodes Blockstor knows about:
-
-    ```bash
-    kubectl get nodes.blockstor.cozystack.io
-    ```
-
-1.  Create the ZFS pool on the backing device of each storage node. The satellite image carries the ZFS tooling, so run it there:
+1.  Check the client reaches the cluster:
 
     ```bash
-    kubectl exec -n cozy-linstor ds/blockstor-satellite -- \
-      zpool create -o failmode=continue data /dev/sdb
+    blockstor controller version
     ```
 
-    Repeat per node, addressing the satellite pod on that node. `failmode=continue` is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020) for the same reason as on LINSTOR: it lets DRBD handle a disk failure rather than ZFS.
+1.  List your nodes and check their readiness:
 
-1.  Register each pool with Blockstor. The object name is `<pool>.<node>` in lower case — a validation rule on the custom resource pins that, so a mismatch is refused rather than stored:
-
-    ```yaml
-    apiVersion: blockstor.cozystack.io/v1alpha1
-    kind: StoragePool
-    metadata:
-      name: data.srv1
-    spec:
-      nodeName: srv1
-      poolName: data
-      providerKind: ZFS_THIN
-      props:
-        StorDriver/StorPoolName: data
+    ```bash
+    blockstor node list
     ```
 
-    Use `ZFS` instead of `ZFS_THIN` for a thick pool, where every volume reserves its full size on creation.
+    ```console
+    +-------+-----------+--------------+--------+
+    | Node  | NodeType  | Addresses    | State  |
+    +=======+===========+==============+========+
+    | srv1  | SATELLITE | 10.20.0.11   | ONLINE |
+    | srv2  | SATELLITE | 10.20.0.12   | ONLINE |
+    | srv3  | SATELLITE | 10.20.0.13   | ONLINE |
+    +-------+-----------+--------------+--------+
+    ```
+
+1.  List available empty devices:
+
+    ```bash
+    blockstor physical-storage list
+    ```
+
+1.  Create the storage pools. The verb and its flags are the same as on LINSTOR:
+
+    ```bash
+    blockstor ps cdp zfs srv1 /dev/sdb --pool-name data --storage-pool data
+    blockstor ps cdp zfs srv2 /dev/sdb --pool-name data --storage-pool data
+    blockstor ps cdp zfs srv3 /dev/sdb --pool-name data --storage-pool data
+    ```
+
+    It is [recommended](https://github.com/LINBIT/linstor-server/issues/463#issuecomment-3401472020) to set `failmode=continue` on ZFS storage pools, so DRBD handles a disk failure rather than ZFS:
+
+    ```bash
+    kubectl exec -ti -n cozy-linstor blockstor-satellite-<pod> -- zpool set failmode=continue data
+    ```
+
+    Use `lvm` in place of `zfs` for an LVM pool.
 
 1.  Check the result:
 
     ```bash
-    kubectl get storagepools.blockstor.cozystack.io
+    blockstor sp l
     ```
 
     ```console
-    NAME                         AGE
-    data.srv1                    1m
-    data.srv2                    1m
-    data.srv3                    1m
-    dfltdisklessstorpool.srv1    1m
+    +----------------------+-------+----------+----------+--------------+---------------+--------------+-------+
+    | StoragePool          | Node  | Driver   | PoolName | FreeCapacity | TotalCapacity | CanSnapshots | State |
+    +======================+=======+==========+==========+==============+===============+==============+=======+
+    | DfltDisklessStorPool | srv1  | DISKLESS |          |              |               | False        | Ok    |
+    | data                 | srv1  | ZFS_THIN | data     | 237.80 GiB   | 254 GiB       | True         | Ok    |
+    +----------------------+-------+----------+----------+--------------+---------------+--------------+-------+
     ```
 
 Then continue with [3.3](#33-create-storage-classes) — storage classes are the same on both backends.
