@@ -25,7 +25,7 @@ bundles:
   - cozystack.migration-controller
 ```
 
-**The VDDK image.** VMware's Virtual Disk Development Kit is proprietary and Cozystack can neither ship nor mirror it. An operator who holds a licence builds the image, pushes it somewhere the cluster can pull from, and names it once at the platform level:
+**The VDDK image.** VMware's Virtual Disk Development Kit is proprietary and Cozystack can neither ship nor mirror it. An operator who holds a licence builds the image once, pushes it somewhere the cluster can pull from, and names it at the platform level — see [Building the VDDK image](#building-the-vddk-image).
 
 ```yaml
 vmImport:
@@ -35,6 +35,61 @@ vmImport:
 Leaving it empty is a supported state: a vSphere import source then reports `Ready=False` with reason `VDDKNotConfigured` the moment it is created, rather than failing halfway through a transfer.
 
 **A vCenter account.** The account needs read access to the inventory and the privileges Forklift uses to snapshot and read disks. Note that vCenter silently ignores an unknown privilege name, so a typo produces a role that looks correct and is quietly incomplete.
+
+## Building the VDDK image
+
+This is an administrator task, done once per cluster. It exists because the Virtual Disk Development Kit is licensed software: VMware distributes it to registered users only, and no one may redistribute it — which is why Cozystack ships no image and cannot mirror one for you.
+
+{{< note >}}
+Read the VDDK licence before you start. It permits an internal build for your own use; it does not permit publishing the resulting image to a registry other people can pull from. Push it to a private registry, not Docker Hub.
+{{< /note >}}
+
+### Download the kit
+
+Sign in to the [Broadcom support portal](https://support.broadcom.com/) and download the **Virtual Disk Development Kit** for **Linux**, matching your vSphere version — a 8.0.x kit for vSphere 8, 7.0.x for vSphere 7. The file is named like `VMware-vix-disklib-8.0.3-24091160.x86_64.tar.gz`.
+
+Matching matters: a kit older than the vCenter it talks to may fail to open disks, and the error appears at transfer time rather than at connection time.
+
+### Build
+
+The image is a plain filesystem carrying the kit at `/vddk-lib` — the engine mounts it into its transfer pod and reads the libraries from there. There is nothing to run inside it, so a scratch-like base is enough:
+
+```dockerfile
+FROM registry.access.redhat.com/ubi9/ubi-minimal
+USER 1001
+COPY vmware-vix-disklib-distrib /vddk-lib
+ENTRYPOINT ["/bin/bash"]
+```
+
+```bash
+tar -xzf VMware-vix-disklib-8.0.3-24091160.x86_64.tar.gz
+podman build -t registry.example.com/vddk:8.0.3 .
+podman push registry.example.com/vddk:8.0.3
+```
+
+Build for **linux/amd64**: the transfer pod runs on the cluster's worker nodes, and an image built on an arm64 laptop without an explicit platform will be pulled and then fail to execute. With `podman` or `docker buildx`, pass `--platform linux/amd64`.
+
+### Make the cluster able to pull it
+
+A private registry needs credentials in the namespaces that pull the image — the Forklift namespace and every tenant namespace an import runs in. Create the pull secret and reference it from the service account, or use whatever registry-credential mechanism your cluster already has.
+
+An image the cluster cannot pull produces a transfer that never starts, with the reason on the pod rather than on the import task, so it is worth confirming the pull works before the first migration:
+
+```bash
+kubectl -n cozy-forklift run vddk-pull-check --rm -it --restart=Never \
+  --image=registry.example.com/vddk:8.0.3 --command -- ls /vddk-lib
+```
+
+### Point the platform at it
+
+```yaml
+vmImport:
+  vddkImage: registry.example.com/vddk:8.0.3
+```
+
+Only the reference travels to the controller — never a credential. The value is not a tenant setting and does not appear on any tenant-facing object: naming an image the cluster will run is an operator's decision.
+
+When the kit is upgraded, change the tag here and the next import uses it. Running imports are unaffected, since the transfer pod already holds its copy.
 
 ## Before the first import
 
@@ -244,7 +299,7 @@ kubectl -n tenant-example get dv -l vmID=vm-1234
 
 The first version of this API is deliberately narrow:
 
-- **vSphere only.** Other Forklift providers (oVirt, OpenStack, OVA) arrive additively.
+- **vSphere only.** Other providers the engine already supports — oVirt, OpenStack, OVA, Hyper-V — arrive additively. **Proxmox is not one of them**: the engine has no Proxmox provider, so migrating from Proxmox goes through [its own guide](/docs/next/virtualization/proxmox-migration/), which exports and uploads disks directly.
 - **Cold migration only.** Warm, change-block-tracking migration is not offered; the source is powered off for the transfer.
 - **One storage class per task.** Disks are not split across classes by source datastore.
 - **Pod networking.** The imported `VMInstance` attaches to the pod network; richer placement arrives with the network-placement design.
