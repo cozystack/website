@@ -43,6 +43,13 @@ const PLURAL_TO_KIND: Record<string, string> = {
   clickhouses: "ClickHouse", mongodbs: "MongoDB", natses: "NATS", buckets: "Bucket",
 }
 
+// --- Живой стор инстансов: показывает деплой «в процессе» ---
+// Демо статично, но при создании инстанс должен появиться в состоянии установки
+// и через несколько секунд стать Ready — иначе деплой выглядит фейково.
+type Cond = { type: string; status: string; reason?: string; message?: string }
+type Inst = Obj & { apiVersion?: string; spec?: unknown; status?: { conditions?: Cond[] } }
+const liveInstances: Inst[] = JSON.parse(JSON.stringify(instances.items)) as Inst[]
+
 const list = (items: Obj[], kind: string) => ({
   apiVersion: "apps.cozystack.io/v1alpha1",
   kind: `${kind}List`,
@@ -134,14 +141,14 @@ export const handlers = [
   // инстансы конкретного типа в namespace
   http.get(`${COZY}/namespaces/:ns/:resource`, ({ params, request }) => {
     const kind = PLURAL_TO_KIND[params.resource as string]
-    const items = kind ? (instances.items as Obj[]).filter((i) => i.kind === kind) : []
+    const items = kind ? liveInstances.filter((i) => i.kind === kind) : []
     return isWatch(request) ? watchStream(items) : HttpResponse.json(list(items, kind ?? "Unknown"))
   }),
 
   // одиночный инстанс
   http.get(`${COZY}/namespaces/:ns/:resource/:name`, ({ params }) => {
     const kind = PLURAL_TO_KIND[params.resource as string]
-    const obj = (instances.items as Obj[]).find((i) => i.kind === kind && i.metadata.name === params.name)
+    const obj = liveInstances.find((i) => i.kind === kind && i.metadata.name === params.name)
     return obj ? HttpResponse.json(obj) : new HttpResponse(null, { status: 404 })
   }),
 
@@ -229,9 +236,27 @@ export const handlers = [
   http.get("/apis/metrics.k8s.io/v1beta1/namespaces/:ns/pods", () =>
     HttpResponse.json({ kind: "PodMetricsList", apiVersion: "metrics.k8s.io/v1beta1", items: [] })),
 
-  // создание инстанса в демо: возвращаем как будто создано (в список не добавляем — статичная витрина)
-  http.post(`${COZY}/namespaces/:ns/:resource`, async ({ request }) => {
-    const obj = await request.json()
+  // Создание инстанса: появляется в состоянии установки и через ~9 c становится Ready.
+  http.post(`${COZY}/namespaces/:ns/:resource`, async ({ params, request }) => {
+    const kind = PLURAL_TO_KIND[params.resource as string] ?? "Unknown"
+    const sent = (await request.json()) as { metadata?: { name?: string }; spec?: unknown }
+    const name = sent?.metadata?.name || `new-${kind.toLowerCase()}`
+    const obj: Inst = {
+      apiVersion: "apps.cozystack.io/v1alpha1", kind,
+      metadata: { name, namespace: NS,
+        creationTimestamp: new Date().toISOString(),
+        uid: crypto.randomUUID(),
+        labels: { "apps.cozystack.io/application.kind": kind, "apps.cozystack.io/application.name": name },
+      } as Obj["metadata"],
+      spec: sent?.spec ?? {},
+      status: { conditions: [{ type: "Ready", status: "False", reason: "Installing", message: "Разворачивается…" }] },
+    }
+    liveInstances.push(obj)
+    // Через ~9 c установка «завершается»: следующий рефетч списка покажет Ready.
+    setTimeout(() => {
+      const c = obj.status?.conditions?.find((x) => x.type === "Ready")
+      if (c) { c.status = "True"; c.reason = "InstallSucceeded"; c.message = "" }
+    }, 9000)
     return HttpResponse.json(obj, { status: 201 })
   }),
 
