@@ -5,7 +5,7 @@ description: "Migrating virtual machines from VMware vSphere into Cozystack tena
 weight: 64
 ---
 
-This guide describes how to migrate virtual machines from VMware vSphere into a Cozystack tenant using the `forklift.cozystack.io` import API. Unlike the [Proxmox migration](/docs/next/virtualization/proxmox-migration/), which exports and uploads disk images by hand, this path is driven by the cluster: you register a connection to vCenter, name the machines you want, and the platform transfers each disk and turns it into a Cozystack `VMDisk` and `VMInstance`.
+This guide describes how to migrate virtual machines from VMware vSphere into a Cozystack tenant using the `forklift.cozystack.io` import API. The migration is driven by the cluster rather than by hand: you register a connection to vCenter, name the machines you want, and the platform transfers each disk and turns it into a Cozystack `VMDisk` and `VMInstance`.
 
 {{< note >}}
 The transfer is a **cold migration**: the source VM is powered off before its disks are read, and stays off until you start it again in vSphere. Plan a maintenance window, and never point an import at a machine you cannot afford to stop.
@@ -299,7 +299,7 @@ kubectl -n tenant-example get dv -l vmID=vm-1234
 
 The first version of this API is deliberately narrow:
 
-- **vSphere only.** Other providers the engine already supports — oVirt, OpenStack, OVA, Hyper-V — arrive additively. **Proxmox is not one of them**: the engine has no Proxmox provider, so migrating from Proxmox goes through [its own guide](/docs/next/virtualization/proxmox-migration/), which exports and uploads disks directly.
+- **vSphere only.** Other providers the engine already supports — oVirt, OpenStack, OVA, Hyper-V — arrive additively.
 - **Cold migration only.** Warm, change-block-tracking migration is not offered; the source is powered off for the transfer.
 - **One storage class per task.** Disks are not split across classes by source datastore.
 - **Pod networking.** The imported `VMInstance` attaches to the pod network; richer placement arrives with the network-placement design.
