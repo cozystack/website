@@ -1,0 +1,48 @@
+---
+title: "Application Marketplace"
+linkTitle: "Marketplace"
+description: "Extend the Cozystack application catalog with external repositories using the PackageSource model and the cozypkg CLI."
+weight: 48
+---
+
+The Cozystack marketplace lets an administrator extend the built-in application catalog with applications published in external repositories. Once a repository is connected to a cluster, its applications appear in the same dashboard catalog and behave like the standard managed applications platform users already know.
+
+A repository is a self-contained, versioned bundle published as an OCI artifact. It is authored and validated with the `cozypkg` CLI, connected to a cluster with a single command (or from the dashboard), and, optionally, listed in a community index so operators can discover it.
+
+{{% note %}}
+
+The marketplace is built on the `PackageSource` model, a different and newer mechanism than the Git-and-HelmRelease bootstrap described in [Adding External Applications]({{% ref "/docs/next/applications/external" %}}). The two can coexist on a cluster; new repositories should use the marketplace model.
+
+{{% /note %}}
+
+## How it works
+
+A marketplace repository ships one or more `PackageSource` resources. Each `PackageSource` declares variants and components; a component is a Helm chart plus, for user-installable applications, an `ApplicationDefinition` that registers the application with the Cozystack API and dashboard.
+
+The lifecycle has two sides:
+
+- **Publishing** turns a repository into an OCI artifact: `cozypkg init` scaffolds it, `cozypkg validate` lints it offline, and `cozypkg push` bundles the `packages/` tree into a single versioned artifact in any OCI registry.
+- **Connecting** registers that artifact on a cluster: `cozypkg tap` (or the dashboard) creates a Flux `OCIRepository` and materializes the repository's `PackageSource` resources. `cozypkg add` then installs individual applications from the connected repository, and they show up in the catalog.
+
+## Key objects
+
+| Object | Group | Role |
+| --- | --- | --- |
+| `PackageSource` | `cozystack.io/v1alpha1` | Declares a repository's variants and components. |
+| `ApplicationDefinition` | `cozystack.io/v1alpha1` | Registers a component as a user-installable application in the API and dashboard. |
+| `Tap` | `core.cozystack.io/v1alpha1` | Virtual resource backing the dashboard "Repositories" view: connect, list, and disconnect repositories. |
+| `OCIRepository` | `source.toolkit.fluxcd.io/v1` | Flux source Cozystack creates for a connected repository's artifact. |
+
+Repositories connected through the marketplace are always named under the `community.` prefix, so an external package can never shadow an official one.
+
+## Trust model
+
+Connecting a third-party repository runs its charts in your management cluster, so connect only sources you trust.
+
+Signature verification happens at **publication** time, not at connect time. `cozypkg tap` and the dashboard connect flow validate an artifact's structure but do not verify its cosign signature. The verification points are the community index CI gate, which pins each release to the entry's recorded cosign identity, and, optionally, Flux `OCIRepository` verification at pull time. See [Publishing a Repository]({{% ref "/docs/next/marketplace/publishing" %}}#the-community-index) for details.
+
+## Where to go next
+
+- [Publishing a Repository]({{% ref "/docs/next/marketplace/publishing" %}}): scaffold, validate, push, and list a repository in the community index.
+- [Connecting a Repository]({{% ref "/docs/next/marketplace/connecting" %}}): discover, connect, install, and disconnect repositories on a cluster.
+- [`cozypkg` Reference]({{% ref "/docs/next/marketplace/cozypkg" %}}): every command and flag.
