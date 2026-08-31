@@ -33,7 +33,7 @@ The lifecycle has two sides:
 | `Tap` | `core.cozystack.io/v1alpha1` | Virtual resource backing the dashboard "Repositories" view: connect, list, and disconnect repositories. |
 | `OCIRepository` | `source.toolkit.fluxcd.io/v1` | Flux source Cozystack creates for a connected repository's artifact. |
 
-Repositories connected through the marketplace are always named under the `community.` prefix, so an external package can never shadow an official one.
+A connected repository keeps its own declared `PackageSource` name. If that name (or an application it registers) would collide with a core component, the connect is rejected, so an external package can never shadow an official one.
 
 ## Trust model
 

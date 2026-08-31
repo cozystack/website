@@ -29,7 +29,7 @@ cozypkg init --app hello --name acme.hello ./hello-repo
 
 {{% note %}}
 
-A `PackageSource` name must not start with a reserved prefix (`cozystack.` or `community.`). `cozystack.` is the platform's own namespace, and `community.` is applied automatically when a repository is connected. `cozypkg init` and `cozypkg validate` both reject reserved names. Use a neutral prefix such as your organization name, for example `acme.hello`.
+A `PackageSource` name is yours to choose: there is no reserved prefix. A tapped repository keeps its declared name on the cluster, and a clash with a core component is caught when the repository is connected (see [Connecting a Repository]({{% ref "/docs/next/marketplace/connecting" %}})), not by `init`. Use your organization as a prefix, for example `acme.hello`, to keep the name distinctive.
 
 {{% /note %}}
 
@@ -76,7 +76,7 @@ spec:
 ```
 
 - `packages/apps/hello` is the application chart that templates the user-facing resources.
-- `packages/system/hello-rd` is a paired chart whose `cozyrds/` asset carries the `ApplicationDefinition` that registers the application in the API and dashboard. Its `chartRef` is templated so it keeps resolving after the source is renamed under the `community.` prefix at connect time.
+- `packages/system/hello-rd` is a paired chart whose `cozyrds/` asset carries the `ApplicationDefinition` that registers the application in the API and dashboard. Its `chartRef` names the app component's assembled artifact directly; because a connected repository keeps its declared name, the reference resolves without any tap-time rewriting.
 
 Replace the placeholder chart in `packages/apps/hello/templates/` with your application's real resources, and add more components or variants to the `PackageSource` as needed.
 

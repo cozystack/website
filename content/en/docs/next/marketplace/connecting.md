@@ -31,7 +31,7 @@ cozypkg search database
 
 ## Connect from the CLI
 
-`cozypkg tap` registers a published repository. It creates a Flux `OCIRepository` pointing at the artifact and materializes the `PackageSource` resources the artifact carries, named under the `community.` prefix so they cannot shadow official packages. Nothing is installed yet:
+`cozypkg tap` registers a published repository. It creates a Flux `OCIRepository` pointing at the artifact and materializes the `PackageSource` resources the artifact carries under their declared names. If a name (or an application it registers) would collide with a core component or another connected repository, the tap is rejected instead of overwriting it, so an external package cannot shadow an official one. Nothing is installed yet:
 
 ```bash
 cozypkg tap oci://ghcr.io/acme/hello:v1.0.0
@@ -61,14 +61,15 @@ cozypkg tap oci://ghcr.io/acme/hello:v1.0.0 --secret acme-pull
 
 ## Connect from the dashboard
 
-The dashboard "Repositories" view is backed by the `Tap` resource and covers the same flow without the CLI. Open it from the sidebar, choose **Connect**, and provide the `oci://` reference and, for a private repository, the name of a pull-credential `Secret` in `cozy-system`. Connected repositories are listed with their status, and community repositories can be disconnected from the same view.
+The dashboard "Repositories" view is backed by the `Tap` resource and covers the same flow without the CLI. Open it from the sidebar, choose **Connect**, and provide the `oci://` reference and, for a private repository, the name of a pull-credential `Secret` in `cozy-system`. Connected repositories are listed with their status; a tapped repository still connecting or blocked by a name collision shows its message there, and tapped repositories can be disconnected from the same view.
 
 ## Install applications
 
-Once a repository is connected, install an application from it with `cozypkg add`, naming the materialized `PackageSource`:
+Once a repository is connected, install an application from it with `cozypkg add`, naming the materialized `PackageSource`. A tapped repository keeps its own declared name, so run `cozypkg list` first to see the exact name to use:
 
 ```bash
-cozypkg add community.acme.hello
+cozypkg list
+cozypkg add acme.hello
 ```
 
 `cozypkg add` installs the `PackageSource` and its dependencies. If a component is privileged, it asks for confirmation first; pass `--allow-privileged` to install privileged components without the interactive prompt.
@@ -91,13 +92,13 @@ Disconnecting has two independent steps, mirroring the two connect steps.
 Remove installed applications with `cozypkg del`. This deletes the `Package` and its resources but leaves the connected source in place:
 
 ```bash
-cozypkg del community.acme.hello
+cozypkg del acme.hello
 ```
 
-Then remove the source itself with `cozypkg untap`. This deletes the `community.` `PackageSource` and its Flux source, and refuses official sources. Already-installed `Package` resources are left untouched, so untap warns if any remain; pass `--yes` to untap anyway:
+Then remove the source itself with `cozypkg untap`. This deletes the tapped `PackageSource` (identified by its marketplace-tap marker, not a name prefix) and its Flux source, and refuses official sources. Already-installed `Package` resources are left untouched, so untap warns if any remain; pass `--yes` to untap anyway:
 
 ```bash
-cozypkg untap community.acme.hello
+cozypkg untap acme.hello
 ```
 
-From the dashboard, disconnecting a community repository in the "Repositories" view removes the `PackageSource` and its Flux source in one step; it does not remove already-installed applications.
+From the dashboard, disconnecting a tapped repository in the "Repositories" view removes the `PackageSource` and its Flux source in one step; it does not remove already-installed applications.

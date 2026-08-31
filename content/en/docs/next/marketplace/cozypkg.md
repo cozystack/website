@@ -22,7 +22,7 @@ Scaffold a new repository built around the `PackageSource` model: a `PackageSour
 | Flag | Description |
 | --- | --- |
 | `--app <label>` | Name of the sample app/component, an RFC-1123 label (default `myapp`). |
-| `--name <name>` | `PackageSource` name (defaults to `example.<app>`). Reserved prefixes `cozystack.` and `community.` are rejected. |
+| `--name <name>` | `PackageSource` name (defaults to `example.<app>`). Any name is allowed; a clash with a core component is caught at tap time, not here. |
 
 ```bash
 cozypkg init --app hello --name acme.hello ./hello-repo
@@ -39,7 +39,6 @@ Validate a repository offline, the same way publication would, without installin
 | `--require-signature` | Require a valid keyless cosign signature on the OCI artifact (needs the `cosign` binary and an `oci://` reference). |
 | `--certificate-identity <id>` | Expected cosign certificate identity for `--require-signature`. |
 | `--certificate-oidc-issuer <url>` | Expected cosign certificate OIDC issuer for `--require-signature`. |
-| `--allow-reserved-names` | Permit reserved `PackageSource` name prefixes. The index gate never sets this. |
 
 ```bash
 cozypkg validate ./hello-repo --helm-lint
@@ -78,7 +77,7 @@ cozypkg search database --index oci://ghcr.io/cozystack/packages-index:latest
 
 ### `cozypkg tap <oci-ref>`
 
-Register an external repository: create a Flux `OCIRepository` for the artifact and materialize the `PackageSource` resources it carries, named under the `community.` prefix. Nothing is installed until `cozypkg add`. Tapping is idempotent and validates the artifact's structure but does not verify its cosign signature.
+Register an external repository: create a Flux `OCIRepository` for the artifact and materialize the `PackageSource` resources it carries under their declared names. A name that collides with a core component (or another tap) is rejected rather than overwritten. Nothing is installed until `cozypkg add`. Tapping is idempotent and validates the artifact's structure but does not verify its cosign signature.
 
 | Flag | Description |
 | --- | --- |
@@ -94,7 +93,7 @@ cozypkg tap oci://ghcr.io/acme/hello:v1.0.0
 
 ### `cozypkg untap <packagesource-name>`
 
-Remove a community-tapped `PackageSource` and its Flux source. Only `community.*` sources can be untapped; official sources are refused. Already-installed `Package` resources are left untouched.
+Remove a tapped `PackageSource` and its Flux source. Only tapped sources (marked with the marketplace-tap label) can be untapped; official sources are refused. Already-installed `Package` resources are left untouched.
 
 | Flag | Description |
 | --- | --- |
@@ -102,7 +101,7 @@ Remove a community-tapped `PackageSource` and its Flux source. Only `community.*
 | `--kubeconfig <path>` | Path to kubeconfig file. |
 
 ```bash
-cozypkg untap community.acme.hello
+cozypkg untap acme.hello
 ```
 
 ## Installing and inspecting
@@ -118,7 +117,7 @@ Install a `PackageSource` and its dependencies interactively. Packages can be gi
 | `--kubeconfig <path>` | Path to kubeconfig file. |
 
 ```bash
-cozypkg add community.acme.hello
+cozypkg add acme.hello
 ```
 
 ### `cozypkg del [package]...`
@@ -131,7 +130,7 @@ Delete `Package` resources. Packages can be given as arguments or read from file
 | `--kubeconfig <path>` | Path to kubeconfig file. |
 
 ```bash
-cozypkg del community.acme.hello
+cozypkg del acme.hello
 ```
 
 ### `cozypkg list`
