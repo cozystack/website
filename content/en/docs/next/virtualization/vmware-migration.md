@@ -303,7 +303,22 @@ The first version of this API is deliberately narrow:
 - **Cold migration only.** Warm, change-block-tracking migration is not offered; the source is powered off for the transfer.
 - **One storage class per task.** Disks are not split across classes by source datastore.
 - **Pod networking.** The imported `VMInstance` attaches to the pod network; richer placement arrives with the network-placement design.
-- **Guest conversion is not offered.** Disks are copied as-is, so the guest must already carry virtio drivers. A Windows guest that has never seen virtio will not boot after import.
+- **Guest conversion is not offered.** Disks are copied as-is: the guest arrives with exactly the drivers it had under VMware. Imported disks are therefore attached to the SATA bus, which every distribution's initramfs and Windows itself can read without help — see [Disk bus](#disk-bus) for what to do once the machine is up.
+
+## Disk bus
+
+Imported disks are attached to the **SATA** bus, not virtio.
+
+This is not a performance preference, it is what makes the machine boot at all. A guest copied out of VMware carries the drivers it had there — typically `vmw_pvscsi` — and no virtio. On a virtio disk such a guest does not fail the import; it imports successfully and then does not boot. Linux stops in its initramfs waiting for a root device that never appears, and Windows stops with `INACCESSIBLE_BOOT_DEVICE` (0x7B). SATA's controller is present in essentially every initramfs and inbox in Windows, so the machine comes up as it did before.
+
+Once the guest is running, switching to virtio is worth doing — it is meaningfully faster — but only after the drivers are in place:
+
+- **Linux:** make sure `virtio_blk` (and `virtio_pci`) are in the initramfs, then rebuild it. On RHEL-family guests that is `dracut --regenerate-all --force`; on Debian-family, `update-initramfs -u -k all`.
+- **Windows:** install the [virtio-win](https://github.com/virtio-win/virtio-win-pkg-scripts) drivers before changing anything.
+
+Then edit the `VMInstance` and set `bus: virtio` on the disk. Change one machine first and confirm it boots before doing the rest.
+
+A machine with more than six disks is the one exception: the SATA controller offers six ports, so disks past the sixth are attached to virtio from the start. Only the boot disk has to be readable before the guest's own drivers load, so Linux picks the rest up normally once it is running; on Windows they appear after virtio-win is installed.
 
 ## Planning notes
 
