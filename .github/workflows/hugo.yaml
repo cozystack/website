@@ -7,6 +7,9 @@ on:
     branches:
       - main
 
+  # Validates that the site still builds, in both environments, on every PR
+  pull_request:
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -71,6 +74,20 @@ jobs:
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Build with Hugo (development, also covers content/next)
+        # The production build above excludes content/next from every language
+        # mount, so it can't catch a broken page there. Development is the
+        # only configuration that renders it.
+        if: github.event_name == 'pull_request'
+        env:
+          HUGO_ENVIRONMENT: development
+          HUGO_ENV: development
+        run: |
+          hugo \
+            --environment development \
+            --gc \
+            --minify \
+            --baseURL "${{ steps.pages.outputs.base_url }}/"
       - name: Patch robots.txt
         # if built in a contributor's repo and deployed to personal pages, disallow search indexing
         if: github.repository_owner != 'cozystack'
@@ -78,12 +95,14 @@ jobs:
           echo -e "\nDisallow: /" >> public/robots.txt
           cat public/robots.txt
       - name: Upload artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./public
 
   # Deployment job
   deploy:
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
