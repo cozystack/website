@@ -39,13 +39,13 @@
       <!-- Title row with Kubernetes logo -->
       <div class="row align-items-start mb-4">
         <div class="col-lg-9">
-          {{ with .Get "title" }}<h1 class="display-1">{{ . | html }}</h1>{{ end }}
-          {{ with .Get "subtitle" }}<p class="display-2">{{ . | html }}</p>{{ end }}
           {{ with .Page.Params.taglines }}
           <ul class="hero-taglines" aria-label="Cozystack platform positioning">
             {{ range . }}<li class="hero-tagline">{{ . | html }}</li>{{ end }}
           </ul>
           {{ end }}
+          {{ with .Get "title" }}<h1 class="display-1">{{ . | html }}</h1>{{ end }}
+          {{ with .Get "subtitle" }}<p class="display-2">{{ . | html }}</p>{{ end }}
         </div>
         <div class="col-lg-3 d-none d-lg-block text-end">
           <a href="https://landscape.cncf.io/?group=certified-partners-and-providers&item=platform--paas-container-service--cozystack" target="_blank" rel="noopener noreferrer">
@@ -63,11 +63,11 @@
             {{ else }}
                 {{ .Inner | htmlUnescape | safeHTML }}
             {{ end }}
-            
+
             {{ if ne $link_url "#" }}
             <a class="btn btn-lg btn-info mt-3" href="{{ $link_url }}">{{ $link_title }} <i class="fas fa-arrow-right"></i></a>
             {{ end }}
-            
+
             <!-- Video for mobile devices -->
             <div class="hero-video-mobile d-lg-none mt-4">
               <div class="ratio ratio-16x9">

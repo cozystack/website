@@ -56,10 +56,15 @@
     }
   }
 
+  // When taglines sit above the title, they own the top spacing
+  .hero-taglines + h1 {
+    padding-top: 0;
+  }
+
   .hero-taglines {
     list-style: none;
-    padding: 0;
-    margin: 1rem 0 0;
+    padding: 50px 0 0;
+    margin: 0 0 1.25rem;
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
