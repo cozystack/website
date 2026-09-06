@@ -70,8 +70,25 @@ spec:
 
 Disabling components must be done before installing Cozystack.
 Applying updated configuration with `disabledPackages` will not remove components that are already installed.
-To remove already installed components, delete the Helm release manually using this command:
+Removing one that is already installed takes two steps. Add its name to `disabledPackages` in the Platform Package above, then wait for the operator to carry that edit across. The name appears in this output once it has:
 
 ```bash
-kubectl delete hr -n <namespace> <component>
+kubectl get helmrelease cozystack-platform --namespace cozy-system \
+  --output jsonpath='{.spec.values.bundles.disabledPackages}'
 ```
+
+Then delete the Package object. `kubectl get packages` lists the names.
+
+{{% alert title="Warning" color="warning" %}}
+Deleting the Package uninstalls the component's Helm release, and that destroys more than the workloads. Anything the chart rendered as an ordinary template without `helm.sh/resource-policy: keep` goes with the release, CRDs and namespaces included, and Kubernetes deletes every custom resource of those CRD kinds along with them. Removing `cozystack.metallb` takes the MetalLB CRDs and with them every IPAddressPool, L2Advertisement, BGPPeer and the rest of those kinds cluster-wide; removing `cozystack.cozystack-basics` takes the `cozy-public` namespace and everything stored in it. Back up anything you still need first.
+{{% /alert %}}
+
+The namespace a component installs into is the exception: the operator applies that one itself, outside the component's release and with no ownerReference, so the uninstall never had it to remove.
+
+```bash
+kubectl delete package.cozystack.io <package-name>
+```
+
+Deleting the Package while the platform values still render it means the next platform upgrade brings it back, undoing the removal one level up. Nothing reports this at the time: the delete succeeds either way and the Package reappears whenever that upgrade happens to run.
+
+`kubectl delete hr` is not a lighter-weight version of this. Flux uninstalls the release when the HelmRelease goes away, so it destroys the same CRDs and custom resources, and then the Package recreates the HelmRelease and the chart reinstalls. The workloads come back, the custom resources do not. If you have run it before, those custom resources are already gone and have to be recreated from your own manifests or a backup.
