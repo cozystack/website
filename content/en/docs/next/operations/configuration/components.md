@@ -80,13 +80,19 @@ kubectl get helmrelease cozystack-platform --namespace cozy-system \
 Then delete the Package object. `kubectl get packages` lists the names.
 
 {{% alert title="Warning" color="warning" %}}
-Deleting the Package uninstalls the component's Helm release, and that destroys more than the workloads. Anything the chart rendered as an ordinary template without `helm.sh/resource-policy: keep` goes with the release, CRDs and namespaces included, and Kubernetes deletes every custom resource of those CRD kinds along with them. Removing `cozystack.metallb` takes the MetalLB CRDs and with them every IPAddressPool, L2Advertisement, BGPPeer and the rest of those kinds cluster-wide; removing `cozystack.cozystack-basics` takes the `cozy-public` namespace and everything stored in it. Back up anything you still need first.
+Deleting the Package uninstalls the component's Helm release, and that destroys more than the workloads. Anything the chart rendered as an ordinary template without `helm.sh/resource-policy: keep` goes with the release, CRDs and namespaces included, and Kubernetes deletes every custom resource of those CRD kinds along with them. Removing `cozystack.metallb` takes every CRD the MetalLB chart bundles, subcharts included, and with them every custom resource of those kinds cluster-wide; removing `cozystack.cozystack-basics` takes the `cozy-public` namespace and everything stored in it. Back up anything you still need first.
 {{% /alert %}}
 
 The namespace a component installs into is the exception: the operator applies that one itself, outside the component's release and with no ownerReference, so the uninstall never had it to remove.
 
 ```bash
 kubectl delete package.cozystack.io <package-name>
+```
+
+Nothing holds a finalizer on the Package, so this command returns as soon as the object is gone and the uninstall it triggers runs afterwards. Wait on the HelmRelease to know the destructive part has finished:
+
+```bash
+kubectl wait --for=delete helmrelease/<component> --namespace <namespace> --timeout=10m
 ```
 
 Deleting the Package while the platform values still render it means the next platform upgrade brings it back, undoing the removal one level up. Nothing reports this at the time: the delete succeeds either way and the Package reappears whenever that upgrade happens to run.
