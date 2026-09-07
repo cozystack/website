@@ -154,6 +154,8 @@ spec:
 
 Either `caCert` or `insecureSkipVerify: true` must be set. A SHA-1 **thumbprint does not work here**: a thumbprint is what the engine wants for a direct ESXi host connection, and supplying one in place of a CA leaves the source stuck reporting `SecretNotValid`.
 
+In the dashboard the same object lives under *Migration → Sources*, where it can also be edited later — passwords rotate and a CA expires, and neither should require kubectl.
+
 Wait for the connection to be tested:
 
 ```bash
@@ -184,7 +186,11 @@ The host id is the one the VM's inventory record names, not the hostname.
 
 ## Step 2: Find the VMs to migrate
 
-Machines are named by their vSphere managed-object reference — `vm-1234`, not the display name. The reference appears in the vSphere client URL when the VM is selected, and `govc ls -i` prints it:
+Machines are named by their vSphere managed-object reference — `vm-1234`, not the display name.
+
+**In the dashboard this is a dropdown.** Under *Migration → Imports*, once a source is chosen the VM field lists the machines that source holds, showing each name beside its reference — `web-01 (vm-1234)` — and writing the reference for you. The list is published by the platform from the source's inventory and refreshes on its own; a source registered moments ago may show an empty list until the first refresh.
+
+Working in YAML, look the reference up yourself. It appears in the vSphere client URL when the VM is selected, and `govc ls -i` prints it:
 
 ```bash
 govc ls -i /DC/vm/web-01
