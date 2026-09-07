@@ -22,7 +22,7 @@ Scaffold a new repository built around the `PackageSource` model: a `PackageSour
 | Flag | Description |
 | --- | --- |
 | `--app <label>` | Name of the sample app/component, an RFC-1123 label (default `myapp`). |
-| `--name <name>` | `PackageSource` name (defaults to `example.<app>`). Any name is allowed; a clash with a core component is caught at tap time, not here. |
+| `--name <name>` | `PackageSource` name (defaults to `example.<app>`). Must be a valid Kubernetes object name; the reserved `cozystack.` and `community.` prefixes are refused. A clash with a core component is caught at tap time. |
 
 ```bash
 cozypkg init --app hello --name acme.hello ./hello-repo
@@ -39,6 +39,7 @@ Validate a repository offline, the same way publication would, without installin
 | `--require-signature` | Require a valid keyless cosign signature on the OCI artifact (needs the `cosign` binary and an `oci://` reference). |
 | `--certificate-identity <id>` | Expected cosign certificate identity for `--require-signature`. |
 | `--certificate-oidc-issuer <url>` | Expected cosign certificate OIDC issuer for `--require-signature`. |
+| `--allow-reserved-names` | Permit the reserved `cozystack.`/`community.` name prefixes. Caller-side only; the index gate never sets it. |
 
 ```bash
 cozypkg validate ./hello-repo --helm-lint
@@ -108,7 +109,7 @@ cozypkg untap acme.hello
 
 ### `cozypkg add [package]...`
 
-Install a `PackageSource` and its dependencies interactively. Packages can be given as arguments or read from files with `-f`.
+Install applications from a `PackageSource` and its dependencies interactively: it creates a `Package` (which the reconciler turns into the application's HelmRelease). Packages can be given as arguments or read from files with `-f`.
 
 | Flag | Description |
 | --- | --- |
@@ -147,9 +148,16 @@ List `PackageSource` or `Package` resources in table format.
 cozypkg list --installed
 ```
 
-### `cozypkg dot`
+### `cozypkg dot [package]...`
 
-Generate the dependency graph of `PackageSource` resources in Graphviz DOT format.
+Generate the dependency graph of `PackageSource` (or installed `Package`) resources in Graphviz DOT format.
+
+| Flag | Description |
+| --- | --- |
+| `-i, --installed` | Graph installed `Package` resources instead of `PackageSource` resources. |
+| `--components` | Show component-level dependencies. |
+| `-f, --file <path>` | Read packages from a file or directory (repeatable). |
+| `--kubeconfig <path>` | Path to kubeconfig file. |
 
 ```bash
 cozypkg dot | dot -Tsvg > packages.svg

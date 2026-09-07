@@ -11,7 +11,7 @@ For the operator side (connecting a published repository to a cluster), see [Con
 
 ## Prerequisites
 
-- The `cozypkg` CLI. It ships with Cozystack releases; see the [`cozypkg` Reference]({{% ref "/docs/next/marketplace/cozypkg" %}}).
+- The `cozypkg` CLI; see [Install cozypkg]({{% ref "/docs/next/install/cozystack/kubernetes-distribution" %}}#2-install-cozypkg).
 - The `flux` CLI, which `cozypkg push` uses to build and push the OCI artifact.
 - Access to an OCI registry you can push to (for example GitHub Container Registry).
 - `helm` on your `PATH` if you want `--helm-lint` to run `helm lint` on the charts.
@@ -29,7 +29,7 @@ cozypkg init --app hello --name acme.hello ./hello-repo
 
 {{% note %}}
 
-A `PackageSource` name is yours to choose: there is no reserved prefix. A tapped repository keeps its declared name on the cluster, and a clash with a core component is caught when the repository is connected (see [Connecting a Repository]({{% ref "/docs/next/marketplace/connecting" %}})), not by `init`. Use your organization as a prefix, for example `acme.hello`, to keep the name distinctive.
+A `PackageSource` name must be a valid Kubernetes object name (lowercase, no underscores), and it must not start with a reserved prefix: `cozystack.` is the platform's own namespace and `community.` is reserved, so `cozypkg init` and `cozypkg validate` both refuse those two prefixes. Beyond that the name is yours to choose; use your organization as a prefix, for example `acme.hello`. The real anti-shadowing boundary is on the cluster: a tapped repository keeps its declared name, and a clash with a core component is rejected at connect time (see [Connecting a Repository]({{% ref "/docs/next/marketplace/connecting" %}})).
 
 {{% /note %}}
 
@@ -76,7 +76,7 @@ spec:
 ```
 
 - `packages/apps/hello` is the application chart that templates the user-facing resources.
-- `packages/system/hello-rd` is a paired chart whose `cozyrds/` asset carries the `ApplicationDefinition` that registers the application in the API and dashboard. Its `chartRef` names the app component's assembled artifact directly; because a connected repository keeps its declared name, the reference resolves without any tap-time rewriting.
+- `packages/system/hello-rd` is a paired chart whose `cozyrds/` asset carries the `ApplicationDefinition` that registers the application in the API and dashboard. Its `chartRef` names the app component's assembled artifact by its concrete name.
 
 Replace the placeholder chart in `packages/apps/hello/templates/` with your application's real resources, and add more components or variants to the `PackageSource` as needed.
 
@@ -110,7 +110,7 @@ The source URL and revision recorded in the artifact are derived from git when n
 
 ## The community index
 
-The community index is a standalone repository (`cozystack/packages-index`) that lets operators discover published repositories with `cozypkg search`. It is metadata only: it records where packages live and who owns them. Artifacts stay in ordinary OCI registries; nothing is hosted in the index.
+The community index is a standalone repository (`cozystack/packages-index`) that lets operators discover published repositories with `cozypkg search`. It is planned: the repository is not published yet, and today only the scaffold under `hack/packages-index/` ships. It is metadata only: it records where packages live and who owns them. Artifacts stay in ordinary OCI registries; nothing is hosted in the index.
 
 To list a repository, add one metadata file under `entries/`:
 
@@ -132,8 +132,8 @@ signing:
 
 Following the model of krew-index, submissions take one of two lanes:
 
-- **Owner version bump.** A change that only updates an existing entry's `version` or description, leaving `ociRef` and `signing` untouched, auto-merges once the new artifact validates and is signed by the entry's recorded cosign identity. This keeps the routine "new release of a listed package" path fast.
-- **New entry, or a change to `ociRef`, `maintainer`, or `signing`.** These are the security-relevant edits and require maintainer review before merge.
+- **Auto lane.** A change that leaves the security-relevant fields untouched (`ociRef`, `maintainer`, and `signing.identity`/`signing.issuer`) auto-merges once the new artifact validates and is signed by the entry's recorded cosign identity. A routine `version`, `description`, `homepage`, or `tags` edit takes this lane, keeping the "new release of a listed package" path fast.
+- **Review lane.** A new entry, or any change to `ociRef`, `maintainer`, or `signing`, is security-relevant and requires maintainer review before merge.
 
 ### Signing
 

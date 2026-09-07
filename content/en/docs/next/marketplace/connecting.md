@@ -11,12 +11,12 @@ For the publisher side (packaging and pushing a repository), see [Publishing a R
 
 ## Prerequisites
 
-- The `cozypkg` CLI and a kubeconfig for the target cluster. Creating cluster-scoped resources requires cluster-admin.
-- Cozystack with the marketplace enabled on the management cluster.
+- The `cozypkg` CLI (see [Install cozypkg]({{% ref "/docs/next/install/cozystack/kubernetes-distribution" %}}#2-install-cozypkg)) and a kubeconfig for the target cluster. Creating cluster-scoped resources requires cluster-admin.
+- A Cozystack release that includes the marketplace. There is no switch to enable: the `taps` API and the tap materializer are always present.
 
 {{% warning %}}
 
-Connecting a repository runs its charts in your management cluster. Connect only sources you trust, or repositories listed in a curated index whose gate verifies signatures. See the [Trust model]({{% ref "/docs/next/marketplace" %}}#trust-model).
+Installing an application from a connected repository runs its charts in your management cluster (tapping itself installs nothing). Connect only sources you trust, or repositories listed in a curated index whose gate verifies signatures. See the [Trust model]({{% ref "/docs/next/marketplace" %}}#trust-model).
 
 {{% /warning %}}
 
@@ -28,6 +28,8 @@ Connecting a repository runs its charts in your management cluster. Connect only
 export COZYPKG_INDEX=oci://ghcr.io/cozystack/packages-index:latest
 cozypkg search database
 ```
+
+The community index is not published yet (see [Publishing]({{% ref "/docs/next/marketplace/publishing" %}}#the-community-index)), so the `oci://` reference above is illustrative. Until it exists, point `--index` at a local checkout of an index repository.
 
 ## Connect from the CLI
 
@@ -95,10 +97,12 @@ Remove installed applications with `cozypkg del`. This deletes the `Package` and
 cozypkg del acme.hello
 ```
 
-Then remove the source itself with `cozypkg untap`. This deletes the tapped `PackageSource` (identified by its marketplace-tap marker, not a name prefix) and its Flux source, and refuses official sources. Already-installed `Package` resources are left untouched, so untap warns if any remain; pass `--yes` to untap anyway:
+Then remove the source itself with `cozypkg untap`. It deletes the tapped `PackageSource` (identified by its `apps.cozystack.io/marketplace-tap` marker label, not a name prefix) and refuses official sources. If a `Package` of that name is still installed it refuses and deletes nothing; pass `--yes` to untap anyway (the `Package` stays installed):
 
 ```bash
 cozypkg untap acme.hello
 ```
+
+The Flux `OCIRepository` is removed only when no other `PackageSource` still references it. So for an artifact that carries several `PackageSource` resources, untap each one; the shared source is deleted with the last.
 
 From the dashboard, disconnecting a tapped repository in the "Repositories" view removes the `PackageSource` and its Flux source in one step; it does not remove already-installed applications.

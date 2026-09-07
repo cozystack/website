@@ -11,7 +11,7 @@ A repository is a self-contained, versioned bundle published as an OCI artifact.
 
 {{% note %}}
 
-The marketplace is built on the `PackageSource` model, a different and newer mechanism than the Git-and-HelmRelease bootstrap described in [Adding External Applications]({{% ref "/docs/next/applications/external" %}}). The two can coexist on a cluster; new repositories should use the marketplace model.
+The marketplace is built on the `PackageSource` model, a newer mechanism alongside the Git-and-HelmRelease bootstrap described in [Adding External Applications]({{% ref "/docs/next/applications/external" %}}). The two coexist on a cluster; the existing External-Apps pipeline is untouched.
 
 {{% /note %}}
 
@@ -37,9 +37,9 @@ A connected repository keeps its own declared `PackageSource` name. If that name
 
 ## Trust model
 
-Connecting a third-party repository runs its charts in your management cluster, so connect only sources you trust.
+Installing an application from a connected repository runs its charts in your management cluster, so connect only sources you trust. (Tapping itself installs nothing; it registers the source.)
 
-Signature verification happens at **publication** time, not at connect time. `cozypkg tap` and the dashboard connect flow validate an artifact's structure but do not verify its cosign signature. The verification points are the community index CI gate, which pins each release to the entry's recorded cosign identity, and, optionally, Flux `OCIRepository` verification at pull time. See [Publishing a Repository]({{% ref "/docs/next/marketplace/publishing" %}}#the-community-index) for details.
+Signature verification happens at **publication** time, not at connect time. `cozypkg tap` and the dashboard connect flow validate an artifact's structure but do not verify its cosign signature. The verification point is the community index CI gate, which pins each release to the entry's recorded cosign identity. Flux can additionally verify the signature at pull time, but only if you set `spec.verify` on the `OCIRepository` yourself; tap and the `Tap` API do not set it. See [Publishing a Repository]({{% ref "/docs/next/marketplace/publishing" %}}#the-community-index) for details.
 
 ## Where to go next
 
