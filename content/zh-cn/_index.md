@@ -8,7 +8,7 @@ seo:
   title: "Cozystack — 基于 Kubernetes 的开源私有云"
   description: "基于 Kubernetes 的开源云平台，提供托管虚拟机、数据库、S3 存储和 GPU 工作负载。CNCF Sandbox 项目。"
   keywords: ["私有云", "Kubernetes", "开源云平台", "托管 Kubernetes"]
-source_digest: "sha256:24e38da4716b93c35dcb9eb607152d193ef3d5ad42c0e22a25063a89da9f8dde"
+source_digest: "sha256:e8f982c2431355bc79d3bb2133781cc539553c4c0a293d36e4c23dc54e7fcf80"
 translation_status: current
 l10n: transcreate
 taglines:
