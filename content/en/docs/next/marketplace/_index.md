@@ -39,7 +39,7 @@ A connected repository keeps its own declared `PackageSource` name. If that name
 
 Installing an application from a connected repository runs its charts in your management cluster, so connect only sources you trust. (Tapping itself installs nothing; it registers the source.)
 
-Signature verification happens at **publication** time, not at connect time. `cozypkg tap` and the dashboard connect flow validate an artifact's structure but do not verify its cosign signature. The verification point is the community index CI gate, which pins each release to the entry's recorded cosign identity. Flux can additionally verify the signature at pull time, but only if you set `spec.verify` on the `OCIRepository` yourself; tap and the `Tap` API do not set it. See [Publishing a Repository]({{% ref "/docs/next/marketplace/publishing" %}}#the-community-index) for details.
+Signature verification happens at **publication** time, not at connect time. `cozypkg tap` validates an artifact's structure before it creates anything; the dashboard connect flow does not, it verifies the artifact's digest and reads the `PackageSource` resources out of it, and a broken chart surfaces later as a failed install. Neither verifies a cosign signature. The verification point is the community index CI gate, which pins each release to the entry's recorded cosign identity. Flux can additionally verify the signature at pull time, but only if you set `spec.verify` on the `OCIRepository` yourself; tap and the `Tap` API do not set it. See [Publishing a Repository]({{% ref "/docs/next/marketplace/publishing" %}}#the-community-index) for details.
 
 ## Where to go next
 

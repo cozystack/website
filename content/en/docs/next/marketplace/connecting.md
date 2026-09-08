@@ -82,6 +82,8 @@ Reading the token from a prompt keeps it out of your shell history. It is still 
 
 The dashboard "Repositories" view is backed by the `Tap` resource and covers the same flow without the CLI. Open it from the sidebar, choose **Connect**, and provide the `oci://` reference and, for a private repository, the name of a pull-credential `Secret` in `cozy-system`. Connected repositories are listed with their status; a tapped repository still connecting or blocked by a name collision shows its message there, and tapped repositories can be disconnected from the same view.
 
+One difference from the CLI: the dashboard does not run the structural validation `cozypkg tap` runs. It verifies the artifact's digest, reads the `PackageSource` resources out of it, and applies the same name-collision check, but a repository whose charts are broken connects cleanly and fails later, when an application from it is installed.
+
 ## Install applications
 
 Once a repository is connected, install an application from it with `cozypkg add`, naming the materialized `PackageSource`. A tapped repository keeps its own declared name, so run `cozypkg list` first to see the exact name to use:
