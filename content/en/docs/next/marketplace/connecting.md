@@ -12,6 +12,7 @@ For the publisher side (packaging and pushing a repository), see [Publishing a R
 ## Prerequisites
 
 - The `cozypkg` CLI (see [Install cozypkg]({{% ref "/docs/next/install/cozystack/kubernetes-distribution" %}}#2-install-cozypkg)) and a kubeconfig for the target cluster. Creating cluster-scoped resources requires cluster-admin.
+- The `flux` CLI on your `PATH`. `cozypkg tap` pulls the artifact to your own machine before it creates anything on the cluster, and it shells out to `flux pull artifact` to do it. `--skip-validate` skips the validation, not the pull, so `flux` is needed either way.
 - A Cozystack release that includes the marketplace. There is no switch to enable: the `taps` API and the tap materializer are always present.
 
 {{% warning %}}
@@ -49,17 +50,33 @@ cozypkg tap acme.hello --index "$COZYPKG_INDEX"
 
 ### Private repositories
 
-For a private registry, pre-create a pull-credential `Secret` in the `cozy-system` namespace and point the tap at it with `--secret`. Cozystack attaches it as the `OCIRepository`'s `secretRef`:
+A private repository is pulled twice, and each pull authenticates on its own.
+
+The first pull runs on your machine, when `cozypkg tap` fetches the artifact through the `flux` CLI. It uses the registry credentials that machine already has, so log in before tapping; otherwise the tap fails before it creates anything:
 
 ```bash
+docker login ghcr.io
+```
+
+The cluster then pulls the same artifact for itself. For that, pre-create a pull-credential `Secret` in the `cozy-system` namespace and point the tap at it with `--secret`. Cozystack attaches it as the `OCIRepository`'s `secretRef`; it covers the cluster-side pull only, and `cozypkg` never reads it:
+
+```bash
+printf 'Registry token: '
+read -rs REGISTRY_TOKEN
+echo
+
 kubectl create secret docker-registry acme-pull \
   --namespace cozy-system \
   --docker-server=ghcr.io \
   --docker-username=<user> \
-  --docker-password=<token>
+  --docker-password="$REGISTRY_TOKEN"
+
+unset REGISTRY_TOKEN
 
 cozypkg tap oci://ghcr.io/acme/hello:v1.0.0 --secret acme-pull
 ```
+
+Reading the token from a prompt keeps it out of your shell history. It is still visible in the process list while `kubectl` runs; where that matters, write the `dockerconfigjson` yourself and create the `Secret` from it with `--from-file`.
 
 ## Connect from the dashboard
 
