@@ -49,7 +49,7 @@ cozypkg validate ./hello-repo --helm-lint
 
 ### `cozypkg push <oci-ref>`
 
-Validate the repository and push its `packages/` tree as a single versioned OCI artifact using the `flux` CLI, the same artifact shape the platform and `cozypkg tap` consume. Source URL and revision are derived from git when not given.
+Validate the repository and push its `packages/` tree as a single versioned OCI artifact using the `flux` CLI, the same artifact shape the platform and `cozypkg tap` consume. Source URL and revision are read from the directory's git `origin` remote and `git describe` when not given; if it is not a git checkout with an `origin` remote, `push` stops and asks for `--source` and `--revision` instead of publishing an artifact with no provenance.
 
 | Flag | Description |
 | --- | --- |

@@ -13,6 +13,7 @@ For the operator side (connecting a published repository to a cluster), see [Con
 
 - The `cozypkg` CLI; see [Install cozypkg]({{% ref "/docs/next/install/cozystack/kubernetes-distribution" %}}#2-install-cozypkg).
 - The `flux` CLI, which `cozypkg push` uses to build and push the OCI artifact.
+- `git`, and a checkout with an `origin` remote, if you want `push` to record the artifact's provenance for you. See [Push](#push) for the alternative.
 - Access to an OCI registry you can push to (for example GitHub Container Registry).
 - `helm` on your `PATH` if you want `--helm-lint` to run `helm lint` on the charts.
 
@@ -106,7 +107,15 @@ You can also validate an already-published artifact by passing an `oci://` refer
 cozypkg push oci://ghcr.io/acme/hello:v1.0.0 --path ./hello-repo
 ```
 
-The source URL and revision recorded in the artifact are derived from git when not given. Override them with `--source` and `--revision`, and pass `--reproducible` for deterministic artifact metadata.
+The source URL and revision recorded in the artifact come from git: the `origin` remote and `git describe` of the directory being pushed. `cozypkg init` writes files and stops there, so a freshly scaffolded directory has neither, and `push` refuses rather than publish an artifact with no provenance. Either commit the scaffold and give it an `origin` remote, or pass `--source` and `--revision` yourself:
+
+```bash
+cozypkg push oci://ghcr.io/acme/hello:v1.0.0 --path ./hello-repo \
+  --source https://github.com/acme/hello \
+  --revision v1.0.0
+```
+
+Mind the case in between: git searches upwards, so a scaffold sitting inside an unrelated checkout picks up that repository's remote and revision and records them as this artifact's provenance. Pass `--reproducible` for deterministic artifact metadata.
 
 ## The community index
 
