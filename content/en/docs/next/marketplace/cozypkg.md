@@ -75,12 +75,16 @@ Search the community package index and list matching repositories without connec
 | `--index <location>` | Index location: a local directory or an `oci://` reference (defaults to `COZYPKG_INDEX`). |
 
 ```bash
-cozypkg search database --index oci://ghcr.io/cozystack/packages-index:latest
+cozypkg search database --index ./packages-index
 ```
+
+The community index is not published yet (see [The community index]({{% ref "/docs/next/marketplace/publishing" %}}#the-community-index)), so `--index` takes a local checkout of an index repository for now; an `oci://` reference works the same way once one exists.
 
 ### `cozypkg tap <oci-ref>`
 
-Register an external repository: create a Flux `OCIRepository` for the artifact and materialize the `PackageSource` resources it carries under their declared names. A `PackageSource` name that collides with a core component (or another tap) is rejected rather than overwritten; the `ApplicationDefinition` resources inside the repository are not compared against anything. Nothing is installed until `cozypkg add`. Tapping is idempotent and validates the artifact's structure but does not verify its cosign signature.
+Register an external repository: create a Flux `OCIRepository` for the artifact and materialize the `PackageSource` resources it carries under their declared names. A `PackageSource` name that collides with a core component (or another tap) is rejected rather than overwritten; the `ApplicationDefinition` resources inside the repository are not compared against anything. Nothing is installed until `cozypkg add`.
+
+Tapping is idempotent. It pulls the artifact with the `flux` CLI first and validates its structure by default; `--skip-validate` drops the validation but not the pull. Neither path verifies the artifact's cosign signature.
 
 | Flag | Description |
 | --- | --- |

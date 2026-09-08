@@ -97,7 +97,7 @@ Installed applications appear in the dashboard catalog alongside the built-in on
 
 ## List what is connected and installed
 
-`cozypkg list` shows connected `PackageSource` resources; `--installed` shows installed `Package` resources instead, and `--components` breaks components onto separate lines:
+`cozypkg list` shows every `PackageSource` on the cluster, so the platform's own `cozystack.*` sources are listed alongside the tapped ones. `--installed` shows installed `Package` resources instead, and `--components` breaks components onto separate lines:
 
 ```bash
 cozypkg list
