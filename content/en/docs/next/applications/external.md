@@ -12,6 +12,12 @@ This guide explains the structure of an external application package and how to 
 
 For a complete working example, see [github.com/cozystack/external-apps-example](https://github.com/cozystack/external-apps-example).
 
+{{% note %}}
+
+This page describes the Git-and-HelmRelease bootstrap. A repository can also be published as a signed OCI artifact and connected with one command, using the `PackageSource` model described in [Application Marketplace]({{% ref "/docs/next/marketplace" %}}). The two coexist on a cluster; the pipeline on this page is untouched.
+
+{{% /note %}}
+
 Just like standard Cozystack applications, this external application package uses Helm and FluxCD.
 To learn more about developing application packages, read the Cozystack [Developer Guide]({{% ref "/docs/next/development" %}}).
 
