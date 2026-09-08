@@ -136,4 +136,6 @@ cozypkg untap acme.hello
 
 The Flux `OCIRepository` is removed only when no other `PackageSource` still references it. So for an artifact that carries several `PackageSource` resources, untap each one; the shared source is deleted with the last.
 
+Finish that sequence promptly. The source stays on its interval until its last `PackageSource` is gone, and a new revision arriving mid-sequence re-materializes everything the artifact carries, putting back the ones already untapped.
+
 From the dashboard, disconnecting a tapped repository in the "Repositories" view follows the same rule: it removes the named `PackageSource`, and the Flux source only once no other `PackageSource` references it. It does not remove already-installed applications, and, unlike `cozypkg untap`, it does not stop to ask when a `Package` from that source is still installed.
