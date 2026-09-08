@@ -24,7 +24,7 @@ Scaffold a new repository built around the `PackageSource` model: a `PackageSour
 | Flag | Description |
 | --- | --- |
 | `--app <label>` | Name of the sample app/component, an RFC-1123 label (default `myapp`). |
-| `--name <name>` | `PackageSource` name (defaults to `example.<app>`). Must be a valid Kubernetes object name; the reserved `cozystack.` and `community.` prefixes are refused. A clash with a core component is caught at tap time. |
+| `--name <name>` | `PackageSource` name (defaults to `example.<app>`). `init` checks it against the reserved `cozystack.` and `community.` prefixes and nothing else. It must also be a valid Kubernetes object name, but neither `init` nor `validate` checks that, so `Acme_Hello` scaffolds and pushes and is first rejected on the cluster, as is a clash with a core component. |
 
 ```bash
 cozypkg init --app hello --name acme.hello ./hello-repo

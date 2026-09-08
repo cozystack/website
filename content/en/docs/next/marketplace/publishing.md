@@ -30,7 +30,7 @@ cozypkg init --app hello --name acme.hello ./hello-repo
 
 {{% note %}}
 
-A `PackageSource` name must be a valid Kubernetes object name (lowercase, no underscores), and it must not start with a reserved prefix: `cozystack.` is the platform's own namespace and `community.` is reserved, so `cozypkg init` and `cozypkg validate` both refuse those two prefixes. Beyond that the name is yours to choose; use your organization as a prefix, for example `acme.hello`. The real anti-shadowing boundary is on the cluster: a tapped repository keeps its declared name, and a clash with a core component is rejected at connect time (see [Connecting a Repository]({{% ref "/docs/next/marketplace/connecting" %}})).
+A `PackageSource` name must be a valid Kubernetes object name (lowercase, no underscores), and it must not start with a reserved prefix: `cozystack.` is the platform's own namespace and `community.` is reserved, so `cozypkg init` and `cozypkg validate` both refuse those two prefixes. The Kubernetes-name rule is yours to keep: neither command checks it, so a name carrying an underscore or a capital gets all the way to the cluster before the apiserver turns it down. Beyond that the name is yours to choose; use your organization as a prefix, for example `acme.hello`. The real anti-shadowing boundary is on the cluster: a tapped repository keeps its declared name, and a clash with a core component is rejected at connect time (see [Connecting a Repository]({{% ref "/docs/next/marketplace/connecting" %}})).
 
 {{% /note %}}
 
