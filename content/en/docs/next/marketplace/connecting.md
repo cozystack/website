@@ -40,7 +40,7 @@ The community index is not published yet (see [Publishing]({{% ref "/docs/next/m
 cozypkg tap oci://ghcr.io/acme/hello:v1.0.0
 ```
 
-Re-tapping the same repository is safe, but it is a replacement, not an addition: each tap applies the whole `OCIRepository` built from that invocation's flags, so a flag left off the second run is dropped from the source. `--secret` is the one that hurts. Re-tapping a private repository without it removes the pull credential, the command still reports success, because its own pull used your local login, and the breakage only shows up later as the cluster failing to pull. Repeat every flag on every tap of the same repository.
+Re-tapping the same repository is safe only if you repeat every flag the first tap used. A tap is a replacement, not an addition: it applies the whole `OCIRepository` built from that invocation's flags, so a flag left off a later run is dropped from the source. `--secret` is the one that hurts. Re-tapping a private repository without it removes the pull credential, the command still reports success, because its own pull used your local login, and the breakage only shows up later as the cluster failing to pull. Repeat every flag on every tap of the same repository.
 
 Use `--tag` to move a tap to a new release, and `--skip-validate` to skip validating the artifact structure before tapping (not recommended).
 
