@@ -78,7 +78,7 @@ cozypkg search database --index oci://ghcr.io/cozystack/packages-index:latest
 
 ### `cozypkg tap <oci-ref>`
 
-Register an external repository: create a Flux `OCIRepository` for the artifact and materialize the `PackageSource` resources it carries under their declared names. A name that collides with a core component (or another tap) is rejected rather than overwritten. Nothing is installed until `cozypkg add`. Tapping is idempotent and validates the artifact's structure but does not verify its cosign signature.
+Register an external repository: create a Flux `OCIRepository` for the artifact and materialize the `PackageSource` resources it carries under their declared names. A `PackageSource` name that collides with a core component (or another tap) is rejected rather than overwritten; the `ApplicationDefinition` resources inside the repository are not compared against anything. Nothing is installed until `cozypkg add`. Tapping is idempotent and validates the artifact's structure but does not verify its cosign signature.
 
 | Flag | Description |
 | --- | --- |

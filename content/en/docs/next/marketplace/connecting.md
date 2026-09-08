@@ -33,7 +33,7 @@ The community index is not published yet (see [Publishing]({{% ref "/docs/next/m
 
 ## Connect from the CLI
 
-`cozypkg tap` registers a published repository. It creates a Flux `OCIRepository` pointing at the artifact and materializes the `PackageSource` resources the artifact carries under their declared names. If a name (or an application it registers) would collide with a core component or another connected repository, the tap is rejected instead of overwriting it, so an external package cannot shadow an official one. Nothing is installed yet:
+`cozypkg tap` registers a published repository. It creates a Flux `OCIRepository` pointing at the artifact and materializes the `PackageSource` resources the artifact carries under their declared names. If a name would collide with a core component or another connected repository, the tap is rejected instead of overwriting it. Only the `PackageSource` name is compared; the `ApplicationDefinition` resources the repository registers are not. Nothing is installed yet:
 
 ```bash
 cozypkg tap oci://ghcr.io/acme/hello:v1.0.0
