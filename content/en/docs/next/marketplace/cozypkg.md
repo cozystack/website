@@ -82,7 +82,7 @@ The community index is not published yet (see [The community index]({{% ref "/do
 
 ### `cozypkg tap <oci-ref>`
 
-Register an external repository: create a Flux `OCIRepository` for the artifact and materialize the `PackageSource` resources it carries under their declared names. A `PackageSource` name that collides with a core component (or another tap) is rejected rather than overwritten; the `ApplicationDefinition` resources inside the repository are not compared against anything. Nothing is installed until `cozypkg add`.
+Register an external repository: create a Flux `OCIRepository` for the artifact and materialize the `PackageSource` resources it carries under their declared names. A `PackageSource` name that collides with a core component (or another tap) is rejected rather than overwritten; the `ApplicationDefinition` resources inside the repository are not compared against anything. The Flux source is named `tap-<org>-<repo>` from the reference's last two path segments, host excluded, and a name already taken by a different URL is refused too. Nothing is installed until `cozypkg add`.
 
 Tapping is idempotent. It pulls the artifact with the `flux` CLI first and validates its structure by default; `--skip-validate` drops the validation but not the pull. Neither path verifies the artifact's cosign signature.
 

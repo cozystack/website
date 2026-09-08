@@ -40,6 +40,8 @@ The community index is not published yet (see [Publishing]({{% ref "/docs/next/m
 cozypkg tap oci://ghcr.io/acme/hello:v1.0.0
 ```
 
+The Flux source takes its name from the last two path segments of the reference, as `tap-<org>-<repo>`, and the registry host is not part of it. A tap whose derived name already exists pointing at a different URL is refused as well. Two registries serving the same repository path collide that way, which is exactly what mirroring produces: untap the first before pointing the same path at the second.
+
 Re-tapping the same repository is safe only if you repeat every flag the first tap used. A tap is a replacement, not an addition: it applies the whole `OCIRepository` built from that invocation's flags, so a flag left off a later run is dropped from the source. `--secret` is the one that hurts. Re-tapping a private repository without it removes the pull credential, the command still reports success, because its own pull used your local login, and the breakage only shows up later as the cluster failing to pull. Repeat every flag on every tap of the same repository.
 
 Use `--tag` to move a direct `oci://` tap to a new release, and `--skip-validate` to skip validating the artifact structure before tapping (not recommended).
