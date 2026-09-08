@@ -141,3 +141,5 @@ The Flux `OCIRepository` is removed only when no other `PackageSource` still ref
 Finish that sequence promptly. The source stays on its interval until its last `PackageSource` is gone, and a new revision arriving mid-sequence re-materializes everything the artifact carries, putting back the ones already untapped.
 
 From the dashboard, disconnecting a tapped repository in the "Repositories" view follows the same rule: it removes the named `PackageSource`, and the Flux source only once no other `PackageSource` references it. It does not remove already-installed applications, and, unlike `cozypkg untap`, it does not stop to ask when a `Package` from that source is still installed.
+
+An application left installed after its source is gone is not left running as it was. Its `Package` goes `Ready=False` with `PackageSourceNotFound` and stops being reconciled, so the release drifts from then on. Remove it with `cozypkg del` if that is what you meant, or tap the repository again to bring the source back.

@@ -100,7 +100,7 @@ cozypkg tap oci://ghcr.io/acme/hello:v1.0.0
 
 ### `cozypkg untap <packagesource-name>`
 
-Remove a tapped `PackageSource`. Only tapped sources (marked with the marketplace-tap label) can be untapped; official sources are refused. The Flux `OCIRepository` goes with it, but only once no other `PackageSource` still references it, so an artifact carrying several sources needs one untap each. A `Package` of the same name still installed makes the command refuse and delete nothing, unless `--yes` is given; already-installed `Package` resources are left untouched either way.
+Remove a tapped `PackageSource`. Only tapped sources (marked with the marketplace-tap label) can be untapped; official sources are refused. The Flux `OCIRepository` goes with it, but only once no other `PackageSource` still references it, so an artifact carrying several sources needs one untap each. A `Package` of the same name still installed makes the command refuse and delete nothing, unless `--yes` is given. An installed `Package` is left in place either way, but with its source gone it stops being reconciled and reports `PackageSourceNotFound`.
 
 | Flag | Description |
 | --- | --- |
