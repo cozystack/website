@@ -42,13 +42,15 @@ cozypkg tap oci://ghcr.io/acme/hello:v1.0.0
 
 Re-tapping the same repository is safe only if you repeat every flag the first tap used. A tap is a replacement, not an addition: it applies the whole `OCIRepository` built from that invocation's flags, so a flag left off a later run is dropped from the source. `--secret` is the one that hurts. Re-tapping a private repository without it removes the pull credential, the command still reports success, because its own pull used your local login, and the breakage only shows up later as the cluster failing to pull. Repeat every flag on every tap of the same repository.
 
-Use `--tag` to move a tap to a new release, and `--skip-validate` to skip validating the artifact structure before tapping (not recommended).
+Use `--tag` to move a direct `oci://` tap to a new release, and `--skip-validate` to skip validating the artifact structure before tapping (not recommended).
 
 If the repository is listed in an index, you can tap it by its short name and let the index resolve the reference:
 
 ```bash
 cozypkg tap acme.hello --index "$COZYPKG_INDEX"
 ```
+
+A short name resolves to the entry's recorded `version`, which is the release the index gate validated and checked the signature of. Do not add `--tag` to it: the flag overrides the resolved version, and what you connect is then a release the gate never saw. To move an indexed tap to a newer release, re-run the short-name tap after the entry's new `version` merges.
 
 ### Private repositories
 

@@ -88,7 +88,7 @@ Tapping is idempotent. It pulls the artifact with the `flux` CLI first and valid
 
 | Flag | Description |
 | --- | --- |
-| `--tag <tag>` | OCI tag to tap (overrides a tag in the reference; defaults to latest). |
+| `--tag <tag>` | OCI tag to tap. It overrides a tag in the reference, and also the version a short name resolved to through the index, so combining the two connects a release the index gate never saw. Left off, the tag comes from the reference, from the index entry's `version` for a short name, or `latest`. |
 | `--secret <name>` | Name of a pull-credential `Secret` in `cozy-system` for a private repository. Not sticky: a later tap that omits it removes the reference from the source. |
 | `--index <location>` | Index location for resolving a short name (local dir or `oci://`; defaults to `COZYPKG_INDEX`). |
 | `--skip-validate` | Skip validating the artifact before tapping. |
