@@ -8,7 +8,7 @@ seo:
   title: "Cozystack — Open-Source Private Cloud auf Kubernetes"
   description: "Open-Source-Cloud-Plattform auf Kubernetes für Managed VMs, Datenbanken, S3-Storage und GPU-Workloads. CNCF-Sandbox-Projekt."
   keywords: ["private cloud", "managed kubernetes", "kubernetes plattform", "open source cloud"]
-source_digest: "sha256:24e38da4716b93c35dcb9eb607152d193ef3d5ad42c0e22a25063a89da9f8dde"
+source_digest: "sha256:e8f982c2431355bc79d3bb2133781cc539553c4c0a293d36e4c23dc54e7fcf80"
 translation_status: current
 l10n: transcreate
 taglines:
@@ -82,6 +82,17 @@ features:
 
 <!-- Screenshot Gallery -->
 {{< home/screenshot-gallery >}}
+
+<!-- Live Demo -->
+<div class="section-live-demo">
+{{< blocks/lead color="primary" >}}
+<h2 class="section-label">Sehen Sie die Konsole, bevor Sie irgendetwas installieren</h2>
+
+Das echte Dashboard von Cozystack, vollständig in Ihrem Browser — kein Cluster, keine Anmeldung, keine Einrichtung. Stöbern Sie im Marketplace, öffnen Sie Managed Services, klicken Sie sich durch die Konsole. Es ist die echte UI, nur mit Demo-Daten.
+
+<a class="btn btn-lg btn-primary mt-4" href="/demo/">Live-Demo öffnen &rarr;</a>
+{{< /blocks/lead >}}
+</div>
 
 <!-- Benefits & Features -->
 

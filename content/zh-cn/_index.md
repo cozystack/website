@@ -8,7 +8,7 @@ seo:
   title: "Cozystack — 基于 Kubernetes 的开源私有云"
   description: "基于 Kubernetes 的开源云平台，提供托管虚拟机、数据库、S3 存储和 GPU 工作负载。CNCF Sandbox 项目。"
   keywords: ["私有云", "Kubernetes", "开源云平台", "托管 Kubernetes"]
-source_digest: "sha256:24e38da4716b93c35dcb9eb607152d193ef3d5ad42c0e22a25063a89da9f8dde"
+source_digest: "sha256:e8f982c2431355bc79d3bb2133781cc539553c4c0a293d36e4c23dc54e7fcf80"
 translation_status: current
 l10n: transcreate
 taglines:
@@ -82,6 +82,17 @@ features:
 
 <!-- Screenshot Gallery -->
 {{< home/screenshot-gallery >}}
+
+<!-- Live Demo -->
+<div class="section-live-demo">
+{{< blocks/lead color="primary" >}}
+<h2 class="section-label">先看看控制台，再决定是否安装</h2>
+
+真实的 Cozystack 仪表盘，完全在你的浏览器中运行——无需集群、无需注册、无需配置。浏览应用市场，打开托管服务，随意点击体验控制台。这就是真正的 UI，只是换成了演示数据。
+
+<a class="btn btn-lg btn-primary mt-4" href="/demo/">打开在线演示 &rarr;</a>
+{{< /blocks/lead >}}
+</div>
 
 <!-- Benefits & Features -->
 

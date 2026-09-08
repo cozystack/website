@@ -43,6 +43,69 @@ const PLURAL_TO_KIND: Record<string, string> = {
   clickhouses: "ClickHouse", mongodbs: "MongoDB", natses: "NATS", buckets: "Bucket",
 }
 
+// Kind по plural для ВСЕХ типов каталога, а не только семи выше. Плюрал приходит
+// в запросе; сопоставляем его с applicationdefinition (spec.application.kind),
+// иначе Kubernetes/FoundationDB/Harbor/… создавались как "Unknown" и висли.
+const appDefKindByName: Record<string, string> = {}
+for (const a of appDefs.items as Array<{ metadata: { name: string }; spec?: { application?: { kind?: string } } }>) {
+  const norm = a.metadata.name.replace(/-/g, "").toLowerCase()
+  const k = a.spec?.application?.kind
+  if (k) appDefKindByName[norm] = k
+}
+function kindForPlural(plural: string): string {
+  if (PLURAL_TO_KIND[plural]) return PLURAL_TO_KIND[plural]
+  const p = plural.toLowerCase()
+  let best = ""
+  for (const norm of Object.keys(appDefKindByName)) {
+    if (p.startsWith(norm) && norm.length > best.length) best = norm
+  }
+  return best ? appDefKindByName[best] : plural
+}
+
+// --- Живой стор инстансов: показывает деплой «в процессе» ---
+// Демо статично, но при создании инстанс должен появиться в состоянии установки
+// и через несколько секунд стать Ready — иначе деплой выглядит фейково.
+type Cond = { type: string; status: string; reason?: string; message?: string }
+type Inst = Obj & { apiVersion?: string; spec?: unknown; status?: { conditions?: Cond[] } }
+const liveInstances: Inst[] = JSON.parse(JSON.stringify(instances.items)) as Inst[]
+// Живые workloads: стартуют из фикстур, при создании инстанса дополняются
+// синтезированными подами/сервисами/томами — чтобы новый инстанс был «живым вглубь».
+const livePods = (pods.items as unknown as LabeledObj[]).slice()
+const seededInstanceNames = new Set((instances.items as Inst[]).map((i) => i.metadata.name))
+// Поды/сервисы для инстансов, созданных в демо (которых нет в фикстурах),
+// синтезируются на лету — так новый инстанс «живой вглубь», без мутаций при create.
+function synthPodsFor(inst: Inst): LabeledObj[] {
+  const k = inst.kind.toLowerCase(); const nm = inst.metadata.name
+  const ready = inst.status?.conditions?.find((c) => c.type === "Ready")?.status === "True"
+  const labels = { "apps.cozystack.io/application.kind": inst.kind, "apps.cozystack.io/application.name": nm,
+    "app.kubernetes.io/instance": `${k}-${nm}`, "app.kubernetes.io/name": k }
+  return [0, 1].map((i) => ({
+    apiVersion: "v1", kind: "Pod",
+    metadata: { name: `${nm}-${i}`, namespace: NS, uid: `synth-${nm}-${i}`, labels: { ...labels } },
+    spec: { containers: [{ name: k, image: `${k}:latest` }] },
+    status: ready
+      ? { phase: "Running", containerStatuses: [{ name: k, ready: true, restartCount: 0, state: { running: { startedAt: (inst.metadata as { creationTimestamp?: string }).creationTimestamp || new Date().toISOString() } } }] }
+      : { phase: "Pending", containerStatuses: [{ name: k, ready: false, restartCount: 0, state: { waiting: { reason: "ContainerCreating" } } }] },
+  })) as unknown as LabeledObj[]
+}
+function synthSvcFor(inst: Inst): LabeledObj {
+  const k = inst.kind.toLowerCase(); const nm = inst.metadata.name
+  return { apiVersion: "v1", kind: "Service",
+    metadata: { name: nm, namespace: NS, uid: `synth-svc-${nm}`, labels: { "apps.cozystack.io/application.kind": inst.kind, "apps.cozystack.io/application.name": nm, "app.kubernetes.io/instance": `${k}-${nm}` } },
+    spec: { type: "ClusterIP", clusterIP: "10.96.120.10", ports: [{ name: "main", port: 5432, protocol: "TCP", targetPort: 5432 }] } } as unknown as LabeledObj
+}
+// собрать полный набор pods/services с учётом созданных инстансов
+function allPods(): LabeledObj[] {
+  const extra = liveInstances.filter((i) => !seededInstanceNames.has(i.metadata.name)).flatMap(synthPodsFor)
+  return livePods.concat(extra)
+}
+function allServices(): LabeledObj[] {
+  const extra = liveInstances.filter((i) => !seededInstanceNames.has(i.metadata.name)).map(synthSvcFor)
+  return liveServices.concat(extra)
+}
+const liveServices = (services.items as unknown as LabeledObj[]).slice()
+const livePvcs = (pvcs.items as unknown as LabeledObj[]).slice()
+
 const list = (items: Obj[], kind: string) => ({
   apiVersion: "apps.cozystack.io/v1alpha1",
   kind: `${kind}List`,
@@ -133,15 +196,15 @@ export const handlers = [
 
   // инстансы конкретного типа в namespace
   http.get(`${COZY}/namespaces/:ns/:resource`, ({ params, request }) => {
-    const kind = PLURAL_TO_KIND[params.resource as string]
-    const items = kind ? (instances.items as Obj[]).filter((i) => i.kind === kind) : []
+    const kind = kindForPlural(params.resource as string)
+    const items = liveInstances.filter((i) => i.kind === kind)
     return isWatch(request) ? watchStream(items) : HttpResponse.json(list(items, kind ?? "Unknown"))
   }),
 
   // одиночный инстанс
   http.get(`${COZY}/namespaces/:ns/:resource/:name`, ({ params }) => {
-    const kind = PLURAL_TO_KIND[params.resource as string]
-    const obj = (instances.items as Obj[]).find((i) => i.kind === kind && i.metadata.name === params.name)
+    const kind = kindForPlural(params.resource as string)
+    const obj = liveInstances.find((i) => i.kind === kind && i.metadata.name === params.name)
     return obj ? HttpResponse.json(obj) : new HttpResponse(null, { status: 404 })
   }),
 
@@ -154,17 +217,20 @@ export const handlers = [
 
 
   // workloads/сервисы/тома/секреты/события инстанса (табы карточки) — фильтр по labelSelector
-  http.get(`/api/v1/namespaces/:ns/pods`, labeled(pods, "Pod", "v1")),
+  http.get(`/api/v1/namespaces/:ns/pods`, ({ request }) => {
+    const items = filterByLabels(allPods(), request)
+    return isWatch(request) ? watchStream(items as unknown as Obj[]) : HttpResponse.json({ apiVersion: "v1", kind: "PodList", metadata: { resourceVersion: "1" }, items })
+  }),
   http.get("/api/v1/pods", ({ request }) =>
     isWatch(request) ? watchStream(pods.items as Obj[]) : HttpResponse.json(pods)),
 
   http.get(`/api/v1/namespaces/:ns/services`, ({ request }) => {
-    const items = filterByFields(filterByLabels(services.items as unknown as LabeledObj[], request), request)
+    const items = filterByFields(filterByLabels(allServices(), request), request)
     return isWatch(request)
       ? watchStream(items)
       : HttpResponse.json({ apiVersion: "v1", kind: "ServiceList", metadata: { resourceVersion: "1" }, items })
   }),
-  http.get(`/api/v1/namespaces/:ns/persistentvolumeclaims`, labeled(pvcs, "PersistentVolumeClaim", "v1")),
+  http.get(`/api/v1/namespaces/:ns/persistentvolumeclaims`, labeled({ items: livePvcs }, "PersistentVolumeClaim", "v1")),
   http.get("/api/v1/persistentvolumeclaims", ({ request }) =>
     isWatch(request) ? watchStream(pvcs.items as Obj[]) : HttpResponse.json(pvcs)),
 
@@ -229,9 +295,27 @@ export const handlers = [
   http.get("/apis/metrics.k8s.io/v1beta1/namespaces/:ns/pods", () =>
     HttpResponse.json({ kind: "PodMetricsList", apiVersion: "metrics.k8s.io/v1beta1", items: [] })),
 
-  // создание инстанса в демо: возвращаем как будто создано (в список не добавляем — статичная витрина)
-  http.post(`${COZY}/namespaces/:ns/:resource`, async ({ request }) => {
-    const obj = await request.json()
+  // Создание инстанса: появляется в состоянии установки и через ~9 c становится Ready.
+  http.post(`${COZY}/namespaces/:ns/:resource`, async ({ params, request }) => {
+    const kind = kindForPlural(params.resource as string)
+    const sent = (await request.json()) as { metadata?: { name?: string }; spec?: unknown }
+    const name = sent?.metadata?.name || `new-${kind.toLowerCase()}`
+    const obj: Inst = {
+      apiVersion: "apps.cozystack.io/v1alpha1", kind,
+      metadata: { name, namespace: NS,
+        creationTimestamp: new Date().toISOString(),
+        uid: crypto.randomUUID(),
+        labels: { "apps.cozystack.io/application.kind": kind, "apps.cozystack.io/application.name": name },
+      } as Obj["metadata"],
+      spec: sent?.spec ?? {},
+      status: { conditions: [{ type: "Ready", status: "False", reason: "Installing", message: "Разворачивается…" }] },
+    }
+    liveInstances.push(obj)
+    // Через ~9 c установка «завершается».
+    setTimeout(() => {
+      const c = obj.status?.conditions?.find((x) => x.type === "Ready")
+      if (c) { c.status = "True"; c.reason = "InstallSucceeded"; c.message = "" }
+    }, 9000)
     return HttpResponse.json(obj, { status: 201 })
   }),
 

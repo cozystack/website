@@ -47,11 +47,11 @@ fi
 
 echo "==> building demo (base /demo/)"
 ( cd "$UI"
-  VITE_DEMO=1 DEMO_BASE_PATH=/demo/ pnpm --filter @cozystack/console build
+  VITE_DEMO=1 DEMO_BASE_PATH=/demo-app/ pnpm --filter @cozystack/console build
   cp apps/console/dist/index.html apps/console/dist/404.html )
 
-echo "==> publishing to static/demo"
-rm -rf "$SITE/static/demo"
-mkdir -p "$SITE/static/demo"
-cp -R "$UI/apps/console/dist/." "$SITE/static/demo/"
-echo "==> done: $(find "$SITE/static/demo" -type f | wc -l) files in static/demo"
+echo "==> publishing to static/demo-app"
+rm -rf "$SITE/static/demo" "$SITE/static/demo-app"
+mkdir -p "$SITE/static/demo-app"
+cp -R "$UI/apps/console/dist/." "$SITE/static/demo-app/"
+echo "==> done: $(find "$SITE/static/demo-app" -type f | wc -l) files in static/demo-app"
