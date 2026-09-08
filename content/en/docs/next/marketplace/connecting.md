@@ -93,7 +93,7 @@ cozypkg list
 cozypkg add acme.hello
 ```
 
-`cozypkg add` creates a `Package` from the named `PackageSource`, plus one for every source it depends on that is not installed already. The reconciler then creates a HelmRelease for each component that carries an `install:` block, which is how the paired registration chart puts the application in the catalog. If a component is privileged, `add` asks for confirmation first; pass `--allow-privileged` to install privileged components without the interactive prompt.
+`cozypkg add` creates a `Package` from the named `PackageSource`, plus one for every source it depends on that is not installed already. The reconciler then creates a HelmRelease for each component that carries an `install:` block, which is how the paired registration chart puts the application in the catalog. `add` needs a terminal: it asks which variant to install even when a `PackageSource` declares only one, and asks again for confirmation when a component is privileged. `--allow-privileged` answers the second question; nothing answers the first. To install without a terminal, write the `Package` manifest yourself and pass it with `-f`, which creates it directly and skips both prompts, along with the dependency resolution that comes with them.
 
 Installed applications appear in the dashboard catalog alongside the built-in ones, and platform users deploy them the same way.
 
