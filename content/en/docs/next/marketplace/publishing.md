@@ -16,6 +16,7 @@ For the operator side (connecting a published repository to a cluster), see [Con
 - `git`, and a checkout with an `origin` remote, if you want `push` to record the artifact's provenance for you. See [Push](#push) for the alternative.
 - Access to an OCI registry you can push to (for example GitHub Container Registry).
 - `helm` on your `PATH` if you want `--helm-lint` to run `helm lint` on the charts.
+- `cosign` on your `PATH` if you use `--require-signature`; validation stops without it.
 
 ## Scaffold a repository
 
