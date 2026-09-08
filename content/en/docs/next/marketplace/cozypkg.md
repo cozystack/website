@@ -131,7 +131,7 @@ cozypkg add acme.hello
 
 ### `cozypkg del [package]...`
 
-Delete `Package` resources. Packages can be given as arguments or read from files with `-f`.
+Delete `Package` resources, along with any installed `Package` that depends on them. The command prints the full set and asks `[y/N]` before deleting, so it needs a terminal. Packages can be given as arguments or read from files with `-f`.
 
 | Flag | Description |
 | --- | --- |

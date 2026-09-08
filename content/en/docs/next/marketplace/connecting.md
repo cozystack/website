@@ -110,7 +110,7 @@ cozypkg list --installed
 
 Disconnecting has two independent steps, mirroring the two connect steps.
 
-Remove installed applications with `cozypkg del`. This deletes the `Package` and its resources but leaves the connected source in place:
+Remove installed applications with `cozypkg del`. It deletes the named `Package` and its resources, and every installed `Package` that depends on it goes too: the command prints the whole set, requested and dependent kept apart, and asks for confirmation before it removes anything. The connected source stays in place:
 
 ```bash
 cozypkg del acme.hello
