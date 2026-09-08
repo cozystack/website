@@ -92,13 +92,13 @@ kubectl get ocirepositories --namespace cozy-system \
   --output custom-columns=NAME:.metadata.name,URL:.spec.url,SECRET:.spec.secretRef.name
 ```
 
-An empty `SECRET` column on a private repository means the credential was dropped; tapping again with `--secret` restores it.
+A `SECRET` column reading `<none>` on a private repository means the credential was dropped; tapping again with `--secret` restores it.
 
 ## Connect from the dashboard
 
 The dashboard "Repositories" view is backed by the `Tap` resource and covers the same flow without the CLI. Open it from the sidebar, choose **Connect**, and provide the `oci://` reference and, for a private repository, the name of a pull-credential `Secret` in `cozy-system`. Connected repositories are listed with their status; a tapped repository still connecting or blocked by a name collision shows its message there, and tapped repositories can be disconnected from the same view.
 
-Two differences from the CLI. The dashboard skips the structural validation `cozypkg tap` runs, so a repository whose charts are broken connects cleanly and fails later, when an application from it is installed. And connecting here only records the intent: the call writes the Flux source and returns `connecting`, then the operator pulls the artifact, checks its digest against the source, reads the `PackageSource` resources and applies the same name-collision check in the background. So an unreachable reference is accepted rather than refused up front the way the CLI refuses it; the outcome arrives as the repository's status in the view, and `cozypkg list` does not show the source until that has finished.
+Two differences from the CLI. The dashboard skips the structural validation `cozypkg tap` runs, so a repository whose charts are broken connects cleanly and fails later, when an application from it is installed. And connecting here only records the intent: the call writes the Flux source and returns `connecting`, and the cluster then pulls the artifact, checks its digest against the source, reads the `PackageSource` resources and applies the same name-collision check in the background. So an unreachable reference is accepted rather than refused up front the way the CLI refuses it; the outcome arrives as the repository's status in the view, and `cozypkg list` does not show the source until that has finished.
 
 ## Install applications
 
