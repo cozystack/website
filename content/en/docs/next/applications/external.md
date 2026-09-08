@@ -14,7 +14,7 @@ For a complete working example, see [github.com/cozystack/external-apps-example]
 
 {{% note %}}
 
-This page describes the Git-and-HelmRelease bootstrap. A repository can also be published as a signed OCI artifact and connected with one command, using the `PackageSource` model described in [Application Marketplace]({{% ref "/docs/next/marketplace" %}}). The two coexist on a cluster; the pipeline on this page is untouched.
+This page describes the Git-and-HelmRelease bootstrap. A repository can also be published as an OCI artifact and connected with one command, using the `PackageSource` model described in [Application Marketplace]({{% ref "/docs/next/marketplace" %}}). The two coexist on a cluster; the pipeline on this page is untouched.
 
 {{% /note %}}
 

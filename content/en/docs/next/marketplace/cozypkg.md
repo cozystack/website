@@ -9,7 +9,7 @@ weight: 30
 
 Commands that create or read cluster resources accept `--kubeconfig` and otherwise fall back to `~/.kube/config` or the `KUBECONFIG` environment variable. Creating cluster-scoped resources requires cluster-admin.
 
-`push`, `tap`, and `validate` against an `oci://` reference all shell out to the `flux` binary, which must be on your `PATH`. Its pulls run on your machine and use the registry credentials found there.
+`push` shells out to the `flux` binary, and so does anything that reads an `oci://` reference: `tap`, `validate` against an artifact, and `search` or short-name `tap` against an `oci://` index. `flux` must be on your `PATH` for those. Its pulls run on your machine and use the registry credentials found there.
 
 ## Environment variables
 
