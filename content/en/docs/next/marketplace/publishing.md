@@ -137,6 +137,8 @@ signing:
   issuer: https://token.actions.githubusercontent.com
 ```
 
+Leave the tag off `ociRef`. Both the index gate and a short-name `cozypkg tap` build the reference as `<ociRef>:<version>`, so a tag baked into `ociRef` yields one carrying two of them, and nothing resolves it.
+
 ### Two-lane merge policy
 
 Following the model of krew-index, submissions take one of two lanes:
