@@ -40,7 +40,9 @@ The community index is not published yet (see [Publishing]({{% ref "/docs/next/m
 cozypkg tap oci://ghcr.io/acme/hello:v1.0.0
 ```
 
-Tapping is idempotent. Use `--tag` to override the tag in the reference, and `--skip-validate` to skip validating the artifact structure before tapping (not recommended).
+Re-tapping the same repository is safe, but it is a replacement, not an addition: each tap applies the whole `OCIRepository` built from that invocation's flags, so a flag left off the second run is dropped from the source. `--secret` is the one that hurts. Re-tapping a private repository without it removes the pull credential, the command still reports success, because its own pull used your local login, and the breakage only shows up later as the cluster failing to pull. Repeat every flag on every tap of the same repository.
+
+Use `--tag` to move a tap to a new release, and `--skip-validate` to skip validating the artifact structure before tapping (not recommended).
 
 If the repository is listed in an index, you can tap it by its short name and let the index resolve the reference:
 
@@ -77,6 +79,16 @@ cozypkg tap oci://ghcr.io/acme/hello:v1.0.0 --secret acme-pull
 ```
 
 Reading the token from a prompt keeps it out of your shell history. It is still visible in the process list while `kubectl` runs; where that matters, write the `dockerconfigjson` yourself and create the `Secret` from it with `--from-file`.
+
+`--secret` is not one-time setup. Pass it again on every later tap of the same repository, including a `--tag` bump, and check the source afterwards:
+
+```bash
+kubectl get ocirepositories --namespace cozy-system \
+  --selector apps.cozystack.io/marketplace-tap=true \
+  --output custom-columns=NAME:.metadata.name,URL:.spec.url,SECRET:.spec.secretRef.name
+```
+
+An empty `SECRET` column on a private repository means the credential was dropped; tapping again with `--secret` restores it.
 
 ## Connect from the dashboard
 
