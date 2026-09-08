@@ -8,7 +8,7 @@ seo:
   title: "Cozystack — Kubernetes पर ओपन-सोर्स प्राइवेट क्लाउड"
   description: "Kubernetes पर ओपन-सोर्स क्लाउड प्लेटफ़ॉर्म: मैनेज्ड VMs, डेटाबेस, S3 स्टोरेज और GPU वर्कलोड। CNCF Sandbox प्रोजेक्ट।"
   keywords: ["private cloud", "managed kubernetes", "kubernetes platform", "cloud platform"]
-source_digest: "sha256:24e38da4716b93c35dcb9eb607152d193ef3d5ad42c0e22a25063a89da9f8dde"
+source_digest: "sha256:e8f982c2431355bc79d3bb2133781cc539553c4c0a293d36e4c23dc54e7fcf80"
 translation_status: current
 l10n: transcreate
 taglines:
@@ -82,6 +82,17 @@ features:
 
 <!-- Screenshot Gallery -->
 {{< home/screenshot-gallery >}}
+
+<!-- Live Demo -->
+<div class="section-live-demo">
+{{< blocks/lead color="primary" >}}
+<h2 class="section-label">कुछ भी इंस्टॉल करने से पहले कंसोल देखें</h2>
+
+Cozystack का असली डैशबोर्ड, पूरी तरह आपके ब्राउज़र में चलता हुआ — न क्लस्टर, न साइनअप, न सेटअप। मार्केटप्लेस देखें, मैनेज्ड सेवाएँ खोलें, कंसोल में क्लिक करके घूमें। यह असली UI ही है, बस डेमो डेटा के साथ।
+
+<a class="btn btn-lg btn-primary mt-4" href="/demo/">लाइव डेमो खोलें &rarr;</a>
+{{< /blocks/lead >}}
+</div>
 
 <!-- Benefits & Features -->
 
