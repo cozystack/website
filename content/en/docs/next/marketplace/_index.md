@@ -5,7 +5,7 @@ description: "Extend the Cozystack application catalog with external repositorie
 weight: 48
 ---
 
-The Cozystack marketplace lets an administrator extend the built-in application catalog with applications published in external repositories. Once a repository is connected to a cluster, its applications appear in the same dashboard catalog and behave like the standard managed applications platform users already know.
+The Cozystack marketplace lets an administrator extend the built-in application catalog with applications published in external repositories. Connecting a repository to a cluster makes its applications available to install; once one is installed, it appears in the same dashboard catalog and behaves like the standard managed applications platform users already know.
 
 A repository is a self-contained, versioned bundle published as an OCI artifact. It is authored and validated with the `cozypkg` CLI, connected to a cluster with a single command (or from the dashboard), and, optionally, listed in a community index so operators can discover it.
 
@@ -17,7 +17,7 @@ The marketplace is built on the `PackageSource` model, a newer mechanism alongsi
 
 ## How it works
 
-A marketplace repository ships one or more `PackageSource` resources. Each `PackageSource` declares variants and components; a component is a Helm chart plus, for user-installable applications, an `ApplicationDefinition` that registers the application with the Cozystack API and dashboard.
+A marketplace repository ships one or more `PackageSource` resources. Each `PackageSource` declares variants and components, and every component is a Helm chart. A user-installable application takes two of them: the application chart itself, and a paired registration chart whose `ApplicationDefinition` advertises the application to the Cozystack API and dashboard.
 
 The lifecycle has two sides:
 

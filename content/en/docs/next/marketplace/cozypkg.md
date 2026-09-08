@@ -109,7 +109,7 @@ cozypkg untap acme.hello
 
 ### `cozypkg add [package]...`
 
-Install applications from a `PackageSource` and its dependencies interactively: it creates a `Package` (which the reconciler turns into the application's HelmRelease). Packages can be given as arguments or read from files with `-f`.
+Install applications from a `PackageSource` and its dependencies interactively: it creates a `Package`, and the reconciler creates a HelmRelease for each of that package's components that carries an `install:` block. In the scaffold that is the paired registration component, which is what puts the application in the catalog; the application's own release comes later, when a user deploys an instance. Packages can be given as arguments or read from files with `-f`.
 
 | Flag | Description |
 | --- | --- |
