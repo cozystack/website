@@ -33,3 +33,15 @@
   to = "/404.html"
   status = 404
 
+# Bluesky/AT Protocol handle verification for @cozystack.io. The spec asks for
+# text/plain, and an extensionless file does not get that by default.
+#
+# This only affects deploy previews: production is GitHub Pages, which serves
+# extensionless files as application/octet-stream and offers no way to set
+# response headers. Handle resolution still works there — neither the TypeScript
+# (@atproto/identity) nor the Go (indigo) resolver inspects Content-Type; both
+# require a 2xx status and a body whose first line parses as a DID.
+[[headers]]
+  for = "/.well-known/atproto-did"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
