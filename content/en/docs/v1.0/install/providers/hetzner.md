@@ -344,9 +344,9 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
           values:
             bundles:
               disabledPackages:
-                - metallb
+                - cozystack.metallb
               enabledPackages:
-                - hetzner-robotlb
+                - cozystack.hetzner-robotlb
             publishing:
               host: "example.org"
               apiServerEndpoint: "https://api.example.org:443"
