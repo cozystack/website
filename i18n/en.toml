@@ -16,6 +16,12 @@ other = "Six situations the project was built for. Every one of them is someone 
 [home_use_cases_more]
 other = "Read more"
 
+[home_use_cases_prev]
+other = "Previous use case"
+
+[home_use_cases_next]
+other = "Next use case"
+
 [home_features]
 other = "Features"
 

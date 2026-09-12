@@ -16,6 +16,12 @@ other = "छह स्थितियाँ, जिनके लिए यह �
 [home_use_cases_more]
 other = "और जानें"
 
+[home_use_cases_prev]
+other = "पिछला उपयोग-प्रसंग"
+
+[home_use_cases_next]
+other = "अगला उपयोग-प्रसंग"
+
 [home_features]
 other = "विशेषताएँ"
 

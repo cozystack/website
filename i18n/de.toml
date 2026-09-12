@@ -16,6 +16,12 @@ other = "Sechs Situationen, für die das Projekt gebaut wurde. Hinter jeder steh
 [home_use_cases_more]
 other = "Mehr erfahren"
 
+[home_use_cases_prev]
+other = "Vorheriger Anwendungsfall"
+
+[home_use_cases_next]
+other = "Nächster Anwendungsfall"
+
 [home_features]
 other = "Funktionen"
 

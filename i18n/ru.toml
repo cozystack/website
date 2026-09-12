@@ -16,6 +16,12 @@ other = "Шесть ситуаций, ради которых проект и д
 [home_use_cases_more]
 other = "Подробнее"
 
+[home_use_cases_prev]
+other = "Предыдущий кейс"
+
+[home_use_cases_next]
+other = "Следующий кейс"
+
 [home_features]
 other = "Возможности"
 

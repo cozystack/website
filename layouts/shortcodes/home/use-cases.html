@@ -12,9 +12,10 @@
     link:        optional, and only ever to a page that exists
     link_text:   label for that link
 
-  The cards sit in a scroll-snap row rather than a JS carousel: it is native,
-  keyboard- and touch-accessible, needs no script, and does not hide content
-  the way a one-at-a-time slider does.
+  One case per slide, so a case is read rather than skimmed. Built on the same
+  Bootstrap carousel the screenshot gallery uses, so there is no second slider
+  mechanism on the page. `data-bs-ride="false"` keeps it manual: this is text,
+  and text that moves on its own is text nobody finishes.
 */}}
 {{- with .Page.Params.use_cases }}
 <div class="body-container use-cases">
@@ -22,18 +23,43 @@
     <h2 class="use-cases__heading">{{ T "home_use_cases" }}</h2>
     <p class="use-cases__lead">{{ T "home_use_cases_lead" }}</p>
 
-    <ul class="use-cases__row" role="list" tabindex="0" aria-label="{{ T "home_use_cases" }}">
-      {{- range . }}
-      <li class="use-cases__card">
-        <h3 class="use-cases__title">{{ .title }}</h3>
-        <p class="use-cases__situation">{{ .situation | markdownify }}</p>
-        <p class="use-cases__outcome">{{ .outcome | markdownify }}</p>
-        {{- if .link }}
-        <a class="use-cases__link" href="{{ .link }}">{{ .link_text | default (T "home_use_cases_more") }}</a>
+    <div id="useCasesCarousel" class="carousel slide carousel-fade use-cases__carousel" data-bs-ride="false">
+      <div class="carousel-inner">
+        {{- range $idx, $case := . }}
+        <div class="carousel-item{{ if eq $idx 0 }} active{{ end }}">
+          <div class="use-cases__case">
+            <h3 class="use-cases__title">{{ $case.title }}</h3>
+            <div class="use-cases__body">
+              <div class="use-cases__col">
+                <p class="use-cases__situation">{{ $case.situation | markdownify }}</p>
+              </div>
+              <div class="use-cases__col">
+                <p class="use-cases__outcome">{{ $case.outcome | markdownify }}</p>
+                {{- if $case.link }}
+                <a class="use-cases__link" href="{{ $case.link }}">{{ $case.link_text | default (T "home_use_cases_more") }}</a>
+                {{- end }}
+              </div>
+            </div>
+          </div>
+        </div>
         {{- end }}
-      </li>
-      {{- end }}
-    </ul>
+      </div>
+
+      <button class="carousel-control-prev" type="button" data-bs-target="#useCasesCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">{{ T "home_use_cases_prev" }}</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#useCasesCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">{{ T "home_use_cases_next" }}</span>
+      </button>
+
+      <div class="carousel-indicators" aria-label="{{ T "home_use_cases" }}">
+        {{- range $idx, $case := . }}
+        <button type="button" data-bs-target="#useCasesCarousel" data-bs-slide-to="{{ $idx }}"{{ if eq $idx 0 }} class="active" aria-current="true"{{ end }} aria-label="{{ $case.title }}"></button>
+        {{- end }}
+      </div>
+    </div>
   </div>
 </div>
 {{- end }}
