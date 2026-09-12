@@ -232,31 +232,48 @@ for capacity already on its way.
 
 ### Pod autoscaling
 
-Horizontal Pod Autoscaler is part of the conformant Kubernetes control plane. Vertical Pod
-Autoscaler ships as an addon:
+The requirement is specifically that autoscaling work **for pods using accelerators**, and that
+it can act on metrics an AI workload actually produces.
+
+HorizontalPodAutoscaler is part of the conformant Kubernetes control plane, and it needs no
+special handling for accelerator pods: a pod holding a GPU is an ordinary pod whose device was
+allocated by the device plugin framework, so replica changes behave as they do for any other
+workload. What differs in practice is the useful signal. CPU utilization says little about an
+inference server, so scaling is driven from the monitoring stack described below — queue depth,
+batch size or token throughput published by the model server itself, collected as custom metrics
+and read by the autoscaler.
+
+Vertical Pod Autoscaler additionally ships as an addon, for right-sizing the requests around
+the accelerator rather than the accelerator count:
 
 ```yaml
 addons:
   verticalPodAutoscaler: {}
 ```
 
-Scaling on custom and external metrics is served from the platform monitoring stack described
-below, so an inference deployment can scale on queue depth or token throughput rather than only
-on CPU.
-
 ## Observability
 
 ### Accelerator metrics
 
-The GPU Operator addon deploys the NVIDIA DCGM exporter, which publishes utilization, memory
-use, temperature and power in Prometheus exposition format. The monitoring agents addon scrapes
-it:
+The requirement is that the platform **allow the installation and operation** of an accelerator
+metrics solution. This one ships with it.
+
+The GPU Operator addon deploys the NVIDIA DCGM exporter on nodes with accelerators. It serves a
+Prometheus exposition endpoint carrying the core set the requirement names — per-accelerator
+utilization and memory use — and, where the hardware reports them, temperature, power draw and
+interconnect counters. The monitoring agents addon discovers and scrapes it:
 
 ```yaml
 addons:
+  gpuOperator:
+    enabled: true
   monitoringAgents:
     enabled: true
 ```
+
+Neither addon is mandatory, which is the other half of the requirement: a tenant who prefers a
+different exporter installs it as an ordinary workload and scrapes it the same way. The platform
+does not take the metrics path over.
 
 ### Metrics from AI workloads
 
