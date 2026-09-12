@@ -1,0 +1,65 @@
+{{/*
+  home/use-cases — who runs Cozystack and what problem it solves for them.
+
+  Reads `use_cases` from the page's front matter, so each locale carries its
+  own copy and a locale without one renders nothing rather than showing
+  English text on a translated page.
+
+  Each entry:
+    title:       the audience, in their own words
+    situation:   the position they are in before Cozystack
+    outcome:     what the platform gives them, concretely
+    link:        optional, and only ever to a page that exists
+    link_text:   label for that link
+
+  One case per slide, so a case is read rather than skimmed. Built on the same
+  Bootstrap carousel the screenshot gallery uses, so there is no second slider
+  mechanism on the page. `data-bs-ride="false"` keeps it manual: this is text,
+  and text that moves on its own is text nobody finishes.
+*/}}
+{{- with .Page.Params.use_cases }}
+<div class="body-container use-cases">
+  <div class="container">
+    <h2 class="use-cases__heading">{{ T "home_use_cases" }}</h2>
+    <p class="use-cases__lead">{{ T "home_use_cases_lead" }}</p>
+
+    <div id="useCasesCarousel" class="carousel slide carousel-fade use-cases__carousel" data-bs-ride="false">
+      <div class="carousel-inner">
+        {{- range $idx, $case := . }}
+        <div class="carousel-item{{ if eq $idx 0 }} active{{ end }}">
+          <div class="use-cases__case">
+            <h3 class="use-cases__title">{{ $case.title }}</h3>
+            <div class="use-cases__body">
+              <div class="use-cases__col">
+                <p class="use-cases__situation">{{ $case.situation | markdownify }}</p>
+              </div>
+              <div class="use-cases__col">
+                <p class="use-cases__outcome">{{ $case.outcome | markdownify }}</p>
+                {{- if $case.link }}
+                <a class="use-cases__link" href="{{ $case.link }}">{{ $case.link_text | default (T "home_use_cases_more") }}</a>
+                {{- end }}
+              </div>
+            </div>
+          </div>
+        </div>
+        {{- end }}
+      </div>
+
+      <button class="carousel-control-prev" type="button" data-bs-target="#useCasesCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">{{ T "home_use_cases_prev" }}</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#useCasesCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">{{ T "home_use_cases_next" }}</span>
+      </button>
+
+      <div class="carousel-indicators" aria-label="{{ T "home_use_cases" }}">
+        {{- range $idx, $case := . }}
+        <button type="button" data-bs-target="#useCasesCarousel" data-bs-slide-to="{{ $idx }}"{{ if eq $idx 0 }} class="active" aria-current="true"{{ end }} aria-label="{{ $case.title }}"></button>
+        {{- end }}
+      </div>
+    </div>
+  </div>
+</div>
+{{- end }}
