@@ -239,7 +239,9 @@ main.td-main {
 .section-live-demo {
   .td-box--primary {
     padding-top: 4.5rem;
-    padding-bottom: 4.5rem;
+    // Slightly deeper than the top: the heading's line-box leading already
+    // reads as ~6px of extra air above, while the button ends on a hard edge.
+    padding-bottom: 5rem;
 
     @include media-breakpoint-down(md) {
       padding-top: 2.75rem;
