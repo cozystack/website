@@ -231,6 +231,59 @@ main.td-main {
 }
 
 
+// Live-demo band. Docsy's blocks/lead wraps everything it is given in
+// `.h4 mb-0`, so without these rules the body copy inherits heading size and
+// weight, the call to action sits inline at the end of the paragraph, and the
+// band has no vertical rhythm of its own. Every declaration below undoes one
+// of those inherited defaults rather than decorating.
+.section-live-demo {
+  .td-box--primary {
+    padding-top: 4.5rem;
+    padding-bottom: 4.5rem;
+
+    @include media-breakpoint-down(md) {
+      padding-top: 2.75rem;
+      padding-bottom: 2.75rem;
+    }
+  }
+
+  // The band is a destination, not a step in a sequence: no scroll cue.
+  .td-arrow-down::before {
+    display: none;
+  }
+
+  .section-label {
+    margin: 0 0 1.25rem 0;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: $cozy-white !important;
+  }
+
+  // Reset the inherited .h4 typography to body copy, and hold the line length
+  // to something readable — centred text across a 1280px container is not.
+  .live-demo-lead {
+    max-width: 46rem;
+    margin: 0 auto;
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.7;
+    color: rgba($cozy-white, 0.92);
+  }
+
+  .live-demo-cta {
+    margin: 2rem 0 0 0;
+
+    a.btn-primary {
+      @include flat-white-button;
+
+      padding: 0.75rem 1.75rem;
+      font-size: 1rem;
+      font-weight: 600 !important;
+    }
+  }
+}
+
 .section-community {
   @include gray-background-a;
   background-color: $cozy-gray;
