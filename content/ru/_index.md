@@ -8,7 +8,7 @@ seo:
   title: "Cozystack — частное облако с открытым кодом на Kubernetes"
   description: "Open-source облачная платформа на Kubernetes: управляемые ВМ, базы данных, S3-хранилище и GPU. Проект CNCF Sandbox."
   keywords: ["частное облако", "managed kubernetes", "kubernetes платформа", "облачная платформа"]
-source_digest: "sha256:e8f982c2431355bc79d3bb2133781cc539553c4c0a293d36e4c23dc54e7fcf80"
+source_digest: "sha256:74f327d876bc1091b8dd1f260bf51a197c68ec1c8eb12a17fc6c1f5723344977"
 translation_status: current
 l10n: transcreate
 taglines:
@@ -88,9 +88,9 @@ features:
 {{< blocks/lead color="primary" >}}
 <h2 class="section-label">Посмотрите на консоль до того, как что-то устанавливать</h2>
 
-Настоящая панель управления Cozystack, целиком работающая в браузере — без кластера, без регистрации, без настройки. Загляните в маркетплейс, откройте управляемые сервисы, покликайте по консоли. Это тот самый интерфейс, только с демонстрационными данными.
+<p class="live-demo-lead">Настоящая панель управления Cozystack, целиком работающая в браузере — без кластера, без регистрации, без настройки. Загляните в маркетплейс, откройте управляемые сервисы, покликайте по консоли. Это тот самый интерфейс, только с демонстрационными данными.</p>
 
-<a class="btn btn-lg btn-primary mt-4" href="/demo/">Открыть живое демо &rarr;</a>
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">Открыть живое демо &rarr;</a></div>
 {{< /blocks/lead >}}
 </div>
 
