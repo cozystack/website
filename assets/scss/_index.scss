@@ -260,7 +260,7 @@ main.td-main {
     font-weight: 500;
     line-height: 1.2;
     text-wrap: balance;
-    color: $cozy-white !important;
+    color: $cozy-white;
   }
 
   // Reset the inherited .h4 typography to body copy, and hold the line length
@@ -286,7 +286,7 @@ main.td-main {
 
       padding: 0.875rem 2rem;
       font-size: 1.125rem;
-      font-weight: 600 !important;
+      font-weight: 600;
 
       // flat-white-button zeroes box-shadow with !important, and Bootstrap has
       // no other focus affordance on .btn -- without this the button is not

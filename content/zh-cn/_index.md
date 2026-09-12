@@ -90,7 +90,7 @@ features:
 
 <p class="live-demo-lead">真实的 Cozystack 仪表盘，完全在你的浏览器中运行——无需集群、无需注册、无需配置。浏览应用市场，打开托管服务，随意点击体验控制台。这就是真正的 UI，只是换成了演示数据。</p>
 
-<p class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">打开在线演示 &rarr;</a></p>
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">打开在线演示 &rarr;</a></div>
 {{< /blocks/lead >}}
 </div>
 

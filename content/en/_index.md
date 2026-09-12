@@ -83,7 +83,7 @@ features:
 
 <p class="live-demo-lead">Cozystack's real dashboard, running entirely in your browser — no cluster, no signup, no setup. Browse the marketplace, open managed services, click through the console. It's the actual UI, just with demo data.</p>
 
-<p class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">Open the live demo &rarr;</a></p>
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">Open the live demo &rarr;</a></div>
 {{< /blocks/lead >}}
 </div>
 

@@ -90,7 +90,7 @@ features:
 
 <p class="live-demo-lead">Das echte Dashboard von Cozystack, vollständig in Ihrem Browser — kein Cluster, keine Anmeldung, keine Einrichtung. Stöbern Sie im Marketplace, öffnen Sie Managed Services, klicken Sie sich durch die Konsole. Es ist die echte UI, nur mit Demo-Daten.</p>
 
-<p class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">Live-Demo öffnen &rarr;</a></p>
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">Live-Demo öffnen &rarr;</a></div>
 {{< /blocks/lead >}}
 </div>
 

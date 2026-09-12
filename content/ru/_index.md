@@ -90,7 +90,7 @@ features:
 
 <p class="live-demo-lead">Настоящая панель управления Cozystack, целиком работающая в браузере — без кластера, без регистрации, без настройки. Загляните в маркетплейс, откройте управляемые сервисы, покликайте по консоли. Это тот самый интерфейс, только с демонстрационными данными.</p>
 
-<p class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">Открыть живое демо &rarr;</a></p>
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">Открыть живое демо &rarr;</a></div>
 {{< /blocks/lead >}}
 </div>
 

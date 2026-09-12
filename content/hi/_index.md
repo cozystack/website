@@ -90,7 +90,7 @@ features:
 
 <p class="live-demo-lead">Cozystack का असली डैशबोर्ड, पूरी तरह आपके ब्राउज़र में चलता हुआ — न क्लस्टर, न साइनअप, न सेटअप। मार्केटप्लेस देखें, मैनेज्ड सेवाएँ खोलें, कंसोल में क्लिक करके घूमें। यह असली UI ही है, बस डेमो डेटा के साथ।</p>
 
-<p class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">लाइव डेमो खोलें &rarr;</a></p>
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">लाइव डेमो खोलें &rarr;</a></div>
 {{< /blocks/lead >}}
 </div>
 
