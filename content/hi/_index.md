@@ -8,7 +8,7 @@ seo:
   title: "Cozystack — Kubernetes पर ओपन-सोर्स प्राइवेट क्लाउड"
   description: "Kubernetes पर ओपन-सोर्स क्लाउड प्लेटफ़ॉर्म: मैनेज्ड VMs, डेटाबेस, S3 स्टोरेज और GPU वर्कलोड। CNCF Sandbox प्रोजेक्ट।"
   keywords: ["private cloud", "managed kubernetes", "kubernetes platform", "cloud platform"]
-source_digest: "sha256:e8f982c2431355bc79d3bb2133781cc539553c4c0a293d36e4c23dc54e7fcf80"
+source_digest: "sha256:74f327d876bc1091b8dd1f260bf51a197c68ec1c8eb12a17fc6c1f5723344977"
 translation_status: current
 l10n: transcreate
 taglines:
