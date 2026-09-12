@@ -1,8 +1,8 @@
 ---
 title: "Kubernetes Conformance Results for Cozystack"
 linkTitle: "Kubernetes Conformance"
-description: "CNCF conformance results for Cozystack: self-hosted clusters passing the suite in full across five Kubernetes releases, and a hosted platform listed in the CNCF record for three."
-date: 2026-08-19
+description: "CNCF conformance results for Cozystack: self-hosted clusters passing the suite in full across five Kubernetes releases, listed in the CNCF record for two of them, and a hosted platform built on it listed for three."
+date: 2026-09-12
 type: "page"
 weight: 30
 ---
@@ -32,9 +32,11 @@ runs took place on 19 August 2026 against a Cozystack v1.6.1 installation.
 | v1.32.13 | **411** | 0 | 6624 |
 | v1.31.14 | **404** | 0 | 6607 |
 
-Results for v1.35 and v1.34 are submitted to the CNCF conformance repository. The programme
-accepts the current Kubernetes release and the two before it, and with v1.36 current those are
-the newest releases the platform offers.
+The v1.35 and v1.34 runs are **accepted and published in the CNCF conformance repository**, at
+[`v1.35/cozystack`](https://github.com/cncf/k8s-conformance/tree/master/v1.35/cozystack) and
+[`v1.34/cozystack`](https://github.com/cncf/k8s-conformance/tree/master/v1.34/cozystack), filed
+by Ænix as a `distribution`. The programme accepts the current Kubernetes release and the two
+before it, and with v1.36 current those are the newest releases the platform offers.
 
 ### Hikube, a hosted platform built on Cozystack
 
@@ -157,16 +159,23 @@ It also says nothing about virtual machines, managed databases or the rest of th
 Those are extensions built on custom resources, and the suite tests the Kubernetes underneath
 them.
 
+Nor does it cover what an AI workload needs from a platform beyond plain Kubernetes —
+accelerator exposure, gang scheduling, accelerator metrics. That is a separate programme, and
+our results for it are on the [AI Conformance](/compliance/ai-conformance/) page.
+
 ## Frequently asked questions
 
 ### Is Cozystack certified Kubernetes?
 
-Clusters created by Cozystack pass the conformance suite in full — across all five Kubernetes
-releases the platform offers, in the runs published here, and in the CNCF's own record for v1.33, v1.34 and v1.35
-through a hosted platform built on it. Submissions for the self-hosted v1.35 and v1.34 runs are
-filed with the CNCF. The Certified Kubernetes mark itself is granted to a named product at a named version, so
-listings appear under the names of the entities that submitted them rather than under the
-project name.
+Yes, for the releases in the CNCF record. Cozystack v1.6.1 is listed as a Certified Kubernetes
+distribution for Kubernetes v1.35 and v1.34, filed by Ænix and published in the CNCF's own
+repository. A hosted platform built on Cozystack is listed separately for v1.33, v1.34 and
+v1.35. Beyond those, clusters created by Cozystack pass the suite in full on all five Kubernetes
+releases the platform offers, in the runs published here.
+
+The Certified Kubernetes mark is granted to a named product at a named version and licensed to
+the entity that submitted it, so listings appear under the names of those entities rather than
+under the project name.
 
 ### Which Kubernetes versions can Cozystack run?
 
@@ -184,9 +193,11 @@ above is published separately, with its own artifacts.
 
 ### Can we see the raw results?
 
-Yes. A conformance submission consists of `e2e.log` and `junit_01.xml` from the run. Both are
-preserved for the Hikube entries in the CNCF repository, and both accompany the self-hosted
-submissions for v1.35 and v1.34. Artifacts for the older runs are available on request.
+Yes. A conformance submission consists of `e2e.log` and `junit_01.xml` from the run, and the
+CNCF preserves both permanently. They are in the repository for the self-hosted
+[v1.35](https://github.com/cncf/k8s-conformance/tree/master/v1.35/cozystack) and
+[v1.34](https://github.com/cncf/k8s-conformance/tree/master/v1.34/cozystack) entries and for the
+Hikube entries. Artifacts for the older runs are available on request.
 
 ## Notes
 
@@ -195,9 +206,9 @@ using Sonobuoy v0.57.5 in `certified-conformance` mode with the `e2e` plugin, on
 Kubernetes version against its own tenant cluster. Passed and failed counts are taken from the
 Ginkgo summary in `e2e.log`.
 
-Submissions for v1.35 and v1.34 are filed with the CNCF conformance repository. Until
-they are accepted and published there, this page reports conformance runs rather than a
-completed certification, and makes no claim to the mark.
+The v1.35 and v1.34 submissions were accepted and published in the CNCF conformance repository
+on 28 August 2026. The three older runs on this page are published here rather than filed, since
+the programme accepts only the three most recent Kubernetes releases.
 
 "Certified Kubernetes" and the Certified Kubernetes logo are marks of The Linux Foundation,
 licensed to the vendor of a conformant product for the product and version it certified.
