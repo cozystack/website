@@ -114,9 +114,9 @@ features:
 {{< blocks/lead color="primary" >}}
 <h2 class="section-label">先看看控制台，再决定是否安装</h2>
 
-真实的 Cozystack 仪表盘，完全在你的浏览器中运行——无需集群、无需注册、无需配置。浏览应用市场，打开托管服务，随意点击体验控制台。这就是真正的 UI，只是换成了演示数据。
+<p class="live-demo-lead">真实的 Cozystack 仪表盘，完全在你的浏览器中运行——无需集群、无需注册、无需配置。浏览应用市场，打开托管服务，随意点击体验控制台。这就是真正的 UI，只是换成了演示数据。</p>
 
-<a class="btn btn-lg btn-primary mt-4" href="/demo/">打开在线演示 &rarr;</a>
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">打开在线演示 &rarr;</a></div>
 {{< /blocks/lead >}}
 </div>
 

@@ -231,6 +231,108 @@ main.td-main {
 }
 
 
+// Live-demo band. Docsy's blocks/lead wraps everything it is given in
+// `.h4 mb-0`, so without these rules the body copy inherits heading size and
+// weight, the call to action sits inline at the end of the paragraph, and the
+// band has no vertical rhythm of its own. Every declaration below undoes one
+// of those inherited defaults rather than decorating.
+.section-live-demo {
+  .td-box--primary {
+    // A gradient rather than the flat primary fill: the band sits between two
+    // white sections and a single flat slab reads as a coloured gap. The
+    // gradient gives it a top and a bottom, so it reads as its own surface.
+    background-image: linear-gradient(160deg, $cozy-dark-blue 0%, $cozy-darkest-blue 100%);
+    padding-top: 5.5rem;
+    padding-bottom: 5.5rem;
+
+    @include media-breakpoint-down(md) {
+      padding-top: 3.25rem;
+      padding-bottom: 3.25rem;
+    }
+  }
+
+  // The band is a destination, not a step in a sequence: no scroll cue.
+  .td-arrow-down::before {
+    display: none;
+  }
+
+  .section-label {
+    margin: 0 0 1.125rem 0;
+    font-size: clamp(1.625rem, 3.2vw, 2.375rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    color: $cozy-white;
+  }
+
+  // Reset the inherited .h4 typography to body copy, and hold the line length
+  // to something readable -- centred text across a 1280px container is not.
+  .live-demo-lead {
+    // ~72 characters at this size; 46rem ran to ~84, past comfortable measure.
+    max-width: 40rem;
+    margin: 0 auto;
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.65;
+    // Flat white, not white-with-alpha: at 0.92 over this band the ratio is
+    // 4.28:1, under the 4.5:1 AA needs for body copy. Do not dim this text.
+    color: $cozy-white;
+  }
+
+  .live-demo-cta {
+    margin: 2.25rem 0 0 0;
+
+    // Deliberately not @include flat-white-button: that mixin paints the label
+    // $cozy-mid-gray with !important, which on a saturated blue ground reads as
+    // a disabled control rather than the one thing on the band to click.
+    a.btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.9375rem 2.25rem;
+      border: none;
+      border-radius: 6px;
+      background-color: $cozy-white !important;
+      color: $cozy-darkest-blue !important;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      letter-spacing: 0.005em;
+      box-shadow: 0 2px 10px rgba(#000, 0.16) !important;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+      &:hover {
+        background-color: $cozy-white !important;
+        color: $cozy-darkest-blue !important;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(#000, 0.22) !important;
+        text-shadow: none !important;
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(#000, 0.2) !important;
+      }
+
+      // Bootstrap has no other focus affordance on .btn once the box-shadow is
+      // replaced, so the ring has to be drawn explicitly.
+      &:focus-visible {
+        outline: 3px solid $cozy-white;
+        outline-offset: 3px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+
+        &:hover,
+        &:active {
+          transform: none;
+        }
+      }
+    }
+  }
+}
+
 .section-community {
   @include gray-background-a;
   background-color: $cozy-gray;

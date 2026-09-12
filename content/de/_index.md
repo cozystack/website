@@ -144,9 +144,9 @@ features:
 {{< blocks/lead color="primary" >}}
 <h2 class="section-label">Sehen Sie die Konsole, bevor Sie irgendetwas installieren</h2>
 
-Das echte Dashboard von Cozystack, vollständig in Ihrem Browser — kein Cluster, keine Anmeldung, keine Einrichtung. Stöbern Sie im Marketplace, öffnen Sie Managed Services, klicken Sie sich durch die Konsole. Es ist die echte UI, nur mit Demo-Daten.
+<p class="live-demo-lead">Das echte Dashboard von Cozystack, vollständig in Ihrem Browser — kein Cluster, keine Anmeldung, keine Einrichtung. Stöbern Sie im Marketplace, öffnen Sie Managed Services, klicken Sie sich durch die Konsole. Es ist die echte UI, nur mit Demo-Daten.</p>
 
-<a class="btn btn-lg btn-primary mt-4" href="/demo/">Live-Demo öffnen &rarr;</a>
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">Live-Demo öffnen &rarr;</a></div>
 {{< /blocks/lead >}}
 </div>
 
