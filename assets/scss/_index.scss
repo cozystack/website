@@ -255,20 +255,27 @@ main.td-main {
   .section-label {
     margin: 0 0 1.25rem 0;
     font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 700;
+    // Every other section label on the home page is 500 at this size. The blue
+    // ground is the emphasis here; the weight does not need to be as well.
+    font-weight: 500;
     line-height: 1.2;
+    text-wrap: balance;
     color: $cozy-white !important;
   }
 
   // Reset the inherited .h4 typography to body copy, and hold the line length
   // to something readable — centred text across a 1280px container is not.
   .live-demo-lead {
-    max-width: 46rem;
+    // ~72 characters at this size; 46rem ran to ~84, past comfortable measure.
+    max-width: 40rem;
     margin: 0 auto;
     font-size: 1.0625rem;
     font-weight: 400;
     line-height: 1.7;
-    color: rgba($cozy-white, 0.92);
+    // Flat white, not white-with-alpha: at 0.92 over this band the ratio is
+    // 4.28:1, under the 4.5:1 AA needs for body copy. Flat white gives 4.74:1,
+    // which is not much headroom either -- do not dim this text again.
+    color: $cozy-white;
   }
 
   .live-demo-cta {
@@ -277,9 +284,18 @@ main.td-main {
     a.btn-primary {
       @include flat-white-button;
 
-      padding: 0.75rem 1.75rem;
-      font-size: 1rem;
+      padding: 0.875rem 2rem;
+      font-size: 1.125rem;
       font-weight: 600 !important;
+
+      // flat-white-button zeroes box-shadow with !important, and Bootstrap has
+      // no other focus affordance on .btn -- without this the button is not
+      // keyboard-visible at all.
+      &:focus-visible {
+        outline: 2px solid $cozy-white;
+        outline-offset: 3px;
+        box-shadow: none;
+      }
     }
   }
 }
