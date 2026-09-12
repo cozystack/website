@@ -1,0 +1,39 @@
+{{/*
+  home/use-cases — who runs Cozystack and what problem it solves for them.
+
+  Reads `use_cases` from the page's front matter, so each locale carries its
+  own copy and a locale without one renders nothing rather than showing
+  English text on a translated page.
+
+  Each entry:
+    title:       the audience, in their own words
+    situation:   the position they are in before Cozystack
+    outcome:     what the platform gives them, concretely
+    link:        optional, and only ever to a page that exists
+    link_text:   label for that link
+
+  The cards sit in a scroll-snap row rather than a JS carousel: it is native,
+  keyboard- and touch-accessible, needs no script, and does not hide content
+  the way a one-at-a-time slider does.
+*/}}
+{{- with .Page.Params.use_cases }}
+<div class="body-container use-cases">
+  <div class="container">
+    <h2 class="use-cases__heading">{{ T "home_use_cases" }}</h2>
+    <p class="use-cases__lead">{{ T "home_use_cases_lead" }}</p>
+
+    <ul class="use-cases__row" role="list" tabindex="0" aria-label="{{ T "home_use_cases" }}">
+      {{- range . }}
+      <li class="use-cases__card">
+        <h3 class="use-cases__title">{{ .title }}</h3>
+        <p class="use-cases__situation">{{ .situation | markdownify }}</p>
+        <p class="use-cases__outcome">{{ .outcome | markdownify }}</p>
+        {{- if .link }}
+        <a class="use-cases__link" href="{{ .link }}">{{ .link_text | default (T "home_use_cases_more") }}</a>
+        {{- end }}
+      </li>
+      {{- end }}
+    </ul>
+  </div>
+</div>
+{{- end }}

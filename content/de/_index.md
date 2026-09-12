@@ -8,13 +8,69 @@ seo:
   title: "Cozystack — Open-Source Private Cloud auf Kubernetes"
   description: "Open-Source-Cloud-Plattform auf Kubernetes für Managed VMs, Datenbanken, S3-Storage und GPU-Workloads. CNCF-Sandbox-Projekt."
   keywords: ["private cloud", "managed kubernetes", "kubernetes plattform", "open source cloud"]
-source_digest: "sha256:e8f982c2431355bc79d3bb2133781cc539553c4c0a293d36e4c23dc54e7fcf80"
+source_digest: "sha256:a2c1ceac912173c93b372da28e9e1410506ac63b14b972e7dc3c2f943d98823e"
 translation_status: current
 l10n: transcreate
 taglines:
   - Self-hosted-Alternative zu AWS
   - KI-fähige Infrastruktur
   - Open-Source-Alternative zu VMware
+use_cases:
+  - title: Hosting- und Cloud-Anbieter
+    situation: >
+      Sie verkaufen VPS. Ihre Kunden fragen inzwischen nach Managed
+      Kubernetes, Datenbanken und Object Storage — und jeden Dienst selbst zu
+      bauen ist eine Roadmap, die nie fertig wird.
+    outcome: >
+      Eine Plattform, die Ihre vorhandene Hardware in einen Servicekatalog
+      verwandelt: isolierte Mandanten, Self-Service-Bereitstellung und eine
+      Kubernetes-native API, an die Ihre Abrechnung andocken kann.
+    link: /docs/guides/use-cases/public-cloud/
+    link_text: Eine Public Cloud aufbauen
+  - title: Abschied von VMware
+    situation: >
+      Unbefristete Lizenzen gibt es nicht mehr, die Verlängerungskontingente
+      sind da, und die VMs müssen weiterhin irgendwo laufen, worüber Sie die
+      Kontrolle behalten.
+    outcome: >
+      Virtuelle Maschinen und Container im selben Cluster, auf Ihren eigenen
+      Servern, mit Live-Migration und repliziertem Storage — und die Migration
+      ist ein Werkzeug, kein Neuschreiben.
+    link: /docs/guides/use-cases/private-cloud/
+    link_text: Eine Private Cloud aufbauen
+  - title: Plattformteams
+    situation: >
+      Entwickler eröffnen Tickets für eine Datenbank, einen Cluster oder eine
+      Umgebung, und das Plattformteam ist für all das der Engpass.
+    outcome: >
+      Entwickler fordern an, was sie brauchen, als Kubernetes-Ressourcen und
+      bekommen es in Minuten — innerhalb Ihrer Quoten und ohne Account in
+      fremden Clouds.
+    link: /docs/guides/use-cases/kubernetes-distribution/
+    link_text: Als Kubernetes-Distribution
+  - title: Hochschulen und Forschung
+    situation: >
+      Jede Arbeitsgruppe möchte einen eigenen Cluster und einen Anteil an den
+      GPUs — und niemand möchte beides administrieren.
+    outcome: >
+      Ein echter isolierter Cluster pro Gruppe oder pro Lehrveranstaltung auf
+      gemeinsamer Hardware, GPU-Zuteilung zwischen ihnen und eine Umgebung,
+      die sich im nächsten Semester aus einem Repository neu erzeugen lässt.
+  - title: Öffentlicher Sektor und regulierte Branchen
+    situation: >
+      Die Daten dürfen Ihre Rechtsordnung nicht verlassen, und von einer
+      externen Control Plane dürfen Sie nicht abhängig sein.
+    outcome: >
+      Die gesamte Plattform läuft auf Ihrer eigenen Hardware, ohne externes
+      SaaS im Steuerungspfad, und jede Komponente ist prüfbarer Open Source.
+  - title: Telekommunikation und Edge
+    situation: >
+      Netzwerkfunktionen kommen weiterhin als virtuelle Maschinen, alles Neue
+      kommt als Container — und am Ende stehen sie auf getrennten Stacks.
+    outcome: >
+      Beides auf einer Plattform, mit dem Networking, das die Dataplane
+      braucht — vom zentralen Standort bis hinaus zu kleinen Edge-Clustern.
+
 benefits:
   - title: API-first
     icon: fas fa-code
@@ -95,6 +151,8 @@ Das echte Dashboard von Cozystack, vollständig in Ihrem Browser — kein Cluste
 </div>
 
 <!-- Benefits & Features -->
+
+{{< home/use-cases >}}
 
 {{< home/benefits >}}
 

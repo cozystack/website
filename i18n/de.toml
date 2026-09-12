@@ -7,6 +7,15 @@ other = "Screenshots"
 [home_benefits]
 other = "Vorteile"
 
+[home_use_cases]
+other = "Wofür Cozystack gemacht ist"
+
+[home_use_cases_lead]
+other = "Sechs Situationen, für die das Projekt gebaut wurde. Hinter jeder steht jemand, der es heute produktiv betreibt."
+
+[home_use_cases_more]
+other = "Mehr erfahren"
+
 [home_features]
 other = "Funktionen"
 
