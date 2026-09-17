@@ -214,7 +214,15 @@ def _split_payload_response(out: str, store: dict, expect: set[str]) -> tuple[di
     else:
         tr_fm = {}
     body = body.strip()
-    bad = {tok: body.count(tok) for tok in store if body.count(tok) != 1}
+    # Only TOP-LEVEL placeholders are sent to the model and must survive verbatim.
+    # A nested token (e.g. an SC shortcode stashed inside an INLINECODE span —
+    # `` `{{< version-pin "x" >}}` ``) lives inside another entry's stored value,
+    # never appears in the masked text the model sees, and is unwound transitively
+    # by restore()'s fixed-point loop. Counting it here would report 0× and raise
+    # on every page that nests, making such pages permanently untranslatable.
+    top_level = {tok for tok in store
+                 if not any(tok in val for other, val in store.items() if other != tok)}
+    bad = {tok: body.count(tok) for tok in top_level if body.count(tok) != 1}
     if bad:
         tok, n = next(iter(bad.items()))
         what = "lost" if n == 0 else "duplicated"
@@ -454,23 +462,35 @@ def main() -> int:
     # or they outlive the source forever (the worklist only iterates English
     # sources). Only `source_digest`-stamped (pipeline-managed) files qualify.
     orphans = [] if args.path else lib.find_orphan_translations(cfg, only_lang=args.lang)
-    # Mass-deletion floor: English pages normally disappear one or two at a
-    # time. A large batch means the English tree moved out from under us
-    # (restructure, bad checkout), and deleting on that signal would commit a
-    # massacre. The floor counts distinct English PAGES, not files — one
-    # deleted page fans out to one orphan per language, and a floor on files
-    # would trip on two legitimately deleted pages × six languages. Threshold
-    # rather than never: a deliberate cleanup can delete the survivors by hand.
     content_root = os.path.join(lib.REPO_ROOT, cfg["content_dir"])
-    orphan_pages = _distinct_orphan_pages(orphans, content_root)
-    if len(orphan_pages) > ORPHAN_PAGE_FLOOR:
-        print(f"::warning::{len(orphans)} orphaned translations of {len(orphan_pages)} "
-              f"English pages found (> {ORPHAN_PAGE_FLOOR} pages) — refusing to "
-              f"mass-delete. If this is a deliberate restructure, remove them "
-              f"manually; first few: "
-              + ", ".join(os.path.relpath(p, lib.REPO_ROOT) for p in orphans[:3]),
+    # Two orphan classes with different risk profiles, and the floor must apply to
+    # only one of them:
+    #   - deleted-source: the English page is gone. A LARGE batch here means the
+    #     English tree moved out from under us (restructure, bad checkout), and
+    #     deleting on that signal would commit a massacre — this is what the floor
+    #     guards. It counts distinct English PAGES, not files (one page fans out to
+    #     one orphan per language).
+    #   - superseded-version: a stamped translation of a non-latest docs version.
+    #     A version bump legitimately orphans a whole retired version at once, so
+    #     this class must NOT count toward the floor — otherwise one release freezes
+    #     ALL orphan cleanup, including genuine source deletions, until someone
+    #     deletes the files by hand.
+    def _is_deleted_source(path):
+        rel = os.path.relpath(path, content_root).split(os.sep, 1)[1]
+        return not os.path.exists(lib.source_path(cfg, rel))
+    deleted_source = [p for p in orphans if _is_deleted_source(p)]
+    superseded = [p for p in orphans if not _is_deleted_source(p)]
+    ds_pages = _distinct_orphan_pages(deleted_source, content_root)
+    if len(ds_pages) > ORPHAN_PAGE_FLOOR:
+        print(f"::warning::{len(deleted_source)} orphaned translations of {len(ds_pages)} "
+              f"English pages with a deleted source (> {ORPHAN_PAGE_FLOOR} pages) — refusing "
+              f"to mass-delete; the English tree may have moved. If this is a deliberate "
+              f"restructure, remove them manually; first few: "
+              + ", ".join(os.path.relpath(p, lib.REPO_ROOT) for p in deleted_source[:3]),
               file=sys.stderr)
-        orphans = []
+        deleted_source = []
+    # Superseded-version orphans are always safe to remove (a retired docs version).
+    orphans = deleted_source + superseded
     for path in orphans:
         rel = os.path.relpath(path, content_root).split(os.sep, 1)[1]
         reason = ("English source deleted"
