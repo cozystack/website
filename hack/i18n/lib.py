@@ -228,12 +228,16 @@ def l10n_mode(path: str) -> str | None:
     if not os.path.exists(path):
         return None
     with open(path, encoding="utf-8") as fh:
-        head = fh.read()
-    fm_end = head.find("\n---", 4)
-    if fm_end != -1:
-        head = head[:fm_end]
-    m = _L10N_RE.search(head)
-    return m.group(1) if m else None
+        text = fh.read()
+    # Parse the front matter as YAML rather than regex-matching the raw text: a
+    # regex that only accepts the bare and double-quoted forms misses the equally
+    # valid single-quoted `l10n: 'transcreate'`, returns None, and the page is
+    # re-translated — exactly the hand-authored work this field is meant to guard.
+    fm, _body, _raw = split_frontmatter(text)
+    if not fm:
+        return None
+    v = fm.get("l10n")
+    return str(v) if v is not None else None
 
 
 def find_transcreated(cfg: dict, only_lang: str | None = None) -> list[tuple[str, str]]:

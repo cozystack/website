@@ -346,8 +346,11 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
     # `l10n` is the site's existing convention for HOW a page was localized
     # (mt | transcreate). Whatever the page was before, this pipeline just
     # machine-translated it, so say so — the disclaimer banner and any future
-    # native-review triage read this.
-    out_fm["l10n"] = "mt"
+    # native-review triage read this. Defense in depth: build_worklist already
+    # skips `transcreate` pages, but if translate_page is ever reached on one,
+    # preserve the hand-authored marker rather than silently downgrading it to
+    # `mt` and erasing the "a human wrote this" signal.
+    out_fm["l10n"] = "transcreate" if (os.path.exists(dest) and lib.l10n_mode(dest) == "transcreate") else "mt"
     # Stamp honestly: a page that ran out of revise rounds with findings still
     # open is NOT the same as one that cleared the gate. Neither is "ratified" —
     # only a human sets that, and only that value drops the disclaimer banner.
@@ -495,10 +498,19 @@ def main() -> int:
             print(f"  [{it.reason:7}] {it.lang}: {it.rel}")
         return 0
     if not items:
-        # An empty worklist still has to clear any report a prior run left behind,
-        # or run-daily.sh reposts stale findings stamped with today's date. This
-        # is the pipeline's normal steady state once the backlog drains.
-        if os.path.exists(REPORT_PATH):
+        # An empty worklist is the steady state once the backlog drains, but
+        # hand-authored `transcreate` pages whose English source has drifted still
+        # need reporting — build that report here too, otherwise it never fires on
+        # the empty-worklist path and run-daily.sh has nothing to post. Only fall
+        # back to clearing a prior run's report when there is genuinely nothing to
+        # say (else stale findings get reposted with today's date).
+        transcreated_md = _format_transcreated(
+            [] if args.path else lib.find_transcreated(cfg, only_lang=args.lang))
+        if transcreated_md:
+            with open(REPORT_PATH, "w", encoding="utf-8") as fh:
+                fh.write(transcreated_md)
+            print(f"\nrun report written to {REPORT_PATH}")
+        elif os.path.exists(REPORT_PATH):
             os.unlink(REPORT_PATH)
         return 0
 
