@@ -154,6 +154,8 @@ talm init --update --preset cozystack --force  # non-interactive: auto-accept al
 
 `--update` re-syncs the vendored `charts/talm/` exactly — files that the new library no longer ships (or strays like `.DS_Store`) are pruned — and advances the preset baseline in `.talm-preset.lock`.
 
+From talm v0.35.0 both version keys have to be pinned. `templateOptions.talosVersion` and `templateOptions.kubernetesVersion` used to work when left empty, and a project created before the presets carried pins now stops rendering with an error naming the key to set. `--update` rewrites `Chart.yaml` from the preset and brings the preset's pins with it, so check `kubernetesVersion` against what your cluster actually runs rather than keeping whatever the re-sync wrote. [Talos versions and output format](https://talm.cozystack.io/configuration/talos-versions/) explains what each key selects.
+
 #### Chart Drift Detection (Talm v0.32+)
 
 Render commands read the project's local `charts/talm/` copy, never the binary's built-in charts, so upgrading the talm binary does not touch your project — the vendored chart silently goes stale. Release builds of talm detect this and print a non-fatal `WARN:` line on stderr for two independent signals:
