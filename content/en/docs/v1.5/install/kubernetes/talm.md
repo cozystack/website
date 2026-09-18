@@ -151,6 +151,8 @@ talm init --update --preset cozystack          # interactive: prompts for each p
 talm init --update --preset cozystack --force  # non-interactive: auto-accept all diffs
 ```
 
+From talm v0.35.0 both version keys have to be pinned. `templateOptions.talosVersion` and `templateOptions.kubernetesVersion` used to work when left empty, and a project created before the presets carried pins now stops rendering with an error naming the key to set. `--update` rewrites `Chart.yaml` from the preset and brings the preset's pins with it, so check `kubernetesVersion` against what your cluster actually runs rather than keeping whatever the re-sync wrote. [Talos versions and output format](https://talm.cozystack.io/configuration/talos-versions/) explains what each key selects.
+
 #### Encrypt / Decrypt Round-Trip
 
 The encrypted copies are what you commit to git; the plaintext copies are what `talm` reads. Use these to round-trip between the two:
