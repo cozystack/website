@@ -1,0 +1,5 @@
+- Formal register: address the reader with "Sie".
+- Follow kubernetes.io German localization conventions.
+- Compound nouns: keep them readable; hyphenate mixed English-German compounds (e.g. "Kubernetes-Cluster", "Bare-Metal-Server").
+- Keep established English infra loanwords where German has no natural equivalent (Deployment, Workload, Pod, Container).
+- Use „German quotation marks".
