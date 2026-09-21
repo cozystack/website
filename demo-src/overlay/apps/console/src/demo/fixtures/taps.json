@@ -1,0 +1,66 @@
+{
+  "apiVersion": "core.cozystack.io/v1alpha1",
+  "kind": "TapList",
+  "metadata": { "resourceVersion": "1" },
+  "items": [
+    {
+      "apiVersion": "core.cozystack.io/v1alpha1",
+      "kind": "Tap",
+      "metadata": {
+        "name": "cozystack-apps",
+        "creationTimestamp": "2026-08-12T10:13:29Z",
+        "uid": "8f2c1b04-55da-4a77-9c31-6b0e5d3a7f10"
+      },
+      "spec": {
+        "source": { "kind": "OCIRepository", "name": "cozystack-apps" },
+        "community": false,
+        "ready": true,
+        "packages": [
+          { "name": "postgres", "kind": "Postgres", "description": "Managed PostgreSQL service", "category": "PaaS", "tags": ["database"] },
+          { "name": "kafka", "kind": "Kafka", "description": "Managed Kafka service", "category": "PaaS", "tags": ["queue"] },
+          { "name": "redis", "kind": "Redis", "description": "Managed Redis service", "category": "PaaS", "tags": ["cache"] },
+          { "name": "clickhouse", "kind": "ClickHouse", "description": "Managed ClickHouse service", "category": "PaaS", "tags": ["database"] },
+          { "name": "kubernetes", "kind": "Kubernetes", "description": "Managed Kubernetes cluster", "category": "IaaS", "tags": ["compute"] },
+          { "name": "vm-instance", "kind": "VMInstance", "description": "Virtual machine", "category": "IaaS", "tags": ["compute"] }
+        ]
+      }
+    },
+    {
+      "apiVersion": "core.cozystack.io/v1alpha1",
+      "kind": "Tap",
+      "metadata": {
+        "name": "tap-cozystack-external-apps-example",
+        "creationTimestamp": "2026-09-01T11:20:04Z",
+        "uid": "2d7e9a33-c418-4f52-b8a6-1e40c7d95b22"
+      },
+      "spec": {
+        "source": { "kind": "OCIRepository", "name": "tap-cozystack-external-apps-example" },
+        "community": true,
+        "ready": true,
+        "packages": [
+          { "name": "immich", "kind": "Immich", "description": "Self-hosted photo and video library", "category": "PaaS", "tags": ["media"] },
+          { "name": "gitea", "kind": "Gitea", "description": "Lightweight Git hosting", "category": "PaaS", "tags": ["devtools"] },
+          { "name": "nextcloud", "kind": "Nextcloud", "description": "File sync and collaboration", "category": "PaaS", "tags": ["files"] }
+        ]
+      }
+    },
+    {
+      "apiVersion": "core.cozystack.io/v1alpha1",
+      "kind": "Tap",
+      "metadata": {
+        "name": "tap-acme-internal-apps",
+        "creationTimestamp": "2026-09-14T17:45:12Z",
+        "uid": "b5081c6f-3a92-47d1-84ee-9c7f20d6a833"
+      },
+      "spec": {
+        "source": { "kind": "OCIRepository", "name": "tap-acme-internal-apps" },
+        "community": true,
+        "ready": false,
+        "message": "Pulling the repository index",
+        "packages": [
+          { "name": "billing-api", "kind": "BillingAPI", "description": "Internal billing service", "category": "PaaS", "privileged": true }
+        ]
+      }
+    }
+  ]
+}

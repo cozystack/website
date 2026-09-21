@@ -8,7 +8,7 @@ index d8a6965..d69d62b 100644
  
 -Promise.all([loadConfig(), loadUsername()]).then(([config, username]) => {
 +async function boot() {
-+  // Демо-режим: поднимаем MSW-моки до первых запросов, backend не нужен.
++  // Demo mode: bring the MSW mocks up before the first request; no backend.
 +  if (import.meta.env.VITE_DEMO) {
 +    const { startDemo } = await import("./demo/browser.ts")
 +    await startDemo()

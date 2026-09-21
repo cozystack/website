@@ -8,13 +8,39 @@ seo:
   title: "Cozystack — 基于 Kubernetes 的开源私有云"
   description: "基于 Kubernetes 的开源云平台，提供托管虚拟机、数据库、S3 存储和 GPU 工作负载。CNCF Sandbox 项目。"
   keywords: ["私有云", "Kubernetes", "开源云平台", "托管 Kubernetes"]
-source_digest: "sha256:24e38da4716b93c35dcb9eb607152d193ef3d5ad42c0e22a25063a89da9f8dde"
+source_digest: "sha256:7b7c6ca6147cb877fc4d71cba375f8be099bfd8b83c05bf5f19dff5030b4ed4e"
 translation_status: current
 l10n: transcreate
 taglines:
   - AWS 的自托管替代方案
   - 面向 AI 的基础设施
   - 开源 VMware 替代方案
+use_cases:
+  - title: 主机与云服务商
+    situation: "你在卖 VPS，而客户如今要的是托管 Kubernetes、数据库和对象存储；每项服务都自己从头做，是一份永远做不完的路线图。"
+    outcome: "一个平台，把你现有的硬件变成一份服务目录：租户彼此隔离、自助开通，以及一套计费系统可以直接对接的 Kubernetes 原生 API。"
+    link: /docs/guides/use-cases/public-cloud/
+    link_text: 构建公有云
+  - title: 正在离开 VMware 的团队
+    situation: "永久许可证已经没有了，续订配额也来了，而那些虚拟机仍然要跑在你自己能掌控的地方。"
+    outcome: "虚拟机和容器运行在同一个集群、你自己的服务器上，具备热迁移与复制存储——迁移是一个工具，而不是一次重写。"
+    link: /docs/guides/use-cases/private-cloud/
+    link_text: 构建私有云
+  - title: 平台团队
+    situation: "开发者为一个数据库、一个集群或一套环境提交工单，而平台团队成了这一切的瓶颈。"
+    outcome: "开发者像申请 Kubernetes 资源一样提出需求，几分钟内就能拿到——在你设定的配额之内，也不需要在别人的云上开账号。"
+    link: /docs/guides/use-cases/kubernetes-distribution/
+    link_text: 作为 Kubernetes 发行版
+  - title: 高校与科研
+    situation: "每个课题组都想要自己的集群和一份 GPU 配额，却没有人愿意去运维其中任何一样。"
+    outcome: "在共享硬件上为每个课题组或每门课程提供真正隔离的集群，在它们之间分配 GPU，并且下个学期可以从代码仓库重新拉起同样的环境。"
+  - title: 公共部门与受监管行业
+    situation: "数据不能离开你所在的司法辖区，外部控制面也不是你被允许去依赖的东西。"
+    outcome: "整个平台运行在你自己的硬件上，控制路径中没有任何外部 SaaS，每一个组件都是可以审计的开源软件。"
+  - title: 电信与边缘
+    situation: "网络功能仍以虚拟机的形式交付，而所有新东西都以容器的形式到来，最后两者落在了互相分离的技术栈上。"
+    outcome: "两者同处一个平台，并具备数据面所需的网络能力——从中心站点一直延伸到小型边缘集群。"
+
 benefits:
   - title: API-first
     icon: fas fa-code
@@ -83,7 +109,20 @@ features:
 <!-- Screenshot Gallery -->
 {{< home/screenshot-gallery >}}
 
+<!-- Live Demo -->
+<div class="section-live-demo">
+{{< blocks/lead color="primary" >}}
+<h2 class="section-label">先看看控制台，再决定是否安装</h2>
+
+<p class="live-demo-lead">真实的 Cozystack 仪表盘，完全在你的浏览器中运行——无需集群、无需注册、无需配置。浏览应用市场，打开托管服务，随意点击体验控制台。这就是真正的 UI，只是换成了演示数据。</p>
+
+<div class="live-demo-cta"><a class="btn btn-lg btn-primary" href="/demo/">打开在线演示 &rarr;</a></div>
+{{< /blocks/lead >}}
+</div>
+
 <!-- Benefits & Features -->
+
+{{< home/use-cases >}}
 
 {{< home/benefits >}}
 

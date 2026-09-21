@@ -1,0 +1,121 @@
+{
+  "apiVersion": "forklift.cozystack.io/v1alpha1",
+  "kind": "VMImportTaskList",
+  "metadata": { "resourceVersion": "1" },
+  "items": [
+    {
+      "apiVersion": "forklift.cozystack.io/v1alpha1",
+      "kind": "VMImportTask",
+      "metadata": {
+        "name": "import-billing",
+        "namespace": "tenant-workshop00",
+        "creationTimestamp": "2026-09-05T08:41:02Z",
+        "uid": "a71c3d60-9e84-4b2f-8c11-27f5a9d0e103",
+        "generation": 1
+      },
+      "spec": {
+        "sourceRef": { "name": "vcenter-hq" },
+        "storageClass": "replicated",
+        "vms": [
+          { "id": "vm-4021", "name": "billing-app-01", "instanceType": "u1.medium" },
+          { "id": "vm-4022", "name": "billing-db-01", "instanceType": "u1.large" }
+        ]
+      },
+      "status": {
+        "phase": "Succeeded",
+        "observedGeneration": 1,
+        "startedAt": "2026-09-05T08:41:05Z",
+        "completedAt": "2026-09-05T09:26:48Z",
+        "message": "2 of 2 machines imported",
+        "vms": [
+          {
+            "id": "vm-4021",
+            "name": "billing-app-01",
+            "phase": "Succeeded",
+            "progress": 100,
+            "vmInstance": "billing-app-01",
+            "disks": ["billing-app-01-disk-0"]
+          },
+          {
+            "id": "vm-4022",
+            "name": "billing-db-01",
+            "phase": "Succeeded",
+            "progress": 100,
+            "vmInstance": "billing-db-01",
+            "disks": ["billing-db-01-disk-0", "billing-db-01-disk-1"]
+          }
+        ],
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "Succeeded",
+            "message": "2 of 2 machines imported",
+            "lastTransitionTime": "2026-09-05T09:26:48Z",
+            "observedGeneration": 1
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "forklift.cozystack.io/v1alpha1",
+      "kind": "VMImportTask",
+      "metadata": {
+        "name": "import-erp-wave-2",
+        "namespace": "tenant-workshop00",
+        "creationTimestamp": "2026-09-12T06:15:30Z",
+        "uid": "d3947f15-40ab-4e6c-9f22-81c0be7a2d04",
+        "generation": 1
+      },
+      "spec": {
+        "sourceRef": { "name": "vcenter-hq" },
+        "storageClass": "replicated",
+        "vms": [
+          { "id": "vm-5108", "name": "erp-web-01", "instanceType": "u1.medium" },
+          { "id": "vm-5109", "name": "erp-web-02", "instanceType": "u1.medium" },
+          { "id": "vm-5110", "name": "erp-batch-01", "instanceType": "u1.large" }
+        ]
+      },
+      "status": {
+        "phase": "Transferring",
+        "observedGeneration": 1,
+        "startedAt": "2026-09-12T06:15:33Z",
+        "message": "Transferring disk data; the source machines keep running until cutover",
+        "vms": [
+          {
+            "id": "vm-5108",
+            "name": "erp-web-01",
+            "phase": "Succeeded",
+            "progress": 100,
+            "vmInstance": "erp-web-01",
+            "disks": ["erp-web-01-disk-0"]
+          },
+          {
+            "id": "vm-5109",
+            "name": "erp-web-02",
+            "phase": "Transferring",
+            "progress": 46,
+            "message": "Copying disk 1 of 1"
+          },
+          {
+            "id": "vm-5110",
+            "name": "erp-batch-01",
+            "phase": "Pending",
+            "progress": 0,
+            "message": "Queued behind the transfers in flight"
+          }
+        ],
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "False",
+            "reason": "Transferring",
+            "message": "1 of 3 machines imported",
+            "lastTransitionTime": "2026-09-12T06:15:33Z",
+            "observedGeneration": 1
+          }
+        ]
+      }
+    }
+  ]
+}

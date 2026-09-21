@@ -1,0 +1,97 @@
+Temporary: carries cozystack/cozystack#4286 (Repositories moves from the
+Marketplace to Admin) into the demo before it is merged upstream. Once it
+lands, this patch stops applying and the build stops with "upstream
+drifted"; delete this file then.
+
+diff --git a/apps/console/src/routes/AdminPage.tsx b/apps/console/src/routes/AdminPage.tsx
+index c0be851ec..53152429d 100644
+--- a/apps/console/src/routes/AdminPage.tsx
++++ b/apps/console/src/routes/AdminPage.tsx
+@@ -14,6 +14,7 @@ import { InfoRedirect } from "./InfoRedirect.tsx"
+ import { ModulesPage } from "./ModulesPage.tsx"
+ import { ExternalIpsPage } from "./ExternalIpsPage.tsx"
+ import { TenantsPage } from "./TenantsPage.tsx"
++import { TapsPage } from "./TapsPage.tsx"
+ import { ApplicationOrderPage } from "./ApplicationOrderPage.tsx"
+ import { ApplicationEditRoute } from "./detail/ApplicationEditRoute.tsx"
+ import { ApplicationDetailPage } from "./detail/ApplicationDetailPage.tsx"
+@@ -21,7 +22,7 @@ import { ApplicationListPage } from "./ApplicationListPage.tsx"
+ 
+ /**
+  * Admin portal at /admin/*. Administration (Info, Modules, External IPs,
+- * Tenants) is always accessible, so the portal itself carries no gate. The two
++ * Repositories, Tenants) is always accessible, so the portal itself carries no gate. The two
+  * cluster-wide operator areas keep their own independent permissions: Capacity
+  * (nodes/list) and Backup Classes (backupclasses/update). Each is wrapped in a
+  * layout guard that closes the direct-URL hole the sidebar already hides, so a
+@@ -47,6 +48,7 @@ export function AdminPage() {
+       <Route path="info" element={<InfoRedirect />} />
+       <Route path="modules" element={<ModulesPage />} />
+       <Route path="external-ips" element={<ExternalIpsPage />} />
++      <Route path="taps" element={<TapsPage />} />
+       <Route path="tenants" element={<TenantsPage />} />
+       <Route path="new/:appName" element={<ApplicationOrderPage />} />
+       <Route path=":plural/:name/edit" element={<ApplicationEditRoute />} />
+diff --git a/apps/console/src/routes/MarketplacePage.tsx b/apps/console/src/routes/MarketplacePage.tsx
+index 16f1ab4cb..87875ea59 100644
+--- a/apps/console/src/routes/MarketplacePage.tsx
++++ b/apps/console/src/routes/MarketplacePage.tsx
+@@ -1,15 +1,14 @@
+-import { Route, Routes } from "react-router"
++import { Navigate, Route, Routes } from "react-router"
+ import { MarketplaceList } from "./MarketplaceList.tsx"
+ import { ApplicationOrderPage } from "./ApplicationOrderPage.tsx"
+-import { TapsPage } from "./TapsPage.tsx"
+ 
+ export function MarketplacePage() {
+   return (
+     <Routes>
+       <Route index element={<MarketplaceList />} />
+       <Route path="c/:category" element={<MarketplaceList />} />
+-      {/* Static route must precede the :appName catch-all. */}
+-      <Route path="taps" element={<TapsPage />} />
++      {/* Repositories moved to Admin; must precede the :appName catch-all. */}
++      <Route path="taps" element={<Navigate to="/admin/taps" replace />} />
+       <Route path=":appName" element={<ApplicationOrderPage />} />
+     </Routes>
+   )
+diff --git a/apps/console/src/routes/sidebar-sections.tsx b/apps/console/src/routes/sidebar-sections.tsx
+index 694df58d4..f1db4e578 100644
+--- a/apps/console/src/routes/sidebar-sections.tsx
++++ b/apps/console/src/routes/sidebar-sections.tsx
+@@ -57,7 +57,6 @@ export function useMarketplaceSidebarSections(): SidebarSection[] {
+         title: "Marketplace",
+         items: [
+           { label: "Marketplace", to: "/marketplace", end: true, icon: LayoutGrid },
+-          { label: "Repositories", to: "/marketplace/taps", icon: Package },
+           ...ordered.map((category) => ({
+             label: category,
+             to: `/marketplace/c/${encodeURIComponent(category)}`,
+@@ -155,7 +154,7 @@ export function useAdminAccess(): {
+ 
+ /**
+  * The Admin tab is always visible: Administration (Info, Modules, External IPs,
+- * Tenants) needs no special permission. The gated Capacity/Backup-Classes areas
++ * Repositories, Tenants) needs no special permission. The gated Capacity/Backup-Classes areas
+  * keep their own per-area guards inside the portal.
+  */
+ export function useCanSeeAdmin(): boolean {
+@@ -164,8 +163,8 @@ export function useCanSeeAdmin(): boolean {
+ 
+ /**
+  * Admin sidebar: Administration first (always visible, no permission needed —
+- * Tenants, Modules, External IPs; per-tenant Info is a row action in the
+- * Tenants tree), then the cluster-wide operator areas (Capacity and Backup
++ * Tenants, Modules, External IPs, Repositories; per-tenant Info is a row action
++ * in the Tenants tree), then the cluster-wide operator areas (Capacity and Backup
+  * Classes). Each operator area is gated by its own permission so the sidebar
+  * never shows an area the user cannot open.
+  */
+@@ -202,6 +201,7 @@ export function useAdminSidebarSections(): SidebarSection[] {
+             alsoMatch: modulePaths ? modulePaths.split(",") : undefined,
+           },
+           { label: "External IPs", to: "/admin/external-ips", icon: Globe },
++          { label: "Repositories", to: "/admin/taps", icon: Package },
+         ],
+       },
+     ]

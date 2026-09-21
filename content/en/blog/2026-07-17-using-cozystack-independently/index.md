@@ -23,11 +23,10 @@ We are especially looking for teams and individual adopters using Cozystack **ou
 
 ## How to take part
 
-If you are using Cozystack independently, please contact my partner Timur Tukaev:
-
-- E-mail: [timur.tukaev@aenix.io](mailto:timur.tukaev@aenix.io)
-- Telegram: [@tym83](https://t.me/tym83)
-- LinkedIn: [linkedin.com/in/tym83](https://www.linkedin.com/in/tym83/)
+If you are using Cozystack independently, tell the maintainers in [GitHub
+Discussions](https://github.com/cozystack/cozystack/discussions). If you would
+rather not say so in public, reach us in the project's Slack or Telegram
+channels linked below and we will take it from there.
 
 **This is not a sales call. Interviews can remain confidential.**
 

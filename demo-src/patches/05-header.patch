@@ -1,0 +1,19 @@
+diff --git a/packages/ui/src/components/layout/Header.tsx b/packages/ui/src/components/layout/Header.tsx
+index 7213c23..1b788e0 100644
+--- a/packages/ui/src/components/layout/Header.tsx
++++ b/packages/ui/src/components/layout/Header.tsx
+@@ -100,10 +100,13 @@ export function Header({
+         <div className="mx-2 h-5 w-px bg-slate-200" />
+ 
+         <div className="relative">
++          {/* Demo: nothing to sign out of, and Sign Out (the only entry) would
++              leave the demo for a URL nothing serves. */}
+           <button
+             type="button"
+             onClick={() => setShowUserMenu((v) => !v)}
+-            className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-slate-100"
++            disabled={!!import.meta.env.VITE_DEMO}
++            className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-slate-100 disabled:cursor-default disabled:hover:bg-transparent"
+           >
+             <User className="h-[18px] w-[18px] text-slate-400" />
+             <span className="text-sm text-slate-600">{username ?? "\u00A0"}</span>

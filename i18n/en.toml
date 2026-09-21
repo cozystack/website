@@ -7,6 +7,21 @@ other = "Screenshots"
 [home_benefits]
 other = "Benefits"
 
+[home_use_cases]
+other = "Where Cozystack fits"
+
+[home_use_cases_lead]
+other = "Six situations the project was built for. Every one of them is someone running it in production today."
+
+[home_use_cases_more]
+other = "Read more"
+
+[home_use_cases_prev]
+other = "Previous use case"
+
+[home_use_cases_next]
+other = "Next use case"
+
 [home_features]
 other = "Features"
 

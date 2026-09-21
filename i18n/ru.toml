@@ -7,6 +7,21 @@ other = "Скриншоты"
 [home_benefits]
 other = "Преимущества"
 
+[home_use_cases]
+other = "Кому подходит Cozystack"
+
+[home_use_cases_lead]
+other = "Шесть ситуаций, ради которых проект и делался. За каждой — кто-то, у кого это уже работает в проде."
+
+[home_use_cases_more]
+other = "Подробнее"
+
+[home_use_cases_prev]
+other = "Предыдущий кейс"
+
+[home_use_cases_next]
+other = "Следующий кейс"
+
 [home_features]
 other = "Возможности"
 

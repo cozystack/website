@@ -7,6 +7,21 @@ other = "स्क्रीनशॉट"
 [home_benefits]
 other = "लाभ"
 
+[home_use_cases]
+other = "Cozystack किनके लिए है"
+
+[home_use_cases_lead]
+other = "छह स्थितियाँ, जिनके लिए यह प्रोजेक्ट बना है। हर एक के पीछे कोई है जो इसे आज प्रोडक्शन में चला रहा है।"
+
+[home_use_cases_more]
+other = "और जानें"
+
+[home_use_cases_prev]
+other = "पिछला उपयोग-प्रसंग"
+
+[home_use_cases_next]
+other = "अगला उपयोग-प्रसंग"
+
 [home_features]
 other = "विशेषताएँ"
 

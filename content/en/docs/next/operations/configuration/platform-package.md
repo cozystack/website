@@ -204,6 +204,25 @@ registries:
 | `resources.memoryAllocationRatio` | `1` | Memory allocation ratio: `1/memoryAllocationRatio` memory requested per unit of configured memory. |
 | `resources.ephemeralStorageAllocationRatio` | `40` | Ephemeral storage allocation ratio: `1/ephemeralStorageAllocationRatio` ephemeral storage requested per unit of configured storage. |
 
+#### KubeVirt
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `kubevirt.disabledFeatureGates` | `[]` | KubeVirt feature gates to switch off, on top of the ones the platform disables itself (`Template`, `ExternalNetResourceInjection`, and `ImageVolume` on Kubernetes older than 1.35). KubeVirt enables every Beta gate by default; list a gate here when the cluster cannot carry it, for example `ImageVolume` on a container runtime without image volume support. A gate the platform enables cannot be switched off here: the render stops and names the gate. |
+| `kubevirt.migrations` | `{}` | Cluster-wide settings forwarded to `spec.configuration.migrations` on the KubeVirt CR. Set them through the platform Package so they are part of the rendered configuration. An empty or null map leaves KubeVirt's defaults unchanged. |
+
+Example under `spec.components.platform.values`:
+
+```yaml
+kubevirt:
+  migrations:
+    bandwidthPerMigration: 625M
+    parallelMigrationsPerCluster: 2
+    parallelOutboundMigrationsPerNode: 1
+```
+
+`bandwidthPerMigration` is a quantity in bytes per second: `625M` is 625,000,000 bytes/s (5 Gbit/s) per migration. This example allows up to two migrations across the cluster and one outbound migration per node.
+
 #### Internal fields
 
 These fields are managed automatically by the Cozystack operator and should not be modified manually.

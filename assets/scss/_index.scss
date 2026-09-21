@@ -231,6 +231,108 @@ main.td-main {
 }
 
 
+// Live-demo band. Docsy's blocks/lead wraps everything it is given in
+// `.h4 mb-0`, so without these rules the body copy inherits heading size and
+// weight, the call to action sits inline at the end of the paragraph, and the
+// band has no vertical rhythm of its own. Every declaration below undoes one
+// of those inherited defaults rather than decorating.
+.section-live-demo {
+  .td-box--primary {
+    // A gradient rather than the flat primary fill: the band sits between two
+    // white sections and a single flat slab reads as a coloured gap. The
+    // gradient gives it a top and a bottom, so it reads as its own surface.
+    background-image: linear-gradient(160deg, $cozy-dark-blue 0%, $cozy-darkest-blue 100%);
+    padding-top: 5.5rem;
+    padding-bottom: 5.5rem;
+
+    @include media-breakpoint-down(md) {
+      padding-top: 3.25rem;
+      padding-bottom: 3.25rem;
+    }
+  }
+
+  // The band is a destination, not a step in a sequence: no scroll cue.
+  .td-arrow-down::before {
+    display: none;
+  }
+
+  .section-label {
+    margin: 0 0 1.125rem 0;
+    font-size: clamp(1.625rem, 3.2vw, 2.375rem);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    color: $cozy-white;
+  }
+
+  // Reset the inherited .h4 typography to body copy, and hold the line length
+  // to something readable -- centred text across a 1280px container is not.
+  .live-demo-lead {
+    // ~72 characters at this size; 46rem ran to ~84, past comfortable measure.
+    max-width: 40rem;
+    margin: 0 auto;
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.65;
+    // Flat white, not white-with-alpha: at 0.92 over this band the ratio is
+    // 4.28:1, under the 4.5:1 AA needs for body copy. Do not dim this text.
+    color: $cozy-white;
+  }
+
+  .live-demo-cta {
+    margin: 2.25rem 0 0 0;
+
+    // Deliberately not @include flat-white-button: that mixin paints the label
+    // $cozy-mid-gray with !important, which on a saturated blue ground reads as
+    // a disabled control rather than the one thing on the band to click.
+    a.btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.9375rem 2.25rem;
+      border: none;
+      border-radius: 6px;
+      background-color: $cozy-white !important;
+      color: $cozy-darkest-blue !important;
+      font-size: 1.0625rem;
+      font-weight: 600;
+      letter-spacing: 0.005em;
+      box-shadow: 0 2px 10px rgba(#000, 0.16) !important;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+      &:hover {
+        background-color: $cozy-white !important;
+        color: $cozy-darkest-blue !important;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(#000, 0.22) !important;
+        text-shadow: none !important;
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(#000, 0.2) !important;
+      }
+
+      // Bootstrap has no other focus affordance on .btn once the box-shadow is
+      // replaced, so the ring has to be drawn explicitly.
+      &:focus-visible {
+        outline: 3px solid $cozy-white;
+        outline-offset: 3px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+
+        &:hover,
+        &:active {
+          transform: none;
+        }
+      }
+    }
+  }
+}
+
 .section-community {
   @include gray-background-a;
   background-color: $cozy-gray;
@@ -454,4 +556,288 @@ label.date {
 
 .navbar-brand__name {
   display: none;
+}
+
+// Use-cases: who runs Cozystack and what it solves for them.
+//
+// One case per slide. Six cards side by side made every case a column of
+// narrow text that gets skimmed; a case only works if it is read, so it gets
+// the full width and the reader moves between them deliberately.
+.use-cases {
+  padding: 4.5rem 0 5rem;
+
+  @include media-breakpoint-down(md) {
+    padding: 2.75rem 0 3rem;
+  }
+
+  &__heading {
+    margin: 0 0 0.75rem;
+    text-align: center;
+  }
+
+  &__lead {
+    max-width: 40rem;
+    margin: 0 auto 3rem;
+    text-align: center;
+    color: $cozy-mid-gray;
+  }
+
+  &__carousel {
+    position: relative;
+    // Not the full container width: a single case stretched across 1280px
+    // gives lines nobody wants to track back across. The cap also pulls the
+    // controls in to hug the panel instead of floating at the screen edges.
+    max-width: 62rem;
+    margin: 0 auto;
+    // Room for the controls either side of the case, so the arrows never sit
+    // on top of the text.
+    padding: 0 3.5rem;
+
+    @include media-breakpoint-down(lg) {
+      padding: 0 2.5rem;
+    }
+
+    @include media-breakpoint-down(md) {
+      padding: 0;
+    }
+  }
+
+  // Slides are different lengths. Without a floor the whole section jumps
+  // height on every change, which reads as the page breaking.
+  // Bootstrap shows one slide and hides the rest with display:none, so the
+  // carousel sizes to whatever case is showing and the whole section jogs on
+  // every change -- by 44px between the shortest and longest English case,
+  // and more as the column narrows and the text wraps further. A fixed
+  // min-height only fixes that at one width and one locale.
+  //
+  // Stacking every slide in a single grid cell makes the container size to the
+  // tallest case instead, at any width and in any language. Hidden slides keep
+  // their box but leave the accessibility tree, so their links are not
+  // reachable by keyboard while off-screen.
+  .carousel-inner {
+    display: grid;
+  }
+
+  .carousel-item {
+    grid-area: 1 / 1;
+    display: block;
+    float: none;
+    margin-right: 0;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+  }
+
+  .carousel-item.active {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.35s ease, visibility 0s;
+  }
+
+  &__case {
+    display: flex;
+    flex-direction: column;
+    // A floor for the short cases, so the panel keeps its presence instead of
+    // shrink-wrapping the text. The height of the tallest case is handled
+    // structurally -- see the grid stack on .carousel-inner below.
+    min-height: 19rem;
+    padding: 3rem 3.5rem;
+    border: 1px solid rgba($cozy-black, 0.1);
+    border-radius: 12px;
+    background: $cozy-white;
+
+    @include media-breakpoint-down(md) {
+      min-height: 0;
+      padding: 2rem 1.5rem;
+    }
+  }
+
+  // The audience names the whole case, so it heads the panel rather than
+  // sitting on top of one of the two columns.
+  &__title {
+    margin: 0 0 2rem;
+    text-align: center;
+    font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+
+    @include media-breakpoint-down(md) {
+      margin-bottom: 1.25rem;
+    }
+  }
+
+  &__body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem 4rem;
+    align-items: start;
+    // Centre the pair in whatever height the panel floor leaves over.
+    flex: 1;
+    align-content: center;
+
+    @include media-breakpoint-down(md) {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+  }
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  // The situation is the reader recognising themselves; the outcome is the
+  // answer. Different colour and weight so the pair reads as a question and
+  // its reply rather than as two paragraphs.
+  &__situation {
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: $cozy-mid-gray;
+  }
+
+  &__outcome {
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: $cozy-black;
+  }
+
+  &__link {
+    margin-top: 1.25rem;
+    align-self: flex-start;
+    font-size: 1rem;
+    font-weight: 600;
+
+    &::after {
+      // Non-breaking space: the arrow stays with the last word, while the link
+      // text itself is still free to wrap.
+      content: "\00a0\2192";
+    }
+  }
+
+  // Bootstrap's default control icons and indicator bars are white, meant for
+  // a carousel over a photograph. On this white ground they are invisible.
+  .carousel-control-prev,
+  .carousel-control-next {
+    width: 3rem;
+    opacity: 1;
+    color: $cozy-mid-gray;
+
+    @include media-breakpoint-down(md) {
+      display: none;
+    }
+
+    &:hover .carousel-control-prev-icon,
+    &:hover .carousel-control-next-icon {
+      border-color: $primary;
+      color: $primary;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $primary;
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+  }
+
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid rgba($cozy-black, 0.18);
+    border-radius: 50%;
+    background-color: $cozy-white;
+    // Bootstrap supplies a white chevron as a background image; recolour it by
+    // masking instead, so the arrow follows `color`.
+    background-image: none;
+    position: relative;
+    transition: border-color 0.15s ease, color 0.15s ease;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 0.625rem;
+      height: 0.625rem;
+      border-top: 2px solid currentColor;
+      border-right: 2px solid currentColor;
+    }
+  }
+
+  .carousel-control-prev-icon::before {
+    transform: translateX(2px) rotate(-135deg);
+  }
+
+  .carousel-control-next-icon::before {
+    transform: translateX(-2px) rotate(45deg);
+  }
+
+  .carousel-indicators {
+    position: static;
+    margin: 1.75rem 0 0;
+
+    button {
+      width: 8px;
+      height: 8px;
+      border: none;
+      border-radius: 50%;
+      background-color: rgba($cozy-black, 0.22);
+      opacity: 1;
+      transition: background-color 0.15s ease;
+
+      &.active {
+        background-color: $primary;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $primary;
+        outline-offset: 3px;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .carousel-item,
+    .carousel-item.active {
+      transition: none;
+    }
+
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon,
+    .carousel-indicators button {
+      transition: none;
+    }
+  }
+}
+
+// Same defence as .oss-card: Docsy can be put into dark mode, and this case
+// panel would otherwise stay white on a dark page.
+[data-bs-theme="dark"] .use-cases {
+  .use-cases__lead,
+  .use-cases__situation {
+    color: var(--bs-gray-400, #ced4da);
+  }
+
+  .use-cases__case {
+    border-color: var(--bs-gray-700, #495057);
+    background: var(--bs-gray-900, #212529);
+  }
+
+  .use-cases__outcome {
+    color: var(--bs-gray-100, #f8f9fa);
+  }
+
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    background-color: var(--bs-gray-900, #212529);
+    border-color: var(--bs-gray-700, #495057);
+  }
+
+  .carousel-indicators button {
+    background-color: var(--bs-gray-600, #6c757d);
+  }
 }
