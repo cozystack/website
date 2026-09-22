@@ -76,14 +76,31 @@ kubectl get helmrelease cozystack-platform --namespace cozy-system \
 Then delete the Package object.
 
 {{% alert title="Warning" color="warning" %}}
-Deleting the Package uninstalls the component's Helm release, and that destroys more than the workloads. Anything the chart rendered as an ordinary template without `helm.sh/resource-policy: keep` goes with the release, CRDs and namespaces included, and Kubernetes deletes every custom resource of those CRD kinds along with them. Removing `cozystack.metallb` takes the MetalLB CRDs and with them every IPAddressPool, L2Advertisement, BGPPeer and the rest of those kinds cluster-wide; removing `cozystack.cozystack-basics` takes the `cozy-public` namespace and everything stored in it. Back up anything you still need first.
+Deleting the Package uninstalls the component's Helm release, and that destroys more than the workloads. Anything the chart rendered as an ordinary template without `helm.sh/resource-policy: keep` goes with the release, CRDs and namespaces included, and Kubernetes deletes every custom resource of those CRD kinds along with them. The annotation is not the only thing that keeps an object alive. From v1.5.0 the platform installs a ValidatingAdmissionPolicy that denies DELETE on anything labelled `platform.cozystack.io/no-delete: "true"`, and several component charts render objects that carry it; `kubectl get <kind> --all-namespaces --selector platform.cozystack.io/no-delete=true` lists them for a given kind. One denial fails the whole uninstall: Helm deletes what it can and then errors out, and the controller keeps its finalizer and retries, so the HelmRelease sits in deletion and the wait below runs to its timeout. Taking the label off hands the object to the uninstall, which is the whole point of the guard, and it has to come off every labelled object in the release: the `cert-manager-issuers` release of `cozystack.cert-manager` labels three ClusterIssuers, and unlabelling one of them still leaves the other two to fail the uninstall. The command is `kubectl label <kind> <name> --namespace <ns> platform.cozystack.io/no-delete-`, without `--namespace` for cluster-scoped kinds. Weigh what that costs before doing it: `cozystack.cozystack-basics` labels two objects, the `tenant-root` Namespace and the `tenant-root` HelmRelease, and only the Namespace is one the uninstall would delete, since the HelmRelease also carries the keep annotation. Unlabelling that Namespace means the uninstall takes the root tenant and every application in it. Removing `cozystack.metallb` takes every CRD the MetalLB chart bundles, subcharts included, and with them every custom resource of those kinds cluster-wide; removing `cozystack.cozystack-basics` takes the `cozy-public` namespace and everything stored in it. Back up anything you still need first.
 {{% /alert %}}
 
 The namespace a component installs into is the exception: the operator applies that one itself, outside the component's release and with no ownerReference, so the uninstall never had it to remove.
 
+List the releases the Package owns before deleting it. The operator labels every HelmRelease it renders with the name of the Package that produced it, and one Package can own several:
+
+```bash
+kubectl get helmrelease --all-namespaces --selector cozystack.io/package=<package-name> \
+  --output custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,SUSPENDED:.spec.suspend'
+```
+
+Clear `spec.suspend` on any release that shows `true` before going on. Flux skips the uninstall for a suspended HelmRelease and only drops its own finalizer, so that release disappears with everything it installed left behind and nothing left managing it.
+
 ```bash
 kubectl delete package.cozystack.io <package-name>
 ```
+
+Nothing holds a finalizer on the Package, so this command returns as soon as the object is gone and the uninstall it triggers runs afterwards. Wait on each release from the listing to know the destructive part has finished:
+
+```bash
+kubectl wait --for=delete helmrelease/<name> --namespace <namespace> --timeout=10m
+```
+
+`kubectl wait --for=delete` exits 0 for a name that was never there, silently and with nothing to tell it apart from a deletion it watched, so take both values from the listing rather than guessing them. A returned wait says the HelmRelease is gone, not that the uninstall ran.
 
 Deleting the Package while the platform values still render it means the next platform upgrade brings it back, undoing the removal one level up. Nothing reports this at the time: the delete succeeds either way and the Package reappears whenever that upgrade happens to run.
 
