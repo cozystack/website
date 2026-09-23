@@ -1,7 +1,7 @@
 ---
-title: "Compliance on Kubernetes: PCI DSS, GDPR, DORA, CIS"
+title: "Compliance on Kubernetes: PCI DSS, GDPR, DORA, CIS, Conformance"
 linkTitle: "Compliance"
-description: "How Cozystack supports PCI DSS, GDPR, DORA and the CIS Benchmark: which controls the platform provides by default, which are opt-in, and which stay with you."
+description: "How Cozystack supports PCI DSS, GDPR, DORA and the CIS Benchmark, plus CNCF Kubernetes and AI Conformance: which controls the platform provides by default, which are opt-in, and which stay with you."
 type: "page"
 weight: 45
 ---
@@ -34,3 +34,8 @@ command you can run against your own cluster.
 - **[Kubernetes Conformance](/compliance/kubernetes-conformance/)** — CNCF conformance results
   for both shapes the platform is used in: a self-hosted cluster passing 446 of 446, and a
   hosted platform listed in the CNCF record for three releases.
+- **[AI Conformance](/compliance/ai-conformance/)** — all twelve requirements of the CNCF
+  Kubernetes AI Conformance programme met and the v1.35 self-assessment merged into the CNCF
+  record, with the mechanism and a command behind each: DRA, GPU Operator and MIG/HAMi sharing,
+  GPUs across the VM boundary, Gateway API inference routing, Kueue gang scheduling, and
+  accelerator metrics.
