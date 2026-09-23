@@ -132,7 +132,7 @@ The host cleanup recipe below is the manual fallback for the rare case where the
 
 1. Set `addons.ouroboros.enabled: false` in the tenant `Kubernetes` CR. Flux runs `helm uninstall` and the chart's pre-delete hook patches `kube-system/coredns-custom` for you.
 
-If the chart's pre-delete hook fails to land (controller pod stuck CrashLooping, ConfigMap RBAC drift, Job timeout, manual `kubectl delete hr` bypassing helm uninstall), the symptom is a stale rewrite in the tenant `kube-system/coredns-custom` ConfigMap pointing at a Service that is now gone. Recover by running the tenant cleanup recipe below against the tenant admin-kubeconfig.
+If the chart's pre-delete hook fails to land (controller pod stuck CrashLooping, ConfigMap RBAC drift, Job timeout, the HelmRelease was suspended when it was deleted so the uninstall step — and the hook with it — is skipped entirely), the symptom is a stale rewrite in the tenant `kube-system/coredns-custom` ConfigMap pointing at a Service that is now gone. Recover by running the tenant cleanup recipe below against the tenant admin-kubeconfig.
 
 Tenant ingress-nginx is unaffected by toggling `addons.ouroboros` on its own — PROXY-protocol on the tenant ingress is wired manually via `valuesOverride` and stays where the operator put it.
 
