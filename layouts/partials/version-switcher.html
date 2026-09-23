@@ -1,10 +1,22 @@
+{{- /* Language-aware version switcher.
+
+  params.versions[].url are default-language paths (/docs/vX/…). On a localized page
+  .Page.RelPermalink carries the language prefix (/ru/docs/vX/…), so the raw prefix
+  match below never fires there and every switch drops the reader onto the English
+  page. Strip the language base before matching, and re-apply it (or a real localized
+  page) when building each target.
+
+  $langBase is "" for the default language and "/ru", "/zh-cn", "/es" … for the others,
+  taken from the language's own home permalink. */ -}}
+{{- $langBase := strings.TrimSuffix "/" .Site.Home.RelPermalink -}}
 {{- if and .Site.Params.versions (gt (len .Site.Params.versions) 1) -}}
 {{- $currentPath := .Page.RelPermalink -}}
+{{- $logicalPath := strings.TrimPrefix $langBase $currentPath -}}
 {{- $currentVersionID := "" -}}
 {{- $currentVersionUrl := "" -}}
 {{- $currentVersionLabel := "" -}}
 {{- range .Site.Params.versions -}}
-  {{- if hasPrefix $currentPath .url -}}
+  {{- if hasPrefix $logicalPath .url -}}
     {{- $currentVersionID = .id -}}
     {{- $currentVersionUrl = .url -}}
     {{- $currentVersionLabel = .version -}}
@@ -24,9 +36,13 @@
   <ul class="version-switcher__menu dropdown-menu" aria-labelledby="versionSwitcherButton">
     {{- range .Site.Params.versions }}
     {{- if not .hidden }}
-    {{- $targetPath := .url -}}
+    {{- /* Default target: this version's root in the CURRENT language, never the
+           English root. When a localized page for the same sub-path exists,
+           site.GetPage (resolved in the current-language site) upgrades it to that
+           exact page. */ -}}
+    {{- $targetPath := printf "%s%s" $langBase .url -}}
     {{- if $currentVersionUrl -}}
-      {{- $subPath := strings.TrimPrefix $currentVersionUrl $currentPath -}}
+      {{- $subPath := strings.TrimPrefix $currentVersionUrl $logicalPath -}}
       {{- $candidatePath := printf "%s%s" .url $subPath -}}
       {{- $trimmed := strings.TrimRight "/" $candidatePath -}}
       {{- with site.GetPage $trimmed -}}
@@ -44,8 +60,9 @@
 </div>
 {{- else if .Site.Params.versions -}}
 {{- $currentPath := .Page.RelPermalink -}}
+{{- $logicalPath := strings.TrimPrefix $langBase $currentPath -}}
 {{- range .Site.Params.versions -}}
-  {{- if hasPrefix $currentPath .url -}}
+  {{- if hasPrefix $logicalPath .url -}}
   <span class="version-switcher__label">{{ .version }}</span>
   {{- end -}}
 {{- end -}}

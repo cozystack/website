@@ -1,0 +1,94 @@
+name: i18n translate
+
+# Daily translation run, one weekly PR — the same contract as hack/i18n/run-daily.sh,
+# moved off a maintainer's clone and personal Max subscription onto CI and an
+# ORG-OWNED Anthropic API key (auth: api-key). Nothing reaches production
+# automatically: the run pushes to a weekly branch and opens a PR a maintainer
+# merges. No auto-merge, CODEOWNERS/branch protection untouched.
+#
+# Required secret:
+#   I18N_ANTHROPIC_API_KEY  — an organization-owned Anthropic API key (metered).
+# Optional secret:
+#   I18N_GH_TOKEN           — a PAT/app token used to push the branch and open the
+#                             PR so its checks (i18n-lint, DCO) actually run; the
+#                             default GITHUB_TOKEN cannot trigger them. Without it
+#                             the run still works, but the PR opens with no checks.
+#
+# Until I18N_ANTHROPIC_API_KEY exists the job is a green no-op (see the guard step),
+# so enabling the schedule before provisioning the key does not spam failures.
+
+on:
+  schedule:
+    - cron: '17 3 * * *'   # daily, 03:17 UTC
+  workflow_dispatch:
+    inputs:
+      lang:
+        description: 'Limit to one language code (e.g. ru); empty = all'
+        required: false
+        default: ''
+      limit:
+        description: 'Max pages this run; empty = until the daily quota stops it'
+        required: false
+        default: ''
+
+concurrency:
+  group: i18n-translate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      I18N_AUTH: api-key
+      ANTHROPIC_API_KEY: ${{ secrets.I18N_ANTHROPIC_API_KEY }}
+      GH_TOKEN: ${{ secrets.I18N_GH_TOKEN || github.token }}
+    steps:
+      - name: Guard — org API key provisioned
+        id: guard
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY}" ]; then
+            echo "::notice::secret I18N_ANTHROPIC_API_KEY is not set yet — skipping this run."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.I18N_GH_TOKEN || github.token }}
+
+      - name: Fetch all branches (weekly-branch bookkeeping needs origin/i18n/week-*)
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+          git fetch --prune origin
+
+      - name: Set up Python
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude CLI (driven by the Agent SDK)
+        if: steps.guard.outputs.skip != 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run translation pipeline
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          args=()
+          if [ -n "${{ github.event.inputs.lang }}" ]; then args+=(--lang "${{ github.event.inputs.lang }}"); fi
+          if [ -n "${{ github.event.inputs.limit }}" ]; then args+=(--limit "${{ github.event.inputs.limit }}"); fi
+          hack/i18n/run-daily.sh "${args[@]}"

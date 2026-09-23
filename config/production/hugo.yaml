@@ -72,6 +72,18 @@ module:
       files:
         - '! **/_include/*'
         - '! docs/next/**'
+    - source: content/es
+      target: content
+      lang: es
+      files:
+        - '! **/_include/*'
+        - '! docs/next/**'
+    - source: content/pt-br
+      target: content
+      lang: pt-br
+      files:
+        - '! **/_include/*'
+        - '! docs/next/**'
     - source: node_modules/bootstrap
       target: assets/vendor/bootstrap
     - source: node_modules/@fortawesome/fontawesome-free
