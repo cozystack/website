@@ -121,8 +121,10 @@ fi
 
 # 5. Snapshot data/versions/next.yaml → data/versions/$DOC_VERSION.yaml so the
 #    {{< version-pin >}} shortcode in the released docs keeps resolving to the
-#    values that were true at the cut. next.yaml is unchanged; update it
-#    separately for the next development cycle.
+#    values that were true at the cut. next.yaml is unchanged. The upstream
+#    promote workflow (cozystack/cozystack promote-rc.yaml) regenerates it from
+#    the release staging branch before calling release-next, so the snapshot
+#    carries that release's Talos pins.
 VERSIONS_DIR="data/versions"
 NEXT_DATA="${VERSIONS_DIR}/next.yaml"
 TARGET_DATA="${VERSIONS_DIR}/${DOC_VERSION}.yaml"
@@ -130,11 +132,22 @@ if [[ -f "$NEXT_DATA" ]]; then
   if [[ -e "$TARGET_DATA" ]]; then
     echo "! $TARGET_DATA already exists; leaving it as-is." >&2
   else
-    cp "$NEXT_DATA" "$TARGET_DATA"
+    # Replace the trunk header (the leading comment block) and the trunk wording
+    # in section comments: both describe next.yaml, not a frozen snapshot.
+    {
+      echo "# Pinned upstream-tool versions for the Cozystack ${DOC_VERSION} docs."
+      echo "#"
+      echo "# Snapshotted from ${NEXT_DATA} by hack/release_next.sh when ${DOC_VERSION}"
+      echo "# was released. 'make update-all' does not rewrite it; patch releases"
+      echo "# update it by hand (hack/release-checklist.md)."
+      echo ""
+      awk 'h && /^#/ {next} h && /^$/ {h=0; next} {h=0; print}' h=1 "$NEXT_DATA" \
+        | sed 's|for this trunk\.|for this minor.|'
+    } > "$TARGET_DATA"
     # Pin the release-coupled Cozystack version from RELEASE_TAG so a stale
     # next.yaml can't silently freeze the wrong version into the snapshot —
     # this is exactly how v1.5.yaml once inherited next.yaml's v1.3.0 values.
-    # Talos pins are left as snapshotted; they're refreshed manually per cycle.
+    # Talos pins are left as snapshotted.
     VERSION_BARE="${RELEASE_TAG#v}"
     sed -i.bak \
       -e "s|^\(cozystack_version:[[:space:]]*\).*|\1\"${VERSION_BARE}\"|" \
