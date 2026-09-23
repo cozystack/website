@@ -540,7 +540,10 @@ def main() -> int:
         print("::error::claude-agent-sdk not installed (pip install claude-agent-sdk)", file=sys.stderr)
         return 1
     # Auth mode is a config decision, not a code one (see config.yaml `auth`).
-    auth_mode = cfg.get("auth", "oauth-subscription")
+    # I18N_AUTH overrides it for CI, which runs on an org api-key while the tracked
+    # default stays oauth-subscription for local bootstrap; run-daily.sh reads the
+    # same var, so the two never disagree.
+    auth_mode = os.environ.get("I18N_AUTH") or cfg.get("auth", "oauth-subscription")
     has_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
     if auth_mode == "oauth-subscription" and has_key:
         print("::error::auth=oauth-subscription but ANTHROPIC_API_KEY is set — it shadows the "
