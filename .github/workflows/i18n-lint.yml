@@ -48,3 +48,8 @@ jobs:
         run: |
           python3 -m pip install --quiet pyyaml
           python3 hack/i18n/test_i18n.py
+      - name: Typography lint on published translations
+        # Advisory: reports per-language typography drift (hand edits, pages
+        # translated before a rule existed) without failing the build. Flip to
+        # --strict per language once its backlog is clean.
+        run: python3 hack/i18n/lint_translations.py

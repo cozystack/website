@@ -597,6 +597,20 @@ class TestPayloadProtocol(unittest.TestCase):
             f'===FRONTMATTER===\n{{}}\n===BODY===\ntranslated {masked}', store, set())
         self.assertIn('{{< version-pin "cozystack_version" >}}', body)
 
+    def test_inner_token_the_model_never_saw_is_rejected(self):
+        # The mirror of the case above: the model may OMIT an inner token, but
+        # it must never EMIT one. A reply carrying the legit outer token plus a
+        # hallucinated inner token would otherwise restore the nested content
+        # twice — silent duplication the residual check can no longer catch.
+        masked, store = lib.protect("Use `{{< param version >}}` here.")
+        outer = next(t for t in store if t in masked)
+        inner = next(t for t in store if t not in masked)
+        with self.assertRaises(translate.ProtocolError) as cm:
+            translate._split_payload_response(
+                f'===FRONTMATTER===\n{{}}\n===BODY===\n{outer} и {inner}',
+                store, set())
+        self.assertIn("injected", str(cm.exception))
+
 
 class TestFindingsReport(unittest.TestCase):
     def test_report_names_the_page_and_every_finding(self):
@@ -803,6 +817,175 @@ class TestStaleReportCleanup(unittest.TestCase):
                     fh.write(backup)
             elif os.path.exists(translate.REPORT_PATH):
                 os.unlink(translate.REPORT_PATH)
+
+
+class TestLinkDestinationMasking(unittest.TestCase):
+    """URLs used to be defended by a prompt rule only. They are masked now, so a
+    model that "fixes" or localizes a link cannot silently ship a broken one."""
+
+    def test_inline_link_destination_is_masked_but_text_is_not(self):
+        masked, store = lib.protect("See the [install guide](/docs/v1.5/install) for details.")
+        self.assertNotIn("/docs/v1.5/install", masked)
+        self.assertIn("install guide", masked)  # link text stays translatable
+        self.assertEqual(lib.restore(masked, store),
+                         "See the [install guide](/docs/v1.5/install) for details.")
+
+    def test_autolink_and_refdef_are_masked(self):
+        text = "Visit <https://cozystack.io> now.\n\n[ref]: https://example.com/a?b=c\n"
+        masked, store = lib.protect(text)
+        self.assertNotIn("cozystack.io", masked)
+        self.assertNotIn("example.com", masked)
+        self.assertEqual(lib.restore(masked, store), text)
+
+    def test_link_title_is_left_translatable(self):
+        masked, store = lib.protect('A [link](/a/b "Read this") here.')
+        self.assertIn('"Read this"', masked)
+        self.assertNotIn("/a/b", masked)
+        self.assertEqual(lib.restore(masked, store), 'A [link](/a/b "Read this") here.')
+
+
+class TestIntegrityFindings(unittest.TestCase):
+    def test_clean_translation_has_no_findings(self):
+        self.assertEqual(
+            lib.integrity_findings("Cozystack v1.5 uses --dry-run.",
+                                   "Cozystack v1.5 verwendet --dry-run.", ["Cozystack"]), [])
+
+    def test_dropped_version_is_major(self):
+        f = lib.integrity_findings("Upgrade to v1.5 now.", "Jetzt aktualisieren.")
+        self.assertTrue(any(x["severity"] == "major" and "v1.5" in x["issue"] for x in f))
+
+    def test_localized_decimal_in_a_version_is_caught(self):
+        # "v1.5" rewritten as "v1,5" — the token no longer matches the source.
+        f = lib.integrity_findings("Use v1.5.", "Nutze v1,5.")
+        self.assertTrue(any("v1.5" in x["issue"] for x in f))
+
+    def test_dropped_flag_is_major(self):
+        f = lib.integrity_findings("Pass --dry-run to preview.", "Zum Testen übergeben.")
+        self.assertTrue(any(x["severity"] == "major" and "--dry-run" in x["issue"] for x in f))
+
+    def test_translated_brand_is_caught(self):
+        f = lib.integrity_findings("Cozystack is a platform.", "Козистек — это платформа.",
+                                   ["Cozystack"])
+        self.assertTrue(any("Cozystack" in x["issue"] for x in f))
+
+    def test_code_spans_are_exempt(self):
+        # A version that only lives inside code is already guaranteed by masking;
+        # it must not be double-reported here.
+        self.assertEqual(lib.integrity_findings("Run `helm install v1.5`.", "Führen Sie aus."), [])
+
+    def test_prose_decimal_reformat_is_allowed(self):
+        # The style guides MANDATE the decimal comma in prose; a bare two-part
+        # decimal is a quantity, not a version, and must not be enforced
+        # byte-for-byte (the finding would refire every revise round and block
+        # the gate forever).
+        self.assertEqual(lib.integrity_findings("It is 3.14 wide.", "Es ist 3,14 breit."), [])
+
+    def test_thousands_separator_reformat_is_allowed(self):
+        self.assertEqual(
+            lib.integrity_findings("It runs 10,000 pods.", "Es betreibt 10.000 Pods."), [])
+
+    def test_three_component_bare_version_is_still_caught(self):
+        f = lib.integrity_findings("Upgrade to 1.2.3 now.", "Jetzt aktualisieren.")
+        self.assertTrue(any(x["severity"] == "major" and "1.2.3" in x["issue"] for x in f))
+
+    def test_dnt_term_is_not_counted_inside_larger_words(self):
+        # Substring counting would see 'Go' inside 'Google' and demand a third
+        # occurrence the translation never had.
+        self.assertEqual(
+            lib.integrity_findings("The Go toolchain is part of Google.",
+                                   "Der Go-Toolchain gehört zu Alphabet.", ["Go"]), [])
+
+    def test_localized_date_is_not_an_invented_version(self):
+        # The de guide mandates 24.07.2026 for numeric dates in prose; the bare
+        # three-component branch must not read it as an invented version.
+        self.assertEqual(
+            lib.integrity_findings("Released on 07/24/2026.",
+                                   "Veröffentlicht am 24.07.2026."), [])
+
+    def test_localized_thousands_grouping_is_not_an_invented_version(self):
+        self.assertEqual(
+            lib.integrity_findings("It holds 10,000,000 records.",
+                                   "Es hält 10.000.000 Einträge."), [])
+
+
+class TestTypographyChecks(unittest.TestCase):
+    def test_russian_ascii_quotes_flagged(self):
+        f = lib.check_typography('Это "кластер" здесь.', "ru")
+        self.assertTrue(any("ёлочки" in x["issue"] for x in f))
+
+    def test_russian_guillemets_pass(self):
+        self.assertEqual(lib.check_typography("Это «кластер» здесь.", "ru"), [])
+
+    def test_chinese_halfwidth_punctuation_flagged(self):
+        self.assertTrue(lib.check_typography("这是集群, 然后部署", "zh-cn"))
+
+    def test_chinese_fullwidth_punctuation_passes(self):
+        self.assertEqual(lib.check_typography("这是集群，然后部署。", "zh-cn"), [])
+
+    def test_pt_pt_vocabulary_leak_flagged(self):
+        f = lib.check_typography("Abra o ficheiro de configuração.", "pt-br")
+        self.assertTrue(any("European Portuguese" in x["issue"] for x in f))
+
+    def test_spanish_opened_question_with_brand_passes(self):
+        # The rule must anchor at sentence start; matching at any capitalized
+        # word would re-match from the brand inside a correctly opened «¿…?».
+        self.assertEqual(lib.check_typography("¿Qué es Cozystack?", "es"), [])
+
+    def test_spanish_mid_sentence_marks_pass(self):
+        # The es guide's own ✓ forms: the mark goes where the question or
+        # exclamation actually starts, which may be mid-sentence.
+        self.assertEqual(
+            lib.check_typography("Si el nodo falla, ¿qué pasa con los datos?", "es"), [])
+        self.assertEqual(
+            lib.check_typography("Listo, ¡ya tienes un clúster!", "es"), [])
+
+    def test_russian_nested_quotes_pass(self):
+        # „лапки“ close with U+201C; two nested pairs on one line must not read
+        # as an English “…” pair.
+        self.assertEqual(
+            lib.check_typography("Задайте параметры „replicas“ и „selector“ в манифесте.", "ru"),
+            [])
+
+    def test_russian_english_curly_pair_still_flagged(self):
+        f = lib.check_typography("Это “cluster” здесь.", "ru")
+        self.assertTrue(any("ёлочки" in x["issue"] for x in f))
+
+    def test_spanish_unopened_question_flagged(self):
+        f = lib.check_typography("Cómo funciona esto exactamente?", "es")
+        self.assertTrue(any("¿" in x["issue"] for x in f))
+
+    def test_spanish_unopened_question_mid_paragraph_flagged(self):
+        f = lib.check_typography("Listo. Cómo funciona esto exactamente?", "es")
+        self.assertTrue(any("¿" in x["issue"] for x in f))
+
+    def test_devanagari_digits_flagged(self):
+        self.assertTrue(lib.check_typography("क्लस्टर में ३ नोड हैं।", "hi"))
+
+    def test_code_spans_are_exempt_from_typography(self):
+        # Straight quotes inside code are correct and must not be flagged.
+        self.assertEqual(lib.check_typography('Запустите `echo "hi"` сейчас.', "ru"), [])
+
+    def test_link_title_quotes_are_not_prose(self):
+        # A link title's ASCII quotes are CommonMark delimiters. Flagging them
+        # would have the revise loop «localize» them into guillemets, breaking
+        # the link — the exact integrity this pipeline exists to guarantee.
+        self.assertEqual(
+            lib.check_typography(
+                'Смотрите [руководство](/docs/install "Руководство по установке") здесь.', "ru"),
+            [])
+
+    def test_image_marker_is_not_prose(self):
+        # The `!` of `![alt](src)` is syntax. Without stripping it, a heading
+        # ending in a CJK ideograph followed by an image reads as "half-width
+        # punctuation after a Chinese character", and an inline image in
+        # Spanish prose reads as an exclamation without ¡.
+        self.assertEqual(lib.check_typography("## 架构图\n\n![架构](/img/arch.png)", "zh-cn"), [])
+        self.assertEqual(
+            lib.check_typography("Vea la imagen ![diagrama](/img/d.png) para más detalles.", "es"),
+            [])
+
+    def test_unknown_language_is_a_no_op(self):
+        self.assertEqual(lib.check_typography('Anything "here".', "xx"), [])
 
 
 if __name__ == "__main__":

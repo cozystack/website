@@ -60,6 +60,24 @@ _HTMLTAG_RE = re.compile(r"</?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*?)?/?>", re.DOTALL
 # link, the delimiters, the param names) is structure and stays verbatim.
 _VISIBLE_ATTR_RE = re.compile(r'\b(?:caption|alt|title)="([^"]*)"')
 
+# Link DESTINATIONS. Only backticked code was structurally protected before, so a
+# URL sitting in ordinary prose (`[text](https://…)`) was defended by a prompt rule
+# alone — the model could silently mutate, localize or "fix" it and nothing would
+# catch it. Masking the destination makes URL integrity a guarantee instead of a
+# hope, while leaving the link TEXT exposed so it still gets translated.
+#   inline:   [text](/docs/install "Optional title")  -> destination only
+#   autolink: <https://example.com>
+#   refdef:   [id]: https://example.com
+# Known ceiling: a destination with unescaped parens (`/wiki/Foo_(bar)`) masks
+# only up to the first `)`, leaving a stray paren exposed to the model. Restore
+# still round-trips; the risk is the model "tidying" the stray paren. No
+# in-scope page has one; extend to balanced-paren matching if that changes.
+_LINKDEST_RE = re.compile(r'(?<=\])\((?P<dest><[^>]*>|[^)\s]*)(?P<title>\s+"[^"]*")?\)')
+_AUTOLINK_RE = re.compile(r'<(?:https?|mailto):[^>\s]+>')
+# `(?!\^)` keeps footnote definitions (`[^1]: prose`) out: their "destination"
+# is the first word of translatable prose, not a URL.
+_REFDEF_RE = re.compile(r'(?m)^(?P<label>\[(?!\^)[^\]]+\]:[ \t]*)(?P<dest>\S+)')
+
 
 def load_config() -> dict:
     with open(CONFIG_PATH, encoding="utf-8") as fh:
@@ -463,11 +481,9 @@ def protect(text: str) -> tuple[str, dict[str, str]]:
     text = _HTMLCOMMENT_RE.sub(_sub("HTMLCOMMENT"), text)
     text = _INLINECODE_RE.sub(_sub("INLINECODE"), text)
 
-    # 4. Raw HTML tags, last so that a tag written inside backticks or a fence
-    # is already a placeholder and is not matched twice. Visible attribute
-    # values are exposed between placeholders exactly as they are for
-    # shortcodes: masking a tag wholesale would leave alt and title text in
-    # English on every localized page.
+    # 4. Raw HTML tags. Visible attribute values are exposed between placeholders
+    # exactly as they are for shortcodes: masking a tag wholesale would leave alt
+    # and title text in English on every localized page.
     def _htmltag(m: "re.Match") -> str:
         tag = m.group(0)
         out, pos = [], 0
@@ -478,6 +494,15 @@ def protect(text: str) -> tuple[str, dict[str, str]]:
         out.append(_stash(tag[pos:], "HTMLTAG"))
         return "".join(out)
     text = _HTMLTAG_RE.sub(_htmltag, text)
+
+    # 5. Link destinations LAST, so URLs already inside code/shortcodes/HTML tags
+    #    are covered by their own placeholders and are not double-masked. Link TEXT
+    #    stays exposed and still gets translated; only the target is opaque.
+    text = _AUTOLINK_RE.sub(_sub("URL"), text)
+    text = _LINKDEST_RE.sub(
+        lambda m: "(" + _stash(m.group("dest"), "URL") + (m.group("title") or "") + ")", text)
+    text = _REFDEF_RE.sub(
+        lambda m: m.group("label") + _stash(m.group("dest"), "URL"), text)
     return text, store
 
 
@@ -537,6 +562,171 @@ def _ref_target(args: str) -> str | None:
 def has_ref_shortcode(text: str) -> bool:
     """True if any ref/relref shortcode remains — a build-breaking hazard."""
     return bool(_ANY_REF_SHORTCODE.search(text))
+
+
+# ---- deterministic integrity & typography checks ----------------------------
+#
+# The masking in protect() guarantees that code, shortcodes and URLs survive
+# byte-for-byte. What it CANNOT guarantee is the material that legitimately sits
+# in ordinary prose: a bare `--flag`, a `kind: Tenant` written without backticks,
+# a version number, a brand from do_not_translate. Those are defended only by
+# prompt rules, which is to say softly. These checks turn "the model was told
+# not to" into "we looked". They return FINDINGS (fed to the same revise loop as
+# the reviewers) rather than raising: a false positive should cost one revise
+# round, never a hard-failed page.
+
+_CODEISH_RE = re.compile(
+    r"```.*?```"                 # fenced code
+    r"|`[^`\n]+`"                # inline code
+    r"|§§[A-Z]+_\d+§§"           # pipeline placeholders
+    r"|\{\{[<%].*?[%>]\}\}"      # Hugo shortcodes (params are not prose)
+    r"|<!--.*?-->"               # HTML comments
+    r"|<[^>\n]+>"                # HTML tags with their attributes
+    # Link/image destinations, with the optional "title". The title's ASCII
+    # quotes are CommonMark delimiters — flagging them would send the revise
+    # loop to «localize» them into a form that no longer parses as a link.
+    r'|\]\([^)\s]*(?:\s+"[^"]*")?\)'
+    r"|!\["                      # image marker — its `!` is syntax, not prose
+    r"|^\[[^\]]+\]:[ \t]*\S+",   # reference-link definitions
+    re.DOTALL | re.MULTILINE)
+
+
+def _prose_only(text: str) -> str:
+    """Drop everything that is markup or code, so the checks see prose alone.
+
+    Without this the typography rules fire on things that are *correctly* written
+    with ASCII punctuation — an HTML attribute (`class="hero"`), a shortcode
+    param, a file path — and a check that cries wolf is a check reviewers learn
+    to ignore.
+    """
+    return _CODEISH_RE.sub(" ", text)
+
+
+# Version tokens: v1.5, v1.2.5, 1.2.3. Localizing the separator (1,2,3) or
+# bumping a digit changes documented behaviour, so counts must match the source.
+# Only UNAMBIGUOUS shapes are enforced — a `v` prefix or three components. A
+# bare `2.5` in prose is usually a quantity, and the style guides mandate the
+# decimal comma for those ("0.5 vCPU" → "0,5 vCPU"); enforcing byte-for-byte
+# survival there would flag every correctly localized number, refire the same
+# finding every revise round, and permanently block the gate. Bare two-part
+# decimals are the reviewers' job.
+_VERSION_RE = re.compile(r"\bv\d+\.\d+(?:\.\d+)?\b|\b\d+\.\d+\.\d+\b")
+# Correctly LOCALIZED numbers that the bare three-component branch would
+# misread as invented versions: numeric dates (24.07.2026 — a component has
+# 4 digits) and period-grouped thousands (10.000.000). Both are formats the
+# style guides mandate for translated prose, so their appearance in the
+# translation alone is expected, not an invention.
+_LOCALIZED_NUMBER_RE = re.compile(r"\d+\.\d+\.\d{4}|\d{1,3}(?:\.\d{3}){2,}")
+# Bare long CLI flags in prose.
+_FLAG_RE = re.compile(r"(?<![\w-])--[a-z][a-z0-9-]{2,}\b")
+
+
+def integrity_findings(src_body: str, tr_body: str, dnt_terms: list[str] | None = None,
+                       who: str = "integrity-check") -> list[dict]:
+    """Compare source and translation for material that must survive verbatim.
+
+    Checks, all on prose only (masked spans are already guaranteed):
+      * version tokens      — same multiset
+      * bare CLI flags      — same multiset
+      * do_not_translate    — a term present in the source must not vanish
+    """
+    out: list[dict] = []
+    src, tr = _prose_only(src_body), _prose_only(tr_body)
+
+    def _counts(rx, s):
+        d: dict[str, int] = {}
+        for m in rx.finditer(s):
+            d[m.group(0)] = d.get(m.group(0), 0) + 1
+        return d
+
+    for label, rx in (("version", _VERSION_RE), ("CLI flag", _FLAG_RE)):
+        a, b = _counts(rx, src), _counts(rx, tr)
+        for tok, n in a.items():
+            got = b.get(tok, 0)
+            if got < n:
+                out.append({"severity": "major", "from": who,
+                            "issue": f"{label} '{tok}' appears {n}× in the English source but "
+                                     f"{got}× in the translation — it must be carried over "
+                                     f"unchanged"})
+        for tok in b:
+            if tok not in a and not _LOCALIZED_NUMBER_RE.fullmatch(tok):
+                out.append({"severity": "minor", "from": who,
+                            "issue": f"{label} '{tok}' appears in the translation but not in "
+                                     f"the source — do not invent versions or flags"})
+
+    for term in (dnt_terms or []):
+        # Word-boundary matching, not substring: `Go` must not count inside
+        # `Google`. `(?!\w)` still allows hyphenated compounds ("Cozystack-
+        # Plattform" is how German writes it) and possessives.
+        term_rx = re.compile(rf"(?<!\w){re.escape(term)}(?!\w)")
+        n = len(term_rx.findall(src))
+        got = len(term_rx.findall(tr))
+        if n and got < n:
+            out.append({"severity": "major", "from": who,
+                        "issue": f"do-not-translate term '{term}' appears {n}× in the source "
+                                 f"but only {got}× in the translation — it must be "
+                                 f"kept verbatim, not translated or transliterated"})
+    return out
+
+
+# Per-language typography. The style guides state these rules; nothing checked
+# them, so a page could read fine and still be typeset like English. Findings are
+# advisory-but-real: they are the cheapest quality signal we have per language.
+_TYPO_RULES: dict[str, list[tuple[str, str]]] = {
+    "ru": [
+        (r'"[^"\n]{1,80}"', 'ASCII double quotes in Russian prose — use «ёлочки»'),
+        # The English pair is “…” (U+201C…U+201D). U+201C alone must not count:
+        # it CLOSES the nested „лапки“ the guide mandates, so a line with two
+        # nested pairs («…„replicas“ и „selector“…») would otherwise match.
+        (r'“[^\n]{0,80}”', 'English curly quotes in Russian prose — use «ёлочки»'),
+        # A hyphen doing a dash's job — but NOT a list marker ("\n- item"), which
+        # is why a non-space character is required immediately before it.
+        (r'(?<=[^\s])[ ]-[ ](?=\S)', 'hyphen used as a dash — use the em dash «—»'),
+    ],
+    "de": [
+        (r'"[^"\n]{1,80}"', 'ASCII double quotes in German prose — use „…“'),
+        (r'[“][^\n]{0,80}[”]', 'English curly quotes in German prose — use „…“'),
+    ],
+    "es": [
+        # Anchored to sentence START (line start or after end punctuation), not
+        # to any capitalized word — otherwise every brand name inside a
+        # correctly opened «¿…?» re-matches from the brand and flags correct
+        # text. The span also stops at a mid-sentence ¿/¡: the guide mandates
+        # the mark where the question actually starts («Si el nodo falla,
+        # ¿qué pasa?» is the ✓ form and must not be flagged).
+        (r'(?m)(?:^|(?<=[.!?:] ))[A-ZÁÉÍÓÚÑ][^.!?¿\n]{5,120}\?',
+         'question without an opening ¿'),
+        (r'(?m)(?:^|(?<=[.!?:] ))[A-ZÁÉÍÓÚÑ][^.!?¡\n]{5,120}!',
+         'exclamation without an opening ¡'),
+    ],
+    "pt-br": [
+        (r'\b(ficheiro|utilizador|ecrã|rato|autocarro|telemóvel|casa de banho)\b',
+         'European Portuguese vocabulary leaked into pt-BR'),
+        (r'\bestá a [a-zçãéêó]+r\b', 'European Portuguese "está a fazer" — pt-BR uses the gerund'),
+    ],
+    "zh-cn": [
+        (r'[一-鿿]\s*[,;:!?]', 'half-width punctuation after a Chinese character — use ，；：！？'),
+        (r'[,;:!?]\s*[一-鿿]', 'half-width punctuation before a Chinese character — use ，；：！？'),
+        (r'[一-鿿]\.(?=\s|$)', 'half-width period ending a Chinese sentence — use 。'),
+        (r'[Ａ-Ｚａ-ｚ０-９]', 'full-width Latin letters or digits — use half-width'),
+    ],
+    "hi": [
+        (r'[०-९]', 'Devanagari digits — use Western Arabic numerals in technical content'),
+    ],
+}
+
+
+def check_typography(text: str, lang: str, who: str = "typography-check") -> list[dict]:
+    """Per-language typography findings (prose only; code spans are exempt)."""
+    prose = _prose_only(text)
+    out: list[dict] = []
+    for pattern, message in _TYPO_RULES.get(lang, []):
+        hits = re.findall(pattern, prose)
+        if hits:
+            sample = hits[0] if isinstance(hits[0], str) else str(hits[0])
+            out.append({"severity": "minor", "from": who,
+                        "issue": f"{message} ({len(hits)}×, e.g. {sample.strip()[:60]!r})"})
+    return out
 
 
 def deref_shortcodes(text: str, page_rel: str) -> str:
