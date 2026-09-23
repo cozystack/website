@@ -4,7 +4,7 @@
 # next/ trunk track upstream cozystack/cozystack@main:
 #
 #   talos / talos_minor       ← packages/core/talos/images/talos/profiles/installer.yaml @ main
-#   cozystack_version / _tag   ← latest final release tag (the upcoming release's
+#   cozystack_version / _tag   ← latest published release (the upcoming release's
 #                                own tag/assets don't exist until it is cut;
 #                                hack/release_next.sh overrides these from
 #                                RELEASE_TAG when next/ is promoted).
