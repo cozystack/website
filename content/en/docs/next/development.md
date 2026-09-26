@@ -301,6 +301,10 @@ docker buildx create \
 
 Alternatively, omit the --driver* options to set up the build environment in an local Docker environment.
 
+`make image` builds for `linux/amd64` and `linux/arm64` by default, so the builder must support both platforms, as the one above does. Pass `BUILDER=<name>` to pick it. Go builders compile natively on the build platform, so only package installs in the image run under emulation; a local Docker builder needs QEMU (or Rosetta on Apple Silicon) registered for the other architecture. Set `PLATFORM` to build something else, for example `PLATFORM=linux/amd64` for a single architecture.
+
+`LOAD=1 PUSH=0` loads the image into the local Docker image store instead of pushing it, and builds for the host architecture only, because the classic image store cannot load a multi-platform image. The `talos` and `testing` packages always build `linux/amd64`, since what they produce only runs there.
+
 ### Packages management
 
 Each application includes a Makefile to simplify the development process. We follow this logic for every package:
