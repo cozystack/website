@@ -102,7 +102,7 @@ For example, the database entry for A10 reads `2236  GA102GL [A10]`, which resul
 
 ## 2. KubeVirt is wired automatically
 
-When `cozystack.gpu-operator` is in `bundles.enabledPackages`, Cozystack mirrors the chosen GPU variant into the `KubeVirt` Custom Resource for you. There is no `kubectl edit kubevirt` step.
+When `cozystack.gpu-operator` is in `bundles.enabledPackages` and `bundles.iaas.gpuOperatorVariant` is `default` (the package default) or `vgpu`, Cozystack mirrors the chosen GPU variant into the `KubeVirt` Custom Resource for you. There is no `kubectl edit kubevirt` step. The `container` variant gets none of this wiring: it keeps the host driver bound, so no GPU can reach a VM (see [containerized GPU workloads](/docs/next/operations/gpu-container-workloads/)).
 
 Specifically, the platform injects:
 
