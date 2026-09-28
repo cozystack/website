@@ -9,11 +9,11 @@ aliases:
 
 ## Enable NFS driver
 
-Add `nfs-driver` to `bundles.enabledPackages` in the [Platform Package]({{% ref "/docs/v1.1/operations/configuration/platform-package" %}}):
+Add `cozystack.nfs-driver` to `bundles.enabledPackages` in the [Platform Package]({{% ref "/docs/v1.1/operations/configuration/platform-package" %}}):
 
 ```bash
 kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
-  -p '[{"op": "add", "path": "/spec/components/platform/values/bundles/enabledPackages/-", "value": "nfs-driver"}]'
+  -p '[{"op": "add", "path": "/spec/components/platform/values/bundles/enabledPackages/-", "value": "cozystack.nfs-driver"}]'
 ```
 
 Wait a minute for the platform chart to reconcile, then verify the HelmRelease has been created:

@@ -36,7 +36,7 @@ Follow these steps:
 
     ```bash
     kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
-      -p '[{"op": "add", "path": "/spec/components/platform/values/bundles/enabledPackages/-", "value": "gpu-operator"}]'
+      -p '[{"op": "add", "path": "/spec/components/platform/values/bundles/enabledPackages/-", "value": "cozystack.gpu-operator"}]'
     ```
 
     This will deploy the components (operands).
