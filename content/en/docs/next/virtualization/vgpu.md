@@ -108,7 +108,7 @@ For Pascal to Ampere GPUs (V100, T4, A100, A30) the mdev model still applies. Fl
 
 ## KubeVirt configuration
 
-When `cozystack.gpu-operator` is in `bundles.enabledPackages` (and not also in `bundles.disabledPackages`), the platform mirrors the chosen GPU variant into the `KubeVirt` CR automatically. There is no manual `kubectl patch` step.
+When `cozystack.gpu-operator` is in `bundles.enabledPackages` (and not also in `bundles.disabledPackages`) and `bundles.iaas.gpuOperatorVariant` is `default` or `vgpu`, the platform mirrors the chosen GPU variant into the `KubeVirt` CR automatically. There is no manual `kubectl patch` step. The `container` variant gets no KubeVirt wiring at all: it keeps the host driver bound, so no GPU can reach a VM.
 
 If you opt out of bundle management and hand-craft a `cozystack.gpu-operator` Package CR directly — typically to apply overrides the bundle does not expose — the platform does **not** auto-wire `HostDevices` or `permittedHostDevices` into the KubeVirt CR. In that flow you also hand-craft a `cozystack.kubevirt` Package CR with `components.kubevirt.values.extraFeatureGates: [HostDevices]` and the appropriate `permittedHostDevices` block. The escape-hatch values shape under `.gpu` below is documented for the bundle-managed flow only; the manual Package-CR override path takes precedence over the bundle render whenever both exist.
 

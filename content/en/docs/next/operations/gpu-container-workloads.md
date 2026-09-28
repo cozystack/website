@@ -44,9 +44,20 @@ With `driver.enabled=false` the operator uses the pre-installed host driver at i
 
 ## 1. Install the GPU Operator (container variant)
 
-**Do not** add `cozystack.gpu-operator` to `bundles.enabledPackages` for this variant. The `iaas` bundle renders the GPU operator from `bundles.iaas.gpuOperatorVariant`, which only accepts `default` or `vgpu` — any other value, `container` included, makes the platform chart fail the Helm render (`packages/core/platform/templates/bundles/iaas.yaml`). Apply the `Package` CR directly instead; the platform controller installs it without a bundle entry and without the variant restriction.
+The platform's `iaas` bundle deploys the gpu-operator Package CR when `cozystack.gpu-operator` is in `bundles.enabledPackages`, with the variant taken from `bundles.iaas.gpuOperatorVariant`. Set it to `container` in the Platform Package values:
 
-Apply a `Package` CR with `variant: container`:
+```yaml
+bundles:
+  iaas:
+    enabled: true
+    gpuOperatorVariant: container
+  enabledPackages:
+  - cozystack.gpu-operator
+```
+
+The bundle leaves the `KubeVirt` CR untouched for this variant: no `HostDevices` feature gate and no `permittedHostDevices` table. The host driver stays bound, so no GPU on the node can be passed through to a VM.
+
+If you need to override something the bundle does not expose (driver settings, custom node selectors, validator or dcgmExporter tweaks), hand-craft a `Package` CR named `cozystack.gpu-operator` with `variant: container` instead, and put the overrides under `spec.components.gpu-operator.values`. The platform controller installs it without a bundle entry:
 
 ```yaml
 apiVersion: cozystack.io/v1alpha1
