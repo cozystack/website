@@ -40,6 +40,7 @@ Pinned upstream versions of managed runtimes (PostgreSQL, MariaDB, Kafka, etc.) 
 {{< oss-card name="Hetzner RobotLB" logo="hetzner" license="MIT" source="https://github.com/Intreecom/robotlb/blob/master/LICENSE" description="Load balancer integration for Hetzner dedicated hardware." >}}
 {{< oss-card name="kuberture" license="BSD-3-Clause" source="https://github.com/lexfrei/kuberture/blob/master/LICENSE" description="Publishes EndpointSlice endpoints as annotated headless Services for ExternalDNS. Optional; off by default." >}}
 {{< oss-card name="ouroboros" license="BSD-3-Clause" source="https://github.com/lexfrei/ouroboros/blob/master/LICENSE" description="Hairpin-NAT fix for Ingress controllers behind PROXY-protocol. Optional; off by default." >}}
+{{< oss-card name="Cloudflare Tunnel Gateway Controller" license="BSD-3-Clause" source="https://github.com/lexfrei/cloudflare-tunnel-gateway-controller/blob/master/LICENSE" description="Optional Gateway API implementation publishing Gateways over a Cloudflare Tunnel." >}}
 {{< /oss-cards >}}
 
 ## Storage

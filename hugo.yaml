@@ -345,6 +345,10 @@ menus:
     url: /compliance/kubernetes-conformance/
     parent: compliance
     weight: 5
+  - name: AI Conformance
+    url: /compliance/ai-conformance/
+    parent: compliance
+    weight: 6
   - name: Community
     url: /community/
     parent: resources

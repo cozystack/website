@@ -14,9 +14,15 @@ workload that runs on one conformant platform run here too, without platform-spe
 workarounds.
 
 The programme defines twelve requirements across accelerators, networking, scheduling,
-observability, security and operators. This page records how each is met, and what to run to
-check it yourself. It is the evidence referenced from our submission to
-[`cncf/k8s-ai-conformance`](https://github.com/cncf/k8s-ai-conformance).
+observability, security and operators. **All twelve are met.** This page records how each is
+met, and what to run to check it yourself.
+
+The v1.35 self-assessment is **accepted and published in the CNCF Kubernetes AI Conformance
+repository**, at
+[`v1.35/cozystack`](https://github.com/cncf/k8s-ai-conformance/tree/main/v1.35/cozystack) in
+[`cncf/k8s-ai-conformance`](https://github.com/cncf/k8s-ai-conformance), filed by Ænix for
+Cozystack v1.6.1 — and this page is the evidence it cites for every requirement. Cozystack is
+also listed on the [CNCF Landscape](https://landscape.cncf.io/).
 
 ## What is being certified
 
@@ -355,9 +361,12 @@ configuration rather than an addition to the cluster. The submission is filed fo
 Kubernetes conformance submission at
 [`v1.35/cozystack`](https://github.com/cncf/k8s-conformance/tree/master/v1.35/cozystack).
 
-Until the submission is accepted and published in the CNCF repository, this page reports
-conformance results rather than a completed certification, and makes no claim to the mark.
+The v1.35 self-assessment is accepted and published in the CNCF Kubernetes AI Conformance
+repository at
+[`v1.35/cozystack`](https://github.com/cncf/k8s-ai-conformance/tree/main/v1.35/cozystack),
+merged on 14 September 2026.
 
 "Certified Kubernetes AI Platform" and the associated logos are marks of The Linux Foundation,
-licensed to the participant that certified a platform, for that platform and version. Nothing
-here is a certification, a grant of that mark, or a claim that the Cozystack project holds one.
+licensed to the vendor whose product is certified, for that platform and version. The accepted
+submission here is Ænix's, for Cozystack v1.6.1 on Kubernetes v1.35 — not a claim that the
+Cozystack project itself holds the mark.
