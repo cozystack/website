@@ -12,16 +12,17 @@ Sources of truth:
   * talos / talos_minor     ← packages/core/talos/images/talos/profiles/installer.yaml
                               at --branch (always the version main/the tag ships).
   * cozystack_version/_tag  ← --cozystack-tag if given (e.g. an upcoming release
-                              tag); otherwise the latest final upstream release
-                              tag. Used as the `next` trunk's resolvable default
-                              until the real release is cut.
+                              tag); otherwise the highest published (non-draft,
+                              non-prerelease) GitHub release, so every
+                              releases/download/<tag>/ URL resolves. Used as the
+                              `next` trunk's default until the real release is cut.
 
 Options:
   --dest PATH           data/versions/<version>.yaml file to (re)generate (required)
   --branch REF          Git ref in cozystack/cozystack to read the Talos installer
                         from (default: main)
   --cozystack-tag TAG   Pin cozystack_tag to this vX.Y.Z tag instead of the latest
-                        release (optional)
+                        published release (optional)
   -h, --help            Show this help and exit
 
 Examples:
@@ -29,6 +30,18 @@ Examples:
   hack/update_versions.sh --dest data/versions/next.yaml --branch v1.6.0 --cozystack-tag v1.6.0
 EOF
 }
+
+# Reads a GitHub releases-list JSON array on stdin and prints the highest
+# published final vX.Y.Z tag. A tag exists before its release is published, so
+# the tag list alone can name a version whose assets are still missing. Sorted
+# by version, not creation time: a patch of an older minor can be the newest.
+latest_published_tag() {
+  jq -r '.[] | select(.draft == false and .prerelease == false) | .tag_name' \
+    | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true
+}
+
+# Sourced by hack/test_version_pins.sh for latest_published_tag only.
+[[ "${BASH_SOURCE[0]}" != "$0" ]] && return 0
 
 SOURCE_REPO="cozystack/cozystack"
 DEST=""
@@ -73,11 +86,30 @@ talos_minor="${talos%.*}"   # v1.13.0 -> v1.13
 
 # -------------------- 2. Cozystack release tag --------------------
 if [[ -z "$COZYSTACK_TAG" ]]; then
-  # Latest final release: top-level refs/tags/vX.Y.Z only (excludes the
-  # api/apps/v1alpha1/* submodule tags and any -rc/-beta pre-releases).
-  COZYSTACK_TAG="$(git ls-remote --tags --refs "https://github.com/${SOURCE_REPO}.git" 'v*.*.*' \
-    | awk -F/ '/refs\/tags\/v[0-9]+\.[0-9]+\.[0-9]+$/{print $NF}' \
-    | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true)"
+  if ! command -v jq >/dev/null; then
+    echo "Error: jq is required to resolve the default cozystack tag; install jq or pass --cozystack-tag." >&2
+    exit 1
+  fi
+  # Optional token for the higher API rate limit.
+  token="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+  RELEASES_URL="https://api.github.com/repos/${SOURCE_REPO}/releases?per_page=100"
+  fetch_releases() {
+    if [[ -n "$token" ]]; then
+      # Header on stdin (curl >= 7.55.0): in argv the token shows in ps.
+      curl -fsSL --header @- "$RELEASES_URL" <<<"Authorization: token ${token}"
+    else
+      curl -fsSL "$RELEASES_URL"
+    fi
+  }
+  if ! releases="$(fetch_releases)"; then
+    echo "Error: GitHub releases API request failed: $RELEASES_URL (set GITHUB_TOKEN if rate-limited, or pass --cozystack-tag)." >&2
+    exit 1
+  fi
+  COZYSTACK_TAG="$(latest_published_tag <<<"$releases")"
+  if [[ -z "$COZYSTACK_TAG" ]]; then
+    echo "Error: no published vX.Y.Z release found at $RELEASES_URL." >&2
+    exit 1
+  fi
 fi
 if [[ ! "$COZYSTACK_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   echo "Error: could not determine a cozystack release tag (got '${COZYSTACK_TAG:-}')." >&2
@@ -94,7 +126,7 @@ cat > "$DEST" <<EOF
 # next/ trunk track upstream cozystack/cozystack@${BRANCH}:
 #
 #   talos / talos_minor       ← ${INSTALLER_PATH} @ ${BRANCH}
-#   cozystack_version / _tag   ← latest final release tag (the upcoming release's
+#   cozystack_version / _tag   ← latest published release (the upcoming release's
 #                                own tag/assets don't exist until it is cut;
 #                                hack/release_next.sh overrides these from
 #                                RELEASE_TAG when next/ is promoted).
