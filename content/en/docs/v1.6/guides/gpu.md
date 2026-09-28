@@ -54,4 +54,4 @@ Inside the tenant cluster the GPU is then served to pods, whole by default, or s
 - [NVIDIA vGPU](/docs/v1.6/virtualization/vgpu/): one card sliced across several VMs, profile assignment and DLS licensing.
 - [GPU Sharing with HAMi](/docs/v1.6/kubernetes/gpu-sharing/): fractional GPU for pods in a tenant cluster, the resource names, and the isolation limits.
 - [GPU Operator: host driver](/docs/v1.6/operations/troubleshooting/gpu-operator-host-driver/): recovering a node where the host driver and the passthrough variant both claim the card.
-- [AI Conformance](/compliance/ai-conformance/): what a tenant cluster certifies for AI workloads, and how to verify it.
+- [AI Conformance](/compliance/ai-conformance/): which AI Conformance requirements a tenant cluster meets, and the command that checks each one.
