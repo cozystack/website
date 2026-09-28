@@ -132,9 +132,9 @@ When `--endpoints` is given exactly one value, init auto-derives `values.yaml::e
 **Update an existing project to the latest bundled library chart:**
 
 - `-u, --update` - re-extract `charts/talm/` and other preset-shipped files from the talm binary. `--preset` is required; `--name` is not.
-- `--force` - auto-accept every preset-template diff (skip the interactive prompt; safe to use in CI).
+- `--force` - auto-accept every preset-template diff, including the `Chart.yaml` and `values.yaml` overwrites described below.
 
-`--update` rewrites preset-shipped files only; your `values.yaml`, `secrets.yaml`, `templates/`, and `nodes/` customisations are preserved.
+`--update` rewrites preset-shipped files: `charts/talm/` outright, and `Chart.yaml`, `values.yaml` and `templates/` behind a per-file prompt that `--force` auto-accepts. Your `secrets.yaml` and `nodes/` are not preset-shipped, so they stay as they are.
 
 **Manage encrypted secrets in-place:**
 
@@ -150,6 +150,10 @@ cd cozystack-cluster
 talm init --update --preset cozystack          # interactive: prompts for each preset-template diff
 talm init --update --preset cozystack --force  # non-interactive: auto-accept all diffs
 ```
+
+talm v0.35.0 changes what an empty `templateOptions.kubernetesVersion` means. A `Chart.yaml` that leaves the key empty still renders while its `talosVersion` is v1.13 or older, but talm no longer substitutes a Kubernetes version of its own: it emits no image for the kubelet, for kube-proxy or for the control-plane components, so Talos picks those versions itself, and talm prints a warning on stderr saying so. Pin `templateOptions.kubernetesVersion` in `Chart.yaml` to the version the cluster actually runs. Do not raise `templateOptions.talosVersion` above v1.13 to get there: past that contract Talos keeps the Kubernetes settings in documents of their own that v0.35.0's charts do not emit, and the render stops whether or not `kubernetesVersion` is pinned — on the cozystack preset a control-plane node stops earlier still, on the preset's `machine.nodeLabels` patch, because that label moved out of `v1alpha1` at the same contract. [Talos versions and output format](https://talm.cozystack.io/configuration/talos-versions/) explains what each key selects.
+
+`--update` can undo those pins. With `--force`, or when you accept its prompt for a file, it rewrites `Chart.yaml`, `values.yaml` and `templates/` from the preset without showing a diff; of `Chart.yaml` only the chart `name` survives. Every other key returns to the preset's value: the two version pins, `valueFiles`, the apply timeout, any pinned `certFingerprints`. A key the preset does not ship at all is dropped outright, `strictCharts` among them, so chart drift quietly goes back to being a warning. `values.yaml` is reset the same way: an empty `endpoint` fails the next render, while an empty `floatingIP` does not — the render simply comes out with no VIP, and a node file regenerated from it carries none either. Keep both files in git and diff them after every `--update`.
 
 #### Encrypt / Decrypt Round-Trip
 
