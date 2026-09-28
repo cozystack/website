@@ -329,6 +329,8 @@ Finally, we can create a couple of storage classes, one of which will be the def
     allowVolumeExpansion: true
     ```
 
+    The `replicated` class requires DRBD: `layerList: "drbd storage"` is served by the DRBD layer inside the LINSTOR satellite, so it works only where the `drbd` kernel module is loadable. On a substrate that cannot provide one, install the `linstor` package with `drbd.enabled: false` — without that the satellite pod never becomes Ready, LINSTOR registers no nodes at all and every PVC stays Pending — and omit `replicated` from this file. What remains is `local`: storage-only volumes, pinned to the node that provisioned them, kept in a single copy with no replication and no remote access.
+
 1.  Apply the storage class configuration
 
     ```bash
