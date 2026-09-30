@@ -349,6 +349,10 @@ menus:
     url: /compliance/ai-conformance/
     parent: compliance
     weight: 6
+  - name: General Technical Review
+    url: /compliance/general-technical-review/
+    parent: compliance
+    weight: 7
   - name: Community
     url: /community/
     parent: resources

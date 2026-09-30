@@ -39,3 +39,7 @@ command you can run against your own cluster.
   record, with the mechanism and a command behind each: DRA, GPU Operator and MIG/HAMi sharing,
   GPUs across the VM boundary, Gateway API inference routing, Kueue gang scheduling, and
   accelerator metrics.
+- **[General Technical Review](/compliance/general-technical-review/)** — the CNCF
+  due-diligence questionnaire answered for Day 0, Day 1 and Day 2: install paths, upgrade and
+  rollback, overhead and load measured on a reference bench, security response, and the gaps
+  that are still open.
