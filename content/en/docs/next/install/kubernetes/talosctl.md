@@ -79,6 +79,7 @@ Discovered open port 50000/tcp on 192.168.123.13
         - name: drbd
           parameters:
             - usermode_helper=disabled
+        - name: drbd_transport_tcp
         - name: zfs
         - name: spl
         - name: vfio_pci
