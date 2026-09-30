@@ -50,7 +50,7 @@ spec:
 
 | Field | Description |
 | --- | --- |
-| `spec.variant` | Variant to use for installation (e.g., `isp-full`, `isp-full-generic`, `isp-hosted`, `distro-full`). |
+| `spec.variant` | Variant to use for installation (e.g., `isp-full`, `isp-full-generic`, `isp-hosted`, `isp-slim`, `isp-slim-generic`, `isp-hosted-slim`). |
 
 ### Platform values (`spec.components.platform.values.*`)
 
@@ -93,10 +93,10 @@ spec:
 | Value | Default | Description |
 | --- | --- | --- |
 | `networking.clusterDomain` | `"cozy.local"` | Internal cluster domain name. |
-| `networking.podCIDR` | `"10.244.0.0/16"` | The pod subnet used by Pods to assign IPs. |
-| `networking.podGateway` | `"10.244.0.1"` | The gateway address for the pod subnet. |
-| `networking.serviceCIDR` | `"10.96.0.0/16"` | The service subnet used by Services to assign IPs. |
-| `networking.joinCIDR` | `"100.64.0.0/16"` | The `join` subnet for network communication between the Node and Pod. Follow the [kube-ovn] documentation to learn more. |
+| `networking.podCIDR` | `"10.244.0.0/16"` | The pod subnet used by Pods to assign IPs. Used by Kube-OVN only: ignored on `isp-hosted` and the slim variants. |
+| `networking.podGateway` | `"10.244.0.1"` | The gateway address for the pod subnet. Kube-OVN only. |
+| `networking.serviceCIDR` | `"10.96.0.0/16"` | The service subnet used by Services to assign IPs. Kube-OVN only. |
+| `networking.joinCIDR` | `"100.64.0.0/16"` | The `join` subnet for network communication between the Node and Pod. Follow the [kube-ovn] documentation to learn more. Kube-OVN only. |
 | `networking.kubeovn.MASTER_NODES` | `""` | Comma-separated list of KubeOVN master node IPs. By default, KubeOVN uses `lookup` to find control-plane nodes by label `node-role.kubernetes.io/control-plane`. On fresh clusters, lookup may return empty results. Set this to override. |
 
 #### Bundles
@@ -104,7 +104,7 @@ spec:
 | Value | Default | Description |
 | --- | --- | --- |
 | `bundles.system.enabled` | `false` | Enable the system bundle. Managed by the operator based on `spec.variant`. |
-| `bundles.system.variant` | `"isp-full"` | System bundle variant. Options: `isp-full`, `isp-full-generic`, `isp-hosted`. Managed by the operator based on `spec.variant`. |
+| `bundles.system.variant` | `"isp-full"` | System bundle variant. Options: `isp-full`, `isp-full-generic`, `isp-hosted`, `isp-slim`, `isp-slim-generic`, `isp-hosted-slim`. Managed by the operator based on `spec.variant`. |
 | `bundles.iaas.enabled` | `false` | Enable the IaaS bundle. Managed by the operator based on `spec.variant`. |
 | `bundles.paas.enabled` | `false` | Enable the PaaS bundle. Managed by the operator based on `spec.variant`. |
 | `bundles.naas.enabled` | `false` | Enable the NaaS bundle. Managed by the operator based on `spec.variant`. |
@@ -127,7 +127,7 @@ Platform-wide Gateway API integration. The actual per-tenant Gateway is material
 | Value | Default | Description |
 | --- | --- | --- |
 | `gateway.enabled` | `false` | Enable Gateway API support across the platform. When `true`, cert-manager `ClusterIssuer`s use an `http01.gatewayHTTPRoute` solver attached to the publishing tenant's Gateway, and exposed services (`dashboard`, `keycloak`, `grafana`, `alerta`, `harbor`, `bucket`, `cozystack-api`, `vm-exportproxy`, `cdi-uploadproxy`) render `HTTPRoute`/`TLSRoute` instead of `Ingress`. Materialising the actual per-tenant Gateway still requires an owning tenant to set `tenant.spec.gateway: true`. |
-| `gateway.http2` | `true` | Advertise HTTP/2 via TLS ALPN (`h2`, then `http/1.1`) on every Gateway API listener served by the bundled Cilium dataplane. Browsers negotiate HTTP/2 exclusively through ALPN, so with this off every client silently falls back to HTTP/1.1 — the pre-Gateway ingress-nginx path advertised `h2` out of the box, hence on by default. Affects only the client↔gateway hop: gateway↔backend connections stay HTTP/1.1 unless a `Service` opts in per [GEP-1911](https://gateway-api.sigs.k8s.io/geps/gep-1911/) by declaring `appProtocol: kubernetes.io/h2c` on its port (that backend-protocol support is switched on together with ALPN). Maps to Cilium's cluster-wide `enable-gateway-api-alpn` agent setting, so it covers the root and all tenant Gateways at once, with no per-Gateway granularity; only effective on bundles where Cozystack manages Cilium (`isp-full`, `isp-full-generic`). Flipping it re-rolls the `cilium` DaemonSet on the next platform upgrade, the same disruption profile as any other Cilium config change. |
+| `gateway.http2` | `true` | Advertise HTTP/2 via TLS ALPN (`h2`, then `http/1.1`) on every Gateway API listener served by the bundled Cilium dataplane. Browsers negotiate HTTP/2 exclusively through ALPN, so with this off every client silently falls back to HTTP/1.1 — the pre-Gateway ingress-nginx path advertised `h2` out of the box, hence on by default. Affects only the client↔gateway hop: gateway↔backend connections stay HTTP/1.1 unless a `Service` opts in per [GEP-1911](https://gateway-api.sigs.k8s.io/geps/gep-1911/) by declaring `appProtocol: kubernetes.io/h2c` on its port (that backend-protocol support is switched on together with ALPN). Maps to Cilium's cluster-wide `enable-gateway-api-alpn` agent setting, so it covers the root and all tenant Gateways at once, with no per-Gateway granularity; only effective on bundles where Cozystack manages Cilium (`isp-full`, `isp-full-generic`, `isp-slim`, `isp-slim-generic`). Flipping it re-rolls the `cilium` DaemonSet on the next platform upgrade, the same disruption profile as any other Cilium config change. |
 | `gateway.className` | `"cilium"` | The `GatewayClass` every tenant Gateway uses unless the tenant names another one via `tenant.spec.gatewayClass`. Nothing checks the name against the classes the cluster has installed — a name no controller claims produces a `Gateway` that is created but never programmed, surfacing as `Ready=False` with reason `GatewayNotAccepted` on the `TenantGateway`. Changing it while a tenant pins the outgoing name fails that tenant's gateway release, because the set a tenant may name is built from the *current* default; add the outgoing class to `gateway.tenantSelectableClasses` first. |
 | `gateway.tenantSelectableClasses` | `[]` | Additional `GatewayClass` names a tenant may select for its own Gateway with `tenant.spec.gatewayClass`. The set a tenant may name is this list plus the current `gateway.className`, so a tenant may always name the default explicitly; anything else fails that tenant's own gateway release at render time, naming the class and the allowed set, and reaches no other tenant. Empty means no tenant can pick anything but the default. The allowlist exists because `Tenant` is tenant-writable while a `GatewayClass` is cluster-scoped. |
 | `gateway.edgeTerminatedClasses` | `[]` | `GatewayClass` names whose provider terminates TLS upstream of the Gateway. Membership here is the only thing that puts a tenant into `edge` cert mode, which renders port-80 listeners only and issues no `Issuer` and no `Certificate`; it wins over `publishing.certificates.wildcardSecretName` and over the solver. Nothing verifies the assertion — listing a class whose provider does *not* terminate TLS makes its Gateways serve every application hostname over plain HTTP, with no redirect and no certificate. Setting `gateway.className` to a class in this list also puts the publishing tenant on it, which unpublishes whichever of the TLS-passthrough endpoints (Kubernetes API, VM export, CDI upload) are published at all — each renders its `TLSRoute` only when `gateway.enabled` is on and its name is in `publishing.exposedServices`. Nothing fails at render time and nothing reports it: the controller writes no route conditions in this mode and removes none, so an orphaned `TLSRoute` can still show the `Accepted=True` it was given under the previous mode. |
