@@ -10,9 +10,9 @@
 #                                RELEASE_TAG when next/ is promoted).
 
 # Cozystack release the docs are pinned to.
-cozystack_version: "1.6.3"   # bare, as used by `helm --version`
-cozystack_tag:     "v1.6.3"  # v-prefixed, as used in GitHub URLs
+cozystack_version: "1.6.4"   # bare, as used by `helm --version`
+cozystack_tag:     "v1.6.4"  # v-prefixed, as used in GitHub URLs
 
 # Talos version shipped by the Cozystack installer for this trunk.
-talos:       "v1.13.6"
-talos_minor: "v1.13"           # the docs minor used by talos.dev URLs
+talos:       "v1.14.2"
+talos_minor: "v1.14"           # the docs minor used by talos.dev URLs
