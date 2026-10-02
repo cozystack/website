@@ -16,6 +16,11 @@ on:
       - 'hack/mcp/**'
       - '.github/workflows/validate-content.yaml'
 
+# The job only reads the repository, yet runs npm lifecycle scripts and
+# downloaded tooling: keep the token read-only.
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -43,7 +48,7 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: |
-          npm install
+          npm ci
           python3 -m pip install --quiet PyYAML Pillow
       - name: Run publishing tool tests
         run: python3 hack/mcp/test_mcp.py

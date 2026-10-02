@@ -16,7 +16,9 @@ python3 hack/mcp/server.py --check                       # every blog post
 python3 hack/mcp/server.py --check --path content/en/blog/some-post.md
 ```
 
-Exits non-zero when any post has an error, so it works as a CI step.
+Exits non-zero when any post has an error, when `--path` names a file that
+does not exist, or when `data/taxonomy.yaml` is missing, so it works as a CI
+step that cannot pass without actually checking anything.
 
 Link checking has two modes. If `public/` holds a build, links are resolved
 against it, which is exact — those are the paths the site actually serves, and
@@ -32,8 +34,11 @@ hugo --gc --minify && python3 hack/mcp/server.py --check
 
 ## Running the tests
 
+The tools need PyYAML, and the tests also need Pillow to generate images:
+
 ```bash
-python3 hack/mcp/test_mcp.py
+python3 -m pip install PyYAML Pillow
+python3 hack/mcp/test_mcp.py      # or: python3 -m pytest hack/mcp
 ```
 
 Each test builds a throwaway site in a temporary directory. Nothing touches the
@@ -43,7 +48,11 @@ real content tree.
 
 `.mcp.json` in the repository root registers the server, so an MCP-capable
 client picks it up from a checkout with no separate installation. It speaks MCP
-over stdio as line-delimited JSON-RPC.
+over stdio as line-delimited JSON-RPC. The server path in `.mcp.json` is
+relative, so the client has to launch it from the repository root, which is
+what clients reading a project-level `.mcp.json` do; from anywhere else, run
+`python3 /path/to/website/hack/mcp/server.py` — the server finds the
+repository from its own location.
 
 ### publish_post
 
