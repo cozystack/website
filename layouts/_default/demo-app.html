@@ -1,0 +1,10 @@
+{{ define "main" }}
+<style>
+  .demo-embed { width: 100%; height: calc(100vh - 4rem); min-height: 560px; border: 0; display: block; }
+  .demo-embed__hint { font-size: .85rem; color: var(--bs-secondary, #6c757d); padding: .4rem 1rem; text-align: center; }
+  footer { display: none; }
+</style>
+<iframe class="demo-embed" src="/demo-app/" title="Cozystack live demo"
+  allow="clipboard-read; clipboard-write"></iframe>
+<div class="demo-embed__hint">Interactive demo — real Cozystack console with mock data, running in your browser. Nothing here touches a real cluster.</div>
+{{ end }}

@@ -1,0 +1,17 @@
+diff --git a/apps/console/vite.config.ts b/apps/console/vite.config.ts
+index 1e33159..de2d2dd 100644
+--- a/apps/console/vite.config.ts
++++ b/apps/console/vite.config.ts
+@@ -9,7 +9,12 @@ import path from "path"
+  * The VNC console streams over a WebSocket, so `ws: true` is set on the
+  * proxies below to forward the upgrade to kubectl proxy.
+  */
++// Base path for the built assets. Empty/"/" → served from the domain root;
++// "/demo/" → served under a sub-path of another site. Also feeds
++// import.meta.env.BASE_URL, which the demo uses for the MSW worker scope and
++// the router basename.
+ export default defineConfig({
++  base: process.env.DEMO_BASE_PATH || "/",
+   plugins: [react(), tailwindcss()],
+   resolve: {
+     alias: {

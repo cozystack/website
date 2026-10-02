@@ -262,14 +262,14 @@ params:
   links:
     # End user relevant links. These will show up on left side of footer and in the community page if you have one.
     user:
-      - name: Twitter
-        url: https://twitter.com/aenix_io
-        icon: fab fa-twitter
-        desc: Follow us on Twitter to get the latest news!
-      - name: LinkedIn
-        url: https://www.linkedin.com/company/aenix-io
-        icon: fab fa-linkedin
-        desc: Join the Flux Community group on LinkedIn!
+      - name: YouTube
+        url: https://www.youtube.com/@cozystack
+        icon: fab fa-youtube
+        desc: Talks, demos and release walkthroughs.
+      - name: Community meetings
+        url: https://calendar.google.com/calendar?cid=ZTQzZDIxZTVjOWI0NWE5NWYyOGM1ZDY0OWMyY2IxZTFmNDMzZTJlNjUzYjU2ZGJiZGE3NGNhMzA2ZjBkMGY2OEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t
+        icon: fas fa-calendar-days
+        desc: Join the biweekly community meeting.
       - name: RSS Feed
         url: /blog/index.xml
         icon: fa fa-rss
@@ -303,31 +303,66 @@ menus:
   # and takes the label from that page's linkTitle.
   - pageRef: /docs/
     weight: 40
-  - name: OSS Health
-    identifier: oss-health
-    weight: 35
+  - name: Resources
+    identifier: resources
+    weight: 30
   - name: Telemetry
     url: /oss-health/telemetry/
-    parent: oss-health
+    parent: resources
     weight: 1
   - name: DevStats
     url: /oss-health/devstats/
-    parent: oss-health
+    parent: resources
     weight: 2
   - name: OpenSSF
     url: /oss-health/openssf/
-    parent: oss-health
+    parent: resources
     weight: 3
   - name: OSS Insight
     url: /oss-health/oss-insight/
-    parent: oss-health
+    parent: resources
     weight: 4
+  - name: Compliance
+    identifier: compliance
+    weight: 33
+  - name: PCI DSS
+    url: /compliance/pci-dss/
+    parent: compliance
+    weight: 1
+  - name: GDPR
+    url: /compliance/gdpr/
+    parent: compliance
+    weight: 2
+  - name: CIS Benchmark
+    url: /compliance/cis-benchmark/
+    parent: compliance
+    weight: 3
+  - name: DORA
+    url: /compliance/dora/
+    parent: compliance
+    weight: 4
+  - name: Kubernetes Conformance
+    url: /compliance/kubernetes-conformance/
+    parent: compliance
+    weight: 5
+  - name: AI Conformance
+    url: /compliance/ai-conformance/
+    parent: compliance
+    weight: 6
+  - name: Community
+    url: /community/
+    parent: resources
+    weight: 5
   - name: Enterprise support
     url: /support
-    weight: 5
+    parent: resources
+    weight: 6
   - name: GitHub
     url: https://github.com/cozystack/cozystack
     weight: 10
+  - name: Live Demo
+    url: /demo/
+    weight: 15
 
 services:
   googleAnalytics:

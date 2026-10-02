@@ -18,7 +18,3 @@ You can implement best GitOps practices, where users will launch their own Kuber
 Thanks to the standardization of the approach to deploying applications, you can expand the platform's capabilities using the functionality of standard Helm charts.
 
 ![Cozystack for private cloud](/img/case-private-cloud.png)
-
-Here you can find reference repository to learn how to configure Cozystack services using GitOps approach:
-
-- https://github.com/aenix-io/cozystack-gitops-example

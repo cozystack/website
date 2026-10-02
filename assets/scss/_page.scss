@@ -3,9 +3,15 @@
 }
 
 .page {
+  // `type: page` content mounts directly inside `.td-main` (no <main> wrapper),
+  // so Docsy's `.td-main main { padding-top }` navbar offset never applies and the
+  // top `margin-top` collapses to nothing — the heading ends up under the fixed
+  // navbar. Use padding-top (collapse-proof) to guarantee breathing room.
   margin-top: 6rem;
+  padding-top: 2.5rem;
   @include media-breakpoint-down(sm) {
     margin-top: 2rem;
+    padding-top: 1.5rem;
   }
 
   a {

@@ -72,9 +72,9 @@ Dashboard will become available under: `https://dashboard.<your_domain>`
 <details>
 <summary>How to configure Cozystack using FluxCD or ArgoCD</summary>
 
-Here you can find reference repository to learn how to configure Cozystack services using GitOps approach:
+Cozystack applications are ordinary Kubernetes resources, so a GitOps workflow needs nothing specific to the platform: point FluxCD or ArgoCD at a repository holding your `Tenant`, `Kubernetes` and application manifests, and reconcile them as you would any other objects. The fields of each application are documented on its reference page.
 
-- https://github.com/aenix-io/cozystack-gitops-example
+There is no maintained reference repository at the moment. The previous example was written before Cozystack 1.0 and no longer matched the current resources, so it was retired rather than left to mislead.
 
 </details>
 <br>

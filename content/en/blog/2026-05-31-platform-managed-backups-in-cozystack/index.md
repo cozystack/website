@@ -113,7 +113,7 @@ The backups API is extensible. If a driver you need doesn't exist yet, you have 
 ## Learn more
 
 - [Application Backup and Recovery](https://cozystack.io/docs/v1.4/applications/backup-and-recovery/)
-- [Backup Classes — admin guide](https://cozystack.io/docs/v1.4/operations/services/backup-classes/)
+- [Backup Classes — admin guide](https://cozystack.io/docs/v1.6/operations/services/backup-classes/)
 - [More examples](https://github.com/cozystack/cozystack/tree/main/examples/backups)
 
 ## Join the community

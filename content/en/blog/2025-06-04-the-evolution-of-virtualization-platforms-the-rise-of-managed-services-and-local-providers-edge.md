@@ -136,7 +136,7 @@ Join our community, develop your own managed services, and together we’ll make
 
 **Articles**
 
-- [DIY: Create Your Own Cloud with Kubernetes](https://kubernetes.io/blog/2024/04/05/diy-create-your-own-cloud-with-kubernetes-part-1/)
+- [DIY: Create Your Own Cloud with Kubernetes](https://kubernetes.io/blog/2024/04/diy-create-your-own-cloud-with-kubernetes-part-1/)
 - [How we built a dynamic Kubernetes API Server for the API Aggregation Layer in Cozystack](https://kubernetes.io/blog/2024/11/21/dynamic-kubernetes-api-server-for-cozystack/)
 - [Cozystack Becomes a CNCF Sandbox Project](https://blog.aenix.io/cozystack-becomes-a-cncf-sandbox-project-3702b8906971)
 - [Cozystack Recognized in CNCF’s CNAI Landscape](https://blog.aenix.io/cozystack-recognized-in-cncfs-cnai-landscape-331f892b9639)

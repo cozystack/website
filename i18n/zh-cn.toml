@@ -7,6 +7,21 @@ other = "屏幕截图"
 [home_benefits]
 other = "优势"
 
+[home_use_cases]
+other = "Cozystack 适合谁"
+
+[home_use_cases_lead]
+other = "这个项目正是为这六种情形而生。每一种背后，都有人今天正把它跑在生产环境里。"
+
+[home_use_cases_more]
+other = "了解更多"
+
+[home_use_cases_prev]
+other = "上一个场景"
+
+[home_use_cases_next]
+other = "下一个场景"
+
 [home_features]
 other = "功能特性"
 

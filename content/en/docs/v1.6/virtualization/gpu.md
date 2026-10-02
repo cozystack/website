@@ -270,7 +270,7 @@ GPU passthrough assigns an entire physical GPU to a single VM. To share one GPU 
 
 ### vGPU (Virtual GPU)
 
-NVIDIA vGPU uses mediated devices (mdev) to create virtual GPUs assignable to VMs. This is the only production-ready solution for GPU sharing between VMs.
+NVIDIA vGPU is the only production-ready solution for GPU sharing between VMs. Two host-side models exist depending on GPU generation: mediated devices (mdev) on Pascal through Ampere, and SR-IOV virtual functions on Ada Lovelace and newer. See [NVIDIA vGPU for virtual machines](/docs/v1.6/virtualization/vgpu/) for the full setup, including profile assignment and DLS licensing.
 
 **Requirements:**
 - NVIDIA vGPU license (commercial, purchased from NVIDIA)

@@ -2,12 +2,13 @@
 title: "DIY: Create Your Own Cloud with Kubernetes (Part 1)"
 slug: diy-create-your-own-cloud-with-kubernetes-part-1
 date: 2024-04-05T07:30:00+00:00
+author: "Andrei Kvapil"
+description: "Part one of building your own cloud with nothing outside the Kubernetes ecosystem: a base distribution on Talos Linux and Flux CD."
 article_types:
   - tech-article
 topics:
   - platform
   - kubernetes
-
 ---
 
 **Author**: Andrei Kvapil (Ænix)
@@ -171,7 +172,7 @@ But the question arises, how do you deliver the freshly formed image to your nod
 
 I have been contemplating the idea of PXE booting for quite some time. For example, the
 **Kubefarm** project that I wrote an
-[article](/blog/2021/12/22/kubernetes-in-kubernetes-and-pxe-bootable-server-farm/) about
+[article](https://kubernetes.io/blog/2021/12/22/kubernetes-in-kubernetes-and-pxe-bootable-server-farm/) about
 two years ago was entirely built using this approach. But unfortunately, it does help you to
 deploy your very first parent cluster that will hold the others. So now you have prepared a
 solution that will help you do this the same using PXE approach.
@@ -251,10 +252,10 @@ This is actually what the [Cozystack](https://github.com/cozystack/cozystack) pr
 you can try out for yourself absolutely free.
 
 In the following articles, I will discuss
-[how to prepare Kubernetes for running virtual machines](/blog/2024/04/05/diy-create-your-own-cloud-with-kubernetes-part-2/)
-and [how to run Kubernetes clusters with the click of a button](/blog/2024/04/05/diy-create-your-own-cloud-with-kubernetes-part-3/).
+[how to prepare Kubernetes for running virtual machines](/blog/2024/04/diy-create-your-own-cloud-with-kubernetes-part-2/)
+and [how to run Kubernetes clusters with the click of a button](/blog/2024/04/diy-create-your-own-cloud-with-kubernetes-part-3/).
 Stay tuned, it'll be fun!
 
 ---
 
-*Originally published at [https://kubernetes.io](https://kubernetes.io/blog/2024/04/05/diy-create-your-own-cloud-with-kubernetes-part-1/) on April 5, 2024.*
+*Originally published at [https://kubernetes.io](https://kubernetes.io/blog/2024/04/diy-create-your-own-cloud-with-kubernetes-part-1/) on April 5, 2024.*

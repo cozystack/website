@@ -99,9 +99,9 @@ Under the hood Cozystack still uses Flux and Helm to roll resources out, but the
 
 ## Documentation
 
-- [VM Instance](https://cozystack.io/docs/v1/virtualization/vm-instance/)
-- [VM Disk](https://cozystack.io/docs/v1/virtualization/vm-disk/)
-- [GPU Passthrough](https://cozystack.io/docs/v1/virtualization/gpu-passthrough/)
+- [VM Instance](https://cozystack.io/docs/v1.6/virtualization/vm-instance/)
+- [VM Disk](https://cozystack.io/docs/v1.6/virtualization/vm-disk/)
+- [GPU Passthrough](https://cozystack.io/docs/v1.6/virtualization/gpu/)
 
 ## Join the community
 

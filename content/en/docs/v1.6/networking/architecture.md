@@ -433,7 +433,7 @@ cilium:
       enabled: true
 ```
 
-See [Enabling Hubble](https://docs.cilium.io/en/stable/observability/hubble/) for full configuration details.
+See [Enabling Hubble for network observability](/docs/v1.6/networking/hubble/) for the metrics list this needs, the Grafana dashboards Cozystack ships for it, and troubleshooting. The upstream [Cilium Hubble documentation](https://docs.cilium.io/en/stable/observability/hubble/) covers the remaining knobs.
 
 ## Traffic Flow Summary
 
