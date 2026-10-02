@@ -234,7 +234,10 @@ class Site:
                 rel = path.relative_to(public)
                 served.add(str(rel))
                 if rel.name == "index.html":
-                    served.add(str(rel.parent).strip("."))
+                    # The root page is served as "", not ".". Stripping dots
+                    # instead would mangle dot-directories like .well-known.
+                    parent = rel.parent
+                    served.add("" if parent == Path(".") else str(parent))
             self._built = served
         return self._built
 
