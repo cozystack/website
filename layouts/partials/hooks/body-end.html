@@ -19,3 +19,54 @@
   }
 </script>
 {{ end }}
+
+{{- /* Page-wide tab switching for tab sets that opt in with `sync`.
+       Clicking "Blockstor" in one set selects it in every other set on
+       the page, and the choice survives navigation — so an operator
+       picks their storage backend once and the whole runbook follows. */ -}}
+<script type="text/javascript">
+(function () {
+  var KEY = "cozystack-tab-sync";
+
+  function stored() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+
+  function remember(group, label) {
+    try {
+      var all = stored();
+      all[group] = label;
+      localStorage.setItem(KEY, JSON.stringify(all));
+    } catch (e) { /* private mode: switching still works, it just forgets */ }
+  }
+
+  function label(a) { return (a.textContent || "").trim(); }
+
+  function selectAll(group, want, origin) {
+    document.querySelectorAll('ul[data-tab-sync="' + group + '"]').forEach(function (ul) {
+      ul.querySelectorAll("a.nav-link").forEach(function (a) {
+        if (a !== origin && label(a) === want && !a.classList.contains("active")) {
+          new bootstrap.Tab(a).show();
+        }
+      });
+    });
+  }
+
+  document.querySelectorAll("ul[data-tab-sync]").forEach(function (ul) {
+    var group = ul.getAttribute("data-tab-sync");
+
+    ul.querySelectorAll("a.nav-link").forEach(function (a) {
+      a.addEventListener("shown.bs.tab", function () {
+        remember(group, label(a));
+        selectAll(group, label(a), a);
+      });
+    });
+  });
+
+  var saved = stored();
+  Object.keys(saved).forEach(function (group) {
+    selectAll(group, saved[group], null);
+  });
+})();
+</script>
