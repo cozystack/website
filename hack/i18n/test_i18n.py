@@ -569,7 +569,7 @@ class TestPayloadProtocol(unittest.TestCase):
         with self.assertRaises(translate.ProtocolError) as cm:
             translate._split_payload_response(
                 '===FRONTMATTER===\n{}\n===BODY===\ntranslated, fence gone', store, set())
-        self.assertIn("lost", str(cm.exception))
+        self.assertIn("lost by the model", str(cm.exception))
 
     def test_duplicated_placeholder_is_rejected(self):
         masked, store = lib.protect("a\n```\ncode\n```\nb")
@@ -577,7 +577,7 @@ class TestPayloadProtocol(unittest.TestCase):
         with self.assertRaises(translate.ProtocolError) as cm:
             translate._split_payload_response(
                 f'===FRONTMATTER===\n{{}}\n===BODY===\n{tok}\n{tok}', store, set())
-        self.assertIn("duplicated", str(cm.exception))
+        self.assertIn("duplicated by the model", str(cm.exception))
 
     def test_placeholders_are_restored(self):
         masked, store = lib.protect("a\n```\ncode\n```\nb")
@@ -609,7 +609,7 @@ class TestPayloadProtocol(unittest.TestCase):
             translate._split_payload_response(
                 f'===FRONTMATTER===\n{{}}\n===BODY===\n{outer} и {inner}',
                 store, set())
-        self.assertIn("injected", str(cm.exception))
+        self.assertIn("injected by the model", str(cm.exception))
 
 
 class TestFindingsReport(unittest.TestCase):
@@ -853,11 +853,27 @@ class TestLinkDestinationMasking(unittest.TestCase):
         self.assertNotIn("example.com", masked)
         self.assertEqual(lib.restore(masked, store), text)
 
+    def test_footnote_definition_prose_is_not_masked(self):
+        # `[^1]: text` is a footnote, not a reference definition: its first word
+        # is prose and must stay translatable.
+        masked, store = lib.protect("Body.[^1]\n\n[^1]: Footnote prose here.\n")
+        self.assertIn("Footnote prose here.", masked)
+        self.assertEqual(lib.restore(masked, store), "Body.[^1]\n\n[^1]: Footnote prose here.\n")
+
     def test_link_title_is_left_translatable(self):
         masked, store = lib.protect('A [link](/a/b "Read this") here.')
         self.assertIn('"Read this"', masked)
         self.assertNotIn("/a/b", masked)
         self.assertEqual(lib.restore(masked, store), 'A [link](/a/b "Read this") here.')
+
+
+class TestTypographyMarkup(unittest.TestCase):
+    def test_html_entity_semicolon_is_not_prose_punctuation(self):
+        self.assertEqual(lib.check_typography("了解更多 &rarr;\n\n## 社区", "zh-cn"), [])
+        self.assertEqual(lib.check_typography("了解更多 &#8594; 社区", "zh-cn"), [])
+
+    def test_real_half_width_semicolon_is_still_caught(self):
+        self.assertTrue(lib.check_typography("了解更多; 社区", "zh-cn"))
 
 
 class TestIntegrityFindings(unittest.TestCase):

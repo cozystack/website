@@ -599,7 +599,12 @@ def _prose_only(text: str) -> str:
     param, a file path — and a check that cries wolf is a check reviewers learn
     to ignore.
     """
-    return _CODEISH_RE.sub(" ", text)
+    return _HTML_ENTITY_RE.sub(" ", _CODEISH_RE.sub(" ", text))
+
+
+# `&rarr;`, `&#8594;`, `&#x2192;` are markup: the trailing `;` is not punctuation,
+# and the zh-cn rules would otherwise read it as a half-width semicolon.
+_HTML_ENTITY_RE = re.compile(r"&(?:[A-Za-z][A-Za-z0-9]+|#\d+|#x[0-9A-Fa-f]+);")
 
 
 # Version tokens: v1.5, v1.2.5, 1.2.3. Localizing the separator (1,2,3) or
