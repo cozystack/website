@@ -723,6 +723,22 @@ class TestRunStatus(unittest.TestCase):
         md = translate._format_run_status(False, "", 0, [{"lang": "de", "rel": "x.md"}], 3)
         self.assertIn("de: x.md", md)
 
+    def test_time_budget_stop_names_its_cause(self):
+        md = translate._format_run_status(True, "", 12, [], 3,
+                                          cause="the run's 240-minute time budget")
+        self.assertIn("240-minute time budget", md)
+        self.assertNotIn("usage limit", md)
+
+
+class TestTimeBudget(unittest.TestCase):
+    def test_no_budget_never_stops(self):
+        self.assertFalse(translate._budget_exhausted(0, None, 10 ** 9))
+        self.assertFalse(translate._budget_exhausted(0, 0, 10 ** 9))
+
+    def test_stops_once_the_budget_is_spent(self):
+        self.assertFalse(translate._budget_exhausted(100.0, 1, 159.9))
+        self.assertTrue(translate._budget_exhausted(100.0, 1, 160.0))
+
 
 class TestOrphanFloor(unittest.TestCase):
     def test_floor_value_is_pinned(self):

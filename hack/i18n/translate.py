@@ -25,7 +25,7 @@ Daily-until-limit: on a usage-limit error the run stops cleanly (exit 0) and
 resumes next day; already-written pages are skipped via source_digest.
 
 Usage:
-  translate.py [--lang ru] [--limit N] [--dry-run]
+  translate.py [--lang ru] [--limit N] [--time-budget-min M] [--dry-run]
 """
 
 from __future__ import annotations
@@ -35,6 +35,7 @@ import json
 import os
 import re
 import sys
+import time
 
 import yaml
 
@@ -380,7 +381,8 @@ def translate_page(cfg, glossary, lang_cfg, rel) -> tuple[str, bool, list[dict]]
 
 
 def _format_run_status(stopped_early: bool, rate_limit_reason: str,
-                       done: int, skipped: list[dict], attempts: int) -> str:
+                       done: int, skipped: list[dict], attempts: int,
+                       cause: str = "the subscription usage limit") -> str:
     """Render an early-stop / skipped-page summary for the weekly PR comment.
 
     Open findings already have a durable home (the PR comment via last-run-findings.md),
@@ -393,7 +395,7 @@ def _format_run_status(stopped_early: bool, rate_limit_reason: str,
     out = ["### Run status", ""]
     if stopped_early:
         reason = f" ({rate_limit_reason})" if rate_limit_reason else ""
-        out.append(f"- Stopped early on the subscription usage limit after {done} "
+        out.append(f"- Stopped early on {cause} after {done} "
                    f"page(s){reason}. Remaining pages stay in the worklist and resume "
                    f"next run.")
     if skipped:
@@ -432,12 +434,28 @@ def _distinct_orphan_pages(orphans: list[str], content_root: str) -> set[str]:
     return {os.path.relpath(p, content_root).split(os.sep, 1)[1] for p in orphans}
 
 
+def _budget_exhausted(started: float, budget_min: float | None, now: float) -> bool:
+    """True once a run has spent its wall-clock budget.
+
+    A scheduled CI job is killed at its timeout and the runner is thrown away, so
+    pages translated before the kill are lost and paid for again the next day.
+    Checking the budget before each page lets the run stop early enough for
+    run-daily.sh to commit and push what it has. A page already in flight is
+    allowed to finish, so the budget must leave room for one slow page."""
+    return budget_min is not None and budget_min > 0 and now - started >= budget_min * 60
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--lang")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--path", help="translate only this exact source rel "
                                    "(e.g. docs/v1.5/getting-started/install-kubernetes.md)")
+    ap.add_argument("--time-budget-min", type=float,
+                    default=float(os.environ["I18N_TIME_BUDGET_MIN"])
+                    if os.environ.get("I18N_TIME_BUDGET_MIN") else None,
+                    help="stop taking new pages after this many minutes "
+                         "(default: $I18N_TIME_BUDGET_MIN, unset = no budget)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -540,7 +558,10 @@ def main() -> int:
         print("::error::claude-agent-sdk not installed (pip install claude-agent-sdk)", file=sys.stderr)
         return 1
     # Auth mode is a config decision, not a code one (see config.yaml `auth`).
-    auth_mode = cfg.get("auth", "oauth-subscription")
+    # I18N_AUTH overrides it for CI, which runs on an org api-key while the tracked
+    # default stays oauth-subscription for local bootstrap; run-daily.sh reads the
+    # same var, so the two never disagree.
+    auth_mode = os.environ.get("I18N_AUTH") or cfg.get("auth", "oauth-subscription")
     has_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
     if auth_mode == "oauth-subscription" and has_key:
         print("::error::auth=oauth-subscription but ANTHROPIC_API_KEY is set — it shadows the "
@@ -564,9 +585,17 @@ def main() -> int:
     clean = with_findings = failed = 0
     stopped_early = False
     rate_limit_reason = ""
+    stop_cause = "the subscription usage limit"
+    started = time.monotonic()
     report: list[dict] = []
     skipped: list[dict] = []
     for it in items:
+        if _budget_exhausted(started, args.time_budget_min, time.monotonic()):
+            stopped_early = True
+            stop_cause = f"the run's {args.time_budget_min:g}-minute time budget"
+            print(f"\ntime budget of {args.time_budget_min:g} min reached after "
+                  f"{clean + with_findings} page(s) — stopping so the run can commit.")
+            break
         try:
             for attempt in range(1, PROTOCOL_ATTEMPTS + 1):
                 try:
@@ -613,7 +642,8 @@ def main() -> int:
     # early-stop / skipped-page summary — dropping either on the floor leaves a
     # `-with-findings` stamp or a stalled page unactionable.
     status_md = _format_run_status(stopped_early, rate_limit_reason,
-                                   clean + with_findings, skipped, PROTOCOL_ATTEMPTS)
+                                   clean + with_findings, skipped, PROTOCOL_ATTEMPTS,
+                                   cause=stop_cause)
     transcreated_md = _format_transcreated(
         [] if args.path else lib.find_transcreated(cfg, only_lang=args.lang))
     sections = [s for s in (status_md, transcreated_md,

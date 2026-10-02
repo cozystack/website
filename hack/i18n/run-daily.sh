@@ -89,7 +89,11 @@ else:
 PY
 }
 
-AUTH_MODE="$(cfg auth)"
+# I18N_AUTH overrides the config's auth mode without editing the tracked file —
+# the clean-tree preflight below forbids an in-place edit, so CI (which runs on an
+# org api-key while the committed default stays oauth-subscription for local
+# bootstrap) sets it in the environment instead. translate.py honours the same var.
+AUTH_MODE="${I18N_AUTH:-$(cfg auth)}"
 if [ "$AUTH_MODE" = "oauth-subscription" ]; then
   if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
     echo "error: auth=oauth-subscription but ANTHROPIC_API_KEY is set — it shadows the" >&2
@@ -108,6 +112,13 @@ elif [ "$AUTH_MODE" = "api-key" ]; then
   fi
 else
   echo "error: unknown auth mode '$AUTH_MODE' in config.yaml" >&2
+  exit 1
+fi
+
+# Publishing needs gh. Without this check an unauthenticated runner would spend a
+# full run of model calls and only fail at `gh pr create`.
+if ! gh auth status >/dev/null 2>&1; then
+  echo "error: gh is not authenticated — run 'gh auth login' or set GH_TOKEN." >&2
   exit 1
 fi
 
