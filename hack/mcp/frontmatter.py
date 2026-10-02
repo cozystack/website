@@ -7,6 +7,8 @@ to model everything Hugo accepts.
 
 from __future__ import annotations
 
+import re
+
 import yaml
 
 DELIMITER = "---"
@@ -25,6 +27,10 @@ KEY_ORDER = [
 ]
 
 
+_OPENING_RE = re.compile(rf"{DELIMITER}[ \t]*\r?\n")
+_CLOSING_RE = re.compile(rf"^{DELIMITER}[ \t]*\r?$", re.MULTILINE)
+
+
 class FrontMatterError(Exception):
     """Raised when a content file has no parseable front matter."""
 
@@ -35,18 +41,19 @@ def split(text: str) -> tuple[str, str]:
     Returns (front_matter_text, body). Raises FrontMatterError when the file
     does not open with a delimiter or the closing delimiter is missing.
     """
-    if not text.startswith(DELIMITER):
+    # Both delimiters must stand alone on their line: "---title: x" is not an
+    # opening, and a "---" inside a block scalar line is not a closing.
+    opening = _OPENING_RE.match(text)
+    if opening is None:
         raise FrontMatterError("file does not start with '---'")
 
-    # Search for the closing delimiter on its own line.
-    rest = text[len(DELIMITER) :]
-    marker = f"\n{DELIMITER}"
-    end = rest.find(marker)
-    if end == -1:
+    rest = text[opening.end() :]
+    closing = _CLOSING_RE.search(rest)
+    if closing is None:
         raise FrontMatterError("closing '---' not found")
 
-    fm = rest[:end]
-    body = rest[end + len(marker) :]
+    fm = rest[: closing.start()]
+    body = rest[closing.end() :]
     return fm.lstrip("\n"), body.lstrip("\n")
 
 
@@ -106,10 +113,50 @@ def dump(data: dict, body: str) -> str:
     return f"{DELIMITER}\n{fm}\n{DELIMITER}\n\n{body}\n"
 
 
+# Characters YAML does not allow raw inside a double-quoted scalar, or that
+# would break the value across lines, mapped to their escape sequences.
+_NAMED_ESCAPES = {
+    "\\": "\\\\",
+    '"': '\\"',
+    "\0": "\\0",
+    "\a": "\\a",
+    "\b": "\\b",
+    "\t": "\\t",
+    "\n": "\\n",
+    "\v": "\\v",
+    "\f": "\\f",
+    "\r": "\\r",
+    "\x1b": "\\e",
+    "\x85": "\\N",
+    "\u2028": "\\L",
+    "\u2029": "\\P",
+}
+
+
+def _escape_char(char: str) -> str:
+    if char in _NAMED_ESCAPES:
+        return _NAMED_ESCAPES[char]
+    code = ord(char)
+    if code < 0x20 or 0x7F <= code <= 0x9F:
+        return f"\\x{code:02x}"
+    if 0xD800 <= code <= 0xDFFF or code in (0xFFFE, 0xFFFF):
+        return f"\\u{code:04x}"
+    return char
+
+
 def _scalar(value) -> str:
-    """Render one scalar as a double-quoted YAML string on a single line."""
+    """Render one scalar as a YAML value on a single line.
+
+    Strings are always double-quoted, with control characters escaped, so a
+    value containing a newline still occupies exactly one line and reads back
+    unchanged.
+    """
     if isinstance(value, bool) or value is None or isinstance(value, (int, float)):
-        return yaml.safe_dump(value, default_flow_style=True).strip().rstrip("...").strip()
-    text = str(value)
-    escaped = text.replace("\\", "\\\\").replace('"', '\\"')
+        rendered = yaml.safe_dump(value, default_flow_style=True).strip()
+        # safe_dump terminates a bare scalar document with an explicit "..."
+        # end marker; drop that suffix, not every trailing dot.
+        if rendered.endswith("..."):
+            rendered = rendered[: -len("...")].rstrip()
+        return rendered
+    escaped = "".join(_escape_char(char) for char in str(value))
     return f'"{escaped}"'

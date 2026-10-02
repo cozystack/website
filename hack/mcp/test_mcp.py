@@ -130,6 +130,39 @@ def test_frontmatter_never_wraps_long_scalars():
     assert data["title"] == long_title, data
 
 
+def test_frontmatter_escapes_control_characters():
+    """A newline or tab in a value must not break the front matter across
+    lines, and the value must read back exactly as given."""
+    tricky = 'line one\nline two\ttabbed\r "quoted" back\\slash \x07 \u2028 end'
+    out = frontmatter.dump({"title": tricky, "description": "plain"}, "body")
+    fm_text, _ = frontmatter.split(out)
+    assert len(fm_text.strip().splitlines()) == 2, out
+    data, _ = frontmatter.load(out)
+    assert data["title"] == tricky, data
+
+
+def test_frontmatter_non_string_scalars():
+    out = frontmatter.dump({"draft": False, "weight": 3, "ratio": 1.5, "x": None}, "b")
+    data, _ = frontmatter.load(out)
+    assert data == {"draft": False, "weight": 3, "ratio": 1.5, "x": None}, out
+    assert "..." not in out, out
+
+
+def test_frontmatter_delimiters_must_stand_alone():
+    try:
+        frontmatter.load("---title: x\n---\n\nbody\n")
+    except frontmatter.FrontMatterError:
+        pass
+    else:
+        raise AssertionError("an opening '---title' must not count as a delimiter")
+
+    text = "---\nnote: |\n  ---not a delimiter\ntitle: Hi\n---\n\nBody.\n"
+    data, body = frontmatter.load(text)
+    assert data["note"] == "---not a delimiter\n", data
+    assert data["title"] == "Hi", data
+    assert body == "Body.\n", body
+
+
 def test_frontmatter_indents_lists():
     out = frontmatter.dump({"topics": ["storage", "platform"]}, "body")
     assert '  - "storage"' in out, out
