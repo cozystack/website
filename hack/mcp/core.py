@@ -15,10 +15,9 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import yaml
-
 import frontmatter
 import validate
+import yaml
 
 BLOG_DIR = Path("content") / "en" / "blog"
 
@@ -127,7 +126,8 @@ def publish(
     """
     images = images or []
     slug = slug or slugify(title)
-    date = date or dt.date.today().isoformat()
+    # The author's local calendar date, which is what a post's date means.
+    date = date or dt.datetime.now().astimezone().date().isoformat()
 
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
         raise PublishError(f"date must be YYYY-MM-DD, got '{date}'")
@@ -273,6 +273,7 @@ def _git(root: Path, *args: str) -> str:
         cwd=root,
         capture_output=True,
         text=True,
+        check=False,
     )
     if proc.returncode != 0:
         raise PublishError(f"git {' '.join(args)} failed: {proc.stderr.strip()}")

@@ -173,7 +173,7 @@ def test_frontmatter_indents_lists():
 
 def test_frontmatter_key_order():
     out = frontmatter.dump({"topics": ["a"], "title": "T", "zzz": 1}, "body")
-    lines = [l for l in out.splitlines() if l and not l.startswith("-")]
+    lines = [line for line in out.splitlines() if line and not line.startswith("-")]
     assert lines[0].startswith("title:"), out
     assert "topics:" in out and "zzz:" in out, out
 
@@ -240,7 +240,9 @@ def test_missing_description_rejected():
     with tempfile.TemporaryDirectory() as tmp:
         root = make_site(Path(tmp))
         front = "\n".join(
-            l for l in VALID_FRONT.strip().splitlines() if not l.startswith("description")
+            line
+            for line in VALID_FRONT.strip().splitlines()
+            if not line.startswith("description")
         )
         path = write_post(root, "2026-08-03-a-post.md", front)
         report = validate.validate_post(path, validate.Site(root))
@@ -360,16 +362,16 @@ def test_plain_file_with_images_rejected():
 
 
 def publish_args(**overrides):
-    args = dict(
-        title="A Post About Storage",
-        description="A description long enough to be a useful search snippet.",
-        author="Someone",
-        body="Some text about storage.",
-        article_types=["how-to"],
-        topics=["storage"],
-        date="2026-08-03",
-        commit=False,
-    )
+    args = {
+        "title": "A Post About Storage",
+        "description": "A description long enough to be a useful search snippet.",
+        "author": "Someone",
+        "body": "Some text about storage.",
+        "article_types": ["how-to"],
+        "topics": ["storage"],
+        "date": "2026-08-03",
+        "commit": False,
+    }
     args.update(overrides)
     return args
 
@@ -703,7 +705,7 @@ def main() -> int:
         try:
             test()
             print(f"  ok   {test.__name__}")
-        except Exception:
+        except Exception:  # noqa: BLE001 - the runner reports every failure
             failed.append(test.__name__)
             print(f"  FAIL {test.__name__}")
             traceback.print_exc()
