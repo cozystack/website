@@ -191,18 +191,30 @@ def tool_publish_post(root: Path, args: dict) -> str:
     return "\n".join(lines)
 
 
-def tool_validate(root: Path, args: dict) -> str:
+class ValidateError(Exception):
+    """Raised when the requested validation cannot run at all."""
+
+
+def collect_reports(root: Path, rel: str | None) -> dict[str, validate.Report]:
+    """Validate one post, or the whole blog when rel is empty.
+
+    rel comes from the MCP client, so it is confined to the repository: a
+    path escaping it would let validation read, and echo back front matter
+    from, any file the process can open.
+    """
     site = validate.Site(root)
-    rel = args.get("path")
+    if not rel:
+        return validate.validate_tree(site)
 
-    if rel:
-        path = (root / rel).resolve()
-        if not path.exists():
-            return f"{rel}: no such file"
-        reports = {rel: validate.validate_post(path, site)}
-    else:
-        reports = validate.validate_tree(site)
+    path = (root / rel).resolve()
+    if not path.is_relative_to(root.resolve()):
+        raise ValidateError(f"{rel}: path is outside the repository")
+    if not path.exists():
+        raise ValidateError(f"{rel}: no such file")
+    return {rel: validate.validate_post(path, site)}
 
+
+def render_reports(reports: dict[str, validate.Report]) -> str:
     if not reports:
         return "No posts found."
 
@@ -225,6 +237,35 @@ def tool_validate(root: Path, args: dict) -> str:
     if lines:
         return summary + "\n\n" + "\n".join(lines)
     return summary + "\nAll checks passed."
+
+
+def tool_validate(root: Path, args: dict) -> str:
+    try:
+        reports = collect_reports(root, args.get("path"))
+    except ValidateError as exc:
+        return str(exc)
+    return render_reports(reports)
+
+
+def check(root: Path, rel: str | None) -> int:
+    """The CI entry point. Returns the process exit code.
+
+    The status comes from the reports themselves, not from the rendered text,
+    so a mistyped --path fails the job instead of passing with nothing checked.
+    A missing taxonomy is an error here too: otherwise every taxonomy rule
+    silently degrades to a warning and the job goes green unchecked.
+    """
+    site = validate.Site(root)
+    if not site.article_types and not site.topics:
+        print("data/taxonomy.yaml is missing or empty; taxonomy cannot be checked")
+        return 1
+    try:
+        reports = collect_reports(root, rel)
+    except ValidateError as exc:
+        print(exc)
+        return 2
+    print(render_reports(reports))
+    return 1 if any(r.errors for r in reports.values()) else 0
 
 
 HANDLERS = {
@@ -326,9 +367,7 @@ def main() -> int:
     root = repo_root()
 
     if args.check:
-        output = tool_validate(root, {"path": args.path} if args.path else {})
-        print(output)
-        return 1 if "FAIL" in output else 0
+        return check(root, args.path)
 
     serve(root)
     return 0

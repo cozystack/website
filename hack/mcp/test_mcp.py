@@ -9,8 +9,9 @@ touches the real content tree. No test framework, matching the rest of hack/.
 
 from __future__ import annotations
 
-import json
+import contextlib
 import io
+import json
 import subprocess
 import sys
 import tempfile
@@ -602,6 +603,55 @@ def test_validate_tool_over_tree():
         out = server.tool_validate(root, {})
         assert "FAIL" in out, out
         assert "2 post(s)" in out, out
+
+
+def test_validate_tool_refuses_paths_outside_repository():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_site(Path(tmp) / "site")
+        secret = Path(tmp) / "secret.md"
+        secret.write_text("---\ntitle: private\n---\n", encoding="utf-8")
+        for rel in ("../secret.md", str(secret)):
+            out = server.tool_validate(root, {"path": rel})
+            assert "outside the repository" in out, out
+            assert "private" not in out, out
+
+
+def _run_check(root: Path, rel: str | None = None) -> tuple[int, str]:
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        code = server.check(root, rel)
+    return code, buffer.getvalue()
+
+
+def test_check_exit_status_follows_reports():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_site(Path(tmp))
+        # A warning-only post whose name contains FAIL must not fail the run.
+        write_post(root, "2026-08-03-FAIL-safe.md", VALID_FRONT.replace("a-post", "FAIL-safe"))
+        code, out = _run_check(root)
+        assert code == 0, out
+
+        write_post(root, "2026-08-03-bad.md", VALID_FRONT.replace("- storage", "- invented"))
+        code, out = _run_check(root)
+        assert code == 1, out
+
+
+def test_check_fails_on_missing_path():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_site(Path(tmp))
+        code, out = _run_check(root, "content/en/blog/typo.md")
+        assert code != 0, out
+        assert "no such file" in out, out
+
+
+def test_check_fails_without_taxonomy():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_site(Path(tmp))
+        write_post(root, "2026-08-03-a-post.md", VALID_FRONT)
+        (root / "data" / "taxonomy.yaml").unlink()
+        code, out = _run_check(root)
+        assert code == 1, out
+        assert "taxonomy" in out, out
 
 
 # --- helpers ----------------------------------------------------------------
