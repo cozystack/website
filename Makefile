@@ -76,6 +76,14 @@ APPS       ?= tenant clickhouse foundationdb harbor redis mongodb openbao rabbit
 K8S       ?= kubernetes
 VMS       ?= vm-disk vm-instance
 NETWORKING       ?= vpc vpn http-cache tcp-balancer
+# Networking apps that only the upstream trunk has so far. A patch release of an already
+# released version fetches READMEs from its own tag, which has no such app, and
+# update_apps.sh exits 1 on the 404, so these are added for the `next` trunk only. Move an
+# app into NETWORKING once every release still receiving patches ships it.
+NETWORKING_NEXT_ONLY ?= site-router
+ifeq ($(DOC_VERSION),next)
+  NETWORKING += $(NETWORKING_NEXT_ONLY)
+endif
 SERVICES       ?= bootbox etcd ingress monitoring seaweedfs
 APPS_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/applications
 K8S_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)
