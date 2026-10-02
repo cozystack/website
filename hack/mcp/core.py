@@ -136,6 +136,7 @@ def publish(
 
     site = validate.Site(root)
     _reject_unknown_terms(site, article_types, topics)
+    _reject_conflicting_image_names(images)
 
     is_bundle = bool(images)
     if is_bundle:
@@ -197,7 +198,7 @@ def publish(
 
         if commit:
             result.branch, result.commit = _commit(
-                root, target, target_dir, branch or f"blog/{slug}", title
+                root, target_dir or target, branch or f"blog/{slug}", title
             )
 
         return result
@@ -235,6 +236,23 @@ def _reject_unknown_terms(
         raise PublishError("\n".join(f"  - {p}" for p in problems))
 
 
+def _reject_conflicting_image_names(images: list[str]) -> None:
+    """Fail before touching disk when two images would land on one path.
+
+    Images are copied into the bundle by basename, so /a/card.png and
+    /b/card.png would overwrite each other, and an image named index.md
+    would overwrite the post itself.
+    """
+    seen: set[str] = set()
+    for src in images:
+        name = Path(src).expanduser().name
+        if name == "index.md":
+            raise PublishError(f"image name conflicts with the post: {src}")
+        if name in seen:
+            raise PublishError(f"two images share the file name '{name}'")
+        seen.add(name)
+
+
 def _rollback(created: list[Path]) -> None:
     """Undo whatever the failed publish managed to create."""
     for path in reversed(created):
@@ -261,31 +279,42 @@ def _git(root: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
-def _commit(
-    root: Path,
-    target: Path,
-    target_dir: Path | None,
-    branch: str,
-    title: str,
-) -> tuple[str, str]:
+def _commit(root: Path, path: Path, branch: str, title: str) -> tuple[str, str]:
     """Put the new post on its own branch and commit it.
 
     Never commits onto the default branch: blog posts arrive through pull
-    requests.
+    requests. If any git step fails, the index and the checked-out branch are
+    restored before the error propagates, so together with the file rollback
+    in publish() a failed commit leaves the repository as it was.
     """
-    current = _git(root, "rev-parse", "--abbrev-ref", "HEAD")
-    if current in ("main", "master"):
+    original = _git(root, "rev-parse", "--abbrev-ref", "HEAD")
+    created_branch = None
+    if original in ("main", "master"):
         _git(root, "checkout", "-b", branch)
+        created_branch = branch
     else:
-        branch = current
+        branch = original
 
-    paths = [str((target_dir or target).relative_to(root))]
-    _git(root, "add", *paths)
-    _git(
-        root,
-        "commit",
-        "--signoff",
-        "-m",
-        f"feat(blog): {title}",
-    )
-    return branch, _git(root, "rev-parse", "--short", "HEAD")
+    rel = str(path.relative_to(root))
+    try:
+        _git(root, "add", "--", rel)
+        _git(root, "commit", "--signoff", "-m", f"feat(blog): {title}")
+        return branch, _git(root, "rev-parse", "--short", "HEAD")
+    except PublishError:
+        _restore_git(root, rel, original, created_branch)
+        raise
+
+
+def _restore_git(
+    root: Path, rel: str, original: str, created_branch: str | None
+) -> None:
+    """Best-effort undo of what _commit did before it failed."""
+    steps = [("reset", "--quiet", "--", rel)]
+    if created_branch is not None:
+        steps += [("checkout", "--quiet", original), ("branch", "-D", created_branch)]
+    for step in steps:
+        try:
+            _git(root, *step)
+        except PublishError:
+            # The failure being handled upstream is the one worth reporting.
+            pass

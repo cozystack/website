@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import io
-import shutil
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -421,6 +421,61 @@ def test_publish_rolls_back_on_validation_failure():
         raise AssertionError("expected PublishError")
 
 
+def test_publish_rejects_conflicting_image_names():
+    """Images are copied by basename, so a clash would silently overwrite one
+    image with another, or the post with an image named index.md."""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_site(Path(tmp))
+        for sub in ("a", "b"):
+            (Path(tmp) / sub).mkdir()
+            _write_png(Path(tmp) / sub / "card.png", 1200, 630)
+        (Path(tmp) / "a" / "index.md").write_text("x", encoding="utf-8")
+        for images in (
+            [str(Path(tmp) / "a" / "card.png"), str(Path(tmp) / "b" / "card.png")],
+            [str(Path(tmp) / "a" / "card.png"), str(Path(tmp) / "a" / "index.md")],
+        ):
+            try:
+                core.publish(root=root, images=images, **publish_args())
+            except core.PublishError:
+                blog = root / "content" / "en" / "blog"
+                assert not any(blog.iterdir()), "nothing must be written on failure"
+                continue
+            raise AssertionError(f"expected PublishError for {images}")
+
+
+def test_publish_restores_git_state_when_commit_fails():
+    """A rejected commit must not leave HEAD on the new branch or the post
+    staged: the publish promises nothing to clean up after a failure."""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_site(Path(tmp))
+        git = _init_repo(root)
+        hook = root / ".git" / "hooks" / "pre-commit"
+        hook.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
+        hook.chmod(0o755)
+
+        try:
+            core.publish(root=root, **publish_args(commit=True))
+        except core.PublishError:
+            pass
+        else:
+            raise AssertionError("expected PublishError from the failing hook")
+
+        assert git("rev-parse", "--abbrev-ref", "HEAD") == "main"
+        assert git("branch", "--list", "blog/*") == "", "created branch must go"
+        assert git("status", "--porcelain") == "", "index and tree must be clean"
+
+
+def test_publish_commits_to_new_branch():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_site(Path(tmp))
+        git = _init_repo(root)
+
+        result = core.publish(root=root, **publish_args(commit=True))
+        assert result.branch == "blog/a-post-about-storage", result
+        assert git("rev-parse", "--abbrev-ref", "HEAD") == result.branch
+        assert git("status", "--porcelain") == ""
+
+
 def test_publish_refuses_duplicate():
     with tempfile.TemporaryDirectory() as tmp:
         root = make_site(Path(tmp))
@@ -550,6 +605,24 @@ def test_validate_tool_over_tree():
 
 
 # --- helpers ----------------------------------------------------------------
+
+
+def _init_repo(root: Path):
+    """Turn a test site into a git repository on main with one commit, and
+    return a helper that runs git in it."""
+
+    def git(*args: str) -> str:
+        return subprocess.run(
+            ["git", *args], cwd=root, check=True, capture_output=True, text=True
+        ).stdout.strip()
+
+    git("init", "--quiet", "--initial-branch=main")
+    git("config", "user.name", "Test")
+    git("config", "user.email", "test@example.com")
+    git("config", "commit.gpgsign", "false")
+    git("add", "--all")
+    git("commit", "--quiet", "-m", "initial")
+    return git
 
 
 def _write_png(path: Path, width: int, height: int) -> None:
