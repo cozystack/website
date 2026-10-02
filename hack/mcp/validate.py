@@ -17,9 +17,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import yaml
-
 import frontmatter
+import yaml
 
 # Raster formats acceptable as an Open Graph card. AVIF and WebP are excluded
 # on purpose: Telegram, LinkedIn and several other parsers do not render them
@@ -67,7 +66,7 @@ class Report:
     def warn(self, message: str) -> None:
         self.warnings.append(message)
 
-    def merge(self, other: "Report") -> None:
+    def merge(self, other: Report) -> None:
         self.errors.extend(other.errors)
         self.warnings.extend(other.warnings)
 
@@ -267,9 +266,11 @@ class Site:
 
         if candidate.startswith("docs/") and not DOCS_VERSION_RE.match(url):
             tail = candidate[len("docs/") :]
-            if self.latest_version:
-                if f"docs/{self.latest_version}/{tail}" in self.pages:
-                    return True
+            if (
+                self.latest_version
+                and f"docs/{self.latest_version}/{tail}" in self.pages
+            ):
+                return True
             # Fall back to any version providing the page: the unversioned URL
             # is served from whichever version is current, and that moves.
             suffix = f"/{tail}"
@@ -457,7 +458,7 @@ def _check_og_image(path: Path, data: dict) -> Report:
         return report
 
     card = str(images[0])
-    if card.startswith("http://") or card.startswith("https://"):
+    if card.startswith(("http://", "https://")):
         report.warn(f"{name}: Open Graph card is remote, not checked: {card}")
         return report
 
@@ -497,7 +498,7 @@ def _check_og_dimensions(name: str, card: str, card_path: Path) -> Report:
     try:
         with Image.open(card_path) as img:
             width, height = img.size
-    except Exception as exc:  # pragma: no cover - depends on broken files
+    except Exception as exc:  # noqa: BLE001  # pragma: no cover - Pillow raises many types
         report.error(f"{name}: cannot read '{card}': {exc}")
         return report
 

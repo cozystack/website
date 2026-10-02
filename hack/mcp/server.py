@@ -25,8 +25,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import core  # noqa: E402
-import validate  # noqa: E402
+import core
+import validate
 
 PROTOCOL_VERSION = "2025-06-18"
 SERVER_NAME = "cozystack-website-publish"
@@ -309,7 +309,7 @@ def handle(request: dict, root: Path) -> dict | None:
             return _result(
                 request_id, {"content": [{"type": "text", "text": text}]}
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - any tool failure is reported
             # Tool failures are reported in-band so the caller can react,
             # rather than as protocol errors.
             return _result(
