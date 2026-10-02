@@ -1,0 +1,6 @@
+# Pinned on purpose: run-daily.sh installs into its venv on every invocation,
+# on a machine holding maintainer credentials (gh token, Claude OAuth token).
+# An unpinned install would silently upgrade code running next to those
+# credentials. Bump deliberately, in a reviewed commit.
+claude-agent-sdk==0.2.123
+pyyaml==6.0.3

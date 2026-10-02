@@ -36,6 +36,7 @@
           <main class="col-12 col-md-12 col-xl-10 pl-md-5 " role="main">
           {{ end }}
             {{ partial "version-banner.html" . }}
+            {{ partial "translation-banner.html" . }}
             {{ if not .Site.Params.ui.breadcrumb_disable }}{{ partial "breadcrumb.html" . }}{{ end }}
             {{ block "main" . }}{{ end }}
           </main>

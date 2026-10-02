@@ -1,0 +1,5 @@
+- Brazilian Portuguese (pt-BR), not European Portuguese.
+- Address the reader with "você"; friendly-professional register.
+- Follow kubernetes.io Brazilian Portuguese localization conventions.
+- Keep English infra loanwords common in the BR tech community (pod, deploy/deployment, cluster, workload→carga de trabalho).
+- Natural BR phrasing over literal calques.
