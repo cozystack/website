@@ -1,0 +1,60 @@
+# Rebuilds the mocked console demo (static/demo-app) from the console in the
+# cozystack monorepo and opens a PR with the result. Self-contained: the demo
+# overlay lives in demo-src/, the build clones upstream fresh, and the PR is
+# opened in THIS repo with the built-in GITHUB_TOKEN — no external tokens, no
+# forks.
+#
+# Requires: Settings → Actions → General → "Allow GitHub Actions to create and
+# approve pull requests" (enabled once). This repo is public, so Actions
+# minutes are free.
+
+name: Refresh console demo
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1" # Mondays 03:00 UTC
+
+concurrency:
+  group: demo-refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Build demo from upstream (with smoke gate)
+        env:
+          # Label shown in the demo header; bump it with the release line.
+          DEMO_VERSION: v1.7.0-rc.2
+        run: bash demo-src/build.sh main
+
+      - name: Open a PR if the demo changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- static/demo-app; then
+            echo "No demo changes — nothing to do."
+            exit 0
+          fi
+          BR="demo/refresh-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BR"
+          git add static/demo-app
+          git commit --signoff -m "chore(demo): refresh mocked console demo from cozystack main"
+          git push origin "$BR"
+          gh pr create --base main --head "$BR" --draft \
+            --title "chore(demo): refresh mocked console demo" \
+            --body "Automated rebuild of the /demo-app/ bundle from the console in the current cozystack main. The Playwright smoke check (every sidebar/tab screen, no un-mocked API call or page error) passed on this build. Review the Netlify deploy preview, then merge. Not auto-merged."

@@ -242,6 +242,18 @@
         ? renderTable("Applications in use", "Instances", period.apps)
         : `<p class="oss-health-empty">No application instances reported for this period yet.</p>`;
 
+      // Without this, a quieter month reads as a shrinking fleet. Instance
+      // counts are each cluster's peak within the window, summed — so a single
+      // load test in one month leaves the next month looking like a decline.
+      const methodNote = `
+        <p class="oss-health-note">
+          Clusters are those that reported at least once in the window. Node,
+          tenant and application figures are each cluster&rsquo;s peak within
+          the window, summed across clusters — so a short-lived burst in one
+          cluster raises the whole period, and the next period reads lower even
+          when nothing was removed.
+        </p>`;
+
       root.innerHTML = `
         <section class="oss-health-stage">
           <div class="oss-health-stage__header">
@@ -255,6 +267,7 @@
             ${renderCards(period.summary_cards)}
             ${rangeStrip}
             ${appsSection}
+            ${methodNote}
           </div>
         </section>
       `;

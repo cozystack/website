@@ -10,7 +10,7 @@
 
     <div id="galleryCarousel" class="carousel slide" data-bs-ride="false">
       <div class="carousel-inner">
-        {{- range $idx, $n := seq 14 }}
+        {{- range $idx, $n := seq 16 }}
         <div class="carousel-item{{ if eq $idx 0 }} active{{ end }}">
           <div class="screenshot-wrapper">
             <img src="/img/carousel/{{ $n }}.png" class="screenshot-img" alt="Screenshot {{ $n }}">
@@ -27,7 +27,7 @@
         <span class="visually-hidden">Next</span>
       </button>
       <div class="carousel-indicators" aria-label="Screenshot navigation">
-        {{- range $idx, $n := seq 14 }}
+        {{- range $idx, $n := seq 16 }}
         <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="{{ $idx }}"{{ if eq $idx 0 }} class="active" aria-current="true"{{ end }} aria-label="Slide {{ $n }}"></button>
         {{- end }}
       </div>

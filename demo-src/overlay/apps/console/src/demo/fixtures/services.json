@@ -1,0 +1,1256 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"name\":\"app-1-http\",\"namespace\":\"tenant-workshop00\"},\"spec\":{\"ports\":[{\"name\":\"http\",\"port\":80,\"protocol\":\"TCP\",\"targetPort\":8080}],\"selector\":{\"app.kubernetes.io/instance\":\"vm-instance-app-1\",\"app.kubernetes.io/name\":\"vm-instance\"}}}\n"
+                },
+                "creationTimestamp": "2026-08-29T01:52:56Z",
+                "name": "app-1-http",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "43951324",
+                "uid": "2f2f8e96-642f-496e-bbcf-93960a369468"
+            },
+            "spec": {
+                "clusterIP": "10.96.17.211",
+                "clusterIPs": [
+                    "10.96.17.211"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http",
+                        "port": 80,
+                        "protocol": "TCP",
+                        "targetPort": 8080
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/instance": "vm-instance-app-1",
+                    "app.kubernetes.io/name": "vm-instance"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "bucket-demo-bucket-system",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00"
+                },
+                "creationTimestamp": "2026-08-29T01:52:06Z",
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Bucket",
+                    "apps.cozystack.io/application.name": "demo-bucket",
+                    "helm.toolkit.fluxcd.io/name": "bucket-demo-bucket-system",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "bucket-demo-bucket-ui",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "43948330",
+                "uid": "a57dd960-44fc-4db3-b334-8ea3a4db82ab"
+            },
+            "spec": {
+                "clusterIP": "10.96.58.80",
+                "clusterIPs": [
+                    "10.96.58.80"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "port": 8080,
+                        "protocol": "TCP",
+                        "targetPort": 8080
+                    }
+                ],
+                "selector": {
+                    "app": "bucket-demo-bucket-ui"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00"
+                },
+                "creationTimestamp": "2026-08-29T02:23:36Z",
+                "labels": {
+                    "app.kubernetes.io/instance": "clickhouse-demo-clickhouse",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse.altinity.com/Service": "chi",
+                    "clickhouse.altinity.com/app": "chop",
+                    "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                    "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse.altinity.com/object-version": "f072f5cb2d7ee559c950719c6e332b08f23013c9",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "true"
+                },
+                "name": "chendpoint-clickhouse-demo-clickhouse",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseInstallation",
+                        "name": "clickhouse-demo-clickhouse",
+                        "uid": "1c2bc0d2-f3c0-4282-b750-bce4960dce6f"
+                    }
+                ],
+                "resourceVersion": "44009498",
+                "uid": "855e2bc6-808b-4281-81f9-1bee23da5405"
+            },
+            "spec": {
+                "clusterIP": "10.96.132.32",
+                "clusterIPs": [
+                    "10.96.132.32"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http",
+                        "port": 8123,
+                        "protocol": "TCP",
+                        "targetPort": 8123
+                    },
+                    {
+                        "name": "tcp",
+                        "port": 9000,
+                        "protocol": "TCP",
+                        "targetPort": 9000
+                    }
+                ],
+                "selector": {
+                    "clickhouse.altinity.com/app": "chop",
+                    "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                    "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse.altinity.com/ready": "yes"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "clickhouse.altinity.com/ready": "yes",
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00"
+                },
+                "creationTimestamp": "2026-08-29T01:52:41Z",
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse.altinity.com/Service": "host",
+                    "clickhouse.altinity.com/app": "chop",
+                    "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                    "clickhouse.altinity.com/cluster": "clickhouse",
+                    "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse.altinity.com/object-version": "c18e145724036d53bc9824cd4c927c11f2aad934",
+                    "clickhouse.altinity.com/replica": "0",
+                    "clickhouse.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "chi-clickhouse-demo-clickhouse-clickhouse-0-0",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseInstallation",
+                        "name": "clickhouse-demo-clickhouse",
+                        "uid": "1c2bc0d2-f3c0-4282-b750-bce4960dce6f"
+                    }
+                ],
+                "resourceVersion": "43951076",
+                "uid": "3df5dce4-b3fa-45ac-a637-241d16ce6880"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "tcp",
+                        "port": 9000,
+                        "protocol": "TCP",
+                        "targetPort": 9000
+                    },
+                    {
+                        "name": "http",
+                        "port": 8123,
+                        "protocol": "TCP",
+                        "targetPort": 8123
+                    },
+                    {
+                        "name": "interserver",
+                        "port": 9009,
+                        "protocol": "TCP",
+                        "targetPort": 9009
+                    }
+                ],
+                "publishNotReadyAddresses": true,
+                "selector": {
+                    "clickhouse.altinity.com/app": "chop",
+                    "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                    "clickhouse.altinity.com/cluster": "clickhouse",
+                    "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse.altinity.com/replica": "0",
+                    "clickhouse.altinity.com/shard": "0"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2026-08-29T01:52:37Z",
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse-keeper.altinity.com/Service": "host",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "1d159ae7dea27eb80055ead627ae9700c0e1c42e",
+                    "clickhouse-keeper.altinity.com/replica": "0",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-0",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse-keeper.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseKeeperInstallation",
+                        "name": "clickhouse-demo-clickhouse-keeper",
+                        "uid": "d56221c2-889d-40f9-b697-2b60b935c5f5"
+                    }
+                ],
+                "resourceVersion": "43950347",
+                "uid": "365b9712-889c-424f-9772-52c5507d0746"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "zk",
+                        "port": 2181,
+                        "protocol": "TCP",
+                        "targetPort": 2181
+                    },
+                    {
+                        "name": "raft",
+                        "port": 9444,
+                        "protocol": "TCP",
+                        "targetPort": 9444
+                    }
+                ],
+                "publishNotReadyAddresses": true,
+                "selector": {
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/replica": "0",
+                    "clickhouse-keeper.altinity.com/shard": "0"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2026-08-29T01:53:04Z",
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse-keeper.altinity.com/Service": "host",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "563e32fe98093cfbfdfd7025afd75352a748e433",
+                    "clickhouse-keeper.altinity.com/replica": "1",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-1",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse-keeper.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseKeeperInstallation",
+                        "name": "clickhouse-demo-clickhouse-keeper",
+                        "uid": "d56221c2-889d-40f9-b697-2b60b935c5f5"
+                    }
+                ],
+                "resourceVersion": "43951801",
+                "uid": "69df28d0-5410-44e2-993f-3033bc7713c7"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "zk",
+                        "port": 2181,
+                        "protocol": "TCP",
+                        "targetPort": 2181
+                    },
+                    {
+                        "name": "raft",
+                        "port": 9444,
+                        "protocol": "TCP",
+                        "targetPort": 9444
+                    }
+                ],
+                "publishNotReadyAddresses": true,
+                "selector": {
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/replica": "1",
+                    "clickhouse-keeper.altinity.com/shard": "0"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2026-08-29T01:53:36Z",
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse-keeper.altinity.com/Service": "host",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "ec8fe52ae9492c6cce419555408c6b4b9dfd678a",
+                    "clickhouse-keeper.altinity.com/replica": "2",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-2",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse-keeper.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseKeeperInstallation",
+                        "name": "clickhouse-demo-clickhouse-keeper",
+                        "uid": "d56221c2-889d-40f9-b697-2b60b935c5f5"
+                    }
+                ],
+                "resourceVersion": "43952952",
+                "uid": "45e054fa-88f0-4bf8-a3be-52dd3bd466bf"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "zk",
+                        "port": 2181,
+                        "protocol": "TCP",
+                        "targetPort": 2181
+                    },
+                    {
+                        "name": "raft",
+                        "port": 9444,
+                        "protocol": "TCP",
+                        "targetPort": 9444
+                    }
+                ],
+                "publishNotReadyAddresses": true,
+                "selector": {
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/replica": "2",
+                    "clickhouse-keeper.altinity.com/shard": "0"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2026-08-29T01:53:04Z",
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse-keeper.altinity.com/Service": "chk",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "5f31ab2622b5fae86829e0bf1d58807740fb2ebe",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "keeper-clickhouse-demo-clickhouse-keeper",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse-keeper.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseKeeperInstallation",
+                        "name": "clickhouse-demo-clickhouse-keeper",
+                        "uid": "d56221c2-889d-40f9-b697-2b60b935c5f5"
+                    }
+                ],
+                "resourceVersion": "43951791",
+                "uid": "435d7242-dd1c-470b-ac73-14be7ad0f340"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "zk",
+                        "port": 2181,
+                        "protocol": "TCP",
+                        "targetPort": "zk"
+                    },
+                    {
+                        "name": "raft",
+                        "port": 9444,
+                        "protocol": "TCP",
+                        "targetPort": "raft"
+                    }
+                ],
+                "selector": {
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/ready": "yes"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "nats-demo-nats-system",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00"
+                },
+                "creationTimestamp": "2026-08-30T06:23:37Z",
+                "labels": {
+                    "app.kubernetes.io/component": "nats",
+                    "app.kubernetes.io/instance": "nats-demo-nats-system",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "nats",
+                    "app.kubernetes.io/version": "2.11.10",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "NATS",
+                    "apps.cozystack.io/application.name": "demo-nats",
+                    "helm.sh/chart": "nats-1.3.16",
+                    "helm.toolkit.fluxcd.io/name": "nats-demo-nats-system",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "true"
+                },
+                "name": "nats-demo-nats",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "47158913",
+                "uid": "fddd59fe-d501-45c9-aa59-3de0450fc646"
+            },
+            "spec": {
+                "clusterIP": "10.96.238.186",
+                "clusterIPs": [
+                    "10.96.238.186"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "appProtocol": "tcp",
+                        "name": "nats",
+                        "port": 4222,
+                        "protocol": "TCP",
+                        "targetPort": "nats"
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/component": "nats",
+                    "app.kubernetes.io/instance": "nats-demo-nats-system",
+                    "app.kubernetes.io/name": "nats"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "nats-demo-nats-system",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00"
+                },
+                "creationTimestamp": "2026-08-30T06:23:37Z",
+                "labels": {
+                    "app.kubernetes.io/component": "nats",
+                    "app.kubernetes.io/instance": "nats-demo-nats-system",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "nats",
+                    "app.kubernetes.io/version": "2.11.10",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "NATS",
+                    "apps.cozystack.io/application.name": "demo-nats",
+                    "helm.sh/chart": "nats-1.3.16",
+                    "helm.toolkit.fluxcd.io/name": "nats-demo-nats-system",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "nats-demo-nats-headless",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "47158908",
+                "uid": "1c49fa1e-f9f4-4f95-83ec-e8dbd4f1627e"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "appProtocol": "tcp",
+                        "name": "nats",
+                        "port": 4222,
+                        "protocol": "TCP",
+                        "targetPort": "nats"
+                    },
+                    {
+                        "appProtocol": "tcp",
+                        "name": "cluster",
+                        "port": 6222,
+                        "protocol": "TCP",
+                        "targetPort": "cluster"
+                    },
+                    {
+                        "appProtocol": "http",
+                        "name": "monitor",
+                        "port": 8222,
+                        "protocol": "TCP",
+                        "targetPort": "monitor"
+                    }
+                ],
+                "publishNotReadyAddresses": true,
+                "selector": {
+                    "app.kubernetes.io/component": "nats",
+                    "app.kubernetes.io/instance": "nats-demo-nats-system",
+                    "app.kubernetes.io/name": "nats"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "cnpg.io/lastAppliedSpec": "{\"ports\":[{\"name\":\"postgres\",\"protocol\":\"TCP\",\"port\":5432,\"targetPort\":5432}],\"selector\":{\"cnpg.io/cluster\":\"postgres-demo-postgres\",\"cnpg.io/podRole\":\"instance\"},\"type\":\"ClusterIP\"}",
+                    "cnpg.io/operatorVersion": "1.28.2"
+                },
+                "creationTimestamp": "2026-08-29T01:52:05Z",
+                "labels": {
+                    "app.kubernetes.io/component": "database",
+                    "app.kubernetes.io/instance": "postgres-demo-postgres",
+                    "app.kubernetes.io/managed-by": "cloudnative-pg",
+                    "app.kubernetes.io/name": "postgres.apps.cozystack.io",
+                    "app.kubernetes.io/version": "18",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Postgres",
+                    "apps.cozystack.io/application.name": "demo-postgres",
+                    "cnpg.io/cluster": "postgres-demo-postgres",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "true",
+                    "policy.cozystack.io/allow-to-apiserver": "true"
+                },
+                "name": "postgres-demo-postgres-r",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "postgresql.cnpg.io/v1",
+                        "controller": true,
+                        "kind": "Cluster",
+                        "name": "postgres-demo-postgres",
+                        "uid": "2f40d223-adab-4bc8-bbfc-28573efa5ce6"
+                    }
+                ],
+                "resourceVersion": "43948014",
+                "uid": "1b2b1501-5129-4cf5-b98f-af83cc80195f"
+            },
+            "spec": {
+                "clusterIP": "10.96.107.105",
+                "clusterIPs": [
+                    "10.96.107.105"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "postgres",
+                        "port": 5432,
+                        "protocol": "TCP",
+                        "targetPort": 5432
+                    }
+                ],
+                "selector": {
+                    "cnpg.io/cluster": "postgres-demo-postgres",
+                    "cnpg.io/podRole": "instance"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "cnpg.io/lastAppliedSpec": "{\"ports\":[{\"name\":\"postgres\",\"protocol\":\"TCP\",\"port\":5432,\"targetPort\":5432}],\"selector\":{\"cnpg.io/cluster\":\"postgres-demo-postgres\",\"cnpg.io/instanceRole\":\"replica\"},\"type\":\"ClusterIP\"}",
+                    "cnpg.io/operatorVersion": "1.28.2"
+                },
+                "creationTimestamp": "2026-08-29T01:52:05Z",
+                "labels": {
+                    "app.kubernetes.io/component": "database",
+                    "app.kubernetes.io/instance": "postgres-demo-postgres",
+                    "app.kubernetes.io/managed-by": "cloudnative-pg",
+                    "app.kubernetes.io/name": "postgres.apps.cozystack.io",
+                    "app.kubernetes.io/version": "18",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Postgres",
+                    "apps.cozystack.io/application.name": "demo-postgres",
+                    "cnpg.io/cluster": "postgres-demo-postgres",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "true",
+                    "policy.cozystack.io/allow-to-apiserver": "true"
+                },
+                "name": "postgres-demo-postgres-ro",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "postgresql.cnpg.io/v1",
+                        "controller": true,
+                        "kind": "Cluster",
+                        "name": "postgres-demo-postgres",
+                        "uid": "2f40d223-adab-4bc8-bbfc-28573efa5ce6"
+                    }
+                ],
+                "resourceVersion": "43948019",
+                "uid": "eb5a1e81-2791-4402-8902-52036e03e804"
+            },
+            "spec": {
+                "clusterIP": "10.96.250.26",
+                "clusterIPs": [
+                    "10.96.250.26"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "postgres",
+                        "port": 5432,
+                        "protocol": "TCP",
+                        "targetPort": 5432
+                    }
+                ],
+                "selector": {
+                    "cnpg.io/cluster": "postgres-demo-postgres",
+                    "cnpg.io/instanceRole": "replica"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "cnpg.io/lastAppliedSpec": "{\"ports\":[{\"name\":\"postgres\",\"protocol\":\"TCP\",\"port\":5432,\"targetPort\":5432}],\"selector\":{\"cnpg.io/cluster\":\"postgres-demo-postgres\",\"cnpg.io/instanceRole\":\"primary\"},\"type\":\"ClusterIP\"}",
+                    "cnpg.io/operatorVersion": "1.28.2"
+                },
+                "creationTimestamp": "2026-08-29T01:52:05Z",
+                "labels": {
+                    "app.kubernetes.io/component": "database",
+                    "app.kubernetes.io/instance": "postgres-demo-postgres",
+                    "app.kubernetes.io/managed-by": "cloudnative-pg",
+                    "app.kubernetes.io/name": "postgres.apps.cozystack.io",
+                    "app.kubernetes.io/version": "18",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Postgres",
+                    "apps.cozystack.io/application.name": "demo-postgres",
+                    "cnpg.io/cluster": "postgres-demo-postgres",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "true",
+                    "policy.cozystack.io/allow-to-apiserver": "true"
+                },
+                "name": "postgres-demo-postgres-rw",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "postgresql.cnpg.io/v1",
+                        "controller": true,
+                        "kind": "Cluster",
+                        "name": "postgres-demo-postgres",
+                        "uid": "2f40d223-adab-4bc8-bbfc-28573efa5ce6"
+                    }
+                ],
+                "resourceVersion": "43948025",
+                "uid": "411ba4b8-a51a-41b2-bbdf-c7a00f53de9b"
+            },
+            "spec": {
+                "clusterIP": "10.96.154.42",
+                "clusterIPs": [
+                    "10.96.154.42"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "postgres",
+                        "port": 5432,
+                        "protocol": "TCP",
+                        "targetPort": 5432
+                    }
+                ],
+                "selector": {
+                    "cnpg.io/cluster": "postgres-demo-postgres",
+                    "cnpg.io/instanceRole": "primary"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "redis-demo-redis",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00"
+                },
+                "creationTimestamp": "2026-08-29T01:52:05Z",
+                "labels": {
+                    "app": "redis-demo-redis-metrics",
+                    "app.kubernetes.io/instance": "redis-demo-redis",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Redis",
+                    "apps.cozystack.io/application.name": "demo-redis",
+                    "helm.toolkit.fluxcd.io/name": "redis-demo-redis",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "redis-demo-redis-metrics",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "43948116",
+                "uid": "5cd485cc-7586-4e61-b544-5bfa3d432e66"
+            },
+            "spec": {
+                "clusterIP": "10.96.33.84",
+                "clusterIPs": [
+                    "10.96.33.84"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "metrics",
+                        "port": 9121,
+                        "protocol": "TCP",
+                        "targetPort": "metrics"
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "prometheus.io/path": "/metrics",
+                    "prometheus.io/port": "http",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2026-08-29T01:52:05Z",
+                "labels": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/instance": "redis-demo-redis",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Redis",
+                    "apps.cozystack.io/application.name": "demo-redis",
+                    "helm.toolkit.fluxcd.io/name": "redis-demo-redis",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false",
+                    "redisfailovers.databases.spotahome.com/name": "redis-demo-redis"
+                },
+                "name": "rfr-redis-demo-redis",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "databases.spotahome.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "RedisFailover",
+                        "name": "redis-demo-redis",
+                        "uid": "2d06e18d-9d48-4bbe-9d5a-8384411b4d0a"
+                    }
+                ],
+                "resourceVersion": "43948148",
+                "uid": "cbcfb8ac-98d7-4dfd-8629-46fe499aab87"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "http-metrics",
+                        "port": 9121,
+                        "protocol": "TCP",
+                        "targetPort": 9121
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "creationTimestamp": "2026-08-29T01:52:06Z",
+                "labels": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/instance": "redis-demo-redis",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Redis",
+                    "apps.cozystack.io/application.name": "demo-redis",
+                    "helm.toolkit.fluxcd.io/name": "redis-demo-redis",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "true",
+                    "redisfailovers-role": "master",
+                    "redisfailovers.databases.spotahome.com/name": "redis-demo-redis"
+                },
+                "name": "rfrm-redis-demo-redis",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "databases.spotahome.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "RedisFailover",
+                        "name": "redis-demo-redis",
+                        "uid": "2d06e18d-9d48-4bbe-9d5a-8384411b4d0a"
+                    }
+                ],
+                "resourceVersion": "43948194",
+                "uid": "37f2ca85-9bd2-4768-bace-e8ba8cd44664"
+            },
+            "spec": {
+                "clusterIP": "10.96.143.50",
+                "clusterIPs": [
+                    "10.96.143.50"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "redis",
+                        "port": 6379,
+                        "protocol": "TCP",
+                        "targetPort": "redis"
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover",
+                    "redisfailovers-role": "master"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "creationTimestamp": "2026-08-29T01:52:06Z",
+                "labels": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/instance": "redis-demo-redis",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Redis",
+                    "apps.cozystack.io/application.name": "demo-redis",
+                    "helm.toolkit.fluxcd.io/name": "redis-demo-redis",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "true",
+                    "redisfailovers-role": "slave",
+                    "redisfailovers.databases.spotahome.com/name": "redis-demo-redis"
+                },
+                "name": "rfrs-redis-demo-redis",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "databases.spotahome.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "RedisFailover",
+                        "name": "redis-demo-redis",
+                        "uid": "2d06e18d-9d48-4bbe-9d5a-8384411b4d0a"
+                    }
+                ],
+                "resourceVersion": "43948203",
+                "uid": "d87ba9fa-68a1-44c1-b166-52ab44d90027"
+            },
+            "spec": {
+                "clusterIP": "10.96.68.109",
+                "clusterIPs": [
+                    "10.96.68.109"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "redis",
+                        "port": 6379,
+                        "protocol": "TCP",
+                        "targetPort": "redis"
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover",
+                    "redisfailovers-role": "slave"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "creationTimestamp": "2026-08-29T01:52:05Z",
+                "labels": {
+                    "app.kubernetes.io/component": "sentinel",
+                    "app.kubernetes.io/instance": "redis-demo-redis",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Redis",
+                    "apps.cozystack.io/application.name": "demo-redis",
+                    "helm.toolkit.fluxcd.io/name": "redis-demo-redis",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "true",
+                    "redisfailovers.databases.spotahome.com/name": "redis-demo-redis"
+                },
+                "name": "rfs-redis-demo-redis",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "databases.spotahome.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "RedisFailover",
+                        "name": "redis-demo-redis",
+                        "uid": "2d06e18d-9d48-4bbe-9d5a-8384411b4d0a"
+                    }
+                ],
+                "resourceVersion": "43948170",
+                "uid": "b3ab58b3-a795-4b3b-859a-b327fab15384"
+            },
+            "spec": {
+                "clusterIP": "10.96.255.52",
+                "clusterIPs": [
+                    "10.96.255.52"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "sentinel",
+                        "port": 26379,
+                        "protocol": "TCP",
+                        "targetPort": 26379
+                    }
+                ],
+                "selector": {
+                    "app.kubernetes.io/component": "sentinel",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}

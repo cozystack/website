@@ -38,6 +38,8 @@ Pinned upstream versions of managed runtimes (PostgreSQL, MariaDB, Kafka, etc.) 
 {{< oss-card name="ExternalDNS" logo="externaldns" license="Apache-2.0" source="https://github.com/kubernetes-sigs/external-dns/blob/master/LICENSE.md" description="Sync Kubernetes resources to external DNS providers." >}}
 {{< oss-card name="Kilo" logo="kilo" license="Apache-2.0" source="https://github.com/squat/kilo/blob/main/LICENSE" description="Mesh networking across geographically distributed nodes." >}}
 {{< oss-card name="Hetzner RobotLB" logo="hetzner" license="MIT" source="https://github.com/Intreecom/robotlb/blob/master/LICENSE" description="Load balancer integration for Hetzner dedicated hardware." >}}
+{{< oss-card name="kuberture" license="BSD-3-Clause" source="https://github.com/lexfrei/kuberture/blob/master/LICENSE" description="Publishes EndpointSlice endpoints as annotated headless Services for ExternalDNS. Optional; off by default." >}}
+{{< oss-card name="ouroboros" license="BSD-3-Clause" source="https://github.com/lexfrei/ouroboros/blob/master/LICENSE" description="Hairpin-NAT fix for Ingress controllers behind PROXY-protocol. Optional; off by default." >}}
 {{< /oss-cards >}}
 
 ## Storage

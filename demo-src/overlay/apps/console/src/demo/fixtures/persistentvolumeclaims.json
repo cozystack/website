@@ -1,0 +1,602 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/selected-node": "ws3",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-29T01:52:09Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/instance": "clickhouse-demo-clickhouse",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse.altinity.com/app": "chop",
+                    "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                    "clickhouse.altinity.com/cluster": "clickhouse",
+                    "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse.altinity.com/object-version": "38f68040b14689498a135547eaad38d6376f2d98",
+                    "clickhouse.altinity.com/reclaimPolicy": "Delete",
+                    "clickhouse.altinity.com/replica": "0",
+                    "clickhouse.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "data-volume-template-chi-clickhouse-demo-clickhouse-clickhouse-0-0-0",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "44009129",
+                "uid": "570849ea-eb01-4ad3-b070-6ef6a5ea2d3a"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "2Gi"
+                    }
+                },
+                "storageClassName": "local",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-570849ea-eb01-4ad3-b070-6ef6a5ea2d3a"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "2Gi"
+                },
+                "phase": "Bound"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true",
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/selected-node": "ws3",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-29T01:52:37Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/instance": "clickhouse-demo-clickhouse",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "7b0a7d19caa64f54d61a6606e0c9618b659e43a8",
+                    "clickhouse-keeper.altinity.com/reclaimPolicy": "Delete",
+                    "clickhouse-keeper.altinity.com/replica": "0",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "default-chk-clickhouse-demo-clickhouse-keeper-cluster1-0-0-0",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "43954693",
+                "uid": "6edf906f-ada8-405d-8c94-2f0582687052"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "1Gi"
+                    }
+                },
+                "storageClassName": "local",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-6edf906f-ada8-405d-8c94-2f0582687052"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "1Gi"
+                },
+                "phase": "Bound"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true",
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/selected-node": "ws1",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-29T01:53:04Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/instance": "clickhouse-demo-clickhouse",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "c4e3c7a42d4b5ec0706cc744a2b4d21590467f69",
+                    "clickhouse-keeper.altinity.com/reclaimPolicy": "Delete",
+                    "clickhouse-keeper.altinity.com/replica": "1",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "default-chk-clickhouse-demo-clickhouse-keeper-cluster1-0-1-0",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "43954697",
+                "uid": "515e56b1-c832-4613-b5ca-fb437794f94a"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "1Gi"
+                    }
+                },
+                "storageClassName": "local",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-515e56b1-c832-4613-b5ca-fb437794f94a"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "1Gi"
+                },
+                "phase": "Bound"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true",
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/selected-node": "ws2",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-29T01:53:36Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/instance": "clickhouse-demo-clickhouse",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "7635dcfcbbe65cd37f5fb6295043b6763a81b7b4",
+                    "clickhouse-keeper.altinity.com/reclaimPolicy": "Delete",
+                    "clickhouse-keeper.altinity.com/replica": "2",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "default-chk-clickhouse-demo-clickhouse-keeper-cluster1-0-2-0",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "43954701",
+                "uid": "527189c1-277f-47ae-a055-0b336b2042c6"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "1Gi"
+                    }
+                },
+                "storageClassName": "local",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-527189c1-277f-47ae-a055-0b336b2042c6"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "1Gi"
+                },
+                "phase": "Bound"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/selected-node": "ws3",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-29T01:52:09Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/instance": "clickhouse-demo-clickhouse",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "ClickHouse",
+                    "apps.cozystack.io/application.name": "demo-clickhouse",
+                    "clickhouse.altinity.com/app": "chop",
+                    "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                    "clickhouse.altinity.com/cluster": "clickhouse",
+                    "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse.altinity.com/object-version": "bf54f3b6b71b7381bf39c39cc0446ddfcb64132a",
+                    "clickhouse.altinity.com/reclaimPolicy": "Delete",
+                    "clickhouse.altinity.com/replica": "0",
+                    "clickhouse.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "log-volume-template-chi-clickhouse-demo-clickhouse-clickhouse-0-0-0",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "44009142",
+                "uid": "481397b2-8dd3-4dfb-bc91-54c5cae43a36"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "2Gi"
+                    }
+                },
+                "storageClassName": "local",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-481397b2-8dd3-4dfb-bc91-54c5cae43a36"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "2Gi"
+                },
+                "phase": "Bound"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-30T06:23:37Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/component": "nats",
+                    "app.kubernetes.io/instance": "nats-demo-nats-system",
+                    "app.kubernetes.io/name": "nats",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "NATS",
+                    "apps.cozystack.io/application.name": "demo-nats",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "nats-demo-nats-js-nats-demo-nats-0",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "StatefulSet",
+                        "name": "nats-demo-nats",
+                        "uid": "0f3d6b47-2933-4356-afda-7dcdd2ad8dcb"
+                    }
+                ],
+                "resourceVersion": "47159174",
+                "uid": "586afce4-1682-4264-958d-f289116971c6"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "10Gi"
+                    }
+                },
+                "storageClassName": "replicated",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-586afce4-1682-4264-958d-f289116971c6"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "10Gi"
+                },
+                "phase": "Bound"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "cnpg.io/nodeSerial": "1",
+                    "cnpg.io/operatorVersion": "1.28.2",
+                    "cnpg.io/pvcStatus": "ready",
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-29T01:52:05Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/component": "database",
+                    "app.kubernetes.io/instance": "postgres-demo-postgres",
+                    "app.kubernetes.io/managed-by": "cloudnative-pg",
+                    "app.kubernetes.io/name": "postgres.apps.cozystack.io",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Postgres",
+                    "apps.cozystack.io/application.name": "demo-postgres",
+                    "cnpg.io/cluster": "postgres-demo-postgres",
+                    "cnpg.io/instanceName": "postgres-demo-postgres-1",
+                    "cnpg.io/instanceRole": "primary",
+                    "cnpg.io/pvcRole": "PG_DATA",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false",
+                    "policy.cozystack.io/allow-to-apiserver": "true",
+                    "role": "primary"
+                },
+                "name": "postgres-demo-postgres-1",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "postgresql.cnpg.io/v1",
+                        "controller": true,
+                        "kind": "Cluster",
+                        "name": "postgres-demo-postgres",
+                        "uid": "2f40d223-adab-4bc8-bbfc-28573efa5ce6"
+                    }
+                ],
+                "resourceVersion": "43951057",
+                "uid": "7bad80ac-902b-4108-92d5-31f84ef7e97a"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "2Gi"
+                    }
+                },
+                "storageClassName": "replicated",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-7bad80ac-902b-4108-92d5-31f84ef7e97a"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "2Gi"
+                },
+                "phase": "Bound"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "cnpg.io/nodeSerial": "2",
+                    "cnpg.io/operatorVersion": "1.28.2",
+                    "cnpg.io/pvcStatus": "ready",
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-29T01:52:53Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/component": "database",
+                    "app.kubernetes.io/instance": "postgres-demo-postgres",
+                    "app.kubernetes.io/managed-by": "cloudnative-pg",
+                    "app.kubernetes.io/name": "postgres.apps.cozystack.io",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Postgres",
+                    "apps.cozystack.io/application.name": "demo-postgres",
+                    "cnpg.io/cluster": "postgres-demo-postgres",
+                    "cnpg.io/instanceName": "postgres-demo-postgres-2",
+                    "cnpg.io/instanceRole": "replica",
+                    "cnpg.io/pvcRole": "PG_DATA",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false",
+                    "policy.cozystack.io/allow-to-apiserver": "true",
+                    "role": "replica"
+                },
+                "name": "postgres-demo-postgres-2",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "postgresql.cnpg.io/v1",
+                        "controller": true,
+                        "kind": "Cluster",
+                        "name": "postgres-demo-postgres",
+                        "uid": "2f40d223-adab-4bc8-bbfc-28573efa5ce6"
+                    }
+                ],
+                "resourceVersion": "43952592",
+                "uid": "fbc67ea7-476b-4610-892f-243adeebd9a2"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "2Gi"
+                    }
+                },
+                "storageClassName": "replicated",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-fbc67ea7-476b-4610-892f-243adeebd9a2"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "2Gi"
+                },
+                "phase": "Bound"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "PersistentVolumeClaim",
+            "metadata": {
+                "annotations": {
+                    "pv.kubernetes.io/bind-completed": "yes",
+                    "pv.kubernetes.io/bound-by-controller": "yes",
+                    "volume.beta.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com",
+                    "volume.kubernetes.io/storage-provisioner": "linstor.csi.linbit.com"
+                },
+                "creationTimestamp": "2026-08-29T01:52:06Z",
+                "finalizers": [
+                    "kubernetes.io/pvc-protection"
+                ],
+                "labels": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/instance": "redis-demo-redis",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover",
+                    "apps.cozystack.io/application.group": "apps.cozystack.io",
+                    "apps.cozystack.io/application.kind": "Redis",
+                    "apps.cozystack.io/application.name": "demo-redis",
+                    "internal.cozystack.io/managed-by-cozystack": "true",
+                    "internal.cozystack.io/tenantresource": "false"
+                },
+                "name": "redisfailover-persistent-data-rfr-redis-demo-redis-0",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "databases.spotahome.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "RedisFailover",
+                        "name": "redis-demo-redis",
+                        "uid": "2d06e18d-9d48-4bbe-9d5a-8384411b4d0a"
+                    }
+                ],
+                "resourceVersion": "43949138",
+                "uid": "c9f4f8d8-7dee-4e24-bab7-8efa7d9c6a66"
+            },
+            "spec": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "resources": {
+                    "requests": {
+                        "storage": "1Gi"
+                    }
+                },
+                "storageClassName": "replicated",
+                "volumeMode": "Filesystem",
+                "volumeName": "pvc-c9f4f8d8-7dee-4e24-bab7-8efa7d9c6a66"
+            },
+            "status": {
+                "accessModes": [
+                    "ReadWriteOnce"
+                ],
+                "capacity": {
+                    "storage": "1Gi"
+                },
+                "phase": "Bound"
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}

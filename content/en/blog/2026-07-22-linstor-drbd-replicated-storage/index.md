@@ -93,13 +93,13 @@ No manual intervention. No restore from backup. No data loss.
 
 ## Documentation
 
-- [Storage overview](https://cozystack.io/docs/v1/storage/)
-- [Disk Preparation](https://cozystack.io/docs/v1/storage/disk-preparation/)
-- [Disk Encryption](https://cozystack.io/docs/v1/storage/disk-encryption/)
-- [DRBD Tuning](https://cozystack.io/docs/v1/storage/drbd-tuning/)
-- [NFS (RWX)](https://cozystack.io/docs/v1/storage/nfs/)
-- [LINSTOR GUI](https://cozystack.io/docs/v1/storage/linstor-gui/)
-- [Dedicated Storage Network](https://cozystack.io/docs/v1/storage/dedicated-network/)
+- [Storage overview](https://cozystack.io/docs/v1.6/storage/)
+- [Disk Preparation](https://cozystack.io/docs/v1.6/storage/disk-preparation/)
+- [Disk Encryption](https://cozystack.io/docs/v1.6/storage/disk-encryption/)
+- [DRBD Tuning](https://cozystack.io/docs/v1.6/storage/drbd-tuning/)
+- [NFS (RWX)](https://cozystack.io/docs/v1.6/storage/nfs/)
+- [LINSTOR GUI](https://cozystack.io/docs/v1.6/storage/linstor-gui/)
+- [Dedicated Storage Network](https://cozystack.io/docs/v1.6/storage/dedicated-network/)
 
 ## Join the community
 
