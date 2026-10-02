@@ -79,8 +79,20 @@ translated_digest_files() {
 # regenerates these, so a stale digest here is a drift REPORT, not a build
 # failure — and re-stamping it wholesale would silence the report while the
 # drift persists.
+#
+# The value is read by lib.l10n_mode, the same YAML parser the pipeline uses, so
+# the two can never disagree: `l10n: 'transcreate'` and `l10n: transcreate # note`
+# are the same value, and a shell regex accepting only some forms would let CI
+# treat as machine output a page the pipeline protects. Needs python3 with pyyaml;
+# without it the lint stops rather than guessing.
+L10N_READER='import sys; sys.path.insert(0, sys.argv[1]); import lib; print(lib.l10n_mode(sys.argv[2]) or "")'
 is_transcreate() {
-  grep -m1 -E '^l10n:' "$1" 2>/dev/null | grep -qE '^l10n:[[:space:]]*"?transcreate"?[[:space:]]*$'
+  local mode
+  if ! mode="$(python3 -c "$L10N_READER" "$(dirname "$0")/i18n" "$1" 2>&1)"; then
+    echo "::error::cannot read l10n from $1 (python3 with pyyaml required): $mode" >&2
+    exit 2
+  fi
+  [ "$mode" = "transcreate" ]
 }
 
 # Map content/<lang>/<rel> -> content/en/<rel>
@@ -102,7 +114,7 @@ latest_docs_version() {
   local hugo; hugo="$(dirname "$CONTENT_DIR")/hugo.yaml"
   [ -f "$hugo" ] || return 0
   grep -m1 -E '^[[:space:]]*latest_version_id:' "$hugo" \
-    | sed -E 's/.*latest_version_id:[[:space:]]*"?([^"[:space:]]+)"?.*/\1/'
+    | sed -E "s/.*latest_version_id:[[:space:]]*[\"']?([^\"'[:space:]]+)[\"']?.*/\\1/"
 }
 
 # True when f is a translated docs page of a NON-latest version
@@ -162,8 +174,12 @@ check_key_parity() {
 check_digest_freshness() {
   local rc=0
   local checked=0
+  local warned=0
   local f
   LATEST_DOCS="$(latest_docs_version)"
+  # A value that names no docs tree (a bad parse, a typo) must not mark every
+  # versioned page as superseded and downgrade real drift to a warning.
+  [ -d "$CONTENT_DIR/$DEFAULT_LANG/docs/$LATEST_DOCS" ] || LATEST_DOCS=""
   while IFS= read -r f; do
     [ -z "$f" ] && continue
     local src expected actual
@@ -180,6 +196,7 @@ check_digest_freshness() {
       if is_transcreate "$f"; then
         # Advisory by design: a drifted transcreation is refreshed when a
         # human decides to, and must not block unrelated PRs meanwhile.
+        warned=$((warned + 1))
         echo "::warning::hand-localized page drifted from its English source: $f"
         echo "    refresh the transcreation by hand, then re-stamp it with:"
         echo "    hack/check-i18n.sh update-digests $f"
@@ -188,6 +205,7 @@ check_digest_freshness() {
         # pipeline never refreshes older versions, and its next run removes this
         # page as a superseded orphan. Failing the lint here would block every
         # unrelated PR on a page no PR can fix by rerunning the pipeline.
+        warned=$((warned + 1))
         echo "::warning::stale translation of a superseded docs version (latest is $LATEST_DOCS): $f"
         echo "    the pipeline removes superseded translations on its next run; not a blocker."
       else
@@ -200,7 +218,11 @@ check_digest_freshness() {
       fi
     fi
   done < <(translated_digest_files)
-  [ "$rc" -eq 0 ] && echo "translation freshness: OK ($checked translated pages match their English source)"
+  if [ "$rc" -eq 0 ] && [ "$warned" -eq 0 ]; then
+    echo "translation freshness: OK ($checked translated pages match their English source)"
+  elif [ "$rc" -eq 0 ]; then
+    echo "translation freshness: no blocking drift ($checked translated pages checked, $warned advisory warning(s) above)"
+  fi
   return "$rc"
 }
 

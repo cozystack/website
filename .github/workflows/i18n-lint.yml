@@ -34,20 +34,21 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Check i18n key parity and translation freshness
-        run: ./hack/check-i18n.sh
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - name: Install pyyaml
+        # check-i18n.sh reads `l10n` through lib.l10n_mode, and the unit tests
+        # need it too. The Claude SDK is imported lazily at runtime, not here.
+        run: python3 -m pip install --quiet pyyaml
+      - name: Check i18n key parity and translation freshness
+        run: ./hack/check-i18n.sh
       - name: Run i18n pipeline unit tests
         # Guards the pure functions of the translation pipeline — including the
         # ref/relref deref that keeps a partially-translated page from breaking
-        # the Hugo build. Only pyyaml is needed; the Claude SDK is imported lazily
-        # at runtime, not at test-import time.
-        run: |
-          python3 -m pip install --quiet pyyaml
-          python3 hack/i18n/test_i18n.py
+        # the Hugo build.
+        run: python3 hack/i18n/test_i18n.py
       - name: Typography lint on published translations
         # Advisory: reports per-language typography drift (hand edits, pages
         # translated before a rule existed) without failing the build. Flip to
