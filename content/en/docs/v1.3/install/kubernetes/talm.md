@@ -92,8 +92,75 @@ The structure of the project mostly mirrors an ordinary Helm chart:
 - `Chart.yaml` - a file containing the common information about your project; the name of the chart is used as the name for the newly created cluster.
 - `templates` - a directory used to describe templates for the configuration generation.
 - `secrets.yaml` - a file containing secrets for your cluster.
+- `secrets.encrypted.yaml`, `talosconfig.encrypted` - encrypted counterparts produced from `talm.key` (commit these to git instead of the plaintext files).
+- `talm.key` - the project-local age key used for encrypt / decrypt. Back this up; without it the encrypted files cannot be reopened.
 - `values.yaml` - a common values file used to provide parameters for the templating.
 - `nodes` - an optional directory used to describe and store generated configuration for nodes.
+
+#### Available Presets
+
+`talm` ships two embedded presets:
+
+- `cozystack` - the production preset used by this guide.
+- `talm` - a minimal library chart for advanced users who want to build their own preset on top of it.
+
+Pass the preset name via `-p` / `--preset`.
+
+#### `talm init` Flag Reference
+
+Run `talm init -h` for the canonical list. Grouped by mode:
+
+**Create a new project (default mode):**
+
+- `-p, --preset <name>` - preset for file generation.
+- `-N, --name <cluster-name>` - cluster name.
+- `--endpoints <list>` - Talos API endpoints (comma-separated) embedded into `talosconfig.contexts.<name>.endpoints` for the talosctl client. See "Endpoint flags: talosctl client vs Kubernetes control plane" below.
+- `--cluster-endpoint <url>` - Kubernetes control-plane URL written to `values.yaml::endpoint` (e.g. `https://<vip>:6443`). Validated for scheme + host + port at init time.
+- `--image <ref>` - override the Talos installer image written to the preset's `values.yaml` (e.g. `factory.talos.dev/installer/<sha256>:<version>`).
+- `--talos-version <ver>` - desired Talos contract version for backwards-compatibility templating (e.g. `v1.12`).
+- `--force` - overwrite existing files without prompt.
+
+##### Endpoint flags: talosctl client vs Kubernetes control plane
+
+Two distinct concepts share the word "endpoint" in talm projects:
+
+- **`talosconfig.contexts.<name>.endpoints`** - list of `host[:port]` entries the talosctl client uses to reach the Talos API. Populated by `--endpoints` (plural, comma-separated list).
+- **`values.yaml::endpoint`** - single URL with scheme + host + port that the chart renders into `cluster.controlPlane.endpoint` of every node's MachineConfig. This is what kubelet and kube-proxy dial. Populated by `--cluster-endpoint` (singular, full URL).
+
+When `--endpoints` is given exactly one value, init auto-derives `values.yaml::endpoint` as `https://<that>:6443` because the single-target case is unambiguous. Multi-endpoint inputs never auto-derive (picking one node would silently couple cluster availability to it) - pass `--cluster-endpoint` explicitly or fill `values.yaml::endpoint` later by hand. The init flow prints a hint at the end when the field is left empty.
+
+**Update an existing project to the latest bundled library chart:**
+
+- `-u, --update` - re-extract `charts/talm/` and other preset-shipped files from the talm binary. `--preset` is required; `--name` is not.
+- `--force` - auto-accept every preset-template diff (skip the interactive prompt; safe to use in CI).
+
+`--update` rewrites preset-shipped files only; your `values.yaml`, `secrets.yaml`, `templates/`, and `nodes/` customisations are preserved.
+
+**Manage encrypted secrets in-place:**
+
+- `-e, --encrypt` - encrypt `secrets.yaml` / `talosconfig` / `kubeconfig` into their `.encrypted` counterparts. Requires `talm.key`.
+- `-d, --decrypt` - reverse the above. Does not require `--preset` or `--name`.
+
+#### Updating to a Newer Talm Release
+
+When a new talm version ships a newer bundled library chart, refresh your project in place:
+
+```bash
+cd cozystack-cluster
+talm init --update --preset cozystack          # interactive: prompts for each preset-template diff
+talm init --update --preset cozystack --force  # non-interactive: auto-accept all diffs
+```
+
+#### Encrypt / Decrypt Round-Trip
+
+The encrypted copies are what you commit to git; the plaintext copies are what `talm` reads. Use these to round-trip between the two:
+
+```bash
+talm init --encrypt   # secrets.yaml -> secrets.encrypted.yaml; talosconfig -> talosconfig.encrypted
+talm init --decrypt   # reverse — does not require --preset or --name
+```
+
+Lose the `talm.key` file and the encrypted counterparts become unreadable, so keep a backup of the key out-of-band. When `talm init --decrypt` runs against a project where `talm.key` is missing, talm surfaces both recovery paths in the error hint: restore the backed-up key, or re-run `talm init` to regenerate (with the explicit warning that regenerating writes new secrets, making the old `secrets.encrypted.yaml` undecryptable without the original key).
 
 
 ### 2.2. Edit Configuration Values and Templates
@@ -131,6 +198,33 @@ certSANs: []
 You don't need to fill in the node IPs at this step.
 Instead, you will provide them later, when you generate node configurations.
 
+#### Extending the rendered Talos config (Talm v0.30+)
+
+The `cozystack` preset ships curated defaults for `machine.kernel.modules`, `machine.sysctls`, `machine.kubelet.extraConfig`, and `machine.files`. Operators wanting to add to any of these without forking the chart use four `extra*` values keys:
+
+| Key | Shape | Semantics on the `cozystack` preset |
+| --- | --- | --- |
+| `extraKernelModules` | list | Appended to the built-in modules (`openvswitch`, `drbd`, `zfs`, `spl`, `vfio_pci`, `vfio_iommu_type1`). Each entry is a Talos kernel-module spec. |
+| `extraKubeletExtraArgs` | map | Merged into `kubelet.extraConfig` after the preset's `cpuManagerPolicy: static`, `maxPods: 512`. Operator keys must NOT collide with built-ins — yaml.v3 rejects duplicate map keys on decode, so a collision fails the render with a precise hint pointing at the offending key. Fork the preset if you need a different default. |
+| `extraSysctls` | map | Merged into `machine.sysctls` after the preset's `gc_thresh*` entries. Same collision-fails-render contract as `extraKubeletExtraArgs`. Values must be YAML strings (Talos expects strings even for numeric sysctls). |
+| `extraMachineFiles` | list | Appended to the preset's CRI customization and `lvm.conf` entries. Talos rejects duplicate `path:` at apply time. |
+
+Example `values.yaml` addition:
+
+```yaml
+extraKernelModules:
+  - name: nf_conntrack
+extraKubeletExtraArgs:
+  feature-gates: "NodeSwap=true"
+extraSysctls:
+  net.core.somaxconn: "65535"
+extraMachineFiles:
+  - path: /etc/example.conf
+    op: create
+    content: "hello = world"
+```
+
+The `generic` preset ships no defaults under any of these sections — each block emits only when the matching `extra*` key is non-empty.
 
 ### 2.3 Add Keycloak Configuration
 
@@ -162,9 +256,9 @@ Create a `nodes` directory and collect the information from each node into a nod
 
 ```bash
 mkdir nodes
-talm template -e 192.168.123.11 -n 192.168.123.11 -t templates/controlplane.yaml -i > nodes/node1.yaml
-talm template -e 192.168.123.12 -n 192.168.123.12 -t templates/controlplane.yaml -i > nodes/node2.yaml
-talm template -e 192.168.123.13 -n 192.168.123.13 -t templates/controlplane.yaml -i > nodes/node3.yaml
+talm template -e 192.168.123.11 --nodes 192.168.123.11 -t templates/controlplane.yaml -i > nodes/node1.yaml
+talm template -e 192.168.123.12 --nodes 192.168.123.12 -t templates/controlplane.yaml -i > nodes/node2.yaml
+talm template -e 192.168.123.13 --nodes 192.168.123.13 -t templates/controlplane.yaml -i > nodes/node3.yaml
 ```
 
 The `--insecure` (`-i`) parameter is required because Talm must retrieve configuration data

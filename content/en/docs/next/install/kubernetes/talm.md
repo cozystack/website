@@ -92,8 +92,87 @@ The structure of the project mostly mirrors an ordinary Helm chart:
 - `Chart.yaml` - a file containing the common information about your project; the name of the chart is used as the name for the newly created cluster.
 - `templates` - a directory used to describe templates for the configuration generation.
 - `secrets.yaml` - a file containing secrets for your cluster.
+- `secrets.encrypted.yaml`, `talosconfig.encrypted` - encrypted counterparts produced from `talm.key` (commit these to git instead of the plaintext files).
+- `talm.key` - the project-local age key used for encrypt / decrypt. Back this up; without it the encrypted files cannot be reopened.
 - `values.yaml` - a common values file used to provide parameters for the templating.
+- `.talm-preset.lock` - a machine-managed file recording the preset name and its content hash at init time; used to detect preset drift after a talm binary upgrade. Commit it to git so the baseline is shared across the team.
 - `nodes` - an optional directory used to describe and store generated configuration for nodes.
+
+#### Available Presets
+
+`talm` ships two embedded presets:
+
+- `cozystack` - the production preset used by this guide.
+- `talm` - a minimal library chart for advanced users who want to build their own preset on top of it.
+
+Pass the preset name via `-p` / `--preset`.
+
+#### `talm init` Flag Reference
+
+Run `talm init -h` for the canonical list. Grouped by mode:
+
+**Create a new project (default mode):**
+
+- `-p, --preset <name>` - preset for file generation.
+- `-N, --name <cluster-name>` - cluster name.
+- `--endpoints <list>` - Talos API endpoints (comma-separated) embedded into `talosconfig.contexts.<name>.endpoints` for the talosctl client. See "Endpoint flags: talosctl client vs Kubernetes control plane" below.
+- `--cluster-endpoint <url>` - Kubernetes control-plane URL written to `values.yaml::endpoint` (e.g. `https://<vip>:6443`). Validated for scheme + host + port at init time.
+- `--image <ref>` - override the Talos installer image written to the preset's `values.yaml` (e.g. `factory.talos.dev/installer/<sha256>:<version>`).
+- `--talos-version <ver>` - desired Talos contract version for backwards-compatibility templating (e.g. `v1.12`).
+- `--force` - overwrite existing files without prompt.
+
+##### Endpoint flags: talosctl client vs Kubernetes control plane
+
+Two distinct concepts share the word "endpoint" in talm projects:
+
+- **`talosconfig.contexts.<name>.endpoints`** - list of `host[:port]` entries the talosctl client uses to reach the Talos API. Populated by `--endpoints` (plural, comma-separated list).
+- **`values.yaml::endpoint`** - single URL with scheme + host + port that the chart renders into `cluster.controlPlane.endpoint` of every node's MachineConfig. This is what kubelet and kube-proxy dial. Populated by `--cluster-endpoint` (singular, full URL).
+
+When `--endpoints` is given exactly one value, init auto-derives `values.yaml::endpoint` as `https://<that>:6443` because the single-target case is unambiguous. Multi-endpoint inputs never auto-derive (picking one node would silently couple cluster availability to it) - pass `--cluster-endpoint` explicitly or fill `values.yaml::endpoint` later by hand. The init flow prints a hint at the end when the field is left empty.
+
+**Update an existing project to the latest bundled library chart:**
+
+- `-u, --update` - re-extract `charts/talm/` and other preset-shipped files from the talm binary. `--preset` is required; `--name` is not.
+- `--force` - auto-accept every preset-template diff (skip the interactive prompt; safe to use in CI).
+
+`--update` rewrites preset-shipped files only; your `values.yaml`, `secrets.yaml`, `templates/`, and `nodes/` customisations are preserved.
+
+**Manage encrypted secrets in-place:**
+
+- `-e, --encrypt` - encrypt `secrets.yaml` / `talosconfig` / `kubeconfig` into their `.encrypted` counterparts. Requires `talm.key`.
+- `-d, --decrypt` - reverse the above. Does not require `--preset` or `--name`.
+
+#### Updating to a Newer Talm Release
+
+When a new talm version ships a newer bundled library chart, refresh your project in place:
+
+```bash
+cd cozystack-cluster
+talm init --update --preset cozystack          # interactive: prompts for each preset-template diff
+talm init --update --preset cozystack --force  # non-interactive: auto-accept all diffs
+```
+
+`--update` re-syncs the vendored `charts/talm/` exactly — files that the new library no longer ships (or strays like `.DS_Store`) are pruned — and advances the preset baseline in `.talm-preset.lock`.
+
+#### Chart Drift Detection (Talm v0.32+)
+
+Render commands read the project's local `charts/talm/` copy, never the binary's built-in charts, so upgrading the talm binary does not touch your project — the vendored chart silently goes stale. Release builds of talm detect this and print a non-fatal `WARN:` line on stderr for two independent signals:
+
+- **Library drift**: the vendored `charts/talm/` differs by content from the copy built into the binary. A pure version stamp difference stays silent; a real difference is reported with a sample of the differing paths (`modified:` / `extra:` / `missing:`).
+- **Preset drift**: the binary ships a newer preset than the baseline pinned in `.talm-preset.lock` at init time. Your `templates/` edits are never reported as drift — the comparison is binary-vs-baseline, not binary-vs-project.
+
+Both warnings point at the remediation above. To escalate the warning into a hard error (exit 1) — for example, in CI — set `strictCharts: true` in `Chart.yaml` so the whole team inherits it, or pass `--strict-charts` for a single run. Under strict mode, a baseline that cannot be verified (a corrupted or deleted `.talm-preset.lock`, an unreadable `charts/talm/`) also blocks, so deleting the baseline is not a bypass; without strict mode, such failures degrade to a warning, and projects created before baseline pinning stay silent.
+
+#### Encrypt / Decrypt Round-Trip
+
+The encrypted copies are what you commit to git; the plaintext copies are what `talm` reads. Use these to round-trip between the two:
+
+```bash
+talm init --encrypt   # secrets.yaml -> secrets.encrypted.yaml; talosconfig -> talosconfig.encrypted
+talm init --decrypt   # reverse — does not require --preset or --name
+```
+
+Lose the `talm.key` file and the encrypted counterparts become unreadable, so keep a backup of the key out-of-band. When `talm init --decrypt` runs against a project where `talm.key` is missing, talm surfaces both recovery paths in the error hint: restore the backed-up key, or re-run `talm init` to regenerate (with the explicit warning that regenerating writes new secrets, making the old `secrets.encrypted.yaml` undecryptable without the original key).
 
 
 ### 2.2. Edit Configuration Values and Templates
@@ -131,6 +210,110 @@ certSANs: []
 You don't need to fill in the node IPs at this step.
 Instead, you will provide them later, when you generate node configurations.
 
+#### Extending the rendered Talos config (Talm v0.30+)
+
+The `cozystack` preset ships curated defaults for `machine.kernel.modules`, `machine.sysctls`, `machine.kubelet.extraConfig`, and `machine.files`. Operators wanting to add to any of these without forking the chart use four `extra*` values keys:
+
+| Key | Shape | Semantics on the `cozystack` preset |
+| --- | --- | --- |
+| `extraKernelModules` | list | Appended to the built-in modules (`openvswitch`, `drbd`, `zfs`, `spl`, `vfio_pci`, `vfio_iommu_type1`). Each entry is a Talos kernel-module spec. |
+| `extraKubeletExtraArgs` | map | Merged into `kubelet.extraConfig` after the preset's `cpuManagerPolicy: static`, `maxPods: 512`. Operator keys must NOT collide with built-ins — yaml.v3 rejects duplicate map keys on decode, so a collision fails the render with a precise hint pointing at the offending key. Fork the preset if you need a different default. |
+| `extraSysctls` | map | Merged into `machine.sysctls` after the preset's built-in entries: the `gc_thresh1/2/3` ARP-cache sizes, the always-on DRBD/LINSTOR tuning (`tcp_orphan_retries`, `tcp_fin_timeout`, `netdev_max_backlog`, `netdev_budget`, `netdev_budget_usecs`), `vm.nr_hugepages` (when set), and the `tcp_keepalive_*` triplet while `tcpKeepaliveTuning` is enabled. All of these are preset-owned — the same collision-fails-render contract as `extraKubeletExtraArgs` applies. Values must be YAML strings (Talos expects strings even for numeric sysctls). |
+| `extraMachineFiles` | list | Appended to the preset's CRI customization and `lvm.conf` entries. Talos rejects duplicate `path:` at apply time. |
+
+Example `values.yaml` addition:
+
+```yaml
+extraKernelModules:
+  - name: nf_conntrack
+extraKubeletExtraArgs:
+  feature-gates: "NodeSwap=true"
+extraSysctls:
+  net.core.somaxconn: "65535"
+extraMachineFiles:
+  - path: /etc/example.conf
+    op: create
+    content: "hello = world"
+```
+
+The `generic` preset ships no defaults under any of these sections — each block emits only when the matching `extra*` key is non-empty.
+
+Beyond the `extra*` extension points, the `cozystack` preset exposes two opinionated tunables you can change without forking the chart:
+
+| Key | Default | Effect |
+| --- | --- | --- |
+| `tcpKeepaliveTuning` | `false` | When `true`, adds `net.ipv4.tcp_keepalive_time=600` / `intvl=10` / `probes=6` to `machine.sysctls`, reaping a dead idle socket in ~660s instead of the kernel default ~2h. These sysctls are kernel-wide — they change failure detection for every long-lived idle TCP connection on the node, not just DRBD — so they are opt-in. DRBD already detects dead peers in seconds via its own protocol-level ping, so leave this off unless you specifically want faster node-wide dead-socket detection. |
+| `etcd.quotaBackendBytes` | `"8589934592"` (8 GiB) | etcd backend DB size ceiling, emitted as `cluster.etcd.extraArgs.quota-backend-bytes` on controlplane nodes only. Raises etcd's own 2 GiB default so a LINSTOR-heavy control plane holding many DRBD-resource CRDs in aggregate does not trip the NOSPACE alarm. It is a ceiling, not a reservation: a small DB stays small and costs no extra RAM/disk. Set it to `""` to fall back to etcd's built-in default. This governs total DB size, not single-object size — per-object writes stay bounded by kube-apiserver's fixed 3 MiB request-body limit, which has no configuration knob. |
+
+The five always-on DRBD/LINSTOR sysctls listed in the `extraSysctls` row above ship unconditionally on the `cozystack` preset — they address TCP-port exhaustion observed under DRBD reconnect storms and have no equivalent on the `generic` preset.
+
+#### Describing the node's network and registries from values (Talm v0.34+)
+
+The `extra*` keys above add to the preset's curated defaults. A second group of keys describes parts of the config the preset used to leave to the template — so a topology that once required forking `templates/_helpers.tpl` is now expressible in `values.yaml`. Both presets accept all of them.
+
+| Key | Shape | What it does |
+| --- | --- | --- |
+| `timeServers` | list | `machine.time.servers`. A mapping here fails the render — Talos wants a list of NTP hosts. |
+| `extraApiServerArgs`, `extraControllerManagerArgs`, `extraSchedulerArgs` | map | Passthrough flags for the matching control-plane component. Values are coerced to quoted strings, since Talos types the field as `map[string]string`; a nested map or list is refused, as is a key with no value. Keys colliding with a preset built-in fail the render rather than silently losing. |
+| `registryMirrors` | map | Registry mirrors keyed by registry host, each with an `endpoints` list. An endpoint without a scheme is refused — Talos rejects it with "unsupported scheme". |
+| `registryTLS` | map | TLS posture keyed by the mirror's **endpoint** host, not the registry name, so a self-signed pull-through cache is trusted without touching the mirror list. Takes `ca` (PEM) and/or `insecureSkipVerify`. An entry that sets neither is refused, because the security posture would be left unstated. |
+| `vips` | list | One Layer 2 VIP per entry, each pinned to a `link`. Emitted on any node role, so a storage VIP on a worker works. `floatingIP` remains the single-VIP shorthand and can be combined with these. |
+| `network.preserveExisting` | bool | Carries the node's running `machine.network.interfaces` block over verbatim instead of rebuilding per-link documents from discovery. The escape hatch for a topology talm cannot yet reconstruct. |
+| `network.extraLinks` | list | Declares links discovery cannot see yet — bonds, VLANs, and extra addresses. See below. |
+
+Example:
+
+```yaml
+timeServers:
+  - time.cloudflare.com
+extraApiServerArgs:
+  max-requests-inflight: "2000"
+registryMirrors:
+  ghcr.io:
+    endpoints:
+      - https://mirror.example.com
+registryTLS:
+  mirror.example.com:
+    insecureSkipVerify: true
+vips:
+  - link: bond1
+    ip: 192.0.2.254
+```
+
+Every key defaults empty, so a config that sets none of them renders exactly as before.
+
+##### Declaring links with `network.extraLinks`
+
+On a node that already carries its topology, nothing needs declaring: discovery reconstructs each link — including bond members, tuning, MTU and VLAN children — into typed documents on its own. `network.extraLinks` is for what the node does not carry yet.
+
+An entry with `addresses` or a `bond` declares a new link; an entry with only `vlans` hangs VLANs off a link that already exists. Both an entry and each of its `vlans` children accept `mtu` and `routes` (a route needs a `gateway`; omit `destination` for a default route):
+
+```yaml
+network:
+  extraLinks:
+    - interface: bond0
+      mtu: 9000
+      bond:
+        interfaces: [enp3s0, enp4s0]
+        mode: 802.3ad
+        xmitHashPolicy: layer2+3
+        lacpRate: slow
+        miimon: 100
+      addresses: [192.0.2.10/24]
+      routes:
+        - gateway: 192.0.2.1
+      vlans:
+        - vlanId: 100
+          addresses: [198.51.100.10/24]
+```
+
+A link named in `bond.interfaces` becomes a slave and gets no document of its own — the same filter discovery applies once the bond exists. Moving an already-addressed NIC into a bond therefore has to say where its addressing goes: a slave carrying addresses needs `addresses` on the bond entry, and one carrying the default route needs a `routes` entry there too. Miss either and the render stops, naming the addresses and the gateway to restate, rather than handing the node a config that leaves it unreachable.
+
+Inputs Talos would reject are refused at render time, where the message can name the offending document: a bond with no `mode` or an unknown one, a VLAN on a parent that exists nowhere, a `vlanId` outside 1-4094 or with a fractional part, an address or route destination whose prefix does not parse, an `mtu` outside the kernel's 68-65535 range, and an address that is also a declared VIP — that one belongs to its `Layer2VIPConfig`, and pinning it statically as well puts the leader and its followers out of sync.
+
+{{% alert color="info" %}}
+`network.extraLinks` renders typed documents that only the Talos v1.12+ multi-document schema has. On an older schema the render stops instead of quietly dropping the declared links — raise `templateOptions.talosVersion` in `Chart.yaml`, or declare those links in the node file's own body.
+{{% /alert %}}
 
 ### 2.3 Add Keycloak Configuration
 
@@ -155,6 +338,45 @@ To configure Keycloak as an OIDC provider, apply the following changes to the te
     ```
 
 
+### 2.4 Encrypted user values and secret redaction (Talm v0.32+)
+
+Beyond `secrets.yaml` (the Talos bootstrap secrets), templates often inject operator-supplied secrets into the config — a registry password, an OIDC client secret, a static-pod env value. Talm lets you keep those encrypted in git the same way as `secrets.yaml`, decrypt them in memory at render time, and keep them out of committed node files, terminal output, and CI logs.
+
+**Step 1 — put the secret values in `values-secret.yaml`:**
+
+```yaml
+registryPassword: "s3cr3t-high-entropy-value"
+```
+
+**Step 2 — encrypt it** with the project's `talm.key`. `talm init --encrypt` produces `values-secret.encrypted.yaml`. Commit the encrypted file; the plaintext `values-secret.yaml` is git-ignored.
+
+**Step 3 — reference the encrypted file** from `Chart.yaml` by adding it to `templateOptions.valueFiles`, so both `talm template` and `talm apply` read it:
+
+```yaml
+templateOptions:
+  valueFiles:
+    - values-secret.encrypted.yaml
+```
+
+Referencing it only via the CLI `--values` flag is a foot-gun: the modeline in a node file does not persist value files, so a later `talm apply` would re-render WITHOUT the secret and silently drop the field. Talm surfaces a warning when an encrypted file is passed via `--values` but is not in `templateOptions.valueFiles`.
+
+**Step 4 — use the values in templates** like any other: `{{ .Values.registryPassword | quote }}`.
+
+How secrets are handled across commands:
+
+| Command | Behavior |
+| --- | --- |
+| `talm template` (stdout) | secret values render as `***`; `--show-secrets` prints them verbatim. |
+| `talm template -I` (node file) | secret values are omitted entirely from the committed node file — the real value is re-rendered in memory only at apply, so no plaintext (or ciphertext) ever lands in `nodes/*.yaml`. |
+| `talm apply --dry-run` | both diffs redact secrets: talm's structured drift preview AND the server-returned `Config diff:` block. `--show-secrets-in-drift` reveals them. |
+
+The `--show-secrets-in-drift` flag governs every secret-bearing surface of the apply dry-run, covering both these user values and the Talos bootstrap material (`cluster.ca.key`, `machine.token`, encryption secrets, Wireguard keys, etc.). By default, a dry-run never prints a CA private key or a user secret in cleartext.
+
+`talm apply` honors the full set of value sources, matching `talm template`: `--values`, `--set`, `--set-string`, `--set-file`, `--set-json`, `--set-literal`, merged on top of the `templateOptions.*` defaults from `Chart.yaml`. This keeps `template` and `apply` rendering identically.
+
+**Sharp edge — value-based matching.** Redaction matches by exact value across the whole rendered config, so a secret whose plaintext coincides with an ordinary structural string (a password literally set to `controlplane`, or a bare port like `6443`) will also redact that unrelated field. Prefer high-entropy values; do not encrypt low-entropy strings that collide with non-secret config.
+
+
 ## 3. Generate Node Configuration Files
 
 Next step is to make node configuration files from templates.
@@ -162,9 +384,9 @@ Create a `nodes` directory and collect the information from each node into a nod
 
 ```bash
 mkdir nodes
-talm template -e 192.168.123.11 -n 192.168.123.11 -t templates/controlplane.yaml -i > nodes/node1.yaml
-talm template -e 192.168.123.12 -n 192.168.123.12 -t templates/controlplane.yaml -i > nodes/node2.yaml
-talm template -e 192.168.123.13 -n 192.168.123.13 -t templates/controlplane.yaml -i > nodes/node3.yaml
+talm template -e 192.168.123.11 --nodes 192.168.123.11 -t templates/controlplane.yaml -i > nodes/node1.yaml
+talm template -e 192.168.123.12 --nodes 192.168.123.12 -t templates/controlplane.yaml -i > nodes/node2.yaml
+talm template -e 192.168.123.13 --nodes 192.168.123.13 -t templates/controlplane.yaml -i > nodes/node3.yaml
 ```
 
 The `--insecure` (`-i`) parameter is required because Talm must retrieve configuration data

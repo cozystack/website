@@ -5,7 +5,7 @@ description: "Cozystack v1.2 documentation — install, configure, and operate t
 taxonomyCloud: []
 cascade:
   type: docs
-weight: 20
+weight: 50
 ---
 
 Cozystack is a free PaaS platform and framework for building clouds

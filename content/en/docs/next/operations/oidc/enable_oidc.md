@@ -82,7 +82,7 @@ kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p
 ```
 
 {{% alert color="info" %}}
-**Optional**: If you want the dashboard to reach Keycloak via the internal cluster network instead of the external ingress, set `keycloakInternalUrl`. This is useful in environments with self-signed certificates or restricted external access. See [Self-Signed Certificates]({{% ref "/docs/next/operations/oidc/self-signed-certificates" %}}) for details.
+Dashboard and LINSTOR backend OIDC requests use the internal `keycloak-http` Service by default, while browser-facing redirects keep the external issuer URL. Override `keycloakInternalUrl` only when Keycloak is deployed at a different in-cluster address, or set it to an empty string to restore external OIDC discovery. See [Private CA and Let's Encrypt Staging]({{% ref "/docs/next/operations/oidc/self-signed-certificates" %}}) for private and development certificate trust.
 {{% /alert %}}
 
 Within one minute, CozyStack will reconcile and create three new `HelmRelease` resources:

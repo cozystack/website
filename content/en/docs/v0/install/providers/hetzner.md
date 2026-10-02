@@ -350,7 +350,7 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
     ```bash
     kubectl create ns cozy-system --dry-run=client --output yaml | kubectl apply -f -
     kubectl apply -f cozystack-config.yaml
-    kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
+    kubectl apply -f https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/cozystack-installer.yaml
     ```
     
     The last command starts Cozystack installation, which will last for some time.

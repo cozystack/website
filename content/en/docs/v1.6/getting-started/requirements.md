@@ -1,0 +1,52 @@
+---
+title: "Requirements and Toolchain"
+linkTitle: "Requirements"
+description: "Prepare infrastructure and install the toolchain."
+weight: 1
+---
+
+## Toolchain
+
+You will need the following tools installed on your workstation:
+
+-   [talosctl](https://www.talos.dev/{{< version-pin "talos_minor" >}}/talos-guides/install/talosctl/), the command line client for Talos Linux (use the {{< version-pin "talos_minor" >}}.x series that matches Cozystack {{< version-pin "cozystack_version" >}}).
+-   [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), the command line client for Kubernetes.
+-   [Talm](https://github.com/cozystack/talm?tab=readme-ov-file#installation), Cozystack's own configuration manager for Talos Linux:<br>
+    
+    ```bash
+    curl -sSL https://github.com/cozystack/talm/raw/refs/heads/main/hack/install.sh | sh -s
+    ```
+
+## Hardware Requirements
+
+To run this tutorial, you will need the following setup:
+
+**Cluster nodes:** three bare-metal servers or virtual machines. Hardware requirements depend on your usage scenario:
+
+{{< include "docs/v1.6/install/_include/hardware-config-tabs.md" >}}
+
+**Storage:**
+-   **Primary Disk**: Used for Talos Linux, etcd storage, and downloaded images. Low latency is required.
+-   **Secondary Disk**: Used for user application data (ZFS pool).
+
+**OS:**
+-   Any Linux distribution, for example, Ubuntu.<br>
+-   There are [other installation methods]({{% ref "/docs/v1.6/install/talos" %}}) which require either any Linux or no OS at all to start.
+
+**BIOS/UEFI Settings:**
+-   **Secure Boot.**<br>
+    Talos Linux ships pre-signed kernel modules and works with Secure Boot enabled. On non-Talos Ubuntu hosts, the default piraeus-operator flow compiles DRBD in-cluster; the resulting unsigned modules are rejected by kernel lockdown when Secure Boot is enforced. The simplest path is to disable Secure Boot in BIOS/UEFI; alternatively, follow [Ubuntu + Secure Boot]({{% ref "/docs/v1.6/install/kubernetes/ubuntu-secure-boot" %}}) to pre-install dkms-signed DRBD on the host.
+
+**Networking:**
+-   Routable FQDN domain.<br>If you don't have one, you can use [nip.io](https://nip.io/) with dash notation
+-   Located in the same L2 network segment.
+-   Anti-spoofing disabled.<br>
+    It is required for MetalLB, the load balancer used in Cozystack.
+
+**Virtual machines:**
+-   CPU passthrough enabled and CPU model set to `host` in the hypervisor settings.
+-   Nested virtualization enabled.<br>
+    Required for virtual machines and tenant kubernetes clusters.
+
+For a more detailed explanation of hardware requirements for different setups, refer to the [Hardware Requirements]({{% ref "/docs/v1.6/install/hardware-requirements" %}})
+    

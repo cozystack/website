@@ -1,0 +1,86 @@
+[caution]
+other = "Vorsicht:"
+
+[home_screenshots]
+other = "Screenshots"
+
+[home_benefits]
+other = "Vorteile"
+
+[home_use_cases]
+other = "Wofür Cozystack gemacht ist"
+
+[home_use_cases_lead]
+other = "Sechs Situationen, für die das Projekt gebaut wurde. Hinter jeder steht jemand, der es heute produktiv betreibt."
+
+[home_use_cases_more]
+other = "Mehr erfahren"
+
+[home_use_cases_prev]
+other = "Vorheriger Anwendungsfall"
+
+[home_use_cases_next]
+other = "Nächster Anwendungsfall"
+
+[home_features]
+other = "Funktionen"
+
+[home_cncf_sandbox]
+other = "Cozystack ist ein Sandbox-Projekt der <a href=\"https://cncf.io\">Cloud Native Computing Foundation</a>"
+
+[join_community]
+other = "Der Community beitreten"
+
+[docs_create_issue]
+other = "Doku-Issue erstellen"
+
+[docs_create_project_issue]
+other = "Projekt-Issue erstellen"
+
+[docs_edit]
+other = "Diese Seite bearbeiten"
+
+[docs_last_mod]
+other = "Zuletzt geändert"
+
+[docs_table_of_contents]
+other = "Inhaltsverzeichnis"
+
+[note]
+other = "Hinweis:"
+
+[outdated_blog__message]
+other = "Dieser Artikel ist mehr als ein Jahr alt. Ältere Artikel können veraltete Inhalte enthalten. Prüfen Sie, ob die Informationen auf der Seite seit ihrer Veröffentlichung nicht unrichtig geworden sind."
+
+[ui_minute_read]
+other = "Minuten Lesezeit"
+
+[ui_pager_next]
+other = "Weiter"
+
+[ui_pager_prev]
+other = "Zurück"
+
+[ui_read_more]
+other = "Mehr lesen"
+
+[warning]
+other = "Warnung:"
+
+[docs_landing_new_users]
+other = "<strong>Neue Nutzer:</strong> Beginnen Sie mit der <a href=\"{{ .url }}\">Dokumentation zu {{ .version }}</a> — dem aktuellen stabilen Release."
+
+[docs_landing_available_versions]
+other = "Verfügbare Versionen"
+
+[docs_landing_col_version]
+other = "Version"
+
+[docs_landing_col_status]
+other = "Status"
+
+[docs_landing_status_latest]
+other = "Aktuell (stabil)"
+
+[docs_landing_status_previous]
+other = "Frühere Version"

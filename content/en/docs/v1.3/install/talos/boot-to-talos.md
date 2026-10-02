@@ -32,11 +32,7 @@ Use `ghcr.io/cozystack/cozystack/talos:{{< version-pin "talos" >}}` as the `boot
 `boot-to-talos` v0.7.x carries its own hardcoded default image
 (`ghcr.io/cozystack/cozystack/talos:v1.11.6` as of v0.7.1, see
 [`cmd/boot-to-talos/main.go`](https://github.com/cozystack/boot-to-talos/blob/v0.7.1/cmd/boot-to-talos/main.go)).
-If you let the interactive prompt fall through to that default on a cluster
-you intend to run Cozystack v1.3.0, you will end up with a Talos v1.11 node
-while the Cozystack installer and Talm templates target Talos v1.12 — you
-will hit a mismatch at bootstrap time. Always type in the image matching
-your target Cozystack release (or pass `-image` on the command line).
+If you let the interactive prompt fall through to that default on a cluster you intend to run Cozystack {{< version-pin "cozystack_version" >}}, you will end up with a Talos v1.11 node while the Cozystack installer and Talm templates target Talos {{< version-pin "talos_minor" >}} — you will hit a mismatch at bootstrap time. Always type in the image matching your target Cozystack release (or pass `-image` on the command line).
 {{% /alert %}}
 
 ## Modes

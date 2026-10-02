@@ -25,6 +25,12 @@
     {{- end -}}
   {{- end -}}
 {{- end -}}
+{{/* SEO: localized (non-English) trees are intentionally indexable from day
+     one. They are machine-translated pending native-speaker ratification, but
+     we deliberately let search engines and AI crawlers index them immediately
+     (publish-then-review model) rather than gating discovery on ratification.
+     Each localized page canonicalizes to itself so per-language versions rank
+     independently. */}}
 {{- if $isOldDocsVersion }}
 <meta name="robots" content="noindex, follow" />
 {{- else }}
@@ -43,7 +49,7 @@
   "foundingDate": "2023",
   "sameAs": [
     "https://github.com/cozystack/cozystack",
-    "https://landscape.cncf.io/?item=platform--paas-container-service--cozystack",
+    "https://landscape.cncf.io/?item=orchestration-management--scheduling-orchestration--cozystack",
     "https://kubernetes.slack.com/messages/cozystack",
     "https://t.me/cozystack"
   ]

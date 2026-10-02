@@ -1,6 +1,17 @@
 {{ define "main"}}
 <script>
 (function() {
+  // The live demo (/demo-app/) is a single-page app. Pages has no fallback for
+  // it, so reloading the demo on any inner screen lands here; hand the route
+  // back to the app, which restores it before rendering.
+  var demo = '/demo-app/';
+  var path = window.location.pathname;
+  if (path.indexOf(demo) === 0 && path !== demo) {
+    var route = path.slice(demo.length - 1) + window.location.search + window.location.hash;
+    window.location.replace(demo + '?demoRoute=' + encodeURIComponent(route));
+    return;
+  }
+
   var latest = {{ printf "%q" .Site.Params.latest_version_id | safeJS }};
   var m = latest.match(/^(v\d+)\./);
   if (m) {

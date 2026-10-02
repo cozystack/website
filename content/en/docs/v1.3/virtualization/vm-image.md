@@ -28,10 +28,13 @@ Cozystack automatically adds prefixes to internal Kubernetes resources:
 
 This means if you create a VMInstance named `ubuntu`, the VirtualMachine in Kubernetes will be `vm-instance-ubuntu`.
 
-## Default Image Collection
+## Default Image Collection (opt-in package)
 
-Cozystack ships with the **`vm-default-images`** system package that automatically provisions a curated collection of OS images in the `cozy-public` namespace.
-No manual setup is required — images become available as soon as the package is installed.
+Cozystack ships an optional package, `vm-default-images`, that provisions a curated collection of pre-built Golden Images (Ubuntu, Rocky Linux, AlmaLinux, Debian, CentOS Stream, openSUSE, Alpine) in the `cozy-public` namespace. **The package is disabled by default and must be explicitly enabled.**
+
+{{% alert title="Storage requirements" color="warning" %}}
+The default image set requests roughly **320Gi** of storage (16 images × 20Gi each). Trim the image list or shrink per-image storage sizes to match your cluster capacity before enabling.
+{{% /alert %}}
 
 The default collection includes:
 
@@ -57,6 +60,76 @@ The default collection includes:
 You can list all available images with:
 ```bash
 kubectl -n cozy-public get dv -l app.kubernetes.io/managed-by=cozystack
+```
+
+### Enable the package
+
+Add `cozystack.vm-default-images` to `bundles.enabledPackages` in the [Platform Package]({{% ref "/docs/v1.3/operations/configuration/platform-package" %}}):
+
+```bash
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=json \
+  -p '[{"op": "add", "path": "/spec/components/platform/values/bundles/enabledPackages/-", "value": "cozystack.vm-default-images"}]'
+```
+
+Wait a minute for the platform chart to reconcile, then verify the HelmRelease and the DataVolumes:
+
+```bash
+kubectl get helmrelease -n cozy-system vm-default-images
+kubectl -n cozy-public get dv
+```
+
+DataVolumes provisioned by the package are named `vm-default-images-<image>` and are exposed to tenants as Golden Images named `<image>` (e.g. `ubuntu-24.04`, `debian-12`).
+
+### Configure the image list
+
+Override the default list by editing the `cozystack.vm-default-images` Package and setting values under `spec.components.vm-default-images.values`. The schema is defined in the chart's [values.yaml](https://github.com/cozystack/cozystack/blob/{{< version-pin "cozystack_tag" >}}/packages/system/vm-default-images/values.yaml):
+
+- `storageClass` — default StorageClass for all images; falls back to the cluster default when empty.
+- `images[]` — list of Golden Image entries. Each entry has:
+  - `name` — image name as exposed to users (e.g. `ubuntu-24.04`).
+  - `url` — HTTP(S) URL of the image source.
+  - `storage` — storage size to allocate (e.g. `20Gi`).
+  - `storageClass` — per-image override of the global StorageClass.
+  - `os.family`, `os.name`, `os.version`, `architecture`, `description` — optional metadata surfaced in the UI.
+
+Example: trim the default list down to two images and pin the StorageClass:
+
+```yaml
+apiVersion: cozystack.io/v1alpha1
+kind: Package
+metadata:
+  name: cozystack.vm-default-images
+spec:
+  variant: default
+  components:
+    vm-default-images:
+      values:
+        storageClass: replicated
+        images:
+          - name: ubuntu-24.04
+            url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+            storage: 20Gi
+            os:
+              family: Linux
+              name: Ubuntu
+              version: "24.04"
+            architecture: amd64
+            description: "Ubuntu 24.04 LTS (Noble Numbat) cloud image"
+          - name: debian-12
+            url: https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
+            storage: 20Gi
+            os:
+              family: Linux
+              name: Debian
+              version: "12"
+            architecture: amd64
+            description: "Debian 12 (Bookworm) generic cloud image"
+```
+
+To drop an image after the package is installed, remove it from `images[]` and delete the orphaned DataVolume:
+
+```bash
+kubectl -n cozy-public delete dv vm-default-images-<name>
 ```
 
 ## Adding Custom Golden Images

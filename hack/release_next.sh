@@ -131,7 +131,17 @@ if [[ -f "$NEXT_DATA" ]]; then
     echo "! $TARGET_DATA already exists; leaving it as-is." >&2
   else
     cp "$NEXT_DATA" "$TARGET_DATA"
-    echo "✓ Snapshotted $NEXT_DATA → $TARGET_DATA"
+    # Pin the release-coupled Cozystack version from RELEASE_TAG so a stale
+    # next.yaml can't silently freeze the wrong version into the snapshot —
+    # this is exactly how v1.5.yaml once inherited next.yaml's v1.3.0 values.
+    # Talos pins are left as snapshotted; they're refreshed manually per cycle.
+    VERSION_BARE="${RELEASE_TAG#v}"
+    sed -i.bak \
+      -e "s|^\(cozystack_version:[[:space:]]*\).*|\1\"${VERSION_BARE}\"|" \
+      -e "s|^\(cozystack_tag:[[:space:]]*\).*|\1\"${RELEASE_TAG}\"|" \
+      "$TARGET_DATA"
+    rm -f "$TARGET_DATA.bak"
+    echo "✓ Snapshotted $NEXT_DATA → $TARGET_DATA (pinned cozystack_tag=${RELEASE_TAG})"
   fi
 else
   echo "! $NEXT_DATA missing; skipped data/versions snapshot. Create $TARGET_DATA manually if the docs use {{< version-pin >}}." >&2

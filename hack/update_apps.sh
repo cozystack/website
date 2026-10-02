@@ -83,6 +83,10 @@ SOURCE_REPO="cozystack/cozystack"
 RAW_BASE_URL="https://raw.githubusercontent.com/${SOURCE_REPO}/${BRANCH}/packages/${PKG_DIR}"
 
 
+# The per-app temp file is removed on every explicit exit path below; the trap
+# covers aborts between mktemp and those paths (set -e on touch/cp/heredoc).
+trap 'rm -f "${tmp:-}"' EXIT
+
 for app in "${APPS[@]}"; do
   if [[ "$INDEX_MODE" == "true" ]]; then
     src_file="${DEST_DIR%/}/${app}/_include/_index.md"
@@ -95,6 +99,24 @@ for app in "${APPS[@]}"; do
       src_file="${DEST_DIR%/}/_include/${app}.md"
       dest_file="${DEST_DIR%/}/${app}.md"
     fi
+  fi
+
+  readme_url="${RAW_BASE_URL}/${app}/README.md"
+  echo "Processing $app..."
+
+  tmp=$(mktemp)
+  if ! curl -fsSL --compressed --retry 3 "$readme_url" \
+    | sed '1s/\xEF\xBB\xBF//' \
+    | awk 'NR==1 && /^#{1,2} / { next } { print }' > "$tmp"; then
+    rm -f "$tmp"
+    echo "Error: failed to fetch README for $app from $readme_url" >&2
+    exit 1
+  fi
+
+  if [[ ! -s "$tmp" ]]; then
+    rm -f "$tmp"
+    echo "Error: fetched empty README for $app from $readme_url" >&2
+    exit 1
   fi
 
   # Ensure template exists (touch if missing)
@@ -114,15 +136,8 @@ source: https://github.com/${SOURCE_REPO}/blob/${SOURCE_REF}/packages/${PKG_DIR}
 
 EOF
 
-  readme_url="${RAW_BASE_URL}/${app}/README.md"
-  echo "Processing $app..."
-
-  if curl -fsSL --compressed "$readme_url" \
-    | sed '1s/\xEF\xBB\xBF//' \
-    | awk 'NR==1 && /^#{1,2} / { next } { print }' >> "$dest_file"; then
-    echo "✓ Appended README for $app -> $dest_file"
-  else
-    echo "⚠️  Failed to fetch README for $app" >&2
-  fi
+  cat "$tmp" >> "$dest_file"
+  rm -f "$tmp"
+  echo "✓ Appended README for $app -> $dest_file"
 
 done

@@ -110,7 +110,7 @@ Discovered open port 50000/tcp on 192.168.123.13
             archive = 0
           }
           devices {
-            global_filter = [ "r|^/dev/drbd.*|", "r|^/dev/dm-.*|", "r|^/dev/zd.*|" ]
+            global_filter = [ "r|^/dev/drbd.*|", "r|^/dev/dm-.*|", "r|^/dev/zd.*|", "r|^/dev/loop.*|" ]
           }
 
     cluster:

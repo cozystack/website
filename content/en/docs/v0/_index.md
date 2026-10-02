@@ -5,7 +5,7 @@ description: "Free PaaS platform and framework for building clouds"
 taxonomyCloud: []
 cascade:
   type: docs
-weight: 50
+weight: 80
 aliases:
   - /docs/v0/reference
   - /docs/reference

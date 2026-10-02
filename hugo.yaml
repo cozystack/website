@@ -3,6 +3,24 @@ title: Cozystack
 enableRobotsTXT: true
 enableEmoji: true
 
+# Since Hugo v0.161.0 the Node asset tools (PostCSS here) run under Node's
+# permission model, with read access limited to the project directory by
+# default. That default is not enough for this site: the Docsy theme arrives as
+# a Hugo module and its SCSS is served from the module cache outside the project
+# tree, so the CSS build fails with "Use --allow-fs-read to manage permissions".
+#
+# Read access is therefore widened. Write access stays denied (allowWrite is
+# left at its empty default), as do addons, child processes and workers beyond
+# what Hugo already permits for tailwindcss.
+#
+# This is deliberately broader than necessary — the minimal set of readable
+# paths has not been pinned down, and narrowing it would be a welcome follow-up.
+security:
+  node:
+    permissions:
+      allowRead:
+        - '*'
+
 # Blog taxonomies: two independent axes used by the blog filter UI.
 #   article_types: release, case, how-to, tech-article, news
 #   topics:        platform, postgresql, kubernetes, cilium, talos, opensearch,
@@ -68,6 +86,27 @@ module:
     # production builds via `config/production/hugo.yaml`.
     - source: content/en
       target: content
+      lang: en
+      files:
+        - '! **/_include/*'
+    - source: content/de
+      target: content
+      lang: de
+      files:
+        - '! **/_include/*'
+    - source: content/ru
+      target: content
+      lang: ru
+      files:
+        - '! **/_include/*'
+    - source: content/zh-cn
+      target: content
+      lang: zh-cn
+      files:
+        - '! **/_include/*'
+    - source: content/hi
+      target: content
+      lang: hi
       files:
         - '! **/_include/*'
     # Mount npm dependencies for Docsy
@@ -104,9 +143,38 @@ markup:
 
 languages:
   en:
+    languageName: English
+    languageCode: en
+    weight: 1
     params:
-      languageName: English
-      languageCode: en
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  de:
+    languageName: Deutsch
+    languageCode: de
+    weight: 2
+    params:
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  ru:
+    languageName: Русский
+    languageCode: ru
+    weight: 3
+    params:
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  zh-cn:
+    languageName: 简体中文
+    languageCode: zh-Hans
+    weight: 4
+    params:
+      time_format_default: 2006-01-02
+      time_format_blog: 2006-01-02
+  hi:
+    languageName: हिन्दी
+    languageCode: hi
+    weight: 5
+    params:
       time_format_default: 2006-01-02
       time_format_blog: 2006-01-02
 
@@ -130,8 +198,20 @@ params:
   offlineSearch: false
   version_menu: "Versions"
   version_menu_pagelinks: true
-  latest_version_id: "v1.3"
+  latest_version_id: "v1.6"
   versions:
+    - version: "v1.6"
+      url: "/docs/v1.6/"
+      id: "v1.6"
+      order: 8
+    - version: "v1.5"
+      url: "/docs/v1.5/"
+      id: "v1.5"
+      order: 7
+    - version: "v1.4"
+      url: "/docs/v1.4/"
+      id: "v1.4"
+      order: 6
     - version: "v1.3"
       url: "/docs/v1.3/"
       id: "v1.3"
@@ -182,14 +262,14 @@ params:
   links:
     # End user relevant links. These will show up on left side of footer and in the community page if you have one.
     user:
-      - name: Twitter
-        url: https://twitter.com/aenix_io
-        icon: fab fa-twitter
-        desc: Follow us on Twitter to get the latest news!
-      - name: LinkedIn
-        url: https://www.linkedin.com/company/aenix-io
-        icon: fab fa-linkedin
-        desc: Join the Flux Community group on LinkedIn!
+      - name: YouTube
+        url: https://www.youtube.com/@cozystack
+        icon: fab fa-youtube
+        desc: Talks, demos and release walkthroughs.
+      - name: Community meetings
+        url: https://calendar.google.com/calendar?cid=ZTQzZDIxZTVjOWI0NWE5NWYyOGM1ZDY0OWMyY2IxZTFmNDMzZTJlNjUzYjU2ZGJiZGE3NGNhMzA2ZjBkMGY2OEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t
+        icon: fas fa-calendar-days
+        desc: Join the biweekly community meeting.
       - name: RSS Feed
         url: /blog/index.xml
         icon: fa fa-rss
@@ -216,35 +296,77 @@ params:
 
 menus:
   main:
-  - name: OSS Health
-    weight: 35
-    identifier: oss-health
-  - name: Security Summary
-    parent: oss-health
-    url: /oss-health/security/
-    weight: 1
+  # Defined here (not in content/en/docs/_index.md front matter) so the link
+  # renders on every language: a front-matter menu entry only appears on the
+  # language that owns the page, which dropped the link on translated pages.
+  # pageRef resolves per language, so each site links to its own docs landing
+  # and takes the label from that page's linkTitle.
+  - pageRef: /docs/
+    weight: 40
+  - name: Resources
+    identifier: resources
+    weight: 30
   - name: Telemetry
     url: /oss-health/telemetry/
-    parent: oss-health
-    weight: 2
+    parent: resources
+    weight: 1
   - name: DevStats
     url: /oss-health/devstats/
-    parent: oss-health
-    weight: 3
+    parent: resources
+    weight: 2
   - name: OpenSSF
     url: /oss-health/openssf/
-    parent: oss-health
-    weight: 4
+    parent: resources
+    weight: 3
   - name: OSS Insight
     url: /oss-health/oss-insight/
-    parent: oss-health
+    parent: resources
+    weight: 4
+  - name: Security Summary
+    url: /oss-health/security/
+    parent: resources
     weight: 5
+  - name: Compliance
+    identifier: compliance
+    weight: 33
+  - name: PCI DSS
+    url: /compliance/pci-dss/
+    parent: compliance
+    weight: 1
+  - name: GDPR
+    url: /compliance/gdpr/
+    parent: compliance
+    weight: 2
+  - name: CIS Benchmark
+    url: /compliance/cis-benchmark/
+    parent: compliance
+    weight: 3
+  - name: DORA
+    url: /compliance/dora/
+    parent: compliance
+    weight: 4
+  - name: Kubernetes Conformance
+    url: /compliance/kubernetes-conformance/
+    parent: compliance
+    weight: 5
+  - name: AI Conformance
+    url: /compliance/ai-conformance/
+    parent: compliance
+    weight: 6
+  - name: Community
+    url: /community/
+    parent: resources
+    weight: 6
   - name: Enterprise support
     url: /support
-    weight: 6
+    parent: resources
+    weight: 7
   - name: GitHub
     url: https://github.com/cozystack/cozystack
     weight: 10
+  - name: Live Demo
+    url: /demo/
+    weight: 15
 
 services:
   googleAnalytics:

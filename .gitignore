@@ -27,3 +27,8 @@ static/docs/*/cozystack-api/
 
 # Claude Code local settings
 .claude/
+.demo-build-uidir
+
+# demo overlay ships a public/ with the MSW worker — keep it despite the public/ ignore
+!demo-src/overlay/apps/console/public/
+!demo-src/overlay/apps/console/public/**

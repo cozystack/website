@@ -90,7 +90,7 @@ This file defines the Cozystack version.
 For tutorial, just take the latest stable version available on GitHub:
 
 ```bash
-kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
+kubectl apply -f https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/cozystack-installer.yaml
 ```
 
 As the installation goes on, you can track the logs of installer:

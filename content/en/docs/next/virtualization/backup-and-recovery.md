@@ -8,11 +8,15 @@ aliases:
   - /docs/next/kubernetes/backup-and-recovery
 ---
 
-Cluster backup **strategies** and **BackupClasses** are configured by cluster administrators. If your tenant does not have a BackupClass yet, ask your administrator to follow the [Velero Backup Configuration]({{% ref "/docs/next/operations/services/velero-backup-configuration" %}}) guide to set up storage, strategies, and BackupClasses.
+Cluster backup **strategies** and **BackupClasses** are configured by cluster administrators. If your tenant does not have a BackupClass yet, ask your administrator to follow the [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) guide to set up storage, strategies, and BackupClasses.
 
 This guide covers backing up and restoring **VMInstance** and **VMDisk** resources as a tenant user: running one-off and scheduled backups, checking backup status, and restoring from a backup using RestoreJobs.
 
 Cozystack uses [Velero](https://velero.io/docs/v1.17/) under the hood for backup storage and volume snapshots.
+
+{{% alert color="info" %}}
+This guide covers VM backups (HelmRelease + CRs + PVC snapshots bundled by Velero). For data-only backups of managed databases (Postgres, MariaDB, ClickHouse, FoundationDB), see [Application Backup and Recovery]({{% ref "/docs/next/applications/backup-and-recovery" %}}).
+{{% /alert %}}
 
 ## Prerequisites
 
@@ -31,11 +35,15 @@ kubectl get backupclasses
 Example output:
 
 ```
-NAME     AGE
-velero   14m
+NAME           AGE
+cozy-default   14m
 ```
 
-Use the BackupClass name when creating a BackupJob or Plan.
+`cozy-default` is the platform-shipped BackupClass; its `strategies[]` array binds the Velero driver for both `VMInstance` and `VMDisk`. Use this name when creating a BackupJob or Plan, or substitute a sibling class name if your administrator has created one.
+
+{{% alert color="info" %}}
+**Fresh-cluster bootstrap window.** On a fresh-cluster install, the Velero `BackupStorageLocation` `cozy-default` reports `Unavailable` for tens of seconds after `helm install` returns, until the platform's credentials projector lands `cozy-backups-creds` into `cozy-velero`. Velero rejects new `Backup` and `Restore` requests against `storageLocation: cozy-default` during that window. If a BackupJob you submit fails immediately with a Velero error referencing storage, wait and retry, or ask your administrator to check that `kubectl -n cozy-velero get bsl cozy-default -o jsonpath='{.status.phase}'` returns `Available`. See the [Backup Classes admin guide]({{% ref "/docs/next/operations/services/backup-classes" %}}) for details.
+{{% /alert %}}
 
 ## Back up a VMInstance
 
@@ -56,7 +64,7 @@ spec:
     apiGroup: apps.cozystack.io
     kind: VMInstance
     name: my-vm
-  backupClassName: velero
+  backupClassName: cozy-default
 ```
 
 Apply it and watch the status:
@@ -84,7 +92,7 @@ spec:
     apiGroup: apps.cozystack.io
     kind: VMInstance
     name: my-vm
-  backupClassName: velero
+  backupClassName: cozy-default
   schedule:
     cron: "0 2 * * *"   # Every day at 02:00
 ```
@@ -104,7 +112,7 @@ Each scheduled run creates a BackupJob (and, on success, a Backup object) named 
 You can back up a VMDisk independently — for example, to capture a specific disk without the VM configuration.
 
 {{% alert color="info" %}}
-The BackupClass must include a strategy for `VMDisk`. Ask your administrator to add one if it is missing (see [Velero Backup Configuration]({{% ref "/docs/next/operations/services/velero-backup-configuration" %}})).
+The BackupClass must include a strategy for `VMDisk`. Ask your administrator to add one if it is missing (see [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}})).
 {{% /alert %}}
 
 ```yaml
@@ -118,7 +126,7 @@ spec:
     apiGroup: apps.cozystack.io
     kind: VMDisk
     name: my-disk
-  backupClassName: velero
+  backupClassName: cozy-default
 ```
 
 Apply and check status:

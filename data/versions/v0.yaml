@@ -1,0 +1,13 @@
+# Pinned upstream-tool versions for the Cozystack v0 docs.
+#
+# This file exists so the {{< version-pin "<key>" >}} shortcode can keep v0
+# download links pinned to a v0-era release. The legacy
+# `releases/latest/download/cozystack-installer.yaml` URL no longer resolves —
+# that asset was dropped in v1.0 when the installer manifest was split into
+# cozystack-crds.yaml plus cozystack-operator-*.yaml.
+#
+# Add more keys (talos, etc.) only when a v0 page introduces the corresponding
+# shortcode call.
+
+# Last released Cozystack v0.x version, used as v-prefixed in GitHub URLs.
+cozystack_tag: "v0.41.11"

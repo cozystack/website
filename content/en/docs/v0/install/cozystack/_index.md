@@ -93,7 +93,7 @@ Create a namespace `cozy-system` and install Cozystack system components:
 ```bash
 kubectl create ns cozy-system --dry-run=client --output yaml | kubectl apply -f -
 kubectl apply -f cozystack.yaml
-kubectl apply -f https://github.com/cozystack/cozystack/releases/latest/download/cozystack-installer.yaml
+kubectl apply -f https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/cozystack-installer.yaml
 ```
 
 As the installation goes on, you can track the logs of installer:

@@ -1,0 +1,33 @@
+diff --git a/apps/console/src/main.tsx b/apps/console/src/main.tsx
+index d8a6965..d69d62b 100644
+--- a/apps/console/src/main.tsx
++++ b/apps/console/src/main.tsx
+@@ -6,16 +6,25 @@ import "./index.css"
+ import App from "./App.tsx"
+ import { loadConfig, loadUsername } from "./lib/config.ts"
+ 
+-Promise.all([loadConfig(), loadUsername()]).then(([config, username]) => {
++async function boot() {
++  // Demo mode: bring the MSW mocks up before the first request; no backend.
++  if (import.meta.env.VITE_DEMO) {
++    const { startDemo } = await import("./demo/browser.ts")
++    await startDemo()
++  }
++
++  const [config, username] = await Promise.all([loadConfig(), loadUsername()])
+   if (config.titleText) document.title = config.titleText
+ 
+   createRoot(document.getElementById("root")!).render(
+     <StrictMode>
+       <K8sProvider>
+-        <BrowserRouter>
++        <BrowserRouter basename={import.meta.env.BASE_URL}>
+           <App config={config} username={username} />
+         </BrowserRouter>
+       </K8sProvider>
+     </StrictMode>,
+   )
+-})
++}
++
++boot()

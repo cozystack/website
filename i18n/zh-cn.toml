@@ -1,0 +1,86 @@
+[caution]
+other = "注意："
+
+[home_screenshots]
+other = "屏幕截图"
+
+[home_benefits]
+other = "优势"
+
+[home_use_cases]
+other = "Cozystack 适合谁"
+
+[home_use_cases_lead]
+other = "这个项目正是为这六种情形而生。每一种背后，都有人今天正把它跑在生产环境里。"
+
+[home_use_cases_more]
+other = "了解更多"
+
+[home_use_cases_prev]
+other = "上一个场景"
+
+[home_use_cases_next]
+other = "下一个场景"
+
+[home_features]
+other = "功能特性"
+
+[home_cncf_sandbox]
+other = "Cozystack 是 <a href=\"https://cncf.io\">Cloud Native Computing Foundation</a> 的 Sandbox 项目"
+
+[join_community]
+other = "加入社区"
+
+[docs_create_issue]
+other = "创建文档 issue"
+
+[docs_create_project_issue]
+other = "创建项目 issue"
+
+[docs_edit]
+other = "编辑本页"
+
+[docs_last_mod]
+other = "最后修改"
+
+[docs_table_of_contents]
+other = "目录"
+
+[note]
+other = "说明："
+
+[outdated_blog__message]
+other = "本文发布已超过一年。较早的文章可能包含过时的内容。请确认页面中的信息自发布以来没有变得不准确。"
+
+[ui_minute_read]
+other = "分钟阅读"
+
+[ui_pager_next]
+other = "下一页"
+
+[ui_pager_prev]
+other = "上一页"
+
+[ui_read_more]
+other = "阅读更多"
+
+[warning]
+other = "警告："
+
+[docs_landing_new_users]
+other = "<strong>新用户：</strong>请从 <a href=\"{{ .url }}\">{{ .version }} 文档</a>开始，这是当前的稳定版本。"
+
+[docs_landing_available_versions]
+other = "可用版本"
+
+[docs_landing_col_version]
+other = "版本"
+
+[docs_landing_col_status]
+other = "状态"
+
+[docs_landing_status_latest]
+other = "最新（稳定版）"
+
+[docs_landing_status_previous]
+other = "旧版本"
