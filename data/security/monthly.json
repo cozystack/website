@@ -3,8 +3,8 @@
   "generated_at": "",
   "new_count": 0,
   "fixed": [],
-  "in_progress": [],
-  "accepted_risk": [],
+  "in_progress_count": 0,
+  "accepted_risk_count": 0,
   "stats": {
     "total_tracked": 0,
     "total_triaged": 0,

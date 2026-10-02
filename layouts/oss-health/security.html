@@ -1,5 +1,13 @@
 {{ define "main" }}
-{{ $data := index .Site.Data.security "monthly" }}
+{{/*
+  Only released fixes are listed by identifier. Findings that are still
+  unfixed (in progress or accepted as risk) are published as counts only:
+  naming them would announce an unpatched exposure before a fix ships.
+  The data file therefore carries counts for those, never identifiers.
+*/}}
+{{ $data := hugo.Data.security.monthly }}
+{{ $fixed := $data.fixed | default slice }}
+{{ $stats := $data.stats | default dict }}
 
 <div class="security-page container py-5">
   <div class="text-center mb-5">
@@ -17,7 +25,7 @@
       <div class="card text-center h-100 shadow-sm security-card">
         <div class="card-body">
           <div class="security-icon"><i class="fas fa-shield-alt"></i></div>
-          <div class="security-value">{{ $data.new_count }}</div>
+          <div class="security-value">{{ $data.new_count | default 0 }}</div>
           <div class="security-label">New This Month</div>
         </div>
       </div>
@@ -26,7 +34,7 @@
       <div class="card text-center h-100 shadow-sm security-card">
         <div class="card-body">
           <div class="security-icon text-success"><i class="fas fa-check-circle"></i></div>
-          <div class="security-value">{{ len $data.fixed }}</div>
+          <div class="security-value">{{ len $fixed }}</div>
           <div class="security-label">Fixed</div>
         </div>
       </div>
@@ -35,7 +43,7 @@
       <div class="card text-center h-100 shadow-sm security-card">
         <div class="card-body">
           <div class="security-icon text-warning"><i class="fas fa-wrench"></i></div>
-          <div class="security-value">{{ len $data.in_progress }}</div>
+          <div class="security-value">{{ $data.in_progress_count | default 0 }}</div>
           <div class="security-label">In Progress</div>
         </div>
       </div>
@@ -44,7 +52,7 @@
       <div class="card text-center h-100 shadow-sm security-card">
         <div class="card-body">
           <div class="security-icon text-info"><i class="fas fa-info-circle"></i></div>
-          <div class="security-value">{{ $data.stats.total_tracked }}</div>
+          <div class="security-value">{{ $stats.total_tracked | default 0 }}</div>
           <div class="security-label">Total Tracked</div>
         </div>
       </div>
@@ -52,7 +60,7 @@
   </div>
 
   <!-- Fixed vulnerabilities -->
-  {{ if $data.fixed }}
+  {{ if $fixed }}
   <h5 class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Security Updates Released</h5>
   <div class="table-responsive mb-5">
     <table class="table table-striped table-hover">
@@ -60,7 +68,7 @@
         <tr><th>CVE</th><th>Severity</th><th>Package</th><th>Fixed Version</th></tr>
       </thead>
       <tbody>
-        {{ range $data.fixed }}
+        {{ range $fixed }}
         <tr>
           <td><a href="https://nvd.nist.gov/vuln/detail/{{ .cve_id }}"><code>{{ .cve_id }}</code></a></td>
           <td>{{ .severity }}</td>
@@ -73,49 +81,11 @@
   </div>
   {{ end }}
 
-  <!-- In progress -->
-  {{ if $data.in_progress }}
-  <h5 class="mb-3"><i class="fas fa-wrench text-warning me-2"></i>In Progress</h5>
-  <div class="table-responsive mb-5">
-    <table class="table table-striped table-hover">
-      <thead class="table-warning">
-        <tr><th>CVE</th><th>Severity</th><th>Package</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        {{ range $data.in_progress }}
-        <tr>
-          <td><a href="https://nvd.nist.gov/vuln/detail/{{ .cve_id }}"><code>{{ .cve_id }}</code></a></td>
-          <td>{{ .severity }}</td>
-          <td><code>{{ .package }}</code></td>
-          <td>Fix in progress</td>
-        </tr>
-        {{ end }}
-      </tbody>
-    </table>
-  </div>
-  {{ end }}
-
-  <!-- Accepted risk -->
-  {{ if $data.accepted_risk }}
-  <h5 class="mb-3"><i class="fas fa-info-circle text-info me-2"></i>Accepted Risks</h5>
-  <div class="table-responsive mb-5">
-    <table class="table table-striped table-hover">
-      <thead class="table-info">
-        <tr><th>CVE</th><th>Severity</th><th>Package</th><th>Reason</th></tr>
-      </thead>
-      <tbody>
-        {{ range $data.accepted_risk }}
-        <tr>
-          <td><a href="https://nvd.nist.gov/vuln/detail/{{ .cve_id }}"><code>{{ .cve_id }}</code></a></td>
-          <td>{{ .severity }}</td>
-          <td><code>{{ .package }}</code></td>
-          <td>{{ .reason }}</td>
-        </tr>
-        {{ end }}
-      </tbody>
-    </table>
-  </div>
-  {{ end }}
+  <p class="text-center text-muted mb-5">
+    {{ $data.in_progress_count | default 0 }} finding(s) with a fix in progress and
+    {{ $data.accepted_risk_count | default 0 }} accepted as risk after triage.
+    Unfixed findings are not listed individually until a fix is released.
+  </p>
 
   {{ if $data.generated_at }}
   <p class="text-center text-muted mt-4">
