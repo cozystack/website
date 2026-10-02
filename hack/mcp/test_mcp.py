@@ -294,6 +294,21 @@ def test_good_internal_link_passes():
         assert report.ok, report.errors
 
 
+def test_link_into_dot_directory_resolves():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = make_site(Path(tmp))
+        page = root / "public" / ".well-known" / "security"
+        page.mkdir(parents=True)
+        (page / "index.html").write_text("<html></html>", encoding="utf-8")
+        site = validate.Site(root)
+        assert ".well-known/security" in site.built, sorted(site.built)
+        assert "" in site.built, sorted(site.built)
+        body = "See [policy](/.well-known/security/) and [home](/)."
+        path = write_post(root, "2026-08-03-a-post.md", VALID_FRONT, body)
+        report = validate.validate_post(path, site)
+        assert report.ok, report.errors
+
+
 def test_link_to_next_trunk_rejected():
     with tempfile.TemporaryDirectory() as tmp:
         root = make_site(Path(tmp))
