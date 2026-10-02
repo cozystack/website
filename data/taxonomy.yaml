@@ -1,0 +1,44 @@
+# Closed vocabularies for the two blog taxonomy axes.
+#
+# The axes are orthogonal and must stay disjoint: no term may appear in both.
+#   article_types — what kind of material this is (the genre)
+#   topics        — what the material is about (the subject area)
+#
+# A post normally carries exactly one article_type and one or more topics.
+#
+# Adding a term is a deliberate act: a one-off term creates a taxonomy page
+# with a single entry, which is thin content for search engines. Prefer an
+# existing term, and add a new one only when a subject genuinely recurs.
+#
+# This file is the source of truth for the publishing validator. Keep both
+# lists alphabetical.
+
+article_types:
+  - announcement
+  - case
+  - how-to
+  - news
+  - release
+  - tech-article
+
+topics:
+  - backup
+  - cilium
+  - cncf
+  - community
+  - drbd
+  - events
+  - gpu
+  - install
+  - kubernetes
+  - kubevirt
+  - linstor
+  - networking
+  - observability
+  - opensearch
+  - platform
+  - postgresql
+  - security
+  - storage
+  - talos
+  - virtualization

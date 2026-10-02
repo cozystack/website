@@ -1,7 +1,7 @@
 ---
 title: "Virtualization Features in Cozystack"
 linkTitle: "Virtualization"
-description: "Everything about deploying, configuring, and using virtual machines in Cozystack."
+description: "KubeVirt-based virtual machines in Cozystack — provision, scale, snapshot, and live-migrate VMs alongside containers on the same Kubernetes cluster."
 weight: 50
 aliases:
   - /docs/v1.2/operations/virtualization

@@ -27,10 +27,10 @@ or come and share your experience in the [Cozystack community](https://t.me/cozy
 
 The first step is to make a Talos Linux installation image available for use in Oracle Cloud as a custom image.
 
-1.  Download the Talos Linux image archive from the [Cozystack releases page](https://github.com/cozystack/cozystack/releases/latest/) and unpack it:
+1.  Download the Talos Linux image archive from the [Cozystack releases page](https://github.com/cozystack/cozystack/releases/tag/{{< version-pin "cozystack_tag" >}}) and unpack it:
 
     ```bash
-    wget https://github.com/cozystack/cozystack/releases/latest/download/metal-amd64.raw.xz
+    wget https://github.com/cozystack/cozystack/releases/download/{{< version-pin "cozystack_tag" >}}/metal-amd64.raw.xz
     xz -d metal-amd64.raw.xz
     ```
 
@@ -251,7 +251,8 @@ Make it executable and save it to `/usr/local/bin/talm`:
 
 ```bash
 # pick your preferred architecture from the release artifacts
-wget -O talm https://github.com/cozystack/talm/releases/latest/download/talm-darwin-arm64
+wget https://github.com/cozystack/talm/releases/latest/download/talm-darwin-arm64.tar.gz
+tar -xzf talm-darwin-arm64.tar.gz talm
 chmod +x talm
 mv talm /usr/local/bin/talm
 ```

@@ -1,31 +1,57 @@
 name: Fetch Telemetry Data
 
 on:
-  # Daily cron is paused until the telemetry-server current-month fix ships.
-  # Until then the live /api/overview response for the current month is a
-  # frozen first-of-month snapshot, and an automatic fetch would overwrite
-  # the manually-corrected telemetry.json with stale numbers. Re-enable the
-  # schedule once cozystack-telemetry-server is deployed with the fix.
-  # schedule:
-  #   - cron: '0 8 * * *'
+  # Runs on the 3rd so the month it publishes is closed and the server has a
+  # final snapshot of it. This stays its own workflow rather than joining the
+  # monthly OSS Health job: those datasets come from public APIs, this one from
+  # our own telemetry server, and a failure there should not hold back the rest.
+  #
+  # The /api/overview undercount that kept this manual is fixed — the server
+  # counts over the period window instead of at an instant (telemetry-server
+  # 43617cc, 2026-06-30), and its numbers now match what was published by hand
+  # from Grafana for June.
+  schedule:
+    - cron: '0 5 3 * *'
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
+
+concurrency:
+  group: fetch-telemetry
+  cancel-in-progress: false
 
 jobs:
   fetch-telemetry:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          ref: 'main'
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
+      # Always the previous month: the current one is still open, and the
+      # server marks a snapshot final only once the month has closed.
+      - name: Resolve the month to publish
+        id: period
+        run: |
+          # The day before the 1st of this month, rather than "last month":
+          # that phrasing resolves to the same day number and silently skips a
+          # month when run on a 29th, 30th or 31st.
+          previous=$(date -u -d "$(date -u +%Y-%m-01) -1 day" +%Y-%m)
+          echo "year=${previous%-*}" >> "$GITHUB_OUTPUT"
+          echo "month=${previous#*-}" >> "$GITHUB_OUTPUT"
+
       - name: Fetch and transform telemetry data
+        env:
+          TELEMETRY_YEAR: ${{ steps.period.outputs.year }}
+          TELEMETRY_MONTH: ${{ steps.period.outputs.month }}
         run: python3 hack/fetch_telemetry.py
 
       - name: Check for changes
@@ -43,5 +69,25 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add static/oss-health-data/telemetry.json
-          git commit -m "chore(oss-health): update telemetry snapshot"
-          git push
+          git branch -D update-telemetry || true
+          git checkout -b update-telemetry
+          git commit --signoff -m "[oss-health] Update telemetry snapshot for ${{ steps.period.outputs.year }}-${{ steps.period.outputs.month }}"
+          git push --force --set-upstream origin update-telemetry
+
+      - name: Open pull request if not exists
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_state=$(gh pr view update-telemetry --json state --jq .state 2>/dev/null || echo "")
+          echo "Current PR state: ${pr_state:-NONE}"
+
+          if [[ "$pr_state" == "OPEN" ]]; then
+            echo "An open pull request already exists – skipping creation."
+          else
+            gh pr create \
+              --title "[oss-health] Update telemetry snapshot" \
+              --body "Automated telemetry update via workflow." \
+              --head update-telemetry \
+              --base main
+          fi

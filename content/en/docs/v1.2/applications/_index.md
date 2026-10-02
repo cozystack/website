@@ -1,7 +1,7 @@
 ---
 title: "Managed Applications: Guides and Reference"
 linkTitle: "Managed Applications"
-description: "Learn how to deploy, configure, access, and backup managed applications in Cozystack."
+description: "Reference and guides for managed PostgreSQL, MySQL, Redis, RabbitMQ, Kafka, ClickHouse, OpenSearch, MongoDB, and other database services in Cozystack."
 weight: 45
 aliases:
   - /docs/v1.2/components

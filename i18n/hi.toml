@@ -1,0 +1,86 @@
+[caution]
+other = "सावधानी:"
+
+[home_screenshots]
+other = "स्क्रीनशॉट"
+
+[home_benefits]
+other = "लाभ"
+
+[home_use_cases]
+other = "Cozystack किनके लिए है"
+
+[home_use_cases_lead]
+other = "छह स्थितियाँ, जिनके लिए यह प्रोजेक्ट बना है। हर एक के पीछे कोई है जो इसे आज प्रोडक्शन में चला रहा है।"
+
+[home_use_cases_more]
+other = "और जानें"
+
+[home_use_cases_prev]
+other = "पिछला उपयोग-प्रसंग"
+
+[home_use_cases_next]
+other = "अगला उपयोग-प्रसंग"
+
+[home_features]
+other = "विशेषताएँ"
+
+[home_cncf_sandbox]
+other = "Cozystack, <a href=\"https://cncf.io\">Cloud Native Computing Foundation</a> का एक Sandbox प्रोजेक्ट है"
+
+[join_community]
+other = "समुदाय से जुड़ें"
+
+[docs_create_issue]
+other = "दस्तावेज़ issue बनाएँ"
+
+[docs_create_project_issue]
+other = "प्रोजेक्ट issue बनाएँ"
+
+[docs_edit]
+other = "इस पृष्ठ को संपादित करें"
+
+[docs_last_mod]
+other = "अंतिम बार संशोधित"
+
+[docs_table_of_contents]
+other = "विषय-सूची"
+
+[note]
+other = "ध्यान दें:"
+
+[outdated_blog__message]
+other = "यह लेख एक वर्ष से अधिक पुराना है। पुराने लेखों में पुरानी सामग्री हो सकती है। जाँच लें कि प्रकाशन के बाद से पृष्ठ की जानकारी गलत तो नहीं हो गई है।"
+
+[ui_minute_read]
+other = "मिनट का पठन"
+
+[ui_pager_next]
+other = "अगला"
+
+[ui_pager_prev]
+other = "पिछला"
+
+[ui_read_more]
+other = "और पढ़ें"
+
+[warning]
+other = "चेतावनी:"
+
+[docs_landing_new_users]
+other = "<strong>नए उपयोगकर्ता:</strong> <a href=\"{{ .url }}\">{{ .version }} दस्तावेज़ीकरण</a> से शुरू करें — यह मौजूदा स्थिर रिलीज़ है।"
+
+[docs_landing_available_versions]
+other = "उपलब्ध संस्करण"
+
+[docs_landing_col_version]
+other = "संस्करण"
+
+[docs_landing_col_status]
+other = "स्थिति"
+
+[docs_landing_status_latest]
+other = "नवीनतम (स्थिर)"
+
+[docs_landing_status_previous]
+other = "पिछली रिलीज़"

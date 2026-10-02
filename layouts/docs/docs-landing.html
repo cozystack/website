@@ -15,26 +15,26 @@
   {{- end -}}
 
   {{ with $latestVersion }}
-  <p><strong>New users:</strong> Start with <a href="{{ .url }}">{{ .version }} documentation</a> — the current stable release.</p>
+  <p>{{ T "docs_landing_new_users" . | safeHTML }}</p>
   {{ end }}
 
   {{ .Content }}
 
-  <h3>Available Versions</h3>
+  <h3>{{ T "docs_landing_available_versions" }}</h3>
   <table class="table">
     <thead>
       <tr>
-        <th>Version</th>
-        <th>Status</th>
+        <th>{{ T "docs_landing_col_version" }}</th>
+        <th>{{ T "docs_landing_col_status" }}</th>
       </tr>
     </thead>
     <tbody>
       {{- range .Site.Params.versions -}}
         {{- if not .hidden -}}
         {{- $isLatest := eq .id $latestID -}}
-        {{- $status := "Previous release" -}}
+        {{- $status := T "docs_landing_status_previous" -}}
         {{- if $isLatest -}}
-          {{- $status = "Latest (stable)" -}}
+          {{- $status = T "docs_landing_status_latest" -}}
         {{- end -}}
         <tr>
           <td><a href="{{ .url }}">{{ .version }}</a></td>

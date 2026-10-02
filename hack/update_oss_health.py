@@ -26,7 +26,7 @@ STATIC_DATA_DIR = Path("static/oss-health-data")
 GITHUB_API = "https://api.github.com"
 OPENSSF_PROJECT_URL = "https://www.bestpractices.dev/projects/10177"
 OPENSSF_BADGE_URL = "https://www.bestpractices.dev/projects/10177/badge"
-OPENSSF_STATUS_URL = "https://www.bestpractices.dev/pt-BR/projects/10177/passing"
+OPENSSF_STATUS_URL = "https://www.bestpractices.dev/en/projects/10177/passing"
 DEVSTATS_URL = "https://cozystack.devstats.cncf.io/"
 OSSINSIGHT_URL = "https://ossinsight.io/analyze/cozystack/cozystack"
 
@@ -357,7 +357,8 @@ def parse_openssf_state(page_text: str) -> str:
 
 
 def parse_openssf_last_updated(page_text: str) -> str | None:
-    match = re.search(r"last updated on\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC)", page_text, re.IGNORECASE)
+    plain_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", page_text))
+    match = re.search(r"last updated on\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC)", plain_text, re.IGNORECASE)
     if not match:
         return None
     try:

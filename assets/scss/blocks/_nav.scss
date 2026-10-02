@@ -37,7 +37,7 @@ nav.navbar {
     svg {
       display: inline-block;
       margin: 0 10px 0 -6px;
-      height: 30px;
+      height: 36px;
       @include media-breakpoint-up(lg) {
         margin: 0 10px;
       }
@@ -289,5 +289,21 @@ nav.navbar {
         color: $cozy-white;
       }
     }
+  }
+}
+
+// Fixed-header offset.
+// The `.td-navbar` is `position: fixed` on md+ screens, so content pages need a
+// top offset to keep their heading from sliding under it. This offset used to be
+// provided by the announcement banner's padding-top; it now lives here so it
+// works whether or not a banner is shown. The home page is excluded on purpose —
+// its full-bleed hero is meant to render behind the navbar.
+body:not(.td-home) {
+  @include media-breakpoint-up(md) {
+    padding-top: 5.5rem; // multi-line navbar on medium screens
+  }
+
+  @include media-breakpoint-up(lg) {
+    padding-top: 4rem; // single-line navbar on large screens
   }
 }

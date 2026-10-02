@@ -254,7 +254,7 @@ That’s our complete scheme for installing Talos Linux in nearly any situation.
 ### Additional materials
 
 - [How we built a dynamic Kubernetes API Server for the API Aggregation Layer in Cozystack](https://kubernetes.io/blog/2024/11/21/dynamic-kubernetes-api-server-for-cozystack/)
-- [DIY: Create Your Own Cloud with Kubernetes](https://kubernetes.io/blog/2024/04/05/diy-create-your-own-cloud-with-kubernetes-part-1/)
+- [DIY: Create Your Own Cloud with Kubernetes](https://kubernetes.io/blog/2024/04/diy-create-your-own-cloud-with-kubernetes-part-1/)
 - [Cozystack Becomes a CNCF Sandbox Project](https://blog.aenix.io/cozystack-becomes-a-cncf-sandbox-project-3702b8906971)
 - [Journey to Stable Infrastructures with Talos Linux &amp; Cozystack | Andrei Kvapil | SREday London 2024](https://www.youtube.com/watch?v=uhXujtTzG44)
 - [Talos Linux: You don’t need an operating system, you only need Kubernetes / Andrei Kvapil](https://www.youtube.com/watch?v=9CIMTum9bTA)

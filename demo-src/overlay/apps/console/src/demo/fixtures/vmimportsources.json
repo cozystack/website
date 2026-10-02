@@ -1,0 +1,73 @@
+{
+  "apiVersion": "forklift.cozystack.io/v1alpha1",
+  "kind": "VMImportSourceList",
+  "metadata": { "resourceVersion": "1" },
+  "items": [
+    {
+      "apiVersion": "forklift.cozystack.io/v1alpha1",
+      "kind": "VMImportSource",
+      "metadata": {
+        "name": "vcenter-hq",
+        "namespace": "tenant-workshop00",
+        "creationTimestamp": "2026-08-24T09:12:40Z",
+        "uid": "0c1a7f28-6d31-4d0e-9a55-5f2b1d6c9a01",
+        "generation": 1
+      },
+      "spec": {
+        "type": "vsphere",
+        "url": "https://vcenter.hq.example.com/sdk",
+        "credentials": {
+          "username": "svc-migration@vsphere.local",
+          "password": "demo",
+          "insecureSkipVerify": true
+        }
+      },
+      "status": {
+        "observedGeneration": 1,
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "Connected",
+            "message": "Connected to vCenter 8.0.3, 214 machines visible",
+            "lastTransitionTime": "2026-08-24T09:12:58Z",
+            "observedGeneration": 1
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "forklift.cozystack.io/v1alpha1",
+      "kind": "VMImportSource",
+      "metadata": {
+        "name": "vcenter-dr",
+        "namespace": "tenant-workshop00",
+        "creationTimestamp": "2026-09-08T14:03:11Z",
+        "uid": "6b0f4a91-2c77-42f3-8a10-b3d7c4e5f602",
+        "generation": 1
+      },
+      "spec": {
+        "type": "vsphere",
+        "url": "https://vcenter.dr.example.com/sdk",
+        "credentials": {
+          "username": "svc-migration@vsphere.local",
+          "password": "demo",
+          "insecureSkipVerify": true
+        }
+      },
+      "status": {
+        "observedGeneration": 1,
+        "conditions": [
+          {
+            "type": "Ready",
+            "status": "False",
+            "reason": "Connecting",
+            "message": "Verifying credentials against the endpoint",
+            "lastTransitionTime": "2026-09-08T14:03:12Z",
+            "observedGeneration": 1
+          }
+        ]
+      }
+    }
+  ]
+}

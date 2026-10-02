@@ -1,0 +1,55 @@
+{{- /*
+  oss-card: single OSS component card.
+
+  Parameters (named):
+    name        — display name of the component (required)
+    license     — SPDX license identifier or short label (required)
+    source      — URL to the upstream LICENSE file or repository (required)
+    description — short one-line description (optional)
+    version     — pinned/upstream version label (optional)
+    logo        — basename under /img/logos/components/<name>.svg (optional)
+                  if omitted or file missing, a colored initials badge is rendered
+    used-in     — URL to the Cozystack module/section that consumes this component (optional)
+*/ -}}
+{{- $name        := .Get "name" -}}
+{{- $license     := .Get "license" -}}
+{{- $source      := .Get "source" -}}
+{{- $description := .Get "description" -}}
+{{- $version     := .Get "version" -}}
+{{- $logo        := .Get "logo" -}}
+{{- $usedIn      := .Get "used-in" -}}
+{{- $logoFile    := "" -}}
+{{- $hasLogo     := false -}}
+{{- if $logo -}}
+  {{- range $ext := slice "svg" "png" "jpg" "webp" -}}
+    {{- $candidate := printf "img/logos/components/%s.%s" $logo $ext -}}
+    {{- if and (not $hasLogo) (fileExists (printf "static/%s" $candidate)) -}}
+      {{- $logoFile = $candidate -}}
+      {{- $hasLogo = true -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $initials    := substr $name 0 2 | upper -}}
+{{- $hue         := mod (mul (len $name) 47) 360 -}}
+<div class="oss-card">
+  <div class="oss-card-head">
+    {{- if $hasLogo -}}
+    <img class="oss-card-logo" src="/{{ $logoFile }}" alt="{{ $name }} logo" loading="lazy">
+    {{- else -}}
+    <span class="oss-card-logo oss-card-logo-fallback" style="--oss-hue: {{ $hue }};" aria-hidden="true">{{ $initials }}</span>
+    {{- end -}}
+    <div class="oss-card-titleblock">
+      <a class="oss-card-title" href="{{ $source }}" rel="noopener" target="_blank">{{ $name }}</a>
+      {{- with $version -}}<span class="oss-card-version">{{ . }}</span>{{- end -}}
+    </div>
+  </div>
+  {{- with $description -}}
+  <p class="oss-card-desc">{{ . }}</p>
+  {{- end -}}
+  <div class="oss-card-meta">
+    <span class="oss-card-license">{{ $license }}</span>
+    {{- with $usedIn -}}
+    · <a class="oss-card-usedin" href="{{ . }}">used in</a>
+    {{- end -}}
+  </div>
+</div>

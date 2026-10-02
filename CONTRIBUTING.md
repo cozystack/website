@@ -225,7 +225,7 @@ make init-version DOC_VERSION=v1.3     # low-level init of any version dir
 make show-target RELEASE_TAG=v1.3.0    # prints resolved DOC_VERSION / BRANCH
 ```
 
-Required tools: Hugo extended 0.160.1, Go 1.23+, Node 20+, `yq` v4+ (for the
+Required tools: Hugo extended 0.164.0, Go 1.23+, Node 22+, `yq` v4+ (for the
 version lifecycle targets and Makefile routing).
 
 ## Where the architecture is implemented

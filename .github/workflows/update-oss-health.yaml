@@ -5,18 +5,26 @@ on:
   schedule:
     - cron: '0 4 1 * *'
 
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-oss-health
+  cancel-in-progress: false
+
 jobs:
   update-oss-health:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout target repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: 'main'
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -28,20 +36,24 @@ jobs:
           git status -s
 
       - name: Commit & push changes
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/oss-health static/oss-health-data content/en/oss-health
           if git diff --cached --quiet; then
             echo "No changes to commit"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git branch -D update-oss-health || true
           git checkout -b update-oss-health
           git commit --signoff -m "[oss-health] Update monthly OSS health snapshot $(date -u +'%Y-%m-%d %H:%M:%S')"
           git push --force --set-upstream origin update-oss-health
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Open pull request if not exists
+        if: steps.commit.outputs.changed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

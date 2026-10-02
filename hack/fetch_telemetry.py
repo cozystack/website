@@ -7,14 +7,17 @@ What it does:
 2. Filter apps to entries visible on the Cozystack dashboard.
 3. Merge case-insensitive / Pax* / legacy-name aliases into one canonical entry
    per application, keeping the maximum instance count (zero-count entries
-   left after the merge are dropped from the table).
-4. Pull `Tenant` out of the apps map and surface it as the top-level Tenants
-   summary card (the raw `total_tenants` field from the API is always zero).
+   left after the merge are dropped from the table). Rows are emitted in a
+   fixed canonical order (FIXED_ORDER) so the published table stays stable for
+   copy-paste; apps not in that list are appended at the end (by count).
+4. Surface the Tenants summary card from the API `total_tenants` field (now
+   populated per period), falling back to the point-in-time `Tenant` entry in
+   the apps map only when `total_tenants` is zero/absent.
 5. Emit the payload in the shape consumed by `oss-health-app.html` +
    `renderTelemetry`, including `summary_cards`, `apps`, `range`.
 
-Used by both `.github/workflows/fetch-telemetry.yml` (daily cron) and the
-developer who needs to refresh the seed file locally.
+Used by the monthly telemetry workflow and by developers who need to refresh or
+backfill the seed file locally.
 """
 from __future__ import annotations
 
@@ -78,12 +81,25 @@ ALIASES: dict[str, str] = {
 }
 
 
+# Fixed canonical row order for the published table. Keeping this stable (rather
+# than re-sorting by count every run) means the rows always line up for copy-paste
+# into external spreadsheets. Apps not listed here are appended at the end, sorted
+# by count desc — move them into this list once they should have a stable slot.
+FIXED_ORDER: list[str] = [
+    "VMDisk", "VMInstance", "Etcd", "Ingress", "Monitoring", "Kubernetes",
+    "SeaweedFS", "Bucket", "Postgres", "MariaDB", "Harbor", "ClickHouse",
+    "Redis", "VirtualPrivateCloud", "MongoDB", "Kafka", "OpenBAO", "RabbitMQ",
+    "Qdrant", "NATS", "FoundationDB", "VPN", "TCPBalancer", "HTTPCache",
+    "OpenSearch", "NFS", "ClearML",
+]
+
+
 def normalize_key(raw: str) -> str:
     return raw.lower().replace("-", "").replace("_", "")
 
 
 def clean_apps(apps: dict[str, int]) -> list[dict[str, object]]:
-    """Filter, dedupe (max), drop zeros, sort desc by count."""
+    """Filter, dedupe (max), drop zeros, order by FIXED_ORDER (extras appended)."""
     merged: dict[str, int] = {}
     for raw_name, count in apps.items():
         canonical = ALIASES.get(normalize_key(raw_name))
@@ -91,16 +107,22 @@ def clean_apps(apps: dict[str, int]) -> list[dict[str, object]]:
             continue
         if count > merged.get(canonical, 0):
             merged[canonical] = count
-    non_zero = [(name, n) for name, n in merged.items() if n > 0]
-    non_zero.sort(key=lambda item: (-item[1], item[0].lower()))
-    return [{"name": name, "value": str(count)} for name, count in non_zero]
+    non_zero = {name: n for name, n in merged.items() if n > 0}
+    rank = {name: i for i, name in enumerate(FIXED_ORDER)}
+    ordered = sorted(
+        non_zero.items(),
+        key=lambda item: (rank.get(item[0], len(FIXED_ORDER)), -item[1], item[0].lower()),
+    )
+    return [{"name": name, "value": str(count)} for name, count in ordered]
 
 
 def transform_period(raw_period: dict, label_fallback: str) -> dict | None:
     if not raw_period:
         return None
     apps_raw = raw_period.get("apps", {}) or {}
-    tenants = int(apps_raw.get("Tenant", 0))
+    # Prefer the per-period `total_tenants` field (now populated by the API);
+    # fall back to the point-in-time `Tenant` entry only if it's zero/absent.
+    tenants = int(raw_period.get("total_tenants") or 0) or int(apps_raw.get("Tenant", 0))
     clusters = int(raw_period.get("clusters", 0))
     total_nodes = int(raw_period.get("total_nodes", 0))
     avg_nodes = raw_period.get("avg_nodes_per_cluster")

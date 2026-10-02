@@ -247,9 +247,9 @@ This structure simplifies upstream chart updates.
 └── values.schema.json                   # JSON schema used for input values validation and to render UI elements in dashboard
 ```
 
-You can use bitnami's [readme-generator](https://github.com/bitnami/readme-generator-for-helm) for generating `README.md` and `values.schema.json` files.
+Use [`cozyvalues-gen`](https://github.com/cozystack/cozyvalues-gen) to generate the `README.md` parameters table and the `values.schema.json` schema from annotations in `values.yaml`.
 
-Just install it as `readme-generator` binary in your system and run generation using `make generate` command.
+Install the `cozyvalues-gen` binary from [the releases page](https://github.com/cozystack/cozyvalues-gen/releases) and run `make generate` in the package directory. Besides the schema and the README, it also refreshes the package's `ApplicationDefinition` (`spec.application.openAPISchema` and `spec.dashboard.keysOrder`) via `hack/update-crd.sh`.
 
 ## Helm Chart Development Principles
 

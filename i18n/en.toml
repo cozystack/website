@@ -1,6 +1,33 @@
 [caution]
 other = "Caution:"
 
+[home_screenshots]
+other = "Screenshots"
+
+[home_benefits]
+other = "Benefits"
+
+[home_use_cases]
+other = "Where Cozystack fits"
+
+[home_use_cases_lead]
+other = "Six situations the project was built for. Every one of them is someone running it in production today."
+
+[home_use_cases_more]
+other = "Read more"
+
+[home_use_cases_prev]
+other = "Previous use case"
+
+[home_use_cases_next]
+other = "Next use case"
+
+[home_features]
+other = "Features"
+
+[home_cncf_sandbox]
+other = "Cozystack is a <a href=\"https://cncf.io\">Cloud Native Computing Foundation</a> Sandbox project"
+
 [join_community]
 other = "Join the Community"
 
@@ -39,3 +66,21 @@ other = "Read more"
 
 [warning]
 other = "Warning:"
+
+[docs_landing_new_users]
+other = "<strong>New users:</strong> Start with <a href=\"{{ .url }}\">{{ .version }} documentation</a> — the current stable release."
+
+[docs_landing_available_versions]
+other = "Available Versions"
+
+[docs_landing_col_version]
+other = "Version"
+
+[docs_landing_col_status]
+other = "Status"
+
+[docs_landing_status_latest]
+other = "Latest (stable)"
+
+[docs_landing_status_previous]
+other = "Previous release"

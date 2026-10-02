@@ -44,6 +44,31 @@ module:
   mounts:
     - source: content/en
       target: content
+      lang: en
+      files:
+        - '! **/_include/*'
+        - '! docs/next/**'
+    - source: content/de
+      target: content
+      lang: de
+      files:
+        - '! **/_include/*'
+        - '! docs/next/**'
+    - source: content/ru
+      target: content
+      lang: ru
+      files:
+        - '! **/_include/*'
+        - '! docs/next/**'
+    - source: content/zh-cn
+      target: content
+      lang: zh-cn
+      files:
+        - '! **/_include/*'
+        - '! docs/next/**'
+    - source: content/hi
+      target: content
+      lang: hi
       files:
         - '! **/_include/*'
         - '! docs/next/**'

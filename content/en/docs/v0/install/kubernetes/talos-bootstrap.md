@@ -92,7 +92,7 @@ talos-bootstrap --help
             archive = 0
           }
           devices {
-            global_filter = [ "r|^/dev/drbd.*|", "r|^/dev/dm-.*|", "r|^/dev/zd.*|" ]
+            global_filter = [ "r|^/dev/drbd.*|", "r|^/dev/dm-.*|", "r|^/dev/zd.*|", "r|^/dev/loop.*|" ]
           }
 
     cluster:

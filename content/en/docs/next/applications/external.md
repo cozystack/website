@@ -12,6 +12,12 @@ This guide explains the structure of an external application package and how to 
 
 For a complete working example, see [github.com/cozystack/external-apps-example](https://github.com/cozystack/external-apps-example).
 
+{{% note %}}
+
+This page describes the Git-and-HelmRelease bootstrap. A repository can also be published as an OCI artifact and connected with one command, using the `PackageSource` model described in [Application Marketplace]({{% ref "/docs/next/marketplace" %}}). The two coexist on a cluster; the pipeline on this page is untouched.
+
+{{% /note %}}
+
 Just like standard Cozystack applications, this external application package uses Helm and FluxCD.
 To learn more about developing application packages, read the Cozystack [Developer Guide]({{% ref "/docs/next/development" %}}).
 
@@ -23,6 +29,7 @@ An external application repository has the following layout:
 init.yaml                        # Bootstrap manifest (GitRepository + HelmRelease)
 scripts/
   package.mk                     # Shared Makefile targets for app charts
+  update-appdef.sh               # Syncs generated chart schemas into the ApplicationDefinitions
 packages/
   core/platform/                 # Platform chart: namespaces, operators, HelmCharts, ApplicationDefinitions
   apps/<app-name>/               # Helm chart for each user-installable application
@@ -99,7 +106,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: <operator-name>
-      version: '>=1.0.0'
+      version: '1.2.3' # pin an exact operator version to keep installs reproducible
 ```
 
 ### ApplicationDefinitions
@@ -123,7 +130,7 @@ spec:
       name: external-apps-<app-name>
       namespace: cozy-public
     labels:
-      cozystack.io/ui: "true"
+      sharding.fluxcd.io/key: tenants
     prefix: <app-name>-
   dashboard:
     category: <Category>
@@ -155,7 +162,7 @@ Follow these naming conventions (matching the main Cozystack repository):
 | `release.prefix` | `<metadata.name>-` | `my-app-` |
 | `openAPISchema` title | always `"Chart Values"` | — |
 
-The `openAPISchema` field contains a single-line JSON string with the schema for the application values. It intentionally omits `if`/`then`/`else` conditional rules because Kubernetes `apiextensions/v1` `JSONSchemaProps` does not support these keywords. Use conditional validation only in the Helm chart's `values.schema.json`.
+The `openAPISchema` field contains a single-line JSON string with the schema for the application values — the minified content of the chart's generated `values.schema.json`. Keep the two in sync: in the example repository, `make generate` embeds the schema with `scripts/update-appdef.sh`. Note that Kubernetes `apiextensions/v1` `JSONSchemaProps` does not support `if`/`then`/`else`, so schemas must not rely on conditional validation.
 
 ## Application Charts
 
@@ -191,11 +198,16 @@ export NAME=<app-name>
 export NAMESPACE=external-<operator-name>
 
 include ../../../scripts/package.mk
+
+.PHONY: generate
+generate:
+	cozyvalues-gen -v values.yaml -s values.schema.json -r README.md
+	../../../scripts/update-appdef.sh $(NAME)
 ```
 
 ### values.schema.json
 
-Define the JSON Schema (draft-07) for the application values. This schema is used by Helm for validation at install time and can include conditional rules (`if`/`then`/`else`) that are not supported at the `ApplicationDefinition` level.
+Generate the JSON schema from annotations in `values.yaml` with [`cozyvalues-gen`](https://github.com/cozystack/cozyvalues-gen) — the same tool and annotation dialect used for packages in the main Cozystack repository. Helm validates user-supplied values against this schema at install time. Run `make generate` after changing `values.yaml` and commit the regenerated files.
 
 ## Bootstrap Manifest
 

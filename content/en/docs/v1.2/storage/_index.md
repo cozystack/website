@@ -1,7 +1,7 @@
 ---
 title: "Storage Subsystem Guides"
 linkTitle: "Storage"
-description: "Operational guides on the storage subsystem"
+description: "Storage in Cozystack — LINSTOR replicated block storage, Rook-Ceph integration, snapshots, and per-database persistent volume management."
 weight: 55
 aliases:
   - /docs/v1.2/operations/storage

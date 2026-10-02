@@ -52,9 +52,8 @@ Complete the following steps to prepare your servers for installing Cozystack:
 
 1.  Make sure that Secure Boot is disabled.
 
-    Secure Boot is currently not supported in Talos Linux.
-    If your server is configured to use Secure Boot, you need to disable this feature in your BIOS.
-    Otherwise, it will block the server from booting after Talos Linux installation.
+    The Talos installation procedure used in this guide (rescue-mode `installimage` writing a standard EFI/MBR layout) requires Secure Boot disabled. Talos does support UEFI Secure Boot via its UKI / SecureBoot installation flow, but that path is not covered here.
+    If your server is configured to use Secure Boot, disable it in BIOS before continuing — otherwise it will block the server from booting after Talos installation.
 
     Check it with the following command:
 

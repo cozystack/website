@@ -23,6 +23,16 @@ else
   BRANCH ?= main
 endif
 
+# FETCH_REF is the ref content is fetched from. It defaults to BRANCH (which is
+# pinned to RELEASE_TAG when set); override it with a staging branch, RC tag, or
+# SHA to generate docs before the final tag exists.
+FETCH_REF ?= $(BRANCH)
+
+# Non-empty when RELEASE_TAG carries a prerelease suffix (-rc.N / -beta.N /
+# -alpha.N). Used to skip trunk pin regeneration on prereleases — update_versions.sh
+# only accepts final vX.Y.Z tags, and the trunk should track the latest final release.
+_is_prerelease := $(findstring -,$(RELEASE_TAG))
+
 # Routing: DOC_VERSION is either a real vX.Y directory (patch releases of an
 # already-released version) or `next` (everything else).
 #
@@ -47,6 +57,20 @@ else
   DOC_VERSION ?= next
 endif
 
+# SOURCE_REF: stable git ref written into the displayed `source:` URL of generated docs.
+# Decoupled from BRANCH (which fetches content) so that patch releases of the same
+# minor don't churn every file's source URL on every release.
+#   v0    → main         (legacy bucket; many 0.x tags share this dir)
+#   next  → main         (trunk tracks upstream main)
+#   vX.Y  → release-X.Y  (the upstream long-lived branch for that minor)
+ifeq ($(DOC_VERSION),v0)
+  SOURCE_REF ?= main
+else ifeq ($(DOC_VERSION),next)
+  SOURCE_REF ?= main
+else
+  SOURCE_REF ?= release-$(patsubst v%,%,$(DOC_VERSION))
+endif
+
 # App lists (override on the command line: `make update-apps APPS="tenant redis"`)
 APPS       ?= tenant clickhouse foundationdb harbor redis mongodb openbao rabbitmq postgres nats kafka mariadb qdrant
 K8S       ?= kubernetes
@@ -60,26 +84,27 @@ NETWORKING_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/networking
 SERVICES_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/operations/services
 
 .PHONY: update-apps update-vms update-networking update-k8s update-services update-oss-health update-all \
+        update-versions \
         template-apps template-vms template-networking template-k8s template-services template-all \
         init-version init-next release-next download-openapi download-openapi-all serve show-target
 
 update-apps:
-	./hack/update_apps.sh --apps "$(APPS)" --dest "$(APPS_DEST_DIR)" --branch "$(BRANCH)"
+	./hack/update_apps.sh --apps "$(APPS)" --dest "$(APPS_DEST_DIR)" --branch "$(FETCH_REF)" --source-ref "$(SOURCE_REF)"
 
 update-vms:
-	./hack/update_apps.sh --apps "$(VMS)" --dest "$(VMS_DEST_DIR)" --branch "$(BRANCH)"
+	./hack/update_apps.sh --apps "$(VMS)" --dest "$(VMS_DEST_DIR)" --branch "$(FETCH_REF)" --source-ref "$(SOURCE_REF)"
 
 update-networking:
-	./hack/update_apps.sh --apps "$(NETWORKING)" --dest "$(NETWORKING_DEST_DIR)" --branch "$(BRANCH)"
+	./hack/update_apps.sh --apps "$(NETWORKING)" --dest "$(NETWORKING_DEST_DIR)" --branch "$(FETCH_REF)" --source-ref "$(SOURCE_REF)"
 
 update-k8s:
-	./hack/update_apps.sh --index --apps "$(K8S)" --dest "$(K8S_DEST_DIR)" --branch "$(BRANCH)"
+	./hack/update_apps.sh --index --apps "$(K8S)" --dest "$(K8S_DEST_DIR)" --branch "$(FETCH_REF)" --source-ref "$(SOURCE_REF)"
 
 update-services:
-	./hack/update_apps.sh --apps "$(SERVICES)" --dest "$(SERVICES_DEST_DIR)" --branch "$(BRANCH)" --pkgdir extra
+	./hack/update_apps.sh --apps "$(SERVICES)" --dest "$(SERVICES_DEST_DIR)" --branch "$(FETCH_REF)" --source-ref "$(SOURCE_REF)" --pkgdir extra
 
 update-oss-health:
-	./hack/update_oss_health.py
+	python3 hack/update_oss_health.py
 
 # Download openapi.json for a specific version from GitHub release
 download-openapi:
@@ -119,6 +144,7 @@ show-target:
 	@echo "RELEASE_TAG=$(RELEASE_TAG)"
 	@echo "DOC_VERSION=$(DOC_VERSION)"
 	@echo "BRANCH=$(BRANCH)"
+	@echo "FETCH_REF=$(FETCH_REF)"
 
 # Update the target directory in place. Routing rules above determine whether
 # this writes into next/ or an existing released version directory.
@@ -130,6 +156,25 @@ update-all:
 	$(MAKE) update-networking
 	$(MAKE) update-k8s
 	$(MAKE) update-services
+	$(MAKE) update-versions
+
+# Regenerate the {{< version-pin >}} data file from upstream so the next/ trunk
+# never goes stale. Only the next trunk is auto-managed here; released vX.Y.yaml
+# files are frozen at release time by hack/release_next.sh.
+#
+# Prerelease tags are skipped: the upstream tags workflow runs `make update-all`
+# for every -rc/-beta/-alpha tag too, but update_versions.sh only accepts final
+# vX.Y.Z tags, and the trunk pins are meant to track the latest final release.
+update-versions:
+ifeq ($(DOC_VERSION),next)
+ifeq ($(_is_prerelease),)
+	./hack/update_versions.sh --dest data/versions/next.yaml --branch "$(FETCH_REF)" $(if $(RELEASE_TAG),--cozystack-tag "$(RELEASE_TAG)")
+else
+	@echo "update-versions: prerelease $(RELEASE_TAG) — skipping trunk pin refresh (pins track the latest final release)."
+endif
+else
+	@echo "update-versions: $(DOC_VERSION) is a released version (frozen at release time) — skipping."
+endif
 
 template-apps:
 	./hack/fill_templates.sh --apps "$(APPS)" --dest "$(APPS_DEST_DIR)" --branch "$(BRANCH)"

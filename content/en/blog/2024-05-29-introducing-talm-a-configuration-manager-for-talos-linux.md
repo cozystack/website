@@ -2,11 +2,12 @@
 title: "Introducing Talm, a configuration manager for Talos Linux"
 slug: introducing-talm-a-configuration-manager-for-talos-linux
 date: 2024-05-29
+author: "Andrei Kvapil"
+description: "Talm is a configuration manager for Talos Linux that generates per-node configs from templates, with a Helm-like interface and no secrets in Git."
 article_types:
   - news
 topics:
   - talos
-
 ---
 
 **Author**: Andrei Kvapil (Ænix)

@@ -20,6 +20,10 @@ For new production deployments, [Talos Linux]({{% ref "/docs/next/guides/talos" 
 
 ## Prerequisites
 
+{{% alert color="warning" %}}
+**Ubuntu hosts with UEFI Secure Boot enabled** require pre-installing `drbd-dkms` before deploying Cozystack. The default piraeus-operator flow compiles DRBD in-cluster and `insmod`s the unsigned module, which kernel lockdown rejects with `Key was rejected by service`. See [Ubuntu + Secure Boot]({{% ref "/docs/next/install/kubernetes/ubuntu-secure-boot" %}}) for the workaround.
+{{% /alert %}}
+
 ### Supported Distributions
 
 Cozystack has been tested on:

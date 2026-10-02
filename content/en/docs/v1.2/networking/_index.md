@@ -1,7 +1,7 @@
 ---
 title: "Networking Capabilities"
 linkTitle: "Networking"
-description: "Network configuration, virtual routers, load balancers, and other networking capabilities in Cozystack."
+description: "Cilium eBPF networking in Cozystack — virtual routers, load balancers, MetalLB, BGP, and tenant network isolation."
 weight: 60
 ---
 

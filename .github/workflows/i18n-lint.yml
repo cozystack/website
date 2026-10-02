@@ -1,0 +1,36 @@
+name: i18n lint
+
+on:
+  pull_request:
+    paths:
+      - 'i18n/**'
+      - 'content/**'
+      - 'hack/check-i18n.sh'
+      - '.github/workflows/i18n-lint.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'i18n/**'
+      - 'content/**'
+      - 'hack/check-i18n.sh'
+      - '.github/workflows/i18n-lint.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  i18n-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check i18n key parity and translation freshness
+        run: ./hack/check-i18n.sh

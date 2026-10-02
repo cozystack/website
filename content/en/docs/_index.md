@@ -6,9 +6,9 @@ layout: docs-landing
 weight: 40
 cascade:
   type: docs
-menu:
-  main:
-    weight: 40
+# The navbar "Documentation" item is defined in hugo.yaml `menus.main` (not here)
+# so it renders on every language. A page-front-matter menu entry only appears on
+# languages where this page exists, which dropped the link on translated pages.
 ---
 
 ### Check Your Current Version

@@ -34,8 +34,8 @@ To run this tutorial, you will need the following setup:
 -   There are [other installation methods]({{% ref "/docs/next/install/talos" %}}) which require either any Linux or no OS at all to start.
 
 **BIOS/UEFI Settings:**
--   **Secure Boot must be disabled.**<br>
-    Secure Boot is currently not supported and must be disabled in the BIOS/UEFI settings before installation.
+-   **Secure Boot.**<br>
+    Talos Linux ships pre-signed kernel modules and works with Secure Boot enabled. On non-Talos Ubuntu hosts, the default piraeus-operator flow compiles DRBD in-cluster; the resulting unsigned modules are rejected by kernel lockdown when Secure Boot is enforced. The simplest path is to disable Secure Boot in BIOS/UEFI; alternatively, follow [Ubuntu + Secure Boot]({{% ref "/docs/next/install/kubernetes/ubuntu-secure-boot" %}}) to pre-install dkms-signed DRBD on the host.
 
 **Networking:**
 -   Routable FQDN domain.<br>If you don't have one, you can use [nip.io](https://nip.io/) with dash notation

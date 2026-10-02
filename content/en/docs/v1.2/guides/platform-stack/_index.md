@@ -170,7 +170,7 @@ Deployment involves the following components:
 This architecture ensures isolated, scalable, and efficient Kubernetes environments tailored for each tenant.
 
 -   Supported version: Kubernetes v1.32.4
--   Operator: [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator) v0.4.2
+-   Kubernetes operator: [aenix-io/etcd-operator](https://github.com/aenix-io/etcd-operator) v0.4.3
 -   Managed application reference: [Kubernetes]({{% ref "/docs/v1.2/kubernetes" %}})
 
 

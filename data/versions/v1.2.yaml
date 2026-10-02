@@ -1,0 +1,20 @@
+# Pinned upstream-tool versions for the Cozystack v1.2 docs.
+#
+# Referenced from content via the {{< version-pin "<key>" >}} shortcode, which
+# derives the version directory from the page's file path — a page under
+# content/en/docs/v1.2/ reads this file.
+#
+# Minimal by design: only the keys actually referenced by v1.2 pages are
+# present (see v0.yaml for the same philosophy). The single consumer is
+# cozystack-api/go-types.md.
+#
+# Note: the Go API submodule (github.com/cozystack/cozystack/api/apps/v1alpha1)
+# has earlier git tags (api/apps/v1alpha1/v1.1.6, v1.1.7), but those do not
+# resolve as Go module versions — proxy.golang.org returns 404 for them, while
+# v1.2.0 resolves. So v1.2.0 is the earliest version `go get` can fetch, making
+# v1.2 the first release whose go-types page can pin to its own tag. The
+# v1.0/v1.1 go-types pages keep a v1.2.0 literal for the same reason: no earlier
+# resolvable module version exists.
+
+# Cozystack release the docs are pinned to.
+cozystack_tag: "v1.2.0"        # v-prefixed, as used in `go get …@<tag>`

@@ -32,7 +32,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.160.1
+      HUGO_VERSION: 0.164.0
     steps:
       - name: Install Hugo CLI
         run: |
@@ -41,13 +41,20 @@ jobs:
       - name: Install Dart Sass
         run: sudo snap install dart-sass
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive
           fetch-depth: 0
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Hugo 0.164 runs Node asset tools with "node --permission", a flag
+          # that exists only since Node 22.13. The runner default is unpinned,
+          # so pin an LTS that supports it.
+          node-version: "22"
       - name: Install Node.js dependencies
         run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
       - name: Download OpenAPI specs
@@ -71,9 +78,13 @@ jobs:
           echo -e "\nDisallow: /" >> public/robots.txt
           cat public/robots.txt
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./public
+          # The action drops dot-entries from the artifact by default, which
+          # would silently 404 /.well-known/atproto-did. That directory is the
+          # only hidden entry the build produces.
+          include-hidden-files: true
 
   # Deployment job
   deploy:
@@ -85,5 +96,5 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 

@@ -66,7 +66,11 @@ We respect your privacy and choice regarding telemetry. If you prefer not to par
 
 Opting Out:
 
-To disable telemetry reporting, upgrade the Cozystack operator Helm release with the `disableTelemetry` flag:
+Telemetry is sent by the two components named above, and they are installed by
+two different charts, so opting out takes two steps. Doing only the first
+leaves `cozystack-controller` reporting application counts.
+
+**1. The operator**, which is part of the `cozy-installer` release:
 
 ```bash
 helm upgrade cozystack oci://ghcr.io/cozystack/cozystack/cozy-installer \
@@ -79,7 +83,24 @@ Replace `X.Y.Z` with your currently installed Cozystack version.
 
 {{< reuse-values-warning >}}
 
-This command updates the operator to disable telemetry data collection. If you wish to re-enable telemetry in the future, run the same command with `disableTelemetry=false`.
+**2. The controller**, which the platform deploys. Set `telemetry.disabled` in
+the Platform Package and apply it:
+
+```yaml
+apiVersion: cozystack.io/v1alpha1
+kind: Package
+metadata:
+  name: cozystack.cozystack-platform
+spec:
+  components:
+    platform:
+      values:
+        telemetry:
+          disabled: true
+```
+
+To re-enable telemetry later, run the same command with
+`disableTelemetry=false` and set `telemetry.disabled: false`.
 
 ## Conclusion
 

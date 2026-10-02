@@ -46,7 +46,7 @@ make update-apps APPS="tenant redis"
 make show-target RELEASE_TAG=v1.3.0    # prints the resolved DOC_VERSION/BRANCH
 ```
 
-Required tools: Hugo extended v0.160.1, Go 1.23+, Node 20+, yq v4+ (for version lifecycle targets).
+Required tools: Hugo extended v0.164.0, Go 1.23+, Node 22+, yq v4+ (for version lifecycle targets).
 
 ## Architecture
 

@@ -1,0 +1,1801 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "apps/v1",
+            "kind": "StatefulSet",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00"
+                },
+                "creationTimestamp": "2026-08-29T01:52:09Z",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "clickhouse.altinity.com/app": "chop",
+                    "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                    "clickhouse.altinity.com/cluster": "clickhouse",
+                    "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse.altinity.com/object-version": "c666b65219d1a6379bd15c3b2fe66b75f1e221a0",
+                    "clickhouse.altinity.com/replica": "0",
+                    "clickhouse.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                },
+                "name": "chi-clickhouse-demo-clickhouse-clickhouse-0-0",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseInstallation",
+                        "name": "clickhouse-demo-clickhouse",
+                        "uid": "1c2bc0d2-f3c0-4282-b750-bce4960dce6f"
+                    }
+                ],
+                "resourceVersion": "43950482",
+                "uid": "d619e8e2-79a2-4154-beab-597b30e64a81"
+            },
+            "spec": {
+                "persistentVolumeClaimRetentionPolicy": {
+                    "whenDeleted": "Retain",
+                    "whenScaled": "Retain"
+                },
+                "podManagementPolicy": "OrderedReady",
+                "replicas": 1,
+                "revisionHistoryLimit": 10,
+                "selector": {
+                    "matchLabels": {
+                        "clickhouse.altinity.com/app": "chop",
+                        "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                        "clickhouse.altinity.com/cluster": "clickhouse",
+                        "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                        "clickhouse.altinity.com/replica": "0",
+                        "clickhouse.altinity.com/shard": "0"
+                    }
+                },
+                "serviceName": "chi-clickhouse-demo-clickhouse-clickhouse-0-0",
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                            "meta.helm.sh/release-namespace": "tenant-workshop00"
+                        },
+                        "labels": {
+                            "app.kubernetes.io/instance": "clickhouse-demo-clickhouse",
+                            "app.kubernetes.io/managed-by": "Helm",
+                            "clickhouse.altinity.com/app": "chop",
+                            "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                            "clickhouse.altinity.com/cluster": "clickhouse",
+                            "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                            "clickhouse.altinity.com/ready": "yes",
+                            "clickhouse.altinity.com/replica": "0",
+                            "clickhouse.altinity.com/shard": "0",
+                            "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                            "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                        },
+                        "name": "clickhouse-per-host"
+                    },
+                    "spec": {
+                        "affinity": {
+                            "podAntiAffinity": {
+                                "requiredDuringSchedulingIgnoredDuringExecution": [
+                                    {
+                                        "labelSelector": {
+                                            "matchExpressions": [
+                                                {
+                                                    "key": "clickhouse.altinity.com/chi",
+                                                    "operator": "In",
+                                                    "values": [
+                                                        "clickhouse-demo-clickhouse"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "topologyKey": "kubernetes.io/hostname"
+                                    }
+                                ]
+                            }
+                        },
+                        "containers": [
+                            {
+                                "env": [
+                                    {
+                                        "name": "CLICKHOUSE_SKIP_USER_SETUP",
+                                        "value": "1"
+                                    }
+                                ],
+                                "image": "clickhouse/clickhouse-server:24.9.2.42",
+                                "imagePullPolicy": "IfNotPresent",
+                                "livenessProbe": {
+                                    "failureThreshold": 10,
+                                    "httpGet": {
+                                        "path": "/ping",
+                                        "port": "http",
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 60,
+                                    "periodSeconds": 3,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "name": "clickhouse",
+                                "ports": [
+                                    {
+                                        "containerPort": 9000,
+                                        "name": "tcp",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8123,
+                                        "name": "http",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 9009,
+                                        "name": "interserver",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "failureThreshold": 3,
+                                    "httpGet": {
+                                        "path": "/ping",
+                                        "port": "http",
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 10,
+                                    "periodSeconds": 3,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "1",
+                                        "ephemeral-storage": "2Gi",
+                                        "memory": "512Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "100m",
+                                        "ephemeral-storage": "53687091",
+                                        "memory": "536870912"
+                                    }
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/var/lib/clickhouse",
+                                        "name": "data-volume-template"
+                                    },
+                                    {
+                                        "mountPath": "/var/log/clickhouse-server",
+                                        "name": "log-volume-template"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-server/config.d/",
+                                        "name": "chi-clickhouse-demo-clickhouse-common-configd"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-server/users.d/",
+                                        "name": "chi-clickhouse-demo-clickhouse-common-usersd"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-server/conf.d/",
+                                        "name": "chi-clickhouse-demo-clickhouse-deploy-confd-clickhouse-0-0"
+                                    }
+                                ]
+                            }
+                        ],
+                        "dnsPolicy": "ClusterFirst",
+                        "hostAliases": [
+                            {
+                                "hostnames": [
+                                    "chi-clickhouse-demo-clickhouse-clickhouse-0-0"
+                                ],
+                                "ip": "127.0.0.1"
+                            }
+                        ],
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "securityContext": {},
+                        "terminationGracePeriodSeconds": 30,
+                        "volumes": [
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chi-clickhouse-demo-clickhouse-common-configd"
+                                },
+                                "name": "chi-clickhouse-demo-clickhouse-common-configd"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chi-clickhouse-demo-clickhouse-common-usersd"
+                                },
+                                "name": "chi-clickhouse-demo-clickhouse-common-usersd"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chi-clickhouse-demo-clickhouse-deploy-confd-clickhouse-0-0"
+                                },
+                                "name": "chi-clickhouse-demo-clickhouse-deploy-confd-clickhouse-0-0"
+                            }
+                        ]
+                    }
+                },
+                "updateStrategy": {
+                    "type": "RollingUpdate"
+                },
+                "volumeClaimTemplates": [
+                    {
+                        "apiVersion": "v1",
+                        "kind": "PersistentVolumeClaim",
+                        "metadata": {
+                            "annotations": {
+                                "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                                "meta.helm.sh/release-namespace": "tenant-workshop00"
+                            },
+                            "labels": {
+                                "app.kubernetes.io/managed-by": "Helm",
+                                "clickhouse.altinity.com/app": "chop",
+                                "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                                "clickhouse.altinity.com/cluster": "clickhouse",
+                                "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                                "clickhouse.altinity.com/replica": "0",
+                                "clickhouse.altinity.com/shard": "0",
+                                "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                                "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                            },
+                            "name": "data-volume-template"
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "2Gi"
+                                }
+                            },
+                            "volumeMode": "Filesystem"
+                        },
+                        "status": {
+                            "phase": "Pending"
+                        }
+                    },
+                    {
+                        "apiVersion": "v1",
+                        "kind": "PersistentVolumeClaim",
+                        "metadata": {
+                            "annotations": {
+                                "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                                "meta.helm.sh/release-namespace": "tenant-workshop00"
+                            },
+                            "labels": {
+                                "app.kubernetes.io/managed-by": "Helm",
+                                "clickhouse.altinity.com/app": "chop",
+                                "clickhouse.altinity.com/chi": "clickhouse-demo-clickhouse",
+                                "clickhouse.altinity.com/cluster": "clickhouse",
+                                "clickhouse.altinity.com/namespace": "tenant-workshop00",
+                                "clickhouse.altinity.com/replica": "0",
+                                "clickhouse.altinity.com/shard": "0",
+                                "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                                "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                            },
+                            "name": "log-volume-template"
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "2Gi"
+                                }
+                            },
+                            "volumeMode": "Filesystem"
+                        },
+                        "status": {
+                            "phase": "Pending"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "availableReplicas": 1,
+                "collisionCount": 0,
+                "currentReplicas": 1,
+                "currentRevision": "chi-clickhouse-demo-clickhouse-clickhouse-0-0-9b9c86458",
+                "observedGeneration": 1,
+                "readyReplicas": 1,
+                "replicas": 1,
+                "updateRevision": "chi-clickhouse-demo-clickhouse-clickhouse-0-0-9b9c86458",
+                "updatedReplicas": 1
+            }
+        },
+        {
+            "apiVersion": "apps/v1",
+            "kind": "StatefulSet",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2026-08-29T01:52:37Z",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "6335b86a52d132e0da89bf3866ff683c1857a865",
+                    "clickhouse-keeper.altinity.com/replica": "0",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                },
+                "name": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-0",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse-keeper.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseKeeperInstallation",
+                        "name": "clickhouse-demo-clickhouse-keeper",
+                        "uid": "d56221c2-889d-40f9-b697-2b60b935c5f5"
+                    }
+                ],
+                "resourceVersion": "43951307",
+                "uid": "51aee869-46ef-4227-9426-079509eb2230"
+            },
+            "spec": {
+                "persistentVolumeClaimRetentionPolicy": {
+                    "whenDeleted": "Retain",
+                    "whenScaled": "Retain"
+                },
+                "podManagementPolicy": "OrderedReady",
+                "replicas": 1,
+                "revisionHistoryLimit": 10,
+                "selector": {
+                    "matchLabels": {
+                        "clickhouse-keeper.altinity.com/app": "chop",
+                        "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                        "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                        "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                        "clickhouse-keeper.altinity.com/replica": "0",
+                        "clickhouse-keeper.altinity.com/shard": "0"
+                    }
+                },
+                "serviceName": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-0",
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                            "meta.helm.sh/release-namespace": "tenant-workshop00",
+                            "prometheus.io/port": "7000",
+                            "prometheus.io/scrape": "true"
+                        },
+                        "labels": {
+                            "app": "clickhouse-demo-clickhouse-keeper",
+                            "app.kubernetes.io/managed-by": "Helm",
+                            "clickhouse-keeper.altinity.com/app": "chop",
+                            "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                            "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                            "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                            "clickhouse-keeper.altinity.com/ready": "yes",
+                            "clickhouse-keeper.altinity.com/replica": "0",
+                            "clickhouse-keeper.altinity.com/shard": "0",
+                            "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                            "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                        },
+                        "name": "default"
+                    },
+                    "spec": {
+                        "affinity": {
+                            "podAntiAffinity": {
+                                "requiredDuringSchedulingIgnoredDuringExecution": [
+                                    {
+                                        "labelSelector": {
+                                            "matchExpressions": [
+                                                {
+                                                    "key": "app",
+                                                    "operator": "In",
+                                                    "values": [
+                                                        "clickhouse-demo-clickhouse-keeper"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "topologyKey": "kubernetes.io/hostname"
+                                    }
+                                ]
+                            }
+                        },
+                        "containers": [
+                            {
+                                "env": [
+                                    {
+                                        "name": "CLICKHOUSE_DATA_DIR",
+                                        "value": "/var/lib/clickhouse-keeper"
+                                    }
+                                ],
+                                "image": "clickhouse/clickhouse-keeper:24.9.2.42",
+                                "imagePullPolicy": "IfNotPresent",
+                                "livenessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "bash",
+                                            "-xc",
+                                            "date \u0026\u0026 OK=$(exec 3\u003c\u003e/dev/tcp/127.0.0.1/2181; printf 'ruok' \u003e\u00263; IFS=; tee \u003c\u00263; exec 3\u003c\u0026-;);if [[ \"${OK}\" == \"imok\" ]]; then exit 0; else exit 1; fi"
+                                        ]
+                                    },
+                                    "failureThreshold": 12,
+                                    "initialDelaySeconds": 5,
+                                    "periodSeconds": 5,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "name": "clickhouse-keeper",
+                                "ports": [
+                                    {
+                                        "containerPort": 2181,
+                                        "name": "zk",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 9444,
+                                        "name": "raft",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "500m",
+                                        "ephemeral-storage": "2Gi",
+                                        "memory": "256Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "50m",
+                                        "ephemeral-storage": "53687091",
+                                        "memory": "268435456"
+                                    }
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/keeper_config.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/users.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/conf.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-0"
+                                    },
+                                    {
+                                        "mountPath": "/var/lib/clickhouse-keeper",
+                                        "name": "default"
+                                    }
+                                ]
+                            }
+                        ],
+                        "dnsPolicy": "ClusterFirst",
+                        "hostAliases": [
+                            {
+                                "hostnames": [
+                                    "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-0"
+                                ],
+                                "ip": "127.0.0.1"
+                            }
+                        ],
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "securityContext": {
+                            "fsGroup": 101
+                        },
+                        "terminationGracePeriodSeconds": 30,
+                        "volumes": [
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-0"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-0"
+                            }
+                        ]
+                    }
+                },
+                "updateStrategy": {
+                    "type": "RollingUpdate"
+                },
+                "volumeClaimTemplates": [
+                    {
+                        "apiVersion": "v1",
+                        "kind": "PersistentVolumeClaim",
+                        "metadata": {
+                            "annotations": {
+                                "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                                "meta.helm.sh/release-namespace": "tenant-workshop00",
+                                "prometheus.io/port": "7000",
+                                "prometheus.io/scrape": "true"
+                            },
+                            "labels": {
+                                "app.kubernetes.io/managed-by": "Helm",
+                                "clickhouse-keeper.altinity.com/app": "chop",
+                                "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                                "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                                "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                                "clickhouse-keeper.altinity.com/replica": "0",
+                                "clickhouse-keeper.altinity.com/shard": "0",
+                                "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                                "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                            },
+                            "name": "default"
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "1Gi"
+                                }
+                            },
+                            "volumeMode": "Filesystem"
+                        },
+                        "status": {
+                            "phase": "Pending"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "availableReplicas": 1,
+                "collisionCount": 0,
+                "currentReplicas": 1,
+                "currentRevision": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-0-77f7fb584f",
+                "observedGeneration": 1,
+                "readyReplicas": 1,
+                "replicas": 1,
+                "updateRevision": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-0-77f7fb584f",
+                "updatedReplicas": 1
+            }
+        },
+        {
+            "apiVersion": "apps/v1",
+            "kind": "StatefulSet",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2026-08-29T01:53:04Z",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "31d4d8053e0cb2505d47f6bb46111239c09401f2",
+                    "clickhouse-keeper.altinity.com/replica": "1",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                },
+                "name": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-1",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse-keeper.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseKeeperInstallation",
+                        "name": "clickhouse-demo-clickhouse-keeper",
+                        "uid": "d56221c2-889d-40f9-b697-2b60b935c5f5"
+                    }
+                ],
+                "resourceVersion": "43952661",
+                "uid": "6dae3b49-34df-4c9d-b3bc-fc6d00a360e1"
+            },
+            "spec": {
+                "persistentVolumeClaimRetentionPolicy": {
+                    "whenDeleted": "Retain",
+                    "whenScaled": "Retain"
+                },
+                "podManagementPolicy": "OrderedReady",
+                "replicas": 1,
+                "revisionHistoryLimit": 10,
+                "selector": {
+                    "matchLabels": {
+                        "clickhouse-keeper.altinity.com/app": "chop",
+                        "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                        "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                        "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                        "clickhouse-keeper.altinity.com/replica": "1",
+                        "clickhouse-keeper.altinity.com/shard": "0"
+                    }
+                },
+                "serviceName": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-1",
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                            "meta.helm.sh/release-namespace": "tenant-workshop00",
+                            "prometheus.io/port": "7000",
+                            "prometheus.io/scrape": "true"
+                        },
+                        "labels": {
+                            "app": "clickhouse-demo-clickhouse-keeper",
+                            "app.kubernetes.io/managed-by": "Helm",
+                            "clickhouse-keeper.altinity.com/app": "chop",
+                            "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                            "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                            "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                            "clickhouse-keeper.altinity.com/ready": "yes",
+                            "clickhouse-keeper.altinity.com/replica": "1",
+                            "clickhouse-keeper.altinity.com/shard": "0",
+                            "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                            "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                        },
+                        "name": "default"
+                    },
+                    "spec": {
+                        "affinity": {
+                            "podAntiAffinity": {
+                                "requiredDuringSchedulingIgnoredDuringExecution": [
+                                    {
+                                        "labelSelector": {
+                                            "matchExpressions": [
+                                                {
+                                                    "key": "app",
+                                                    "operator": "In",
+                                                    "values": [
+                                                        "clickhouse-demo-clickhouse-keeper"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "topologyKey": "kubernetes.io/hostname"
+                                    }
+                                ]
+                            }
+                        },
+                        "containers": [
+                            {
+                                "env": [
+                                    {
+                                        "name": "CLICKHOUSE_DATA_DIR",
+                                        "value": "/var/lib/clickhouse-keeper"
+                                    }
+                                ],
+                                "image": "clickhouse/clickhouse-keeper:24.9.2.42",
+                                "imagePullPolicy": "IfNotPresent",
+                                "livenessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "bash",
+                                            "-xc",
+                                            "date \u0026\u0026 OK=$(exec 3\u003c\u003e/dev/tcp/127.0.0.1/2181; printf 'ruok' \u003e\u00263; IFS=; tee \u003c\u00263; exec 3\u003c\u0026-;);if [[ \"${OK}\" == \"imok\" ]]; then exit 0; else exit 1; fi"
+                                        ]
+                                    },
+                                    "failureThreshold": 12,
+                                    "initialDelaySeconds": 5,
+                                    "periodSeconds": 5,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "name": "clickhouse-keeper",
+                                "ports": [
+                                    {
+                                        "containerPort": 2181,
+                                        "name": "zk",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 9444,
+                                        "name": "raft",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "500m",
+                                        "ephemeral-storage": "2Gi",
+                                        "memory": "256Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "50m",
+                                        "ephemeral-storage": "53687091",
+                                        "memory": "268435456"
+                                    }
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/keeper_config.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/users.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/conf.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-1"
+                                    },
+                                    {
+                                        "mountPath": "/var/lib/clickhouse-keeper",
+                                        "name": "default"
+                                    }
+                                ]
+                            }
+                        ],
+                        "dnsPolicy": "ClusterFirst",
+                        "hostAliases": [
+                            {
+                                "hostnames": [
+                                    "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-1"
+                                ],
+                                "ip": "127.0.0.1"
+                            }
+                        ],
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "securityContext": {
+                            "fsGroup": 101
+                        },
+                        "terminationGracePeriodSeconds": 30,
+                        "volumes": [
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-1"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-1"
+                            }
+                        ]
+                    }
+                },
+                "updateStrategy": {
+                    "type": "RollingUpdate"
+                },
+                "volumeClaimTemplates": [
+                    {
+                        "apiVersion": "v1",
+                        "kind": "PersistentVolumeClaim",
+                        "metadata": {
+                            "annotations": {
+                                "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                                "meta.helm.sh/release-namespace": "tenant-workshop00",
+                                "prometheus.io/port": "7000",
+                                "prometheus.io/scrape": "true"
+                            },
+                            "labels": {
+                                "app.kubernetes.io/managed-by": "Helm",
+                                "clickhouse-keeper.altinity.com/app": "chop",
+                                "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                                "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                                "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                                "clickhouse-keeper.altinity.com/replica": "1",
+                                "clickhouse-keeper.altinity.com/shard": "0",
+                                "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                                "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                            },
+                            "name": "default"
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "1Gi"
+                                }
+                            },
+                            "volumeMode": "Filesystem"
+                        },
+                        "status": {
+                            "phase": "Pending"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "availableReplicas": 1,
+                "collisionCount": 0,
+                "currentReplicas": 1,
+                "currentRevision": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-1-c4486dc88",
+                "observedGeneration": 1,
+                "readyReplicas": 1,
+                "replicas": 1,
+                "updateRevision": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-1-c4486dc88",
+                "updatedReplicas": 1
+            }
+        },
+        {
+            "apiVersion": "apps/v1",
+            "kind": "StatefulSet",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "prometheus.io/port": "7000",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2026-08-29T01:53:36Z",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "clickhouse-keeper.altinity.com/app": "chop",
+                    "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                    "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                    "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                    "clickhouse-keeper.altinity.com/object-version": "47552a8719830d3307a5044f94baa6b8f1098b52",
+                    "clickhouse-keeper.altinity.com/replica": "2",
+                    "clickhouse-keeper.altinity.com/shard": "0",
+                    "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                },
+                "name": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-2",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "clickhouse-keeper.altinity.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "ClickHouseKeeperInstallation",
+                        "name": "clickhouse-demo-clickhouse-keeper",
+                        "uid": "d56221c2-889d-40f9-b697-2b60b935c5f5"
+                    }
+                ],
+                "resourceVersion": "43953597",
+                "uid": "aa42ec25-5cfa-40f6-a983-b823a7fbdf71"
+            },
+            "spec": {
+                "persistentVolumeClaimRetentionPolicy": {
+                    "whenDeleted": "Retain",
+                    "whenScaled": "Retain"
+                },
+                "podManagementPolicy": "OrderedReady",
+                "replicas": 1,
+                "revisionHistoryLimit": 10,
+                "selector": {
+                    "matchLabels": {
+                        "clickhouse-keeper.altinity.com/app": "chop",
+                        "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                        "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                        "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                        "clickhouse-keeper.altinity.com/replica": "2",
+                        "clickhouse-keeper.altinity.com/shard": "0"
+                    }
+                },
+                "serviceName": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-2",
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                            "meta.helm.sh/release-namespace": "tenant-workshop00",
+                            "prometheus.io/port": "7000",
+                            "prometheus.io/scrape": "true"
+                        },
+                        "labels": {
+                            "app": "clickhouse-demo-clickhouse-keeper",
+                            "app.kubernetes.io/managed-by": "Helm",
+                            "clickhouse-keeper.altinity.com/app": "chop",
+                            "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                            "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                            "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                            "clickhouse-keeper.altinity.com/ready": "yes",
+                            "clickhouse-keeper.altinity.com/replica": "2",
+                            "clickhouse-keeper.altinity.com/shard": "0",
+                            "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                            "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                        },
+                        "name": "default"
+                    },
+                    "spec": {
+                        "affinity": {
+                            "podAntiAffinity": {
+                                "requiredDuringSchedulingIgnoredDuringExecution": [
+                                    {
+                                        "labelSelector": {
+                                            "matchExpressions": [
+                                                {
+                                                    "key": "app",
+                                                    "operator": "In",
+                                                    "values": [
+                                                        "clickhouse-demo-clickhouse-keeper"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "topologyKey": "kubernetes.io/hostname"
+                                    }
+                                ]
+                            }
+                        },
+                        "containers": [
+                            {
+                                "env": [
+                                    {
+                                        "name": "CLICKHOUSE_DATA_DIR",
+                                        "value": "/var/lib/clickhouse-keeper"
+                                    }
+                                ],
+                                "image": "clickhouse/clickhouse-keeper:24.9.2.42",
+                                "imagePullPolicy": "IfNotPresent",
+                                "livenessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "bash",
+                                            "-xc",
+                                            "date \u0026\u0026 OK=$(exec 3\u003c\u003e/dev/tcp/127.0.0.1/2181; printf 'ruok' \u003e\u00263; IFS=; tee \u003c\u00263; exec 3\u003c\u0026-;);if [[ \"${OK}\" == \"imok\" ]]; then exit 0; else exit 1; fi"
+                                        ]
+                                    },
+                                    "failureThreshold": 12,
+                                    "initialDelaySeconds": 5,
+                                    "periodSeconds": 5,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 1
+                                },
+                                "name": "clickhouse-keeper",
+                                "ports": [
+                                    {
+                                        "containerPort": 2181,
+                                        "name": "zk",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 9444,
+                                        "name": "raft",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "500m",
+                                        "ephemeral-storage": "2Gi",
+                                        "memory": "256Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "50m",
+                                        "ephemeral-storage": "53687091",
+                                        "memory": "268435456"
+                                    }
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/keeper_config.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/users.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                                    },
+                                    {
+                                        "mountPath": "/etc/clickhouse-keeper/conf.d/",
+                                        "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-2"
+                                    },
+                                    {
+                                        "mountPath": "/var/lib/clickhouse-keeper",
+                                        "name": "default"
+                                    }
+                                ]
+                            }
+                        ],
+                        "dnsPolicy": "ClusterFirst",
+                        "hostAliases": [
+                            {
+                                "hostnames": [
+                                    "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-2"
+                                ],
+                                "ip": "127.0.0.1"
+                            }
+                        ],
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "securityContext": {
+                            "fsGroup": 101
+                        },
+                        "terminationGracePeriodSeconds": 30,
+                        "volumes": [
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-common-configd"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-common-usersd"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-2"
+                                },
+                                "name": "chk-clickhouse-demo-clickhouse-keeper-deploy-confd-cluster1-0-2"
+                            }
+                        ]
+                    }
+                },
+                "updateStrategy": {
+                    "type": "RollingUpdate"
+                },
+                "volumeClaimTemplates": [
+                    {
+                        "apiVersion": "v1",
+                        "kind": "PersistentVolumeClaim",
+                        "metadata": {
+                            "annotations": {
+                                "meta.helm.sh/release-name": "clickhouse-demo-clickhouse",
+                                "meta.helm.sh/release-namespace": "tenant-workshop00",
+                                "prometheus.io/port": "7000",
+                                "prometheus.io/scrape": "true"
+                            },
+                            "labels": {
+                                "app.kubernetes.io/managed-by": "Helm",
+                                "clickhouse-keeper.altinity.com/app": "chop",
+                                "clickhouse-keeper.altinity.com/chk": "clickhouse-demo-clickhouse-keeper",
+                                "clickhouse-keeper.altinity.com/cluster": "cluster1",
+                                "clickhouse-keeper.altinity.com/namespace": "tenant-workshop00",
+                                "clickhouse-keeper.altinity.com/replica": "2",
+                                "clickhouse-keeper.altinity.com/shard": "0",
+                                "helm.toolkit.fluxcd.io/name": "clickhouse-demo-clickhouse",
+                                "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                            },
+                            "name": "default"
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "1Gi"
+                                }
+                            },
+                            "volumeMode": "Filesystem"
+                        },
+                        "status": {
+                            "phase": "Pending"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "availableReplicas": 1,
+                "collisionCount": 0,
+                "currentReplicas": 1,
+                "currentRevision": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-2-77cd98b47",
+                "observedGeneration": 1,
+                "readyReplicas": 1,
+                "replicas": 1,
+                "updateRevision": "chk-clickhouse-demo-clickhouse-keeper-cluster1-0-2-77cd98b47",
+                "updatedReplicas": 1
+            }
+        },
+        {
+            "apiVersion": "apps/v1",
+            "kind": "StatefulSet",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "nats-demo-nats-system",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00"
+                },
+                "creationTimestamp": "2026-08-30T06:23:37Z",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/component": "nats",
+                    "app.kubernetes.io/instance": "nats-demo-nats-system",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "nats",
+                    "app.kubernetes.io/version": "2.11.10",
+                    "helm.sh/chart": "nats-1.3.16",
+                    "helm.toolkit.fluxcd.io/name": "nats-demo-nats-system",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00"
+                },
+                "name": "nats-demo-nats",
+                "namespace": "tenant-workshop00",
+                "resourceVersion": "47158965",
+                "uid": "0f3d6b47-2933-4356-afda-7dcdd2ad8dcb"
+            },
+            "spec": {
+                "persistentVolumeClaimRetentionPolicy": {
+                    "whenDeleted": "Delete",
+                    "whenScaled": "Delete"
+                },
+                "podManagementPolicy": "Parallel",
+                "replicas": 1,
+                "revisionHistoryLimit": 10,
+                "selector": {
+                    "matchLabels": {
+                        "app.kubernetes.io/component": "nats",
+                        "app.kubernetes.io/instance": "nats-demo-nats-system",
+                        "app.kubernetes.io/name": "nats"
+                    }
+                },
+                "serviceName": "nats-demo-nats-headless",
+                "template": {
+                    "metadata": {
+                        "annotations": {
+                            "checksum/config": "e5444580c919938dcc8ecf942a2e0171dd51dd54c3df5862c620ee8defea12e7"
+                        },
+                        "labels": {
+                            "app.kubernetes.io/component": "nats",
+                            "app.kubernetes.io/instance": "nats-demo-nats-system",
+                            "app.kubernetes.io/managed-by": "Helm",
+                            "app.kubernetes.io/name": "nats",
+                            "app.kubernetes.io/version": "2.11.10",
+                            "helm.sh/chart": "nats-1.3.16"
+                        }
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "args": [
+                                    "--config",
+                                    "/etc/nats-config/nats.conf"
+                                ],
+                                "env": [
+                                    {
+                                        "name": "POD_NAME",
+                                        "valueFrom": {
+                                            "fieldRef": {
+                                                "apiVersion": "v1",
+                                                "fieldPath": "metadata.name"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "SERVER_NAME",
+                                        "value": "$(POD_NAME)"
+                                    }
+                                ],
+                                "image": "nats:2.11.10-alpine",
+                                "imagePullPolicy": "IfNotPresent",
+                                "lifecycle": {
+                                    "preStop": {
+                                        "exec": {
+                                            "command": [
+                                                "nats-server",
+                                                "-sl=ldm=/var/run/nats/nats.pid"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "livenessProbe": {
+                                    "failureThreshold": 3,
+                                    "httpGet": {
+                                        "path": "/healthz?js-enabled-only=true",
+                                        "port": "monitor",
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 10,
+                                    "periodSeconds": 30,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 5
+                                },
+                                "name": "nats",
+                                "ports": [
+                                    {
+                                        "containerPort": 4222,
+                                        "name": "nats",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 6222,
+                                        "name": "cluster",
+                                        "protocol": "TCP"
+                                    },
+                                    {
+                                        "containerPort": 8222,
+                                        "name": "monitor",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "failureThreshold": 3,
+                                    "httpGet": {
+                                        "path": "/healthz?js-server-only=true",
+                                        "port": "monitor",
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 10,
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 5
+                                },
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "250m",
+                                        "ephemeral-storage": "2Gi",
+                                        "memory": "128Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "25m",
+                                        "ephemeral-storage": "53687091",
+                                        "memory": "134217728"
+                                    }
+                                },
+                                "startupProbe": {
+                                    "failureThreshold": 90,
+                                    "httpGet": {
+                                        "path": "/healthz",
+                                        "port": "monitor",
+                                        "scheme": "HTTP"
+                                    },
+                                    "initialDelaySeconds": 10,
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 5
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/etc/nats-config",
+                                        "name": "config"
+                                    },
+                                    {
+                                        "mountPath": "/var/run/nats",
+                                        "name": "pid"
+                                    },
+                                    {
+                                        "mountPath": "/data",
+                                        "name": "nats-demo-nats-js"
+                                    }
+                                ]
+                            },
+                            {
+                                "args": [
+                                    "-pid",
+                                    "/var/run/nats/nats.pid",
+                                    "-config",
+                                    "/etc/nats-config/nats.conf"
+                                ],
+                                "image": "natsio/nats-server-config-reloader:0.20.1",
+                                "imagePullPolicy": "IfNotPresent",
+                                "name": "reloader",
+                                "resources": {},
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/var/run/nats",
+                                        "name": "pid"
+                                    },
+                                    {
+                                        "mountPath": "/etc/nats-config",
+                                        "name": "config"
+                                    }
+                                ]
+                            },
+                            {
+                                "args": [
+                                    "-port=7777",
+                                    "-connz",
+                                    "-routez",
+                                    "-subz",
+                                    "-varz",
+                                    "-prefix=nats",
+                                    "-use_internal_server_id",
+                                    "-jsz=all",
+                                    "http://localhost:8222/"
+                                ],
+                                "image": "natsio/prometheus-nats-exporter:0.17.3",
+                                "imagePullPolicy": "IfNotPresent",
+                                "name": "prom-exporter",
+                                "ports": [
+                                    {
+                                        "containerPort": 7777,
+                                        "name": "prom-metrics",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {},
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File"
+                            }
+                        ],
+                        "dnsPolicy": "ClusterFirst",
+                        "enableServiceLinks": false,
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "securityContext": {},
+                        "shareProcessNamespace": true,
+                        "terminationGracePeriodSeconds": 60,
+                        "volumes": [
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "nats-demo-nats-config"
+                                },
+                                "name": "config"
+                            },
+                            {
+                                "emptyDir": {},
+                                "name": "pid"
+                            }
+                        ]
+                    }
+                },
+                "updateStrategy": {
+                    "rollingUpdate": {
+                        "partition": 0
+                    },
+                    "type": "RollingUpdate"
+                },
+                "volumeClaimTemplates": [
+                    {
+                        "apiVersion": "v1",
+                        "kind": "PersistentVolumeClaim",
+                        "metadata": {
+                            "name": "nats-demo-nats-js"
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "10Gi"
+                                }
+                            },
+                            "storageClassName": "replicated",
+                            "volumeMode": "Filesystem"
+                        },
+                        "status": {
+                            "phase": "Pending"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "availableReplicas": 0,
+                "collisionCount": 0,
+                "currentReplicas": 1,
+                "currentRevision": "nats-demo-nats-55db96f9d4",
+                "observedGeneration": 1,
+                "replicas": 1,
+                "updateRevision": "nats-demo-nats-55db96f9d4",
+                "updatedReplicas": 1
+            }
+        },
+        {
+            "apiVersion": "apps/v1",
+            "kind": "StatefulSet",
+            "metadata": {
+                "annotations": {
+                    "meta.helm.sh/release-name": "redis-demo-redis",
+                    "meta.helm.sh/release-namespace": "tenant-workshop00",
+                    "storageCapacity": "1073741824"
+                },
+                "creationTimestamp": "2026-08-29T01:52:06Z",
+                "generation": 1,
+                "labels": {
+                    "app.kubernetes.io/component": "redis",
+                    "app.kubernetes.io/instance": "redis-demo-redis",
+                    "app.kubernetes.io/managed-by": "Helm",
+                    "app.kubernetes.io/name": "redis-demo-redis",
+                    "app.kubernetes.io/part-of": "redis-failover",
+                    "helm.toolkit.fluxcd.io/name": "redis-demo-redis",
+                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                    "redisfailovers-role": "slave",
+                    "redisfailovers.databases.spotahome.com/name": "redis-demo-redis"
+                },
+                "name": "rfr-redis-demo-redis",
+                "namespace": "tenant-workshop00",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "databases.spotahome.com/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "RedisFailover",
+                        "name": "redis-demo-redis",
+                        "uid": "2d06e18d-9d48-4bbe-9d5a-8384411b4d0a"
+                    }
+                ],
+                "resourceVersion": "43951804",
+                "uid": "97e2653c-b83f-4c2c-9cda-f6e87a8acd1f"
+            },
+            "spec": {
+                "persistentVolumeClaimRetentionPolicy": {
+                    "whenDeleted": "Retain",
+                    "whenScaled": "Retain"
+                },
+                "podManagementPolicy": "Parallel",
+                "replicas": 1,
+                "revisionHistoryLimit": 10,
+                "selector": {
+                    "matchLabels": {
+                        "app.kubernetes.io/component": "redis",
+                        "app.kubernetes.io/name": "redis-demo-redis",
+                        "app.kubernetes.io/part-of": "redis-failover"
+                    }
+                },
+                "serviceName": "rfr-redis-demo-redis",
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "app.kubernetes.io/component": "redis",
+                            "app.kubernetes.io/instance": "redis-demo-redis",
+                            "app.kubernetes.io/managed-by": "Helm",
+                            "app.kubernetes.io/name": "redis-demo-redis",
+                            "app.kubernetes.io/part-of": "redis-failover",
+                            "helm.toolkit.fluxcd.io/name": "redis-demo-redis",
+                            "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                            "redisfailovers-role": "slave",
+                            "redisfailovers.databases.spotahome.com/name": "redis-demo-redis"
+                        }
+                    },
+                    "spec": {
+                        "affinity": {
+                            "podAntiAffinity": {
+                                "preferredDuringSchedulingIgnoredDuringExecution": [
+                                    {
+                                        "podAffinityTerm": {
+                                            "labelSelector": {
+                                                "matchLabels": {
+                                                    "app.kubernetes.io/component": "redis",
+                                                    "app.kubernetes.io/instance": "redis-demo-redis",
+                                                    "app.kubernetes.io/managed-by": "Helm",
+                                                    "app.kubernetes.io/name": "redis-demo-redis",
+                                                    "app.kubernetes.io/part-of": "redis-failover",
+                                                    "helm.toolkit.fluxcd.io/name": "redis-demo-redis",
+                                                    "helm.toolkit.fluxcd.io/namespace": "tenant-workshop00",
+                                                    "redisfailovers-role": "slave",
+                                                    "redisfailovers.databases.spotahome.com/name": "redis-demo-redis"
+                                                }
+                                            },
+                                            "topologyKey": "kubernetes.io/hostname"
+                                        },
+                                        "weight": 100
+                                    }
+                                ]
+                            }
+                        },
+                        "containers": [
+                            {
+                                "command": [
+                                    "redis-server",
+                                    "/redis/redis.conf"
+                                ],
+                                "env": [
+                                    {
+                                        "name": "REDIS_ADDR",
+                                        "value": "redis://127.0.0.1:6379"
+                                    },
+                                    {
+                                        "name": "REDIS_PORT",
+                                        "value": "6379"
+                                    },
+                                    {
+                                        "name": "REDIS_USER",
+                                        "value": "default"
+                                    },
+                                    {
+                                        "name": "REDIS_PASSWORD",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "key": "password",
+                                                "name": "redis-demo-redis-auth"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "image": "redis:8.4.0",
+                                "imagePullPolicy": "Always",
+                                "lifecycle": {
+                                    "preStop": {
+                                        "exec": {
+                                            "command": [
+                                                "/bin/sh",
+                                                "/redis-shutdown/shutdown.sh"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "livenessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "sh",
+                                            "-c",
+                                            "redis-cli -h $(hostname) -p 6379 --user pinger --pass pingpass --no-auth-warning ping | grep PONG"
+                                        ]
+                                    },
+                                    "failureThreshold": 6,
+                                    "initialDelaySeconds": 30,
+                                    "periodSeconds": 15,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 5
+                                },
+                                "name": "redis",
+                                "ports": [
+                                    {
+                                        "containerPort": 6379,
+                                        "name": "redis",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "readinessProbe": {
+                                    "exec": {
+                                        "command": [
+                                            "/bin/sh",
+                                            "/redis-readiness/ready.sh"
+                                        ]
+                                    },
+                                    "failureThreshold": 3,
+                                    "initialDelaySeconds": 30,
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "timeoutSeconds": 5
+                                },
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "250m",
+                                        "ephemeral-storage": "2Gi",
+                                        "memory": "128Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "25m",
+                                        "ephemeral-storage": "53687091",
+                                        "memory": "134217728"
+                                    }
+                                },
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": false,
+                                    "capabilities": {
+                                        "drop": [
+                                            "ALL"
+                                        ]
+                                    },
+                                    "privileged": false,
+                                    "readOnlyRootFilesystem": true,
+                                    "runAsGroup": 1000,
+                                    "runAsNonRoot": true,
+                                    "runAsUser": 1000
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File",
+                                "volumeMounts": [
+                                    {
+                                        "mountPath": "/redis",
+                                        "name": "redis-config"
+                                    },
+                                    {
+                                        "mountPath": "/redis-shutdown",
+                                        "name": "redis-shutdown-config"
+                                    },
+                                    {
+                                        "mountPath": "/redis-readiness",
+                                        "name": "redis-readiness-config"
+                                    },
+                                    {
+                                        "mountPath": "/data",
+                                        "name": "redisfailover-persistent-data"
+                                    }
+                                ]
+                            },
+                            {
+                                "args": [
+                                    "--web.telemetry-path",
+                                    "/metrics"
+                                ],
+                                "env": [
+                                    {
+                                        "name": "REDIS_EXPORTER_LOG_FORMAT",
+                                        "value": "txt"
+                                    },
+                                    {
+                                        "name": "REDIS_ALIAS",
+                                        "valueFrom": {
+                                            "fieldRef": {
+                                                "apiVersion": "v1",
+                                                "fieldPath": "metadata.name"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "name": "REDIS_ADDR",
+                                        "value": "redis://127.0.0.1:6379"
+                                    },
+                                    {
+                                        "name": "REDIS_PORT",
+                                        "value": "6379"
+                                    },
+                                    {
+                                        "name": "REDIS_USER",
+                                        "value": "default"
+                                    },
+                                    {
+                                        "name": "REDIS_PASSWORD",
+                                        "valueFrom": {
+                                            "secretKeyRef": {
+                                                "key": "password",
+                                                "name": "redis-demo-redis-auth"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "image": "oliver006/redis_exporter:v1.55.0-alpine",
+                                "imagePullPolicy": "Always",
+                                "name": "redis-exporter",
+                                "ports": [
+                                    {
+                                        "containerPort": 9121,
+                                        "name": "metrics",
+                                        "protocol": "TCP"
+                                    }
+                                ],
+                                "resources": {
+                                    "limits": {
+                                        "cpu": "1",
+                                        "memory": "100Mi"
+                                    },
+                                    "requests": {
+                                        "cpu": "10m",
+                                        "memory": "50Mi"
+                                    }
+                                },
+                                "securityContext": {
+                                    "allowPrivilegeEscalation": false,
+                                    "capabilities": {
+                                        "drop": [
+                                            "ALL"
+                                        ]
+                                    },
+                                    "privileged": false,
+                                    "readOnlyRootFilesystem": true,
+                                    "runAsGroup": 1000,
+                                    "runAsNonRoot": true,
+                                    "runAsUser": 1000
+                                },
+                                "terminationMessagePath": "/dev/termination-log",
+                                "terminationMessagePolicy": "File"
+                            }
+                        ],
+                        "dnsPolicy": "ClusterFirst",
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "securityContext": {
+                            "fsGroup": 1000,
+                            "runAsGroup": 1000,
+                            "runAsNonRoot": true,
+                            "runAsUser": 1000
+                        },
+                        "terminationGracePeriodSeconds": 30,
+                        "volumes": [
+                            {
+                                "configMap": {
+                                    "defaultMode": 420,
+                                    "name": "rfr-redis-demo-redis"
+                                },
+                                "name": "redis-config"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 484,
+                                    "name": "rfr-s-redis-demo-redis"
+                                },
+                                "name": "redis-shutdown-config"
+                            },
+                            {
+                                "configMap": {
+                                    "defaultMode": 484,
+                                    "name": "rfr-readiness-redis-demo-redis"
+                                },
+                                "name": "redis-readiness-config"
+                            }
+                        ]
+                    }
+                },
+                "updateStrategy": {
+                    "type": "OnDelete"
+                },
+                "volumeClaimTemplates": [
+                    {
+                        "apiVersion": "v1",
+                        "kind": "PersistentVolumeClaim",
+                        "metadata": {
+                            "labels": {
+                                "app.kubernetes.io/component": "redis",
+                                "app.kubernetes.io/instance": "redis-demo-redis"
+                            },
+                            "name": "redisfailover-persistent-data",
+                            "ownerReferences": [
+                                {
+                                    "apiVersion": "databases.spotahome.com/v1",
+                                    "blockOwnerDeletion": true,
+                                    "controller": true,
+                                    "kind": "RedisFailover",
+                                    "name": "redis-demo-redis",
+                                    "uid": "2d06e18d-9d48-4bbe-9d5a-8384411b4d0a"
+                                }
+                            ]
+                        },
+                        "spec": {
+                            "accessModes": [
+                                "ReadWriteOnce"
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "storage": "1Gi"
+                                }
+                            },
+                            "storageClassName": "replicated",
+                            "volumeMode": "Filesystem"
+                        },
+                        "status": {
+                            "phase": "Pending"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "availableReplicas": 1,
+                "collisionCount": 0,
+                "currentReplicas": 1,
+                "currentRevision": "rfr-redis-demo-redis-54564b7c8d",
+                "observedGeneration": 1,
+                "readyReplicas": 1,
+                "replicas": 1,
+                "updateRevision": "rfr-redis-demo-redis-54564b7c8d",
+                "updatedReplicas": 1
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}
