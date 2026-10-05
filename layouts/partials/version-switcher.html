@@ -1,10 +1,22 @@
+{{- /* Language-aware version switcher.
+
+  params.versions[].url are default-language paths (/docs/vX/…). On a localized page
+  .Page.RelPermalink carries the language prefix (/ru/docs/vX/…), so the raw prefix
+  match below never fires there and every switch drops the reader onto the English
+  page. Strip the language base before matching, then link to a localized page when
+  one is built and to the English page otherwise.
+
+  $langBase is "" for the default language and "/ru", "/zh-cn", "/es" … for the others,
+  taken from the language's own home permalink. */ -}}
+{{- $langBase := strings.TrimSuffix "/" .Site.Home.RelPermalink -}}
 {{- if and .Site.Params.versions (gt (len .Site.Params.versions) 1) -}}
 {{- $currentPath := .Page.RelPermalink -}}
+{{- $logicalPath := strings.TrimPrefix $langBase $currentPath -}}
 {{- $currentVersionID := "" -}}
 {{- $currentVersionUrl := "" -}}
 {{- $currentVersionLabel := "" -}}
 {{- range .Site.Params.versions -}}
-  {{- if hasPrefix $currentPath .url -}}
+  {{- if hasPrefix $logicalPath .url -}}
     {{- $currentVersionID = .id -}}
     {{- $currentVersionUrl = .url -}}
     {{- $currentVersionLabel = .version -}}
@@ -24,11 +36,23 @@
   <ul class="version-switcher__menu dropdown-menu" aria-labelledby="versionSwitcherButton">
     {{- range .Site.Params.versions }}
     {{- if not .hidden }}
+    {{- /* Each target is the most specific page that is actually built, so no
+           link 404s. The pipeline translates only the latest version, so most
+           localized pages and version roots never exist. Staying on the same
+           topic matters more than staying in the language, so the order is:
+           English version root (always built), localized version root, the same
+           page in English, the same page localized. site.GetPage resolves in the
+           current-language site; hugo.Sites.Default is the English site. */ -}}
     {{- $targetPath := .url -}}
+    {{- with site.GetPage (strings.TrimRight "/" .url) -}}
+      {{- $targetPath = .RelPermalink -}}
+    {{- end -}}
     {{- if $currentVersionUrl -}}
-      {{- $subPath := strings.TrimPrefix $currentVersionUrl $currentPath -}}
-      {{- $candidatePath := printf "%s%s" .url $subPath -}}
-      {{- $trimmed := strings.TrimRight "/" $candidatePath -}}
+      {{- $subPath := strings.TrimPrefix $currentVersionUrl $logicalPath -}}
+      {{- $trimmed := strings.TrimRight "/" (printf "%s%s" .url $subPath) -}}
+      {{- with hugo.Sites.Default.GetPage $trimmed -}}
+        {{- $targetPath = .RelPermalink -}}
+      {{- end -}}
       {{- with site.GetPage $trimmed -}}
         {{- $targetPath = .RelPermalink -}}
       {{- end -}}
@@ -44,8 +68,9 @@
 </div>
 {{- else if .Site.Params.versions -}}
 {{- $currentPath := .Page.RelPermalink -}}
+{{- $logicalPath := strings.TrimPrefix $langBase $currentPath -}}
 {{- range .Site.Params.versions -}}
-  {{- if hasPrefix $currentPath .url -}}
+  {{- if hasPrefix $logicalPath .url -}}
   <span class="version-switcher__label">{{ .version }}</span>
   {{- end -}}
 {{- end -}}

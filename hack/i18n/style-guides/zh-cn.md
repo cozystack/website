@@ -1,0 +1,4 @@
+- Simplified Chinese (zh-Hans), mainland conventions; follow kubernetes.io/zh-cn glossary.
+- No spaces between Chinese characters; put a space between Chinese and Latin/number runs.
+- Use full-width Chinese punctuation (，。：；""）for Chinese text; keep half-width for code/commands.
+- Keep product/brand/CLI terms in Latin; translate prose. Common infra terms per k8s zh glossary (集群=cluster, 节点=node, 存储=storage, 工作负载=workload).

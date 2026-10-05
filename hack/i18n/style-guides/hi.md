@@ -1,0 +1,3 @@
+- Modern standard Hindi (Devanagari) as used in Indian tech writing; Hinglish is common — keep widely-used English technical terms in Latin script rather than forcing Sanskritized coinages.
+- Keep ALL technical/product terms and most infra vocabulary in English/Latin (Kubernetes, cluster, pod, deployment, storage) — translate connective prose, not jargon.
+- Professional, clear register.

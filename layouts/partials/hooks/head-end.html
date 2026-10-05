@@ -13,10 +13,14 @@
 {{/* SEO: canonical + noindex for legacy doc versions.
      Older non-latest doc versions (v0, v1.0, v1.1, …) duplicate content from
      the latest version (v1.2). Without dedup signals, search engines split
-     ranking signals across all five copies. We mark old versions as noindex
+     ranking signals across every copy. We mark old versions as noindex
      (still crawlable for users following links) and canonicalize current
      pages to themselves. */}}
-{{- $latestVersion := .Site.Params.latest_version_id | default "v1.2" -}}
+{{- $latestVersion := .Site.Params.latest_version_id -}}
+{{/* Required: an empty value would make (ne .id $latestVersion) true for EVERY
+     version, noindex-ing the entire docs tree including the latest. Fail the
+     build loudly rather than silently de-indexing everything. */}}
+{{- if not $latestVersion -}}{{- errorf "head-end.html: Site.Params.latest_version_id is required for docs noindex logic but is unset" -}}{{- end -}}
 {{- $isOldDocsVersion := false -}}
 {{- range .Site.Params.versions -}}
   {{- if and .id (ne .id $latestVersion) (ne .id "next") -}}
@@ -35,6 +39,19 @@
 <meta name="robots" content="noindex, follow" />
 {{- else }}
 <link rel="canonical" href="{{ .Permalink }}" />
+{{- end }}
+
+{{/* SEO: hreflang alternates. Emitted only when a page has translations, so
+     search engines and AI crawlers map the per-language versions to each other.
+     Language codes come from `languageCode` in hugo.yaml (proper BCP-47:
+     zh-Hans, pt-BR, …). English doubles as x-default. */}}
+{{- if gt (len .AllTranslations) 1 }}
+{{- range .AllTranslations }}
+<link rel="alternate" hreflang="{{ .Language.LanguageCode }}" href="{{ .Permalink }}" />
+{{- if eq .Language.Lang "en" }}
+<link rel="alternate" hreflang="x-default" href="{{ .Permalink }}" />
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/* JSON-LD Organization (every page) */}}
