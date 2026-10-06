@@ -322,6 +322,10 @@ menus:
     url: /oss-health/oss-insight/
     parent: resources
     weight: 4
+  - name: Security Summary
+    url: /oss-health/security/
+    parent: resources
+    weight: 5
   - name: Compliance
     identifier: compliance
     weight: 33
@@ -356,11 +360,11 @@ menus:
   - name: Community
     url: /community/
     parent: resources
-    weight: 5
+    weight: 6
   - name: Enterprise support
     url: /support
     parent: resources
-    weight: 6
+    weight: 7
   - name: GitHub
     url: https://github.com/cozystack/cozystack
     weight: 10
