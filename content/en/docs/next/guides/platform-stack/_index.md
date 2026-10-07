@@ -27,6 +27,7 @@ Cozystack-maintained charts, CRDs, controllers, and application APIs are license
 {{< oss-cards >}}
 {{< oss-card name="Kamaji" logo="kamaji" license="Apache-2.0" source="https://github.com/clastix/kamaji/blob/master/LICENSE" description="Deploys tenant Kubernetes control planes as pods in the management cluster. Enables multi-tenancy without dedicated control-plane VMs." >}}
 {{< oss-card name="Cluster API" logo="clusterapi" license="Apache-2.0" source="https://github.com/kubernetes-sigs/cluster-api/blob/main/LICENSE" description="Declarative cluster lifecycle management via Kamaji and KubeVirt providers. Enables consistent, reproducible tenant cluster provisioning and upgrades." >}}
+{{< oss-card name="Cluster API IPAM Provider In-Cluster" logo="clusterapi" license="Apache-2.0" source="https://github.com/kubernetes-sigs/cluster-api-ipam-provider-in-cluster/blob/main/LICENSE" description="Cluster API IPAM provider that assigns static addresses from in-cluster pools. Installed with the opt-in Proxmox packages; gives Proxmox VE worker VMs their addresses, including from Proxmox-backed VPC subnets." >}}
 {{< oss-card name="KubeVirt" logo="kubevirt" license="Apache-2.0" source="https://github.com/kubevirt/kubevirt/blob/main/LICENSE" description="Virtual machine management as native Kubernetes workloads. Powers Cozystack's VM service and tenant cluster worker nodes via CDI disk management." >}}
 {{< /oss-cards >}}
 

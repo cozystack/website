@@ -22,6 +22,7 @@ Pinned upstream versions of managed runtimes (PostgreSQL, MariaDB, Kafka, etc.) 
 {{< oss-card name="Kubernetes" logo="kubernetes" license="Apache-2.0" source="https://github.com/kubernetes/kubernetes/blob/master/LICENSE" description="Container orchestration kernel used for both the management cluster and tenant clusters." >}}
 {{< oss-card name="Kamaji" logo="kamaji" license="Apache-2.0" source="https://github.com/clastix/kamaji/blob/master/LICENSE" description="Hosted control planes for tenant Kubernetes clusters." >}}
 {{< oss-card name="Cluster API" logo="clusterapi" license="Apache-2.0" source="https://github.com/kubernetes-sigs/cluster-api/blob/main/LICENSE" description="Declarative provisioning of tenant Kubernetes clusters (core, operator, and Kamaji/KubeVirt providers)." >}}
+{{< oss-card name="Cluster API IPAM Provider In-Cluster" logo="clusterapi" license="Apache-2.0" source="https://github.com/kubernetes-sigs/cluster-api-ipam-provider-in-cluster/blob/main/LICENSE" description="Static address pools for Cluster API machines, used by the opt-in Proxmox packages." >}}
 {{< oss-card name="KubeVirt" logo="kubevirt" license="Apache-2.0" source="https://github.com/kubevirt/kubevirt/blob/main/LICENSE" description="Virtual machines as Kubernetes-native workloads (core, CDI, CSI, and instancetypes)." >}}
 {{< /oss-cards >}}
 
