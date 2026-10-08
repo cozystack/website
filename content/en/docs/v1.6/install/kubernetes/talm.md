@@ -133,9 +133,9 @@ When `--endpoints` is given exactly one value, init auto-derives `values.yaml::e
 **Update an existing project to the latest bundled library chart:**
 
 - `-u, --update` - re-extract `charts/talm/` and other preset-shipped files from the talm binary. `--preset` is required; `--name` is not.
-- `--force` - auto-accept every preset-template diff (skip the interactive prompt; safe to use in CI).
+- `--force` - auto-accept every preset-template diff, including the `Chart.yaml` and `values.yaml` overwrites described below.
 
-`--update` rewrites preset-shipped files only; your `values.yaml`, `secrets.yaml`, `templates/`, and `nodes/` customisations are preserved.
+`--update` rewrites preset-shipped files: `charts/talm/` outright, and `Chart.yaml`, `values.yaml` and `templates/` behind a per-file prompt that `--force` auto-accepts. Your `secrets.yaml` and `nodes/` are not preset-shipped, so they stay as they are.
 
 **Manage encrypted secrets in-place:**
 
@@ -153,6 +153,10 @@ talm init --update --preset cozystack --force  # non-interactive: auto-accept al
 ```
 
 `--update` re-syncs the vendored `charts/talm/` exactly — files that the new library no longer ships (or strays like `.DS_Store`) are pruned — and advances the preset baseline in `.talm-preset.lock`.
+
+talm v0.35.0 changes what an empty `templateOptions.kubernetesVersion` means. A `Chart.yaml` that leaves the key empty still renders while its `talosVersion` is v1.13 or older, but talm no longer substitutes a Kubernetes version of its own: it emits no image for the kubelet, for kube-proxy or for the control-plane components, so Talos picks those versions itself, and talm prints a warning on stderr saying so. Pin `templateOptions.kubernetesVersion` in `Chart.yaml` to the version the cluster actually runs. Do not raise `templateOptions.talosVersion` above v1.13 to get there: past that contract Talos keeps the Kubernetes settings in documents of their own that v0.35.0's charts do not emit, and the render stops whether or not `kubernetesVersion` is pinned — on the cozystack preset a control-plane node stops earlier still, on the preset's `machine.nodeLabels` patch, because that label moved out of `v1alpha1` at the same contract. [Talos versions and output format](https://talm.cozystack.io/configuration/talos-versions/) explains what each key selects.
+
+`--update` can undo those pins. With `--force`, or when you accept its prompt for a file, it rewrites `Chart.yaml`, `values.yaml` and `templates/` from the preset without showing a diff; of `Chart.yaml` only the chart `name` survives, and its `version` is restamped to the talm release you ran. Every other key returns to the preset's value: the two version pins, `valueFiles`, the apply timeout, any pinned `certFingerprints`. A key the preset does not ship at all is dropped outright, `strictCharts` among them, so chart drift quietly goes back to being a warning. `values.yaml` is reset the same way: an empty `endpoint` fails the next render, while an empty `floatingIP` does not — the render simply comes out with no VIP, and a node file regenerated from it carries none either. `image` goes back to the installer the preset ships (`v1.12.6` in talm v0.35.0), also without an error or a warning, and `talm upgrade` takes its target from `values.yaml` unless you pass `--image`: if your nodes run a newer Talos than the preset, the next upgrade downgrades them. Put the pinned `image` back before that upgrade. Keep both files in git and diff them after every `--update`.
 
 #### Chart Drift Detection (Talm v0.32+)
 
@@ -238,14 +242,74 @@ extraMachineFiles:
 
 The `generic` preset ships no defaults under any of these sections — each block emits only when the matching `extra*` key is non-empty.
 
-Beyond the `extra*` extension points, the `cozystack` preset exposes two opinionated tunables you can change without forking the chart:
+Beyond the `extra*` extension points, the `cozystack` preset exposes three opinionated tunables you can change without forking the chart:
 
 | Key | Default | Effect |
 | --- | --- | --- |
 | `tcpKeepaliveTuning` | `false` | When `true`, adds `net.ipv4.tcp_keepalive_time=600` / `intvl=10` / `probes=6` to `machine.sysctls`, reaping a dead idle socket in ~660s instead of the kernel default ~2h. These sysctls are kernel-wide — they change failure detection for every long-lived idle TCP connection on the node, not just DRBD — so they are opt-in. DRBD already detects dead peers in seconds via its own protocol-level ping, so leave this off unless you specifically want faster node-wide dead-socket detection. |
 | `etcd.quotaBackendBytes` | `"8589934592"` (8 GiB) | etcd backend DB size ceiling, emitted as `cluster.etcd.extraArgs.quota-backend-bytes` on controlplane nodes only. Raises etcd's own 2 GiB default so a LINSTOR-heavy control plane holding many DRBD-resource CRDs in aggregate does not trip the NOSPACE alarm. It is a ceiling, not a reservation: a small DB stays small and costs no extra RAM/disk. Set it to `""` to fall back to etcd's built-in default. This governs total DB size, not single-object size — per-object writes stay bounded by kube-apiserver's fixed 3 MiB request-body limit, which has no configuration knob. |
+| `zfs.exportOnShutdown` | `false` | When `false`, emits an `ExtensionServiceConfig` for `zfs-service` with `ZFS_EXPORT_TIMEOUT=0`, so the ZFS extension does not export the pool on shutdown and re-imports it with `zpool import -fal` on the next boot. The section below explains when to set it to `true`. |
 
 The five always-on DRBD/LINSTOR sysctls listed in the `extraSysctls` row above ship unconditionally on the `cozystack` preset — they address TCP-port exhaustion observed under DRBD reconnect storms and have no equivalent on the `generic` preset.
+
+#### ZFS pool export on shutdown (Talm v0.36+)
+
+The ZFS extension runs `zpool export -a` when the node shuts down. While DRBD holds the zvols, the export blocks in the kernel and cannot be killed, so the node stays in `rebooting` on every reboot, upgrade and reset until it is power-cycled. The `cozystack` preset turns the export off by default.
+
+The default fits a pool built on raw disks or partitions, which is the standard Cozystack layout. LUKS on top of zvols (the LINSTOR LUKS layer) and native ZFS encryption also keep raw disks under the pool, so they work with the default too.
+
+Set `zfs.exportOnShutdown: true` in two cases:
+
+- The pool is built on dm-crypt/LUKS devices. Without the export, `cryptsetup close` cannot release the device at shutdown. With this layout, bring DRBD down on the node before every reboot instead, as described below.
+- Several hosts can import the pool, for example over shared SAN or multipath storage. The export protects the pool from being imported twice.
+
+The setting takes effect on Talos v1.13.4 and later, where the ZFS extension reads `ZFS_EXPORT_TIMEOUT`. Talos v1.13.0 to v1.13.3 always export, so on those versions the document does nothing: move to v1.13.4 or later, or bring DRBD down before every reboot as described below. Earlier versions do not export at all.
+
+To keep the export with your own timeout, set `zfs.exportOnShutdown: true` and add your own `zfs-service` document. A `ZFS_EXPORT_TIMEOUT` placed in a node file is appended next to the preset's entry instead of replacing it.
+
+Node files written by `talm template` carry the rendered `zfs-service` document, and `talm apply` merges it back over the chart. After switching to `true`, remove that document from every node file, or regenerate the files, otherwise the export stays disabled.
+
+##### One-time reboot on a running cluster
+
+An existing project gets the document only after its preset templates are updated: run `talm init --update --preset cozystack` after upgrading the talm binary, review the template diff, then `talm apply` each node. No `values.yaml` change is needed, since a missing `zfs` key means the default.
+
+The running `zfs-service` keeps the environment it was started with. On a node currently running Talos v1.13.0 or later, the first reboot after the change, including the one inside `talm upgrade`, still runs the export and can hang. Nodes on older Talos do not export, so their first reboot is safe. For that one reboot, handle each affected node in turn:
+
+1. Drain the node:
+
+   ```bash
+   kubectl drain <node> --ignore-daemonsets --delete-emptydir-data
+   ```
+
+2. Bring DRBD down on the node:
+
+   ```bash
+   kubectl exec -n cozy-linstor ds/linstor-satellite.<node> -- drbdadm down all
+   ```
+
+3. Check that no zvol has a holder left. The command must print nothing, and any holder it lists blocks the reboot:
+
+   ```bash
+   kubectl exec -n cozy-linstor ds/linstor-satellite.<node> -- sh -c 'find /sys/block/zd*/holders -mindepth 1 2>/dev/null'
+   ```
+
+   A `drbd*` holder means a resource is still up, usually one still Primary on this node. Find it with `drbdsetup status` in the same pod and repeat step 2 once nothing uses it.
+
+   A `dm-*` holder is usually the dm-crypt mapping of a resource with the LINSTOR LUKS layer, which stays open after DRBD goes down. Close it by name, with `dm-N` replaced by the device the check printed:
+
+   ```bash
+   kubectl exec -n cozy-linstor ds/linstor-satellite.<node> -- sh -c 'cryptsetup close "$(cat /sys/block/dm-N/dm/name)"'
+   ```
+
+4. Reboot the node right away, or run `talm upgrade` for it.
+
+5. Once the node is back and `Ready`, return it to scheduling:
+
+   ```bash
+   kubectl uncordon <node>
+   ```
+
+From the next boot on, the setting is in effect and reboots need no manual steps. Clusters installed with the document already in their config are not affected.
 
 #### Describing the node's network and registries from values (Talm v0.34+)
 

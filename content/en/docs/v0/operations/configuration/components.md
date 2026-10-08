@@ -60,7 +60,11 @@ data:
 
 Disabling components must be done before installing Cozystack.
 Applying updated configuration with `bundle-disable` will not remove components that are already installed.
-To remove already installed components, delete the Helm release manually using this command:
+To remove already installed components, delete the Helm release manually.
+
+{{% alert title="Warning" color="warning" %}}
+Uninstalling the component's Helm release destroys more than the workloads. Anything the chart rendered as an ordinary template without `helm.sh/resource-policy: keep` goes with the release, CRDs and namespaces included, and Kubernetes deletes every custom resource of those CRD kinds along with them. Removing `metallb` takes every CRD the MetalLB chart bundles, subcharts included, and with them every custom resource of those kinds cluster-wide. Back up anything you still need first.
+{{% /alert %}}
 
 ```bash
 kubectl delete hr -n <namespace> <component>
