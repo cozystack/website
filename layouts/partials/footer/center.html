@@ -1,7 +1,10 @@
-{{ partial "footer/copyright.html" . -}}
+{{- /* Docsy's footer/copyright.html prints "© <year>" without the word "Copyright"; the CNCF website guidelines ask for "Copyright <project> a Series of LF Projects, LLC" and the lfprojects.org policies line on every page. */ -}}
+<span class="td-footer__copyright">Copyright &copy; {{ now.Year }} <span class="td-footer__authors">{{ site.Params.copyright }}</span></span>
+{{- with T "footer_all_rights_reserved" }}<span class="td-footer__all_rights_reserved">{{ . }}</span>{{ end }}
 <a class="td-footer__badge ms-2" href="https://www.bestpractices.dev/projects/10177" target="_blank" rel="noopener noreferrer">
   <img src="https://www.bestpractices.dev/projects/10177/badge" alt="OpenSSF Best Practices badge">
 </a>
+<p class="td-footer__policies mt-2 mb-0">For website terms of use, trademark policy and other project policies please see <a href="https://lfprojects.org/policies/">lfprojects.org/policies</a>.</p>
 
 {{ with .Site.Params.privacy_policy -}}
   <span class="ms-2"><a href="{{ . }}" target="_blank" rel="noopener">{{ T "footer_privacy_policy" }}</a></span>
