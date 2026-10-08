@@ -25,7 +25,7 @@ Everything else is stored as before. In the admin console, a search by username 
 Encrypted values start with the `$KKP$` marker.
 
 {{% alert color="warning" %}}
-Always set `encryption.deksetSecretName`. Without it, the proxy generates a new DEK every time it starts and keeps it only in memory, so after a restart of the proxy pod it can no longer decrypt anything it has encrypted before.
+The proxy needs a persistent DEK set, `encryption.deksetSecretName`. Without one it would generate a new DEK every time it starts and keep it only in memory, so after a restart of the proxy pod it could no longer decrypt anything it had encrypted before. The chart refuses to enable encryption without it.
 {{% /alert %}}
 
 ## Prerequisites
@@ -164,7 +164,7 @@ kubectl apply --server-side --filename keycloak-package.yaml
 flux resume helmrelease keycloak --namespace cozy-keycloak
 ```
 
-Flux deploys the proxy and updates Keycloak to point at it. If the `keycloak` StatefulSet stays at zero replicas afterwards, scale it back with `kubectl --namespace cozy-keycloak scale statefulset keycloak --replicas="$REPLICAS"`. With a shared DEK set the proxy can run more than one replica; without `deksetSecretName`, `replicas` above 1 is refused.
+Flux deploys the proxy and updates Keycloak to point at it. If the `keycloak` StatefulSet stays at zero replicas afterwards, scale it back with `kubectl --namespace cozy-keycloak scale statefulset keycloak --replicas="$REPLICAS"`. Because the DEK set is shared, the proxy can run more than one replica.
 
 If Vault uses a private CA, add it as `encryption.kms.vault.caBundle` (PEM), or reference an existing Secret with `encryption.kms.vault.caSecretName` and `caSecretKey`.
 
