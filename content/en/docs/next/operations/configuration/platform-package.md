@@ -99,6 +99,8 @@ spec:
 | `networking.serviceCIDR` | `"10.96.0.0/16"` | The service subnet used by Services to assign IPs. Kube-OVN only. |
 | `networking.joinCIDR` | `"100.64.0.0/16"` | The `join` subnet for network communication between the Node and Pod. Follow the [kube-ovn] documentation to learn more. Kube-OVN only. |
 | `networking.kubeovn.MASTER_NODES` | `""` | Comma-separated list of KubeOVN master node IPs. By default, KubeOVN uses `lookup` to find control-plane nodes by label `node-role.kubernetes.io/control-plane`. On fresh clusters, lookup may return empty results. Set this to override. |
+| `networking.stageCniPlugins` | unset (on) | Installs the upstream reference CNI plugins (`bridge`, `macvlan`, `ipvlan` and others) from the multus image into `/opt/cni/bin` on every node, so Multus NetworkAttachmentDefinitions can delegate to them. Talos ships only some of them and generic Linux gives no guarantee at all. Unset means on; set `false` for nodes whose `/opt/cni/bin` is managed by something else. Accepted spellings are `true`/`yes`/`on`/`1` and `false`/`no`/`off`/`0`, and anything else stops the whole platform render. When on, the plugins are rewritten every time the Multus pod is recreated. |
+| `networking.multus.resources` | unset | Resources of the `kube-multus` container, merged over the multus chart defaults: requests of `100m` CPU and `100Mi` memory, a `4Gi` memory limit and no CPU limit. Unset keeps the defaults. A value that is not a map stops the platform render, and the multus release refuses to render without a memory limit and a memory request. |
 
 #### Bundles
 
