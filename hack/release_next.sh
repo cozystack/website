@@ -18,6 +18,7 @@ Given a release tag like v1.3.0, derives DOC_VERSION (v1.3) and:
 The /docs/v<major>/ short path is handled dynamically by layouts/404.html,
 which reads Site.Params.latest_version_id and redirects. No Hugo alias is
 emitted for that path, so no release-time alias shuffling is needed.
+The docs links in /llms.txt follow the same value (layouts/home.llms.txt).
 
 Only accepts final release tags (vX.Y.Z); pre-release tags like vX.Y.Z-rc1
 are rejected — those should accumulate in next/ via update-all.

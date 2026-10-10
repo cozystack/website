@@ -146,6 +146,9 @@ languages:
     languageName: English
     languageCode: en
     weight: 1
+    # html and rss are the Hugo defaults; llms adds /llms.txt (see outputFormats).
+    outputs:
+      home: [html, rss, llms]
     params:
       time_format_default: 2006-01-02
       time_format_blog: 2006-01-02
@@ -180,6 +183,16 @@ languages:
 
 permalinks:
   blog: /:section/:year/:month/:slug/
+
+# /llms.txt (https://llmstxt.org), rendered from layouts/home.llms.txt so its
+# docs links follow params.latest_version_id. Enabled only for the English home
+# page (languages.en.outputs), so no /<lang>/llms.txt copies are emitted.
+outputFormats:
+  llms:
+    mediaType: text/plain
+    baseName: llms
+    isPlainText: true
+    notAlternative: true
 
 
 params:
