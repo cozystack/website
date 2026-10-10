@@ -55,7 +55,7 @@ or just need a minimal Kubernetes cluster.
 [k8s]: {{% ref "/docs/v0/kubernetes" %}}
 [api]: {{% ref "/docs/v0/cozystack-api" %}}
 [monitoring subsystem]: {{% ref "/docs/v0/guides/platform-stack#victoria-metrics" %}}
-[linstor]: {{% ref "/docs/v0/guides/platform-stack#drbd" %}}
+[linstor]: {{% ref "/docs/v0/guides/platform-stack#drbd-and-linstor" %}}
 [kube-ovn]: {{% ref "/docs/v0/guides/platform-stack#kube-ovn" %}}
 [cilium]: {{% ref "/docs/v0/guides/platform-stack#cilium" %}}
 [kubevirt]: {{% ref "/docs/v0/guides/platform-stack#kubevirt" %}}

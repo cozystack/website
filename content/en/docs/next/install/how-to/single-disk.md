@@ -11,7 +11,7 @@ Default Talos setup assumes that each node has a primary and secondary disks, us
 However, it's possible to use a single disk, allocating space for user storage.
 
 This configuration must be applied with the first [`talosctl apply`]({{% ref "/docs/next/install/kubernetes/talosctl#3-apply-node-configuration" %}})
-or [`talm apply`]({{% ref "/docs/next/install/kubernetes/talm#3-apply-node-configuration" %}})
+or [`talm apply`]({{% ref "/docs/next/install/kubernetes/talm#41-apply-configuration-files" %}})
 — the one with the `-i` (`--insecure`) flag.
 Applying changes after initialization will not have any effect.
 

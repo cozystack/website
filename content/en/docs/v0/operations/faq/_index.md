@@ -49,7 +49,7 @@ Most cloud providers don't support MetalLB.
 Instead of using it, you can expose the main ingress controller using the external IPs method.
 
 For deploying on Hetzner, follow the specialized [Hetzner installation guide]({{% ref "/docs/v0/install/providers/hetzner" %}}).
-For other providers, follow the [Cozystack installation guide, Public IP Setup]({{% ref "/docs/v0/install/cozystack#4b-public-ip-setup" %}}).
+For other providers, follow the [Cozystack installation guide, Public IP Setup]({{% ref "/docs/v0/install/cozystack#4b-node-public-ip-setup" %}}).
 
 </details>
 <br>
