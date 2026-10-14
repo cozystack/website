@@ -320,7 +320,7 @@ Pick it when certificates are issued outside the cluster — a corporate CA, an 
 
 ### edge (TLS terminated by the class provider)
 
-This mode is not selected by a certificate value. A tenant lands in it when the class its Gateway resolves to is listed in `gateway.edgeTerminatedClasses` — the class provider ends TLS upstream and forwards cleartext to the Gateway, so there is nothing for the Gateway to present and nothing for cert-manager to issue. A Cloudflare Tunnel is the worked example; see [Publishing through a Cloudflare Tunnel]({{% ref "/docs/next/networking/cloudflare-tunnel" %}}).
+This mode is not selected by a certificate value. A tenant lands in it when the class its Gateway resolves to is listed in `gateway.edgeTerminatedClasses` — the class provider ends TLS upstream and forwards cleartext to the Gateway, so there is nothing for the Gateway to present and nothing for cert-manager to issue.
 
 What changes on the Gateway:
 
