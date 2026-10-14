@@ -53,7 +53,7 @@ Read more: [tenant Kubernetes clusters]({{% ref "/docs/next/kubernetes" %}}).
 ## Managed Applications
 
 Cozystack comes with a catalog of **managed applications** (services) that can be deployed on the platform with minimal effort.
-These include relational databases (PostgreSQL, MySQL/MariaDB), NoSQL/queues (Redis, NATS, Kafka, RabbitMQ), HTTP cache, load balancer, and others.
+These include relational databases (PostgreSQL, MySQL/MariaDB), NoSQL/queues (Redis, NATS, Kafka, RabbitMQ), load balancer, and others.
 
 Tenants, tenant Kubernetes clusters, and VMs are also managed applications in terms of Cozystack.
 They are created with the same user workflow and are managed with Helm and Flux, just as other applications.

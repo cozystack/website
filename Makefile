@@ -75,7 +75,7 @@ endif
 APPS       ?= tenant clickhouse foundationdb harbor redis mongodb openbao rabbitmq postgres nats kafka mariadb qdrant
 K8S       ?= kubernetes
 VMS       ?= vm-disk vm-instance
-NETWORKING       ?= vpc vpn http-cache tcp-balancer
+NETWORKING       ?= vpc vpn tcp-balancer
 SERVICES       ?= bootbox etcd ingress monitoring seaweedfs
 APPS_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/applications
 K8S_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)

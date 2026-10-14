@@ -127,8 +127,6 @@ Pinned upstream versions of managed runtimes (PostgreSQL, MariaDB, Kafka, etc.) 
 ## Managed networking services
 
 {{< oss-cards >}}
-{{< oss-card name="NGINX" logo="nginx" license="BSD-2-Clause" source="https://github.com/nginx/nginx/blob/master/LICENSE" description="Used by the managed HTTP Cache service." >}}
-{{< oss-card name="HAProxy" logo="haproxy" license="GPL-2.0 with exceptions" source="https://github.com/haproxy/haproxy/blob/master/LICENSE" description="Used by the managed TCP Balancer and HTTP Cache services." >}}
-{{< oss-card name="IP2Location modules" license="MIT" source="https://github.com/ip2location/ip2location-nginx/blob/master/LICENSE" description="GeoIP modules bundled into the HTTP Cache (IP2Location and IP2Proxy)." >}}
+{{< oss-card name="HAProxy" logo="haproxy" license="GPL-2.0 with exceptions" source="https://github.com/haproxy/haproxy/blob/master/LICENSE" description="Used by the managed TCP Balancer service." >}}
 {{< oss-card name="Outline Server (Shadowsocks)" logo="outline" license="Apache-2.0" source="https://github.com/OutlineFoundation/outline-server/blob/master/LICENSE" description="Backs the managed VPN service." >}}
 {{< /oss-cards >}}
