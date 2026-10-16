@@ -131,4 +131,6 @@ Pinned upstream versions of managed runtimes (PostgreSQL, MariaDB, Kafka, etc.) 
 {{< oss-card name="HAProxy" logo="haproxy" license="GPL-2.0 with exceptions" source="https://github.com/haproxy/haproxy/blob/master/LICENSE" description="Used by the managed TCP Balancer and HTTP Cache services." >}}
 {{< oss-card name="IP2Location modules" license="MIT" source="https://github.com/ip2location/ip2location-nginx/blob/master/LICENSE" description="GeoIP modules bundled into the HTTP Cache (IP2Location and IP2Proxy)." >}}
 {{< oss-card name="Outline Server (Shadowsocks)" logo="outline" license="Apache-2.0" source="https://github.com/OutlineFoundation/outline-server/blob/master/LICENSE" description="Backs the managed VPN service." >}}
+
+{{< oss-card name="barerouter" license="Apache-2.0 (build scripts); per-package licenses (image)" source="https://github.com/aenix-io/barerouter/blob/main/LICENSE" description="Gateway VM image of the managed Site Router, built from the VyOS rolling sources without VyOS branding. Not produced or endorsed by VyOS Inc." >}}
 {{< /oss-cards >}}
