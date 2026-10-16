@@ -124,6 +124,10 @@ spec:
             - vm-exportproxy
 ```
 
+Some packages of the `iaas` bundle are opt-in on `isp-full` and `isp-full-generic`: they are installed only when listed in `bundles.enabledPackages`.
+One of them is `cozystack.proxmox-network`, which backs tenant VPC subnets with Proxmox VE VLANs and brings the in-cluster Cluster API IPAM provider along.
+It is a proposed feature that is not in any release yet; see [Setting up Proxmox-backed VPC subnets]({{% ref "/docs/next/operations/vpc/proxmox-network" %}}).
+
 ### `isp-full-generic`
 
 `isp-full-generic` provides the same full-featured PaaS and IaaS experience as `isp-full`, but is designed for generic Kubernetes distributions such as k3s, kubeadm, or RKE2.
