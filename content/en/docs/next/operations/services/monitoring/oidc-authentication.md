@@ -48,7 +48,7 @@ Cozystack provisions the following. Every derived identifier below uses `<releas
 - A per-instance **`KeycloakClientScope`** whose audience mapper pins the token's `aud` claim to that same `clientId` — the isolation primitive.
 - A persistent Kubernetes **Secret** carrying the confidential `client-secret` (random on first install, preserved on upgrades).
 - A chart-owned **users-reconcile Job** (`<release>-oidc-users`) that syncs `spec.oidc.users[]` into the Grafana instance on every reconcile: creates missing Grafana accounts, patches roles, and prunes stale org members. Runs as a post-install / post-upgrade hook when `users[]` is non-empty; omitted otherwise (BYO-IdP-friendly).
-- An **`auth.generic_oauth`** entry under the Grafana CR's **`spec.config`** (a single ini-section key literally named `auth.generic_oauth`, so it is addressed as `spec.config["auth.generic_oauth"]`, not a two-level `auth` / `generic_oauth` nesting), wired to the cozy realm issuer, per-instance audience scope, and the tenant-membership gate:
+- An **`auth.generic_oauth`** entry under the Grafana CR's **`spec.config`** (a single ini-section key literally named `auth.generic_oauth`, so it is addressed as `spec.config["auth.generic_oauth"]`, not a two-level `auth` / `generic_oauth` nesting), wired to the platform realm issuer (`cozy` by default, set via `authentication.oidc.realmName`), per-instance audience scope, and the tenant-membership gate:
 
   ```ini
   allowed_groups        = <namespace>-view <namespace>-use <namespace>-admin <namespace>-super-admin
