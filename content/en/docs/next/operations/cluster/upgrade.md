@@ -27,6 +27,8 @@ To learn more about Cozystack release process, read the [Cozystack Release Workf
 
 ## Upgrading Cozystack
 
+Before moving to a new minor version, read the upgrade notes of every minor version you cross, such as [Upgrading from v1.6 to v1.7]({{% ref "/docs/next/operations/cluster/upgrade-to-v1.7" %}}). Some changes need an action before the upgrade starts.
+
 ### 1. Check the cluster status
 
 Before upgrading, check the current status of your Cozystack cluster by following steps from
