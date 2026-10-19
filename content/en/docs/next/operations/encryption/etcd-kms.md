@@ -27,7 +27,7 @@ The plugin must be a static pod rather than a Deployment: kube-apiserver needs i
 - Talm v0.35.0 or later. Earlier releases cannot render configuration for Talos v1.14 nodes. Keep `talosVersion` in `Chart.yaml` at `v1.13` or lower, as the Talm documentation requires.
 - A HashiCorp Vault server reachable from every control-plane node, with permission to enable a secrets engine and an auth method. The examples below use `https://vault.example.com:8200`.
 - `talosctl` with the `os:admin` role, and `kubectl` with cluster-admin access to the management cluster.
-- For verification: `etcd`, `etcdutl` and `etcdctl` binaries of the same minor version as the cluster etcd (Talos v1.14.1 runs etcd v3.7.1), and `jq`.
+- For verification: `etcd`, `etcdutl` and `etcdctl` binaries of the same minor version as the cluster etcd (Talos v1.14.2, which Cozystack pins, runs etcd v3.7.1), and `jq`.
 
 {{% alert color="warning" %}}
 Vault becomes a dependency of the Kubernetes API. If the Transit key is lost, every Secret encrypted with it is lost as well, and an etcd backup does not help: it holds only ciphertext. Back up Vault, and never delete or trim the Transit key while Secrets encrypted with it may still exist.
