@@ -4,9 +4,17 @@
 #
 # Subcommands:
 #   check           (default) Run every guard; exit non-zero on any gap.
-#   update-digests  Recompute and rewrite `source_digest` in every translated
-#                   page from its English source. Run this after editing an
-#                   English source or after adding/refreshing a translation.
+#                   Hand-localized pages (l10n: transcreate) get a ::warning::
+#                   instead of an error when they drift: the pipeline never
+#                   regenerates them, so drift is a report for a human, not a
+#                   build failure.
+#   update-digests [file...]
+#                   Recompute and rewrite `source_digest` in translated pages
+#                   from their English source. Run after editing an English
+#                   source or after adding/refreshing a translation. Without
+#                   arguments, hand-localized pages are SKIPPED (a wholesale
+#                   re-stamp would silence their drift report); pass the file
+#                   explicitly to re-stamp one you refreshed by hand.
 #
 # Guards run by `check`:
 #   1. i18n key parity  — every i18n/<lang>.toml must define exactly the same
@@ -67,12 +75,63 @@ translated_digest_files() {
     | sort
 }
 
+# A page a human localized by hand (l10n: transcreate). The pipeline never
+# regenerates these, so a stale digest here is a drift REPORT, not a build
+# failure — and re-stamping it wholesale would silence the report while the
+# drift persists.
+#
+# The value is read by lib.l10n_mode, the same YAML parser the pipeline uses, so
+# the two can never disagree: `l10n: 'transcreate'` and `l10n: transcreate # note`
+# are the same value, and a shell regex accepting only some forms would let CI
+# treat as machine output a page the pipeline protects. Needs python3 with pyyaml;
+# without it the lint stops rather than guessing.
+L10N_READER='import sys; sys.path.insert(0, sys.argv[1]); import lib; print(lib.l10n_mode(sys.argv[2]) or "")'
+is_transcreate() {
+  local mode
+  if ! mode="$(python3 -c "$L10N_READER" "$(dirname "$0")/i18n" "$1" 2>&1)"; then
+    echo "::error::cannot read l10n from $1 (python3 with pyyaml required): $mode" >&2
+    exit 2
+  fi
+  [ "$mode" = "transcreate" ]
+}
+
 # Map content/<lang>/<rel> -> content/en/<rel>
 en_source_for() {
   local f="$1"
   local stripped="${f#"$CONTENT_DIR"/}"      # <lang>/<rel>
   local rel="${stripped#*/}"                   # <rel>
   echo "$CONTENT_DIR/$DEFAULT_LANG/$rel"
+}
+
+# The latest docs version (params.latest_version_id in hugo.yaml). The pipeline
+# only ever refreshes the latest version, so a stale digest on an older,
+# noindex'd version is not something a PR can fix by rerunning. Read once and
+# cached. lib.py fails closed on a missing key; here we degrade to an empty
+# value, which turns is_superseded_docs into a no-op (nothing is treated as
+# superseded) rather than silencing a genuine error.
+LATEST_DOCS=""
+latest_docs_version() {
+  local hugo; hugo="$(dirname "$CONTENT_DIR")/hugo.yaml"
+  [ -f "$hugo" ] || return 0
+  grep -m1 -E '^[[:space:]]*latest_version_id:' "$hugo" \
+    | sed -E "s/.*latest_version_id:[[:space:]]*[\"']?([^\"'[:space:]]+)[\"']?.*/\\1/"
+}
+
+# True when f is a translated docs page of a NON-latest version
+# (content/<lang>/docs/<ver>/... with ver != latest). Such a page is out of the
+# pipeline's scope: it is never refreshed and is removed by the next pipeline
+# run (find_orphan_translations), so a drifted digest on it must be advisory,
+# not a CI blocker for every unrelated PR in the repo.
+is_superseded_docs() {
+  [ -n "$LATEST_DOCS" ] || return 1
+  local rel="${1#"$CONTENT_DIR"/}"; rel="${rel#*/}"   # <rel> under the lang
+  case "$rel" in
+    docs/*/*)
+      local ver="${rel#docs/}"; ver="${ver%%/*}"
+      [ "$ver" != "$LATEST_DOCS" ]
+      ;;
+    *) return 1 ;;
+  esac
 }
 
 check_key_parity() {
@@ -115,7 +174,12 @@ check_key_parity() {
 check_digest_freshness() {
   local rc=0
   local checked=0
+  local warned=0
   local f
+  LATEST_DOCS="$(latest_docs_version)"
+  # A value that names no docs tree (a bad parse, a typo) must not mark every
+  # versioned page as superseded and downgrade real drift to a warning.
+  [ -d "$CONTENT_DIR/$DEFAULT_LANG/docs/$LATEST_DOCS" ] || LATEST_DOCS=""
   while IFS= read -r f; do
     [ -z "$f" ] && continue
     local src expected actual
@@ -129,26 +193,66 @@ check_digest_freshness() {
     actual="$(grep -m1 -E '^source_digest:' "$f" | sed -E 's/.*sha256:([0-9a-fA-F]+).*/\1/')"
     checked=$((checked + 1))
     if [ "$actual" != "$expected" ]; then
-      rc=1
-      echo "::error::stale translation: $f"
-      echo "    English source: $src"
-      echo "    recorded digest: sha256:${actual}"
-      echo "    current  digest: sha256:${expected}"
-      echo "    fix: refresh the translation, then run 'hack/check-i18n.sh update-digests'"
+      if is_transcreate "$f"; then
+        # Advisory by design: a drifted transcreation is refreshed when a
+        # human decides to, and must not block unrelated PRs meanwhile.
+        warned=$((warned + 1))
+        echo "::warning::hand-localized page drifted from its English source: $f"
+        echo "    refresh the transcreation by hand, then re-stamp it with:"
+        echo "    hack/check-i18n.sh update-digests $f"
+      elif is_superseded_docs "$f"; then
+        # Out of the pipeline's scope: the latest version is $LATEST_DOCS, the
+        # pipeline never refreshes older versions, and its next run removes this
+        # page as a superseded orphan. Failing the lint here would block every
+        # unrelated PR on a page no PR can fix by rerunning the pipeline.
+        warned=$((warned + 1))
+        echo "::warning::stale translation of a superseded docs version (latest is $LATEST_DOCS): $f"
+        echo "    the pipeline removes superseded translations on its next run; not a blocker."
+      else
+        rc=1
+        echo "::error::stale translation: $f"
+        echo "    English source: $src"
+        echo "    recorded digest: sha256:${actual}"
+        echo "    current  digest: sha256:${expected}"
+        echo "    fix: refresh the translation, then run 'hack/check-i18n.sh update-digests'"
+      fi
     fi
   done < <(translated_digest_files)
-  [ "$rc" -eq 0 ] && echo "translation freshness: OK ($checked translated pages match their English source)"
+  if [ "$rc" -eq 0 ] && [ "$warned" -eq 0 ]; then
+    echo "translation freshness: OK ($checked translated pages match their English source)"
+  elif [ "$rc" -eq 0 ]; then
+    echo "translation freshness: no blocking drift ($checked translated pages checked, $warned advisory warning(s) above)"
+  fi
   return "$rc"
 }
 
 update_digests() {
+  # With explicit files, re-stamp exactly those — the escape hatch for a
+  # transcreation a human just refreshed. With no arguments, re-stamp every
+  # machine-translated page but SKIP hand-localized ones: their stale digest
+  # is the only signal that the transcreation drifted, and a wholesale
+  # re-stamp would silence it while the drift persists.
   local f
-  while IFS= read -r f; do
+  {
+    # `|| true`: with zero stamped translations the underlying grep exits 1,
+    # which under `set -euo pipefail` would silently kill the whole script.
+    if [ "$#" -gt 0 ]; then printf '%s\n' "$@"; else translated_digest_files || true; fi
+  } | while IFS= read -r f; do
     [ -z "$f" ] && continue
+    if [ "$#" -eq 0 ] && is_transcreate "$f"; then
+      echo "skip $f — hand-localized (l10n: transcreate); refresh it by hand, then: hack/check-i18n.sh update-digests $f"
+      continue
+    fi
     local src expected tmp
     src="$(en_source_for "$f")"
     if [ ! -f "$src" ]; then
       echo "::warning::skip $f — English source missing: $src"
+      continue
+    fi
+    # The awk below only REWRITES an existing line; without this check a page
+    # missing the field would pass through untouched yet be reported "updated".
+    if ! grep -qE '^source_digest:' "$f"; then
+      echo "::warning::skip $f — no source_digest line in the front matter; add one, then re-run"
       continue
     fi
     expected="$(sha256 "$src")"
@@ -159,7 +263,7 @@ update_digests() {
     ' "$f" > "$tmp"
     mv "$tmp" "$f"
     echo "updated $f -> sha256:${expected}"
-  done < <(translated_digest_files)
+  done
 }
 
 cmd="${1:-check}"
@@ -171,10 +275,11 @@ case "$cmd" in
     exit "$rc"
     ;;
   update-digests)
-    update_digests
+    shift
+    update_digests "$@"
     ;;
   *)
-    echo "usage: $0 [check|update-digests]" >&2
+    echo "usage: $0 [check|update-digests [file...]]" >&2
     exit 2
     ;;
 esac

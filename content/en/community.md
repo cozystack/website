@@ -14,7 +14,6 @@ Cozystack is a CNCF project built in the open. Everything below is public and op
 | Where | What it is for |
 |---|---|
 | [Telegram — English](https://t.me/cozystack) | Day-to-day questions, the fastest place to get an answer |
-| [Telegram — Russian](https://t.me/cozystack_ru) | Same, in Russian |
 | [CNCF Slack — #cozystack](https://cloud-native.slack.com/archives/C08BQJD95J7) | Discussion inside the CNCF workspace |
 | [Kubernetes Slack — #cozystack](https://kubernetes.slack.com/archives/C06L3CPRVN1) | Discussion inside the Kubernetes workspace ([get an invite](https://slack.kubernetes.io/)) |
 | [GitHub Discussions](https://github.com/cozystack/cozystack/discussions) | Usage questions and early ideas worth keeping |

@@ -1,3 +1,21 @@
+{{- /*
+  Served as /llms.txt. Only the English home page renders it: the llms output
+  format is defined in hugo.yaml and enabled under languages.en.outputs there.
+
+  The versioned docs links follow params.latest_version_id, so promoting a new
+  release needs no edit here. The build fails if a linked page is missing from
+  the latest version, so a renamed page cannot leave a dead link behind.
+*/ -}}
+{{- $latest := site.Params.latest_version_id -}}
+{{- $docs := dict -}}
+{{- range $name, $path := dict "quickstart" "getting-started" "components" "guides/platform-stack" "architecture" "guides/concepts" -}}
+  {{- $ref := printf "/docs/%s/%s" $latest $path -}}
+  {{- with site.GetPage $ref -}}
+    {{- $docs = merge $docs (dict $name (printf "https://cozystack.io%s" .RelPermalink)) -}}
+  {{- else -}}
+    {{- errorf "llms.txt: %s does not exist; update the link in layouts/home.llms.txt" $ref -}}
+  {{- end -}}
+{{- end -}}
 # Cozystack
 
 > Cozystack is an open-source, CNCF Sandbox cloud platform that provides Kubernetes-based, multi-tenant cloud infrastructure. Apache 2.0 license. CNCF Sandbox project since 2024-09-26. CNCF-Certified Kubernetes Distribution. Maintained by Aenix and the Cozystack community.
@@ -23,9 +41,9 @@ Apache License, Version 2.0. See https://github.com/cozystack/cozystack/blob/mai
 ## Project documentation
 
 - [Documentation](https://cozystack.io/docs/): Full project documentation including installation, architecture, components, operations
-- [Quickstart](https://cozystack.io/docs/get-started/): Get up and running with Cozystack
-- [Components](https://cozystack.io/docs/components/): Detailed component reference
-- [Architecture](https://cozystack.io/docs/architecture/): How Cozystack is structured
+- [Quickstart]({{ $docs.quickstart }}): Get up and running with Cozystack
+- [Components]({{ $docs.components }}): Detailed component reference
+- [Architecture]({{ $docs.architecture }}): How Cozystack is structured
 
 ## Releases and source code
 
