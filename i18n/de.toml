@@ -92,3 +92,6 @@ other = 'Einen Fehler entdeckt? <a href="{{ .IssueURL }}">Eröffnen Sie ein Issu
 
 [translation_see_original]
 other = 'Siehe das <a href="{{ .Link }}">englische Original</a>.'
+
+[docs_older_versions]
+other = "Ältere Versionen"

@@ -92,3 +92,6 @@ other = 'कोई त्रुटि मिली? <a href="{{ .IssueURL }}">Is
 
 [translation_see_original]
 other = '<a href="{{ .Link }}">अंग्रेज़ी मूल</a> देखें।'
+
+[docs_older_versions]
+other = "पुराने संस्करण"
