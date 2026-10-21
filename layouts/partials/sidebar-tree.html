@@ -35,11 +35,21 @@
         {{- end -}}
       {{- end -}}
     {{- end -}}
+    {{- $hideRoots := slice -}}
+    {{- /* Never prune the version the page belongs to. .Path is the content path, so
+           this holds even when the prefix match above misses (subpath baseURL,
+           defaultContentLanguageInSubdir) and the tree is rooted at /docs/. */ -}}
+    {{- range (partial "docs-versions.html" .).older -}}
+      {{- $root := strings.TrimRight "/" .url -}}
+      {{- if not (or (eq $.Page.Path $root) (hasPrefix $.Page.Path (printf "%s/" $root))) -}}
+        {{- $hideRoots = $hideRoots | append $root -}}
+      {{- end -}}
+    {{- end -}}
     {{ $ulNr := 0 -}}
     {{ $ulShow := cond (isset .Site.Params.ui "ul_show") .Site.Params.ui.ul_show 1 -}}
     {{ $sidebarMenuTruncate := cond (isset .Site.Params.ui "sidebar_menu_truncate") .Site.Params.ui.sidebar_menu_truncate 50 -}}
     <ul class="td-sidebar-nav__section pr-md-3 ul-{{ $ulNr }}">
-      {{ template "section-tree-nav-section" (dict "page" . "section" $navRoot "shouldDelayActive" $shouldDelayActive "sidebarMenuTruncate" $sidebarMenuTruncate "ulNr" $ulNr "ulShow" (add $ulShow 1)) }}
+      {{ template "section-tree-nav-section" (dict "page" . "section" $navRoot "shouldDelayActive" $shouldDelayActive "sidebarMenuTruncate" $sidebarMenuTruncate "ulNr" $ulNr "ulShow" (add $ulShow 1) "hideRoots" $hideRoots) }}
     </ul>
   </nav>
 </div>
@@ -51,6 +61,7 @@
 {{ $treeRoot := cond (eq .ulNr 0) true false -}}
 {{ $ulNr := .ulNr -}}
 {{ $ulShow := .ulShow -}}
+{{ $hideRoots := .hideRoots -}}
 {{ $active := and (not $shouldDelayActive) (eq $s $p) -}}
 {{ $activePath := and (not $shouldDelayActive) (or (eq $p $s) ($p.IsDescendant $s)) -}}
 {{ $show := cond (or (lt $ulNr $ulShow) $activePath (and (not $shouldDelayActive) (eq $s.Parent $p.Parent)) (and (not $shouldDelayActive) (eq $s.Parent $p)) (not $p.Site.Params.ui.sidebar_menu_compact) (and (not $shouldDelayActive) ($p.IsDescendant $s.Parent))) true false -}}
@@ -71,8 +82,8 @@
   {{- $ulNr := add $ulNr 1 }}
   <ul class="ul-{{ $ulNr }}{{ if (gt $ulNr 1)}} foldable{{end}}">
     {{ range $pages -}}
-    {{ if (not (and (eq $s $p.Site.Home) (eq .Params.toc_root true))) -}}
-    {{ template "section-tree-nav-section" (dict "page" $p "section" . "shouldDelayActive" $shouldDelayActive "sidebarMenuTruncate" $sidebarMenuTruncate "ulNr" $ulNr "ulShow" $ulShow) }}
+    {{ if and (not (and (eq $s $p.Site.Home) (eq .Params.toc_root true))) (not (in $hideRoots .Path)) -}}
+    {{ template "section-tree-nav-section" (dict "page" $p "section" . "shouldDelayActive" $shouldDelayActive "sidebarMenuTruncate" $sidebarMenuTruncate "ulNr" $ulNr "ulShow" $ulShow "hideRoots" $hideRoots) }}
     {{- end }}
     {{- end }}
   </ul>

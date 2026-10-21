@@ -93,3 +93,6 @@ other = "Caso de uso anterior"
 
 [home_use_cases_next]
 other = "Próximo caso de uso"
+
+[docs_older_versions]
+other = "Versões anteriores"

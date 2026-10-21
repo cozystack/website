@@ -25,7 +25,7 @@
 
 <div class="version-switcher dropdown">
   <button class="version-switcher__toggle dropdown-toggle" type="button"
-          id="versionSwitcherButton" data-bs-toggle="dropdown"
+          id="versionSwitcherButton" data-bs-toggle="dropdown" data-bs-auto-close="outside"
           aria-expanded="false" aria-haspopup="true">
     {{- if $currentVersionLabel -}}
       {{ $currentVersionLabel }}
@@ -34,35 +34,24 @@
     {{- end -}}
   </button>
   <ul class="version-switcher__menu dropdown-menu" aria-labelledby="versionSwitcherButton">
-    {{- range .Site.Params.versions }}
-    {{- if not .hidden }}
-    {{- /* Each target is the most specific page that is actually built, so no
-           link 404s. The pipeline translates only the latest version, so most
-           localized pages and version roots never exist. Staying on the same
-           topic matters more than staying in the language, so the order is:
-           English version root (always built), localized version root, the same
-           page in English, the same page localized. site.GetPage resolves in the
-           current-language site; hugo.Sites.Default is the English site. */ -}}
-    {{- $targetPath := .url -}}
-    {{- with site.GetPage (strings.TrimRight "/" .url) -}}
-      {{- $targetPath = .RelPermalink -}}
-    {{- end -}}
-    {{- if $currentVersionUrl -}}
-      {{- $subPath := strings.TrimPrefix $currentVersionUrl $logicalPath -}}
-      {{- $trimmed := strings.TrimRight "/" (printf "%s%s" .url $subPath) -}}
-      {{- with hugo.Sites.Default.GetPage $trimmed -}}
-        {{- $targetPath = .RelPermalink -}}
-      {{- end -}}
-      {{- with site.GetPage $trimmed -}}
-        {{- $targetPath = .RelPermalink -}}
-      {{- end -}}
-    {{- end -}}
-    <li>
-      <a href="{{ $targetPath }}" class="dropdown-item{{ if eq .id $currentVersionID }} active{{ end }}">
-        {{- .version -}}
-      </a>
-    </li>
+    {{- $groups := partial "docs-versions.html" . -}}
+    {{- $currentIsOlder := false -}}
+    {{- range $groups.older }}{{ if eq .id $currentVersionID }}{{ $currentIsOlder = true }}{{ end }}{{ end }}
+    {{- range $groups.recent }}
+    {{ partial "version-switcher-item.html" (dict "v" . "logicalPath" $logicalPath "currentID" $currentVersionID "currentUrl" $currentVersionUrl) }}
     {{- end }}
+    {{- with $groups.older }}
+    <li><hr class="dropdown-divider"></li>
+    <li>
+      <details class="version-switcher__older"{{ if $currentIsOlder }} open{{ end }}>
+        <summary class="dropdown-item">{{ T "docs_older_versions" }}</summary>
+        <ul class="list-unstyled mb-0">
+          {{- range . }}
+          {{ partial "version-switcher-item.html" (dict "v" . "logicalPath" $logicalPath "currentID" $currentVersionID "currentUrl" $currentVersionUrl) }}
+          {{- end }}
+        </ul>
+      </details>
+    </li>
     {{- end }}
   </ul>
 </div>
