@@ -290,6 +290,36 @@ nav.navbar {
       }
     }
   }
+
+  // "Older versions" group: native <details>, no JS.
+  &__older {
+    summary {
+      cursor: pointer;
+      list-style: none;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      // Same caret as .dropdown-toggle, flipped when the group is open.
+      &::after {
+        content: "";
+        float: right;
+        margin-top: 0.5em;
+        border-top: 0.3em solid;
+        border-right: 0.3em solid transparent;
+        border-left: 0.3em solid transparent;
+      }
+    }
+
+    &[open] > summary::after {
+      transform: rotate(180deg);
+    }
+
+    ul .dropdown-item {
+      padding-left: 1.75rem;
+    }
+  }
 }
 
 // Fixed-header offset.

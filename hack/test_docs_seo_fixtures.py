@@ -30,7 +30,8 @@ class DocsFixtureTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.public = self.root / "public"
         for path in ("layouts/partials/head.html", "layouts/partials/docs-seo.html", "layouts/partials/navbar-lang-selector.html",
-                     "layouts/partials/version-switcher.html",
+                     "layouts/partials/version-switcher.html", "layouts/partials/version-switcher-item.html",
+                     "layouts/partials/docs-versions.html",
                      "layouts/partials/hooks/head-end.html", "layouts/sitemap.xml"):
             self.write(path, (REPO / path).read_text())
         for name in ("favicons", "page-description", "schema", "twitter_cards", "head-css", "google_analytics"):
