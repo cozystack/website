@@ -83,10 +83,9 @@ The seven short names that existed before the instance-type rename remain accept
 
 Legacy names are scheduled for removal in a future Cozystack release; new manifests should use the instance-type form. The Cozystack API server logs a deprecation warning whenever an app CR carries a legacy value, naming the suggested replacement.
 
-A platform upgrade runs a one-shot migration (Migration 39) that walks every `HelmRelease.spec.values` and every app CR under `apps.cozystack.io/v1alpha1` and rewrites legacy values to their instance-type equivalents in place. The conversion is idempotent, best-effort, and never changes CPU or memory.
+A platform upgrade runs a one-shot migration (Migration 39) that walks every `HelmRelease.spec.values` and every app CR under `apps.cozystack.io/v1alpha1` and rewrites legacy values to their instance-type equivalents in place. The conversion is idempotent, best-effort, and never changes CPU or memory. A failure on one object logs a warning and leaves the rest of the migration to complete. Set `MIGRATION_DRY_RUN=1` to preview the patches without applying them.
 
-Cozystack presets are defined in an internal library
-[`cozy-lib`](https://github.com/cozystack/cozystack/tree/main/packages/library/cozy-lib). The canonical reference, including the full size matrix and migration table, lives in [`docs/operations/resource-presets.md`](https://github.com/cozystack/cozystack/blob/main/docs/operations/resource-presets.md).
+Cozystack presets are defined in an internal library [`cozy-lib`](https://github.com/cozystack/cozystack/tree/main/packages/library/cozy-lib).
 
 
 ### Defining Resources Explicitly
