@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "cozystack-website": {
+      "command": "python3",
+      "args": ["hack/mcp/server.py"]
+    }
+  }
+}
