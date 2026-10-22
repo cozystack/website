@@ -247,6 +247,9 @@ params:
   version_menu: "Versions"
   version_menu_pagelinks: true
   latest_version_id: "v1.6"
+  # How many of the newest released versions stay in the version switcher and the
+  # /docs/ table; the rest go under "Older versions". Ranked by `order`; minimum 1.
+  versions_visible: 2
   versions:
     - version: "v1.6"
       url: "/docs/v1.6/"

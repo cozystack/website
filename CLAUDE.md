@@ -72,11 +72,12 @@ Docs are versioned per Cozystack minor release. Each version is an independent c
 **Version registration (`hugo.yaml`)**
 - `params.latest_version_id` — id of the current/default version
 - `params.versions[]` — ordered list consumed by the version switcher (`layouts/partials/version-switcher.html`). Newest goes first, `order` highest. **When adding a new version, update both fields.**
+- `params.versions_visible` — how many of the newest non-hidden versions (ranked by `order`, minimum 1) stay in the switcher, the `/docs/` table and the `/docs/` sidebar tree; the rest are grouped under "Older versions". `hack/register_version.sh` needs no change: a new release pushes the oldest visible version into the group on its own. The split lives in `layouts/partials/docs-versions.html`.
 - `hidden: true` on a version entry hides it from the dropdown selector. Combined with the content mount exclusion pattern (`- '! docs/<id>/**'`), the whole version is also excluded from production builds. Used for the `next` trunk; the dev server and Netlify deploy previews still render it at `/docs/next/`.
 
 **Where to add changes**
 - Docs for an upcoming (unreleased) feature → edit `content/en/docs/next/`. These materialize as `v<next-release>/` when `make release-next RELEASE_TAG=vX.Y.Z` runs
-- Bug fix or addition to the current release → edit only `content/en/docs/<latest_version_id>/` (currently `v1.2`)
+- Bug fix or addition to the current release → edit only `content/en/docs/<latest_version_id>/` (the `params.latest_version_id` value in `hugo.yaml`)
 - Content that also applies to older supported versions → copy the change into each relevant `v*/` directory (no automatic backport)
 - Cross-version/landing content → `content/en/docs/_index.md`
 - Blog posts are version-independent → `content/en/blog/`

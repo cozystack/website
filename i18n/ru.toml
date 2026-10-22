@@ -92,3 +92,6 @@ other = 'Нашли ошибку? <a href="{{ .IssueURL }}">Создайте iss
 
 [translation_see_original]
 other = 'Смотрите <a href="{{ .Link }}">английский оригинал</a>.'
+
+[docs_older_versions]
+other = "Старые версии"
