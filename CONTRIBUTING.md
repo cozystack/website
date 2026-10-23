@@ -225,7 +225,7 @@ make init-version DOC_VERSION=v1.3     # low-level init of any version dir
 make show-target RELEASE_TAG=v1.3.0    # prints resolved DOC_VERSION / BRANCH
 ```
 
-Required tools: Hugo extended 0.164.0, Go 1.23+, Node 22+, `yq` v4+ (for the
+Required tools: Hugo extended 0.164.0, Go 1.23+, Node 22+, Python 3, `yq` v4+ (for
 version lifecycle targets and Makefile routing), `jq` (for
 `hack/download_openapi.sh` in the production build and `make update-all`
 without `RELEASE_TAG`).
@@ -250,10 +250,46 @@ If you need to understand or change the versioning machinery itself:
   cozystack/cozystack.
 - `hack/download_openapi.sh` — fetches `openapi.json` per version at build
   time (v1.1+; v0 and v1.0 ship their `api.json` in-tree).
-- `layouts/docs/docs-landing.html` — the `/docs/` landing template; builds the
-  version table from `params.versions[]`, filtering out hidden entries.
+- `layouts/docs/docs-landing.html` — the version-selection landing template,
+  published at `/docs/versions/`; builds the version table from `params.versions[]`,
+  filtering out hidden entries.
 - `layouts/partials/version-switcher.html` — top-navbar version dropdown;
   filters out hidden entries.
-- `layouts/404.html` — client-side fallback redirect for `/docs/v1/…` short
-  paths.
+- `hack/mirror_latest.sh` calls `hack/mirror_latest.py` after Hugo to copy current
+  docs to `/docs/` and `/docs/v<major>/`. It also copies translated docs
+  when they exist. The original landing is published at `/docs/versions/`, with a
+  link in the version dropdown. Pages and Netlify builds run it; `make serve` does
+  not. Local `make serve` keeps the version-selection landing and its navigation
+  links at `/docs/`. The landing template carries `data-docs-version-landing` so
+  repeat mirror runs can identify it independently of Open Graph metadata.
+- `layouts/partials/docs-seo.html` supplies canonical and robots rules to the
+  document head and sitemap. Current numbered docs and their copies canonicalize
+  to `/docs/`. Older versions remain noindex and stay out of sitemaps.
+  Preview builds and print output are noindex. No archive content is removed.
+- `layouts/partials/head.html` overrides the Docsy v0.12.0 head to emit one robots
+  tag. `navbar-lang-selector.html` keeps the version-selection page at its new
+  path when changing language. Compare both with upstream when updating Docsy.
+
+The mirrors add two copies of the current docs to the published artifact.
+Mirroring preserves numbered versions, `next/` and unrelated legacy aliases. The
+`.docs-mirror.json` build file tracks root and major copies and their hashes so
+minor and major rollover remove stale copies without deleting aliases restored
+by Hugo. Only tracked, unchanged files are removed. Keep the manifest when
+rebuilding in the same output directory. Mirrored Open Graph URLs match the
+stable canonical; absolute feed and print links follow the served copy.
+After a release, run Hugo and the mirror step together. Publishing just Hugo's
+output would leave the stable canonical and sitemap URLs without their pages.
+
+Check the production output and release rollover with the CI-pinned Hugo:
+
+```sh
+hugo --gc --minify --baseURL https://cozystack.io/
+./hack/mirror_latest.sh public
+python3 hack/test_docs_seo.py public --latest v1.6  # use latest_version_id
+HUGO=hugo python3 hack/test_docs_seo_fixtures.py
+```
+
+The fixture suite builds small sites to check minor-release rollover, translated
+copies, baseURL subpaths, previews, print output, HTTP responses without JavaScript,
+and invalid configuration. The output check also scans the full site's sitemaps.
 
