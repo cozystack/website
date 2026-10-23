@@ -1,0 +1,18 @@
+{{/* Docsy v0.12.0 selector; the version landing is published after Hugo. */ -}}
+{{ $langPage := cond (gt (len .Translations) 0) . .Site.Home -}}
+<div class="dropdown">
+  <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    {{- $langPage.Language.LanguageName -}}
+  </a>
+  <ul class="dropdown-menu">
+    {{ range $langPage.Translations -}}
+    {{- $target := .RelPermalink -}}
+    {{- with .File -}}
+      {{- if eq .Path "docs/_index.md" -}}
+        {{- $target = printf "%sversions/" $target -}}
+      {{- end -}}
+    {{- end -}}
+    <li><a class="dropdown-item" href="{{ $target }}">{{ .Language.LanguageName }}</a></li>
+    {{ end -}}
+  </ul>
+</div>
