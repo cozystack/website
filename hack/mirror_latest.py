@@ -6,7 +6,6 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import re
-import shutil
 import sys
 from urllib.parse import urlsplit
 
@@ -15,14 +14,21 @@ class PageURL(HTMLParser):
     def __init__(self, html):
         super().__init__()
         self.url = None
+        self.version_landing = False
         self.feed(html)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-        # Open Graph retains the original page URL, including on previews where
-        # no canonical is emitted. This also supplies the baseURL subpath.
+        # Numbered source pages retain og:url even when previews omit canonical.
         if tag == "meta" and attrs.get("property") == "og:url":
             self.url = attrs.get("content")
+        if "data-docs-version-landing" in attrs:
+            self.version_landing = True
+
+
+def rewrite_og_url(text, source_url, target_url):
+    return re.sub(r'''(<meta\b(?=[^>]*\bproperty=["']?og:url(?:["'\s>]))[^>]*\bcontent=["']?)''' + re.escape(source_url),
+                  lambda m: m[1] + target_url, text)
 
 
 def rewrite(text, source_url, alias):
@@ -34,13 +40,14 @@ def rewrite(text, source_url, alias):
     # Keep the original formatting (Hugo's minified attributes may be unquoted).
     text = re.sub(r'''(["'(=])''' + re.escape(source_path),
                   lambda m: m[1] + destination_path, text)
-    text = re.sub(r'''(<a\b[^>]*\bhref=["']?)''' + re.escape(source_url),
+    # Hugo alias stubs do not use the regular head template.
+    text = re.sub(r'''(<link\b(?=[^>]*\brel=["']?canonical(?:["'\s>]))[^>]*\bhref=["']?)''' + re.escape(source_url),
+                  lambda m: m[1] + canonical_url, text)
+    text = rewrite_og_url(text, source_url, canonical_url)
+    text = re.sub(r'''(\b(?:href|src)=["']?)''' + re.escape(source_url),
                   lambda m: m[1] + destination_url, text)
     text = re.sub(r'''(http-equiv="?refresh"? content="?[0-9]+;\s*url=)''' + re.escape(source_url),
                   lambda m: m[1] + destination_url, text)
-    # Hugo alias stubs do not use the regular head template.
-    text = re.sub(r'''(<link\b[^>]*\brel="?canonical"?\s+href=["']?)''' + re.escape(source_url),
-                  lambda m: m[1] + canonical_url, text)
     return text
 
 
@@ -48,13 +55,14 @@ def reserved(name):
     return re.fullmatch(r"v[0-9]+(?:\.[0-9]+)?|next|versions|latest", name)
 
 
-def root_target(public, name):
-    """Keep cleanup and root copies outside version trees, including symlinks."""
+def root_target(public, name, *, allow_major=False):
+    """Keep managed copies outside numbered archives, including symlinks."""
     path = Path(name)
     parts = path.parts
     offset = 1 if parts and parts[0] == "docs" else 2
     if (path.is_absolute() or ".." in parts or len(parts) <= offset
-            or parts[offset - 1] != "docs" or reserved(parts[offset])):
+            or parts[offset - 1] != "docs"
+            or (reserved(parts[offset]) and not (allow_major and re.fullmatch(r"v[1-9][0-9]*", parts[offset])))):
         raise ValueError(f"invalid root mirror path: {name}")
     target = public / path
     if target.resolve() != target or target.is_dir():
@@ -78,7 +86,7 @@ def mirror(public):
     if not isinstance(previous, dict):
         raise ValueError(f"invalid root mirror manifest: {manifest}")
     for name, digest in previous.items():
-        root_target(public, name)
+        root_target(public, name, allow_major=True)
         if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
             raise ValueError(f"invalid root mirror digest: {name}")
 
@@ -89,9 +97,12 @@ def mirror(public):
         versions = landing.parent / "versions/index.html"
         if versions.resolve() != versions or versions.is_dir():
             raise ValueError(f"invalid versions landing path: {versions}")
-        landing_url = PageURL(landing.read_text()).url
-        if landing_url and urlsplit(landing_url).path.endswith("/docs/"):
-            landings.append((versions, landing.read_bytes()))
+        html = landing.read_text()
+        page_url = PageURL(html)
+        if page_url.version_landing:
+            if not page_url.url:
+                raise ValueError(f"missing og:url in {landing}")
+            landings.append((versions, rewrite_og_url(html, page_url.url, page_url.url + "versions/").encode()))
         elif not versions.is_file():
             raise ValueError(f"missing version-selection landing: {landing}")
     for source in sources:
@@ -100,25 +111,27 @@ def mirror(public):
         source_url = PageURL((source / "index.html").read_text()).url
         if not source_url or not urlsplit(source_url).path.endswith(f"/docs/{latest}/"):
             raise ValueError(f"invalid og:url in {source / 'index.html'}")
+        destination = source.parent / major
+        if major != latest and (destination.resolve() != destination or destination.is_file()):
+            raise ValueError(f"invalid major mirror destination: {destination}")
         for file in source.rglob("*"):
             if file.is_symlink() or reserved(file.relative_to(source).parts[0]):
                 raise ValueError(f"reserved or symlink source path: {file}")
             if file.is_file():
-                target = source.parent / file.relative_to(source)
-                root_target(public, target.relative_to(public))
-                plans.append((file, source_url, target))
-        destination = source.parent / major
-        if major != latest and (destination.resolve() != destination or destination.is_file()):
-            raise ValueError(f"invalid major mirror destination: {destination}")
+                aliases = [""] if major == latest else ["", major + "/"]
+                for alias in aliases:
+                    target = source.parent / alias / file.relative_to(source)
+                    root_target(public, target.relative_to(public), allow_major=bool(alias))
+                    plans.append((file, source_url, target, alias))
 
     for versions, content in landings:
         versions.parent.mkdir(parents=True, exist_ok=True)
         versions.write_bytes(content)
     current = {}
-    for file, source_url, target in plans:
+    for file, source_url, target, alias in plans:
         content = file.read_bytes()
         if file.suffix in (".html", ".xml"):
-            content = rewrite(content.decode(), source_url, "").encode()
+            content = rewrite(content.decode(), source_url, alias).encode()
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(content)
         current[str(target.relative_to(public))] = sha256(content).hexdigest()
@@ -128,16 +141,6 @@ def mirror(public):
         if name not in current and target.is_file() and sha256(target.read_bytes()).hexdigest() == digest:
             target.unlink()
     manifest.write_text(json.dumps(current, indent=2) + "\n")
-    if major != latest:
-        for source in sources:
-            destination = source.parent / major
-            if destination.exists():
-                shutil.rmtree(destination)
-            shutil.copytree(source, destination)
-            source_url = PageURL((source / "index.html").read_text()).url
-            for file in destination.rglob("*"):
-                if file.suffix in (".html", ".xml"):
-                    file.write_text(rewrite(file.read_text(), source_url, major + "/"))
     print(f"mirrored {latest} to /docs/ and /docs/{major}/; version selection at /docs/versions/")
 
 

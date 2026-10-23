@@ -65,7 +65,7 @@
     {{- end }}
     {{- end }}
     <li><hr class="dropdown-divider"></li>
-    <li><a href="{{ .Site.Home.RelPermalink }}docs/versions/" class="dropdown-item">{{ T "docs_landing_available_versions" }}</a></li>
+    <li><a href="{{ .Site.Home.RelPermalink }}docs/{{ if not hugo.IsServer }}versions/{{ end }}" class="dropdown-item">{{ T "docs_landing_available_versions" }}</a></li>
   </ul>
 </div>
 {{- else if .Site.Params.versions -}}

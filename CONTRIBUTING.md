@@ -259,7 +259,9 @@ If you need to understand or change the versioning machinery itself:
   docs to `/docs/` and `/docs/v<major>/`. It also copies translated docs
   when they exist. The original landing is published at `/docs/versions/`, with a
   link in the version dropdown. Pages and Netlify builds run it; `make serve` does
-  not. Local `make serve` keeps the version-selection landing at `/docs/`.
+  not. Local `make serve` keeps the version-selection landing and its navigation
+  links at `/docs/`. The landing template carries `data-docs-version-landing` so
+  repeat mirror runs can identify it independently of Open Graph metadata.
 - `layouts/partials/docs-seo.html` supplies canonical and robots rules to the
   document head and sitemap. Current numbered docs and their copies canonicalize
   to `/docs/`. Older versions remain noindex and stay out of sitemaps.
@@ -268,11 +270,13 @@ If you need to understand or change the versioning machinery itself:
   tag. `navbar-lang-selector.html` keeps the version-selection page at its new
   path when changing language. Compare both with upstream when updating Docsy.
 
-The mirrors add two copies of the current docs to the published artifact. Root
-mirroring preserves numbered versions, `next/` and unrelated legacy aliases. The
-`.docs-mirror.json` build file tracks copied files and their hashes so repeat
-builds remove stale copies without deleting aliases restored by Hugo. Keep it
-when rebuilding in the same output directory.
+The mirrors add two copies of the current docs to the published artifact.
+Mirroring preserves numbered versions, `next/` and unrelated legacy aliases. The
+`.docs-mirror.json` build file tracks root and major copies and their hashes so
+minor and major rollover remove stale copies without deleting aliases restored
+by Hugo. Only tracked, unchanged files are removed. Keep the manifest when
+rebuilding in the same output directory. Mirrored Open Graph URLs match the
+stable canonical; absolute feed and print links follow the served copy.
 After a release, run Hugo and the mirror step together. Publishing just Hugo's
 output would leave the stable canonical and sitemap URLs without their pages.
 

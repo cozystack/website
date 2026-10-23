@@ -8,7 +8,7 @@
     {{ range $langPage.Translations -}}
     {{- $target := .RelPermalink -}}
     {{- with .File -}}
-      {{- if eq .Path "docs/_index.md" -}}
+      {{- if and (eq .Path "docs/_index.md") (not hugo.IsServer) -}}
         {{- $target = printf "%sversions/" $target -}}
       {{- end -}}
     {{- end -}}

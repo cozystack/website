@@ -6,10 +6,13 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import socket
 import subprocess
 import tempfile
 import threading
+import time
 import unittest
+from urllib.error import URLError
 from urllib.request import urlopen
 import xml.etree.ElementTree as ET
 
@@ -38,7 +41,7 @@ class DocsFixtureTests(unittest.TestCase):
 {{ range .AlternativeOutputFormats }}{{ $alts.Set .Name true }}{{ end }}
 {{ range .OutputFormats }}{{ if not ($alts.Get .Name) }}{{ $format = .Name }}{{ end }}{{ end }}
 {{ return $format }}''')
-        page = '{{ define "_internal/google_analytics.html" }}{{ end }}<!doctype html><html><head>{{ partial "head.html" . }}</head><body>{{ .Content }}{{ partial "navbar-lang-selector.html" . }}{{ partial "version-switcher.html" . }}</body></html>'
+        page = '{{ define "_internal/google_analytics.html" }}{{ end }}<!doctype html><html><head>{{ partial "head.html" . }}</head><body{{ if eq .Params.layout "docs-landing" }} data-docs-version-landing{{ end }}>{{ .Content }}{{ partial "navbar-lang-selector.html" . }}{{ partial "version-switcher.html" . }}</body></html>'
         for path in ("layouts/_default/single.html", "layouts/_default/list.html", "layouts/_default/single.print.html"):
             self.write(path, page)
         for lang in ("en", "ru"):
@@ -129,6 +132,7 @@ markup:
             self.assertIn("Choose a version", (self.public / versions).read_text())
             self.assertEqual(self.head(versions).canonical,
                              [f"https://example.org/{prefix}docs/versions/"])
+            self.assertEqual(self.head(versions).og_urls, self.head(versions).canonical)
             self.assertIn(f"https://example.org/{prefix}docs/versions/", self.locations())
             other_prefix = "ru/" if not prefix else ""
             self.assertIn(f"/{other_prefix}docs/versions/", self.head(versions).links)
@@ -170,12 +174,14 @@ markup:
 
     def test_version_landing_without_translated_current_docs(self):
         self.write("content/ru-landing/_index.md", '---\ntitle: Home\n---\nHome')
-        self.write("content/ru-landing/docs/_index.md", '---\ntitle: Versions\n---\nTranslated chooser')
+        self.write("content/ru-landing/docs/_index.md", '---\ntitle: Versions\nlayout: docs-landing\n---\nTranslated chooser')
         config = self.root / "hugo.yaml"
         config.write_text(config.read_text().replace("contentDir: content/ru", "contentDir: content/ru-landing"))
         self.build()
         self.assertIn("Translated chooser", (self.public / "ru/docs/versions/index.html").read_text())
         self.assertEqual(self.head("ru/docs/versions/index.html").canonical,
+                         ["https://example.org/ru/docs/versions/"])
+        self.assertEqual(self.head("ru/docs/versions/index.html").og_urls,
                          ["https://example.org/ru/docs/versions/"])
         self.assertFalse((self.public / "ru/docs/guide/index.html").exists())
 
@@ -185,7 +191,7 @@ markup:
         original = manifest.read_bytes()
         archive = self.public / "docs/v0/guide/index.html"
         archive_content = archive.read_bytes()
-        for name in ("docs/v0/guide/index.html", "../outside", "/outside"):
+        for name in ("docs/v0/guide/index.html", "docs/v1.6/guide/index.html", "../outside", "/outside"):
             manifest.write_text(json.dumps({name: "0" * 64}))
             self.mirror(success=False)
             self.assertEqual(archive.read_bytes(), archive_content)
@@ -207,6 +213,84 @@ markup:
         self.assertFalse((self.public / "docs/removed/index.html").exists())
         self.assertEqual(self.head("docs/v1.6/guide/index.html").robots, ["noindex, follow"])
         self.assertFalse(any("/docs/v1.6/" in url for url in self.locations()))
+
+    def test_metadata_uses_stable_copy_urls(self):
+        self.configure(base="https://example.org/project/")
+        config = self.root / "hugo.yaml"
+        config.write_text(config.read_text().replace("    baseName: print", "    rel: alternate\n    baseName: print"))
+        for lang in ("en", "ru"):
+            self.write(f"content/{lang}/docs/v1.6/guide.md", '---\ntitle: Guide\noutputs: [HTML, RSS, PRINT]\n---\nGuide')
+        self.build()
+        for prefix in ("", "ru/"):
+            for alias in ("", "v1/"):
+                head = self.head(f"{prefix}docs/{alias}guide/index.html")
+                self.assertEqual(head.og_urls, [f"https://example.org/project/{prefix}docs/guide/"])
+                base = f"https://example.org/project/{prefix}docs/{alias}guide/"
+                self.assertEqual(head.formats["application/rss+xml"], base + "index.xml")
+                self.assertEqual(head.formats["text/html"], base + "print.html")
+
+    def test_major_rollover_cleans_owned_files(self):
+        self.build()
+        manifest = json.loads((self.public / ".docs-mirror.json").read_text())
+        self.assertIn("docs/v1/guide/index.html", manifest)
+        for lang in ("en", "ru"):
+            self.write(f"content/{lang}/docs/v2.0/_index.md", '---\ntitle: v2.0\n---\nv2.0')
+            self.write(f"content/{lang}/docs/v2.0/guide.md", '---\ntitle: Guide\n---\nv2.0')
+        self.configure("v2.0")
+        self.build()
+        for prefix in ("", "ru/"):
+            self.assertFalse((self.public / f"{prefix}docs/v1/guide/index.html").exists())
+            self.assertFalse((self.public / f"{prefix}docs/v1/index.html").exists())
+            self.assertTrue((self.public / f"{prefix}docs/v1.6/guide/index.html").is_file())
+            self.assertEqual(self.head(f"{prefix}docs/v2/guide/index.html").canonical,
+                             [f"https://example.org/{prefix}docs/guide/"])
+
+    def test_major_copy_preserves_hugo_aliases(self):
+        self.write("content/en/docs/v1.6/guide.md", '---\ntitle: Guide\naliases: [/docs/v1/legacy-guide/]\n---\nGuide')
+        self.build()
+        self.assertTrue(self.head("docs/v1/legacy-guide/index.html").refresh)
+        self.write("content/en/docs/v0/removed.md", '---\ntitle: Legacy\naliases: [/docs/v1/removed/]\n---\nLegacy')
+        self.configure("v1.7")
+        self.build()
+        self.assertIn("/docs/v0/removed/", self.head("docs/v1/removed/index.html").refresh[0])
+        self.assertTrue((self.public / "docs/v1.6/removed/index.html").is_file())
+
+    def test_invalid_major_destination_preserves_landings(self):
+        result = subprocess.run([HUGO, "--minify"], cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.write("public/docs/v1", "existing file")
+        before = (self.public / "docs/index.html").read_bytes()
+        self.mirror(success=False)
+        self.assertEqual((self.public / "docs/index.html").read_bytes(), before)
+        self.assertFalse((self.public / "docs/versions/index.html").exists())
+
+    def test_dev_server_links_to_existing_version_chooser(self):
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            port = listener.getsockname()[1]
+        process = subprocess.Popen([HUGO, "server", "--bind", "127.0.0.1", "--port", str(port),
+                                    "--disableLiveReload"], cwd=self.root,
+                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        try:
+            deadline = time.monotonic() + 15
+            while True:
+                try:
+                    with urlopen(f"http://127.0.0.1:{port}/docs/v1.6/guide/", timeout=1) as response:
+                        guide = Head(response.read().decode())
+                    break
+                except URLError:
+                    if time.monotonic() >= deadline or process.poll() is not None:
+                        self.fail("Hugo server did not start")
+                    time.sleep(0.05)
+            self.assertIn("/docs/", guide.links)
+            self.assertNotIn("/docs/versions/", guide.links)
+            with urlopen(f"http://127.0.0.1:{port}/docs/") as response:
+                chooser = Head(response.read().decode())
+            self.assertIn("/ru/docs/", chooser.links)
+            self.assertNotIn("/ru/docs/versions/", chooser.links)
+        finally:
+            process.terminate()
+            process.communicate(timeout=5)
 
     def test_subpath_language_queries_fragments_and_aliases(self):
         self.configure(base="https://example.org/project/")

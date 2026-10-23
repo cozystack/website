@@ -22,6 +22,8 @@ class Head(HTMLParser):
         self.refresh = []
         self.links = []
         self.languages = {}
+        self.og_urls = []
+        self.formats = {}
         self.feed(text)
 
     def handle_starttag(self, tag, attrs):
@@ -36,6 +38,10 @@ class Head(HTMLParser):
             self.links.append(attrs["href"])
         if tag == "link" and attrs.get("hreflang"):
             self.languages[attrs["hreflang"]] = attrs.get("href")
+        if tag == "meta" and attrs.get("property") == "og:url":
+            self.og_urls.append(attrs.get("content"))
+        if tag == "link" and attrs.get("rel") == "alternate" and attrs.get("type"):
+            self.formats[attrs["type"]] = attrs.get("href")
 
 
 class BuiltSiteTests(unittest.TestCase):
@@ -60,6 +66,10 @@ class BuiltSiteTests(unittest.TestCase):
                     self.assertEqual(urlsplit(page.canonical[0]).path, "/docs/" + str(relative).removesuffix("index.html"))
                     self.assertEqual(page.canonical, original.canonical)
                     self.assertEqual(page.robots, ["index, follow"])
+                    if version != self.latest:
+                        self.assertEqual(page.og_urls, page.canonical)
+                        for url in page.formats.values():
+                            self.assertNotIn(f"/docs/{self.latest}/", urlsplit(url).path)
         self.assertGreater(count, 0)
 
     def test_archive_robots(self):
