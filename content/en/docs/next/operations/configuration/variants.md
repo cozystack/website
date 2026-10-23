@@ -48,13 +48,13 @@ or need full manual control over installed packages.
 [vm]: {{% ref "/docs/next/virtualization" %}}
 [k8s]: {{% ref "/docs/next/kubernetes" %}}
 [api]: {{% ref "/docs/next/cozystack-api" %}}
-[monitoring subsystem]: {{% ref "/docs/next/guides/platform-stack#victoria-metrics" %}}
-[linstor]: {{% ref "/docs/next/guides/platform-stack#drbd" %}}
-[kube-ovn]: {{% ref "/docs/next/guides/platform-stack#kube-ovn" %}}
-[cilium]: {{% ref "/docs/next/guides/platform-stack#cilium" %}}
-[kubevirt]: {{% ref "/docs/next/guides/platform-stack#kubevirt" %}}
-[talos linux]: {{% ref "/docs/next/guides/platform-stack#talos-linux" %}}
-[kubernetes]: {{% ref "/docs/next/guides/platform-stack#kubernetes" %}}
+[monitoring subsystem]: {{% ref "/docs/next/guides/platform-stack#observability" %}}
+[linstor]: {{% ref "/docs/next/guides/platform-stack#storage-and-backup" %}}
+[kube-ovn]: {{% ref "/docs/next/guides/platform-stack#networking" %}}
+[cilium]: {{% ref "/docs/next/guides/platform-stack#networking" %}}
+[kubevirt]: {{% ref "/docs/next/guides/platform-stack#cluster-provisioning-and-virtualization" %}}
+[talos linux]: {{% ref "/docs/next/guides/platform-stack#operating-system-and-kubernetes-runtime" %}}
+[kubernetes]: {{% ref "/docs/next/guides/platform-stack#operating-system-and-kubernetes-runtime" %}}
 [kubernetes operators]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/templates/bundles/paas.yaml
 
 [default]: {{% ref "/docs/next/operations/configuration/variants#default" %}}
