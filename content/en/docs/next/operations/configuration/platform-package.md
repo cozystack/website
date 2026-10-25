@@ -160,6 +160,12 @@ gateway:
 | --- | --- | --- |
 | `scheduling.globalAppTopologySpreadConstraints` | `""` | Global pod topology spread constraints applied to all managed applications. |
 
+#### Object storage
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `seaweedfs.rootEnabled` | `true` | Whether the root tenant runs SeaweedFS, that is, whether `Tenant/root` has `spec.seaweedfs: true`. When `true`, tenants without their own SeaweedFS use `tenant-root` as their S3. When `false`, a Bucket or Harbor in such a tenant fails to render with a message that no tenant up the chain runs SeaweedFS, instead of waiting on a bucket class that never appears. Nothing sets `spec.seaweedfs` on the root Tenant from this value, so set it to match the root Tenant. The default `true` keeps the earlier behaviour, and the slim variants (`isp-slim`, `isp-slim-generic`, `isp-hosted-slim`) default to `false`. |
+
 #### Monitoring
 
 | Value | Default | Description |
