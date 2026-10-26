@@ -35,8 +35,6 @@ jobs:
         environment: [production, preview]
     env:
       HUGO_VERSION: 0.164.0
-      HUGO_ENVIRONMENT: ${{ matrix.environment }}
-      HUGO_ENV: ${{ matrix.environment }}
     steps:
       - name: Install Hugo CLI
         run: |
@@ -70,7 +68,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Build and check documentation
+        # Fixtures select their own Hugo environment, independently of this step.
         env:
+          HUGO_ENVIRONMENT: ${{ matrix.environment }}
+          HUGO_ENV: ${{ matrix.environment }}
           PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
           base_url="${PAGES_BASE_URL:-https://cozystack.io}"
