@@ -113,9 +113,9 @@ Deploy your apps with standard `kubectl` or `helm` — no vendor-specific toolin
 
 ## Learn more
 
-- [Managed Kubernetes documentation](https://cozystack.io/docs/v1.6/kubernetes/)
-- [Deploy Applications guide](https://cozystack.io/docs/v1.6/getting-started/deploy-app/)
-- [Create a Tenant](https://cozystack.io/docs/v1.6/getting-started/create-tenant/)
+- [Managed Kubernetes documentation](https://cozystack.io/docs/kubernetes/)
+- [Deploy Applications guide](https://cozystack.io/docs/getting-started/deploy-app/)
+- [Create a Tenant](https://cozystack.io/docs/getting-started/create-tenant/)
 
 ## Join the community
 
