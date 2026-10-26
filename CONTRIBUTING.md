@@ -204,7 +204,8 @@ npm install
 make serve                             # dev server at http://localhost:1313/docs
 
 # Production-shape build (reproduces what GitHub Pages serves)
-./hack/download_openapi.sh && HUGO_ENV=production hugo --gc --minify
+./hack/download_openapi.sh && hugo --environment production --gc --minify
+./hack/mirror_latest.sh public
 
 # Pull upstream content (targets next/ by default; pass RELEASE_TAG to route)
 make update-all                        # trunk from upstream main
@@ -289,16 +290,28 @@ stable canonical; absolute feed and print links follow the served copy.
 After a release, run Hugo and the mirror step together. Publishing just Hugo's
 output would leave the stable canonical and sitemap URLs without their pages.
 
+The Pages workflow builds and checks both production and preview on every PR and before publishing from `main`. Preview includes `next/` and future content; it is never uploaded as the Pages deployment artifact. Both builds must pass before deployment. PR checks have read-only permissions and separate concurrency groups.
+
 Check the production output and release rollover with the CI-pinned Hugo:
 
 ```sh
-hugo --gc --minify --baseURL https://cozystack.io/
+hugo --environment production --gc --minify --baseURL https://cozystack.io/
 ./hack/mirror_latest.sh public
-python3 hack/test_docs_seo.py public --latest v1.6  # use latest_version_id
+latest=$(hugo config --environment production --format json | jq -er '.params.latest_version_id')
+python3 hack/test_docs_seo.py public --latest "$latest" --base-url https://cozystack.io/
 HUGO=hugo python3 hack/test_docs_seo_fixtures.py
+```
+
+Check preview output separately:
+
+```sh
+hugo --environment preview --gc --minify --buildFuture --baseURL https://preview.invalid/ --destination public-preview
+./hack/mirror_latest.sh public-preview
+latest=$(hugo config --environment preview --format json | jq -er '.params.latest_version_id')
+python3 hack/test_docs_seo.py public-preview --latest "$latest" --environment preview --base-url https://preview.invalid/
 ```
 
 The fixture suite builds small sites to check minor-release rollover, translated
 copies, baseURL subpaths, previews, print output, HTTP responses without JavaScript,
-and invalid configuration. The output check also scans the full site's sitemaps.
+and invalid configuration. It also verifies that the output checker rejects missing legacy copies, wrong canonical URLs, indexable preview pages and noindex entries in sitemaps. The output check scans the full site's sitemaps and legacy URL registry, requires `next/` in previews and rejects it in production. Pass the actual publishing URL with `--base-url` when testing a custom domain or repository subpath.
 
