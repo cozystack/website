@@ -262,6 +262,15 @@ If you need to understand or change the versioning machinery itself:
   not. Local `make serve` keeps the version-selection landing and its navigation
   links at `/docs/`. The landing template carries `data-docs-version-landing` so
   repeat mirror runs can identify it independently of Open Graph metadata.
+- `data/docs-legacy-urls.json` maps old English URLs to current docs or a numbered
+  archive. The same generator serves full HTML copies at those paths, with the
+  source page's canonical and robots policy. Current-doc mappings also produce
+  their major-version paths. There is no redirect, so queries and existing
+  fragments stay on the requested URL. Copies carry `data-docs-legacy-url` and
+  are tracked in the manifest. Missing targets, symlinks and collisions with
+  real pages fail before output is replaced.
+  `distro-hosted` uses the v0 archive; the old LINSTOR path uses the storage
+  overview because its exact historical page was not identified.
 - `layouts/partials/docs-seo.html` supplies canonical and robots rules to the
   document head and sitemap. Current numbered docs and their copies canonicalize
   to `/docs/`. Older versions remain noindex and stay out of sitemaps.

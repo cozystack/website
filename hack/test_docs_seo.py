@@ -24,10 +24,13 @@ class Head(HTMLParser):
         self.languages = {}
         self.og_urls = []
         self.formats = {}
+        self.ids = set()
         self.feed(text)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if attrs.get("id"):
+            self.ids.add(attrs["id"])
         if tag == "link" and attrs.get("rel") == "canonical":
             self.canonical.append(attrs.get("href"))
         if tag == "meta" and attrs.get("name", "").lower() == "robots":
