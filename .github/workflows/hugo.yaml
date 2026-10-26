@@ -1,7 +1,7 @@
-# Sample workflow for building and deploying a Hugo site to GitHub Pages
 name: Deploy Hugo site to Pages
 
 on:
+  pull_request:
   # Runs on pushes targeting the default branch
   push:
     branches:
@@ -10,17 +10,14 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
-  pages: write
-  id-token: write
+  pages: read
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# PR checks have their own queue and cannot cancel a Pages publication.
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Default to bash
 defaults:
@@ -30,14 +27,21 @@ defaults:
 jobs:
   # Build job
   build:
+    name: Build and check (${{ matrix.environment }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [production, preview]
     env:
       HUGO_VERSION: 0.164.0
+      HUGO_ENVIRONMENT: ${{ matrix.environment }}
+      HUGO_ENV: ${{ matrix.environment }}
     steps:
       - name: Install Hugo CLI
         run: |
-          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
-          && sudo dpkg -i ${{ runner.temp }}/hugo.deb          
+          wget -O "$RUNNER_TEMP/hugo.deb" "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
+          sudo dpkg -i "$RUNNER_TEMP/hugo.deb"
       - name: Install Dart Sass
         run: sudo snap install dart-sass
       - name: Checkout
@@ -45,9 +49,13 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+          persist-credentials: false
       - name: Setup Pages
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && matrix.environment == 'production'
         id: pages
         uses: actions/configure-pages@v6
+        with:
+          enablement: false
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -56,31 +64,38 @@ jobs:
           # so pin an LTS that supports it.
           node-version: "22"
       - name: Install Node.js dependencies
-        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
+        run: npm ci
       - name: Download OpenAPI specs
         run: ./hack/download_openapi.sh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build with Hugo
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Build and check documentation
         env:
-          # For maximum backward compatibility with Hugo modules
-          HUGO_ENVIRONMENT: production
-          HUGO_ENV: production
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
-          hugo \
-            --gc \
-            --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
-      - name: Mirror latest docs under /docs/ and /docs/v<major>/
-        # GitHub Pages cannot redirect, so the stable aliases are real copies.
-        run: ./hack/mirror_latest.sh public
+          base_url="${PAGES_BASE_URL:-https://cozystack.io}"
+          args=(--environment "$HUGO_ENVIRONMENT" --gc --minify)
+          if [ "$HUGO_ENVIRONMENT" = preview ]; then
+            base_url=https://preview.invalid
+            args+=(--buildFuture)
+          fi
+          base_url="${base_url%/}/"
+          hugo "${args[@]}" --baseURL "$base_url"
+          ./hack/mirror_latest.sh public
+          latest=$(hugo config --environment "$HUGO_ENVIRONMENT" --format json | jq -er '.params.latest_version_id')
+          python3 hack/test_docs_seo.py public --latest "$latest" \
+            --environment "$HUGO_ENVIRONMENT" --base-url "$base_url"
+      - name: Check version rollover and legacy URL fixtures
+        if: matrix.environment == 'production'
+        run: python3 hack/test_docs_seo_fixtures.py
       - name: Patch robots.txt
         # if built in a contributor's repo and deployed to personal pages, disallow search indexing
-        if: github.repository_owner != 'cozystack'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && matrix.environment == 'production' && github.repository_owner != 'cozystack'
         run: |
           echo -e "\nDisallow: /" >> public/robots.txt
           cat public/robots.txt
       - name: Upload artifact
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && matrix.environment == 'production'
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./public
@@ -91,6 +106,10 @@ jobs:
 
   # Deployment job
   deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
