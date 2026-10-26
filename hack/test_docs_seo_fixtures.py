@@ -54,6 +54,7 @@ class DocsFixtureTests(unittest.TestCase):
         self.write("content/en/docs/v1.6/removed.md", '---\ntitle: Removed\n---\nOld page')
         self.write("content/en/private.md", '---\ntitle: Private\nparams:\n  noindex: true\n---\nPrivate')
         self.write("content/en/print.md", '---\ntitle: Print\noutputs: [HTML, PRINT]\n---\nPrint')
+        self.write("data/docs-legacy-urls.json", "{}")
         self.configure()
 
     def write(self, name, text):
@@ -369,6 +370,164 @@ aliases: [/docs/v1.6/old-links/]
             server.shutdown()
             thread.join()
             server.server_close()
+
+    def legacy_site(self):
+        self.write("data/docs-legacy-urls.json", (REPO / "data/docs-legacy-urls.json").read_text())
+        for version in ("v1.6", "v1.7"):
+            for path, name in (("applications/_index.md", "Applications"),
+                               ("applications/mariadb.md", "MariaDB"),
+                               ("install/talos/boot-to-talos.md", "Boot to Talos"),
+                               ("roadmap.md", "Roadmap"), ("storage/_index.md", "Storage")):
+                self.write(f"content/en/docs/{version}/{path}", f'---\ntitle: {name}\n---\n{name} {version}\n\n## Backups\n')
+        self.write("content/en/docs/v0/operations/configuration/bundles.md",
+                   '---\ntitle: Archived bundles\n---\nArchived bundles\n\n## distro-hosted\n')
+        return {
+            "/docs/reference/applications/": "/docs/applications/",
+            "/docs/reference/applications/mysql/": "/docs/applications/mariadb/",
+            "/docs/install/talos/kexec/": "/docs/install/talos/boot-to-talos/",
+            "/roadmap/": "/docs/roadmap/",
+            "/docs/bundles/distro-hosted/": None,
+            "/docs/operations/storage/linstor/": "/docs/storage/",
+            "/docs/v1/reference/applications/": "/docs/applications/",
+            "/docs/v1/reference/applications/mysql/": "/docs/applications/mariadb/",
+            "/docs/v1/install/talos/kexec/": "/docs/install/talos/boot-to-talos/",
+            "/docs/v1/operations/storage/linstor/": "/docs/storage/",
+        }
+
+    def test_legacy_urls_serve_current_and_archived_content(self):
+        expected = self.legacy_site()
+        self.build()
+        for old, target in expected.items():
+            with self.subTest(url=old):
+                page = self.head(old.lstrip("/") + "index.html")
+                self.assertFalse(page.refresh)
+                if target:
+                    self.assertEqual(page.canonical, ["https://example.org" + target])
+                    self.assertEqual(page.og_urls, page.canonical)
+                    self.assertEqual(page.robots, ["index, follow"])
+                    self.assertIn("backups", page.ids)
+                else:
+                    self.assertEqual(page.canonical, [])
+                    self.assertEqual(page.robots, ["noindex, follow"])
+                    self.assertIn("distro-hosted", page.ids)
+        self.configure("v1.7")
+        self.build()
+        for old, target in expected.items():
+            html = (self.public / old.lstrip("/") / "index.html").read_text()
+            self.assertIn("v1.7" if target else "Archived bundles", html)
+        archive = (self.public / "docs/v1.6/applications/mariadb/index.html").read_bytes()
+        self.mirror()
+        self.assertEqual((self.public / "docs/v1.6/applications/mariadb/index.html").read_bytes(), archive)
+
+    def test_legacy_urls_preserve_queries_and_fragments_without_javascript(self):
+        expected = self.legacy_site()
+        self.configure(base="https://example.org/project/")
+        self.build()
+        class QuietHandler(SimpleHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+        server = ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(QuietHandler, directory=self.public))
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            for old, target in expected.items():
+                fragment = "backups" if target else "distro-hosted"
+                url = f"http://127.0.0.1:{server.server_port}{old}?source=test#{fragment}"
+                with urlopen(url) as response:
+                    page = Head(response.read().decode())
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.geturl(), url)
+                    self.assertFalse(page.refresh)
+                    self.assertIn(fragment, page.ids)
+                    if target:
+                        self.assertEqual(page.canonical, ["https://example.org/project" + target])
+        finally:
+            server.shutdown()
+            thread.join()
+            server.server_close()
+
+    def test_invalid_legacy_map_preserves_previous_output(self):
+        expected = self.legacy_site()
+        self.build()
+        before = {old: (self.public / old.lstrip("/") / "index.html").read_bytes() for old in expected}
+        source = self.public / "docs/v1.6/applications/index.html"
+        source.write_text(source.read_text().replace("Applications v1.6", "Changed applications"))
+        self.write("public/docs/blocked", "existing file")
+        for old, target in (("/docs/unknown/", "/docs/missing/"),
+                            ("/docs/v0/overwrite/", "/docs/storage/"),
+                            ("/docs/../outside/", "/docs/storage/"),
+                            ("/docs/unknown/", "https://other.example/"),
+                            ("/docs/blocked/guide/", "/docs/storage/"),
+                            ("/docs/applications/", "/docs/storage/")):
+            with self.subTest(old=old, target=target):
+                mapping = {"/docs/reference/applications/": "/docs/applications/", old: target}
+                self.write("data/docs-legacy-urls.json", json.dumps(mapping))
+                self.mirror(success=False)
+                for path, content in before.items():
+                    self.assertEqual((self.public / path.lstrip("/") / "index.html").read_bytes(), content)
+        for mapping in ([], None, {"/docs/unknown/": None},
+                        {"/docs/unknown/": "/docs/storage/?x=one"},
+                        {"/docs/%2e%2e/outside/": "/docs/storage/"}):
+            self.write("data/docs-legacy-urls.json", json.dumps(mapping))
+            self.mirror(success=False)
+            for path, content in before.items():
+                self.assertEqual((self.public / path.lstrip("/") / "index.html").read_bytes(), content)
+
+    def test_legacy_map_refuses_symlinks(self):
+        self.legacy_site()
+        self.build()
+        archive = self.public / "docs/v0/guide/index.html"
+        original = archive.read_bytes()
+        old = self.public / "docs/reference/applications/mysql/index.html"
+        old.unlink()
+        old.symlink_to(archive)
+        self.mirror(success=False)
+        self.assertTrue(old.is_symlink())
+        self.assertEqual(archive.read_bytes(), original)
+
+    def test_legacy_map_refuses_archive_source_symlink_and_alias_target(self):
+        self.legacy_site()
+        self.write("content/en/docs/v1.6/guide.md", '---\ntitle: Guide\naliases: [/docs/v1.6/alias-guide/]\n---\nGuide')
+        self.build()
+        self.write("data/docs-legacy-urls.json", json.dumps({"/docs/old-guide/": "/docs/alias-guide/"}))
+        self.mirror(success=False)
+        self.write("data/docs-legacy-urls.json", (REPO / "data/docs-legacy-urls.json").read_text())
+        source = self.public / "docs/v0/operations/configuration/bundles/index.html"
+        source.unlink()
+        source.symlink_to(self.public / "docs/v0/guide/index.html")
+        self.mirror(success=False)
+        self.assertTrue(source.is_symlink())
+
+    def test_legacy_map_preserves_real_roadmap_page(self):
+        self.legacy_site()
+        self.write("content/en/roadmap.md", '---\ntitle: Standalone roadmap\n---\nStandalone roadmap')
+        result = subprocess.run([HUGO, "--minify"], cwd=self.root, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        before = (self.public / "roadmap/index.html").read_bytes()
+        self.mirror(success=False)
+        self.assertEqual((self.public / "roadmap/index.html").read_bytes(), before)
+
+    def test_legacy_preview_has_no_indexable_copies(self):
+        expected = self.legacy_site()
+        self.build("preview")
+        for old in expected:
+            page = self.head(old.lstrip("/") + "index.html")
+            self.assertEqual(page.robots, ["noindex, nofollow"])
+            self.assertEqual(page.canonical, [])
+        self.assertEqual(self.locations(), [])
+
+    def test_legacy_major_aliases_are_cleaned_on_major_rollover(self):
+        self.legacy_site()
+        self.build()
+        source = self.root / "content/en/docs/v1.7"
+        for file in source.rglob("*.md"):
+            self.write("content/en/docs/v2.0/" + str(file.relative_to(source)),
+                       file.read_text().replace("v1.7", "v2.0"))
+        self.configure("v2.0")
+        self.build()
+        self.assertFalse((self.public / "docs/v1/reference/applications/mysql/index.html").exists())
+        self.assertIn("v2.0", (self.public / "docs/v2/reference/applications/mysql/index.html").read_text())
+        self.assertTrue((self.public / "docs/v1.6/applications/mariadb/index.html").is_file())
 
 
 if __name__ == "__main__":
