@@ -39,7 +39,7 @@ Each tenant has its own set of applications and one or more nested Kubernetes cl
 Tenant users have full access to their clusters.
 Optionally, you can configure quotas for each tenant to limit resource usage and prevent overconsumption.
 
-To learn more about tenants, read the [Core Concepts]({{% ref "/docs/v1.4/guides/concepts#tenant-system" %}}) guide.
+To learn more about tenants, read the [Core Concepts]({{% ref "/docs/v1.4/guides/concepts#tenant" %}}) guide.
 
 
 ## Create a Tenant

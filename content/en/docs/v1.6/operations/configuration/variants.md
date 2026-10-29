@@ -47,13 +47,13 @@ or need full manual control over installed packages.
 [vm]: {{% ref "/docs/v1.6/virtualization" %}}
 [k8s]: {{% ref "/docs/v1.6/kubernetes" %}}
 [api]: {{% ref "/docs/v1.6/cozystack-api" %}}
-[monitoring subsystem]: {{% ref "/docs/v1.6/guides/platform-stack#victoria-metrics" %}}
-[linstor]: {{% ref "/docs/v1.6/guides/platform-stack#drbd" %}}
-[kube-ovn]: {{% ref "/docs/v1.6/guides/platform-stack#kube-ovn" %}}
-[cilium]: {{% ref "/docs/v1.6/guides/platform-stack#cilium" %}}
-[kubevirt]: {{% ref "/docs/v1.6/guides/platform-stack#kubevirt" %}}
-[talos linux]: {{% ref "/docs/v1.6/guides/platform-stack#talos-linux" %}}
-[kubernetes]: {{% ref "/docs/v1.6/guides/platform-stack#kubernetes" %}}
+[monitoring subsystem]: {{% ref "/docs/v1.6/guides/platform-stack#observability" %}}
+[linstor]: {{% ref "/docs/v1.6/guides/platform-stack#storage-and-backup" %}}
+[kube-ovn]: {{% ref "/docs/v1.6/guides/platform-stack#networking" %}}
+[cilium]: {{% ref "/docs/v1.6/guides/platform-stack#networking" %}}
+[kubevirt]: {{% ref "/docs/v1.6/guides/platform-stack#cluster-provisioning-and-virtualization" %}}
+[talos linux]: {{% ref "/docs/v1.6/guides/platform-stack#operating-system-and-kubernetes-runtime" %}}
+[kubernetes]: {{% ref "/docs/v1.6/guides/platform-stack#operating-system-and-kubernetes-runtime" %}}
 [kubernetes operators]: https://github.com/cozystack/cozystack/blob/main/packages/core/platform/templates/bundles/paas.yaml
 
 [default]: {{% ref "/docs/v1.6/operations/configuration/variants#default" %}}
