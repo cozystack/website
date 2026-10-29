@@ -1,5 +1,5 @@
 ---
-title: "Cozystack: бесплатная облачная платформа на базе Kubernetes"
+title: "Cozystack: свободная облачная платформа на базе Kubernetes"
 description: >
   Превратите набор bare-metal серверов в интеллектуальную систему с простым REST API для создания кластеров Kubernetes, баз данных как сервиса, виртуальных машин, балансировщиков нагрузки, сервисов HTTP-кэширования и других сервисов.
 
@@ -8,7 +8,7 @@ seo:
   title: "Cozystack — частное облако с открытым кодом на Kubernetes"
   description: "Open-source облачная платформа на Kubernetes: управляемые ВМ, базы данных, S3-хранилище и GPU. Проект CNCF Sandbox."
   keywords: ["частное облако", "managed kubernetes", "kubernetes платформа", "облачная платформа"]
-source_digest: "sha256:7b7c6ca6147cb877fc4d71cba375f8be099bfd8b83c05bf5f19dff5030b4ed4e"
+source_digest: "sha256:75141670f2b71f7aea8c92bb724d027ebbc863ac8c7d3a588b4bedbc34a8b66c"
 translation_status: current
 l10n: transcreate
 taglines:
@@ -67,71 +67,65 @@ use_cases:
 
 benefits:
   - title: API-first
-    icon: fas fa-code
+    icon: api-first
     description: >
       Cozystack построен на Kubernetes и предполагает тесное взаимодействие с его API. Платформа не стремится полностью спрятать все элементы за красивым UI или какими-либо кастомизациями. Вместо этого она даёт стандартный интерфейс и учит пользователей работать с базовыми примитивами.
   - title: Стандартизация и унификация
-    icon: fas fa-certificate
+    icon: standardization
     description: >
       Все компоненты платформы построены на проверенных open-source инструментах и технологиях, широко известных в индустрии.
       Мы стремимся использовать самые устоявшиеся и проверенные подходы, делая платформу очень простой и избегая привязки к вендору.
   - title: Сотрудничество, а не конкуренция
-    icon: fas fa-handshake
+    icon: collaborate
     description: >
       Мы гордимся нашим сообществом и тесно взаимодействуем с проектами вокруг него.
       Если мы создаём функцию платформы, которая может быть полезна в upstream-проекте,
       мы предпочитаем отдать её в этот проект, а не держать в платформе.
 features:
   - title: Простая установка
-    icon: fas fa-wrench
+    icon: install
     description: >
       С [talos-bootstrap](https://github.com/cozystack/talos-bootstrap/) мы даём предельно простой способ установки,
       позволяя развернуть Cozystack методами PXE или ISO на серверах в «голом» дата-центре.
       Использование immutable-ОС помогает поддерживать консистентность системы и гарантировать, что всё работает как задумано.
   - title: Простая интеграция
-    icon: fas fa-plug
+    icon: integrate
     description: >
       Мы предоставляем нативный RESTful API Kubernetes, широко известный своей декларативностью.
       Поэтому для интеграции с вашим биллингом достаточно научить вашу систему отправлять в Kubernetes API конкретный YAML-манифест, описывающий нужный сервис.
       Остальное Cozystack сделает за вас.
   - title: Простое расширение
-    icon: fas fa-up-right-and-down-left-from-center
+    icon: extend
     description: >
       Каждый пакет платформы состоит из набора YAML-файлов. Поэтому любой, кто знаком с примитивами Kubernetes, может модифицировать или расширять платформу. Доставку пакетов надёжно обеспечивает FluxCD — хорошо известный и широко используемый инструмент.
   - title: Высокая производительность при низких накладных расходах
-    icon: fas fa-gauge-high
+    icon: performance
     description: >
       Мы заботимся о производительности. Поэтому применяем самые производительные технологии, балансируя стабильность и функциональность.
       Более того, наша уникальная модель тенантов позволяет эффективно выделять облачные ресурсы под control plane, обеспечивая экономичность и необходимый уровень безопасности.
   - title: Встроенный мониторинг и алерты
-    icon: fas fa-area-chart
+    icon: monitoring
     description: >
       Каждый экземпляр каждого сервиса сопровождается набором преднастроенных дашбордов и алертов.
       Вы можете создавать отдельные центры мониторинга для каждого тенанта или объединять их в один.
   - title: Встроенный UI для управления приложениями
-    icon: fas fa-window-maximize
+    icon: ui
     description: >
       Хотя основная цель платформы — предоставить красивый API, у неё также есть панель управления для развёртывания приложений.
       Веб-интерфейс облегчает быстрое погружение в платформу и наглядно демонстрирует её возможности.
 ---
 
-<div class="hero-gitops">
-  {{% blocks/hero title="Cozystack: бесплатная облачная платформа на базе Kubernetes" color="primary"
-  height="auto" link_title="Начать" link_url="/ru/docs/v1.4/getting-started/" %}}
-  Превратите набор bare-metal серверов в интеллектуальную систему с простым REST API для создания кластеров Kubernetes, баз данных как сервиса, виртуальных машин, балансировщиков нагрузки, сервисов HTTP-кэширования и других сервисов.
-
-  Используйте Cozystack, чтобы построить собственное облако или предоставлять экономичные среды разработки.
-
-  {{% /blocks/hero %}}
-
-  <div class="lead-flux">
-  {{< blocks/lead >}}
-  {{< /blocks/lead >}}
-  </div>
-</div>
+{{< blocks/hero title="Cozystack: свободная облачная платформа на базе Kubernetes" link_title="Начать" link_url="/ru/docs/v1.4/getting-started/" >}}
+Используйте Cozystack, чтобы построить собственное облако или предоставлять экономичные среды разработки.
+{{< /blocks/hero >}}
 
 <!-- Screenshot Gallery -->
 {{< home/screenshot-gallery >}}
+
+<!-- Intro: description, certification badges, positioning -->
+{{< home/intro >}}
+Превратите набор bare-metal серверов в интеллектуальную систему с простым REST API для создания кластеров Kubernetes, баз данных как сервиса, виртуальных машин, балансировщиков нагрузки, сервисов HTTP-кэширования и других сервисов.
+{{< /home/intro >}}
 
 <!-- Live Demo -->
 <div class="section-live-demo">
@@ -166,25 +160,26 @@ features:
   <div class="subsection-community-row">
   {{< blocks/section color="dark" type="community-row">}}
 
-  {{< home/community icon="fab fa-github" title="GitHub Discussions" >}}
+  {{< home/community icon="github-discussions" title="GitHub Discussions" >}}
   <a target="_blank" rel="noopener noreferrer" href="https://github.com/cozystack/cozystack/discussions">Присоединяйтесь к обсуждению в GitHub Discussions</a>. Здесь происходит всё, что связано с Cozystack — от спецификаций и планирования функций до Show &amp; Tell.
 
   {{< /home/community >}}
 
-  {{< home/community icon="fab fa-slack" title="Slack" >}}
+  {{< home/community icon="slack" title="Slack" >}}
   Если хотите общаться с командой и сообществом Cozystack в реальном времени, присоединяйтесь к нам в Slack. Это отличный способ познакомиться со всеми.
 
   Получите <a target="_blank" rel="noopener noreferrer" href="https://slack.kubernetes.io/">приглашение в Slack</a> или перейдите в <a target="_blank" rel="noopener noreferrer" href="https://kubernetes.slack.com/messages/cozystack">канал <code>#cozystack</code></a>.
 
   {{< /home/community >}}
 
-  {{< home/community icon="fa fa-paper-plane" title="Telegram" >}}
+  {{< home/community icon="telegram" title="Telegram" >}}
   У нас также большое сообщество в Telegram. Присоединяйтесь к групповому чату <a target="_blank" rel="noopener noreferrer" href="https://t.me/cozystack/">@cozystack</a>, чтобы общаться с другими пользователями, задавать вопросы и быть в курсе последних новостей и разработок.
   {{< /home/community >}}
 
   {{< /blocks/section >}}
   </div>
 
-</div>
+  <!-- Introductory talk -->
+  {{< home/video >}}
 
-{{< home/cncf >}}
+</div>

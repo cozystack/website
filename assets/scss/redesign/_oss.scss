@@ -1,0 +1,141 @@
+// ---------- Resources: Telemetry, DevStats, OpenSSF, OSS Insight ----------
+// Same data and markup as before (rendered by oss-health-app.html); only the look moves
+// to the kit: flat white page, hairline borders, 6px corners, dark segmented switcher.
+
+.oss-health-shell {
+  margin-top: 70px;               // fixed navbar
+  padding-bottom: 5rem;
+  background: #fff;
+
+  &__hero { padding: 3rem 0 1rem; }
+
+  &__eyebrow {
+    margin-bottom: 18px;
+    color: var(--cz-muted);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .1em;
+  }
+
+  h1 {
+    margin: 0 0 18px;
+    font-size: clamp(44px, 6vw, 72px);
+    font-weight: 900;
+    line-height: 1.04;
+    letter-spacing: -0.045em;
+    color: var(--cz-ink);
+  }
+
+  &__lede { max-width: 680px; margin: 0; font-size: 21px; line-height: 1.5; letter-spacing: -0.015em; color: var(--cz-text); }
+
+  &__meta-item, &__meta-link {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--cz-muted);
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  &__meta-link { color: var(--cz-ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+
+  &__aside {
+    padding: 20px 22px;
+    border: 1px solid var(--cz-line);
+    border-radius: var(--cz-radius);
+    background: var(--cz-surface);
+    box-shadow: none;
+    color: var(--cz-text);
+
+    p { margin: 10px 0 0; font-size: 15px; line-height: 1.7; color: var(--cz-text); }
+  }
+
+  &__pulse { padding: 0; background: none; box-shadow: none; color: var(--cz-ink); font-size: 14px; font-weight: 700; }
+  &__pulse-dot { background: #44cc11; box-shadow: none; }
+}
+
+.oss-health-app { padding-top: 1rem; }
+
+.oss-health-stage {
+  padding: 40px 0 0;
+  border: 0;
+  border-top: 1px solid var(--cz-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+
+  h2 { font-size: 36px; font-weight: 800; letter-spacing: -0.035em; color: var(--cz-ink); }
+  &__kicker { color: var(--cz-muted); font-size: 13px; font-weight: 700; letter-spacing: .1em; }
+}
+
+.oss-health-switcher {
+  padding: 3px;
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  background: #fff;
+  box-shadow: none;
+
+  &__button {
+    border-radius: 4px;
+    background: transparent;
+    color: var(--cz-ink);
+    font-weight: 700;
+
+    &.is-active { background: var(--cz-ink); color: #fff; box-shadow: none; }
+  }
+}
+
+.oss-health-stat,
+.oss-health-panel,
+.oss-health-mini__item,
+.oss-health-state__panel,
+.oss-health-state__badge {
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  background: #fff;
+  box-shadow: none;
+}
+
+.oss-health-mini__item { background: var(--cz-surface); }
+
+.oss-health-stat {
+  &__label { color: var(--cz-muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+  &__value { color: var(--cz-ink); font-size: 44px; font-weight: 900; letter-spacing: -0.04em; }
+  &__hint { color: var(--cz-muted); }
+}
+
+.oss-health-panel__header h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; color: var(--cz-ink); }
+
+.oss-health-table {
+  th { color: var(--cz-muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+  td { color: var(--cz-text); font-size: 15px; }
+  td:last-child { color: var(--cz-ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+  td a { color: var(--cz-ink); text-decoration: underline; text-decoration-color: #b9bec6; text-underline-offset: 3px; }
+}
+
+.oss-health-language-pill {
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  background: #fff;
+  box-shadow: none;
+  color: var(--cz-text);
+}
+
+.oss-health-note { border-left: 3px solid var(--cz-line); color: var(--cz-muted); }
+
+.oss-health-state {
+  &__badge { background: var(--cz-surface); }
+  &__pill, &__pill.is-passing, &__pill.is-in-progress, &__pill.is-unknown { border-radius: var(--cz-radius); background: var(--cz-ink); color: #fff; box-shadow: none; }
+}
+
+.oss-health-actions .btn { border-radius: var(--cz-radius); }
+
+// Neutral text colours (the earlier palette used navy).
+.oss-health-mini__item strong,
+.oss-health-table td,
+.oss-health-table td:first-child { color: var(--cz-text); }
+.oss-health-mini__item strong { color: var(--cz-ink); }
+.oss-health-table td:last-child { color: var(--cz-ink); }
+.oss-health-mini__item span { color: var(--cz-muted); }

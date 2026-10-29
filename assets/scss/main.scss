@@ -126,10 +126,9 @@
 // Import Docsy styles_project (allows further customization)
 @import "docsy/styles_project";
 
-// Import Google Fonts (Montserrat)
-@import url($web-font-path);
+// Self-hosted Nunito Sans
+@import "fonts";
 
-// Ensure Montserrat font is applied to body
 body {
   font-family: $font-family-base;
 }
@@ -163,3 +162,6 @@ a {
 @import "tabs_alerts";
 @import "override-docsy-tabs";
 @import "telemetry";
+
+// Site redesign (must stay last)
+@import "redesign/redesign";

@@ -1,0 +1,316 @@
+// ---------- Content pages: docs, blog, community, support, compliance ----------
+
+// Page layout. The sidebars stay Docsy's; they only change colour and weight.
+.td-main main { background: transparent; }
+
+.td-content {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--cz-text);
+
+  h1 {
+    margin: 0 0 .6em;
+    font-size: clamp(32px, 3.4vw, 48px);
+    font-weight: 900;
+    line-height: 1.08;
+    letter-spacing: -0.04em;
+    color: var(--cz-ink);
+  }
+
+  h2 { margin: 2.2rem 0 .8rem; font-size: 28px; font-weight: 800; line-height: 1.25; letter-spacing: -0.02em; color: var(--cz-ink); }
+  h3 { margin: 1.8rem 0 .6rem; font-size: 21px; font-weight: 700; line-height: 1.3; letter-spacing: -0.02em; color: var(--cz-ink); }
+  h4, h5 { margin: 1.5rem 0 .5rem; font-size: 18px; font-weight: 700; color: var(--cz-ink); }
+
+  // Long identifiers in headings (e.g. NetworkAttachmentDefinition) must wrap, not widen the page.
+  h1, h2, h3, h4, h5, h6 { overflow-wrap: anywhere; }
+
+  @include media-breakpoint-down(md) {
+    h2 { font-size: 24px; }
+    h3 { font-size: 19px; }
+  }
+
+  p, li { color: var(--cz-text); }
+  strong, b { color: var(--cz-ink); }
+
+  a:not(.btn):not(.cz-link):not(.taxonomy-term) {
+    color: var(--cz-ink);
+    text-decoration: underline;
+    text-decoration-color: #b9bec6;
+    text-underline-offset: 3px;
+
+    &:hover { text-decoration-color: var(--cz-ink); }
+  }
+
+  hr { border-color: var(--cz-line); opacity: 1; }
+
+  blockquote {
+    margin: 1.5rem 0;
+    padding: .25rem 0 .25rem 1.25rem;
+    border-left: 3px solid var(--cz-line);
+    color: var(--cz-text);
+  }
+
+  img { max-width: 100%; height: auto; border-radius: var(--cz-radius); }
+}
+
+// Breadcrumbs
+.td-breadcrumbs, .breadcrumb {
+  font-size: 13px;
+  background: transparent;
+  padding-left: 0;
+
+  .breadcrumb-item, .breadcrumb-item a { color: var(--cz-muted); text-decoration: none; }
+  .breadcrumb-item.active, .breadcrumb-item.active a { color: var(--cz-ink); font-weight: 600; }
+  .breadcrumb-item + .breadcrumb-item::before { color: #b9bec6; content: "/"; }
+}
+
+// Tables
+.td-content table:not(.lntable):not(.highlight) {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  font-size: 15px;
+  line-height: 1.55;
+  overflow: hidden;
+
+  thead th, thead td {
+    padding: 12px 14px;
+    border: 0;
+    border-bottom: 1px solid var(--cz-line);
+    background: var(--cz-surface);
+    color: var(--cz-ink);
+    font-weight: 700;
+    text-align: left;
+  }
+
+  tbody td, tbody th {
+    padding: 12px 14px;
+    border: 0;
+    border-top: 1px solid var(--cz-line);
+    background: #fff;
+    color: var(--cz-text);
+    vertical-align: top;
+  }
+
+  tbody tr:first-child td, tbody tr:first-child th { border-top: 0; }
+  tbody tr td, tbody tr th { background: #fff !important; box-shadow: none; }
+  tbody tr { background: #fff !important; }
+  tbody td:first-child { color: var(--cz-ink); font-weight: 600; }
+
+  // Raw-HTML tables (no wrapper): scroll inside the column rather than widen the page.
+  display: block !important;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+// Markdown tables arrive wrapped (render-table.html): the wrapper draws the frame and
+// scrolls, the table keeps its natural layout and fills the width.
+.cz-table-wrap {
+  margin: 1.5rem 0;
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  overflow-x: auto;
+
+  > table:not(.lntable):not(.highlight) {
+    display: table !important;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+}
+
+// Plain pages (community, support, compliance, resources): a readable column.
+.page.td-content.container { max-width: 960px; }
+
+// Code
+.td-content code, code {
+  padding: 1px 5px;
+  border: 1px solid var(--cz-line);
+  border-radius: 4px;
+  background: #f1f3f5;
+  color: var(--cz-ink);
+  font-size: .875em;
+}
+
+.td-content pre, .highlight pre, pre.chroma {
+  padding: 16px 18px;
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  background: var(--cz-surface) !important;
+  color: var(--cz-ink);
+  font-size: 14px;
+  line-height: 1.65;
+
+  code { padding: 0; border: 0; border-radius: 0; background: none; color: inherit; font-size: inherit; }
+}
+
+// Alerts and notes
+.td-content .alert, .alert {
+  border: 1px solid var(--cz-line);
+  border-left: 3px solid var(--cz-ink);
+  border-radius: var(--cz-radius);
+  background: var(--cz-surface);
+  color: var(--cz-text);
+
+  .alert-heading, h4 { color: var(--cz-ink); }
+}
+
+// Tabs
+.nav-tabs {
+  border-bottom: 1px solid var(--cz-line);
+
+  .nav-link {
+    padding: .6rem 1rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--cz-muted);
+    font-weight: 600;
+
+    &:hover { color: var(--cz-ink); }
+    &.active { border-bottom-color: var(--cz-ink); background: transparent; color: var(--cz-ink); font-weight: 700; }
+  }
+}
+
+// Docs sidebar
+.td-sidebar {
+  background: transparent !important;
+  border-right: 1px solid var(--cz-line);
+}
+
+.td-sidebar-nav {
+  .td-sidebar-link {
+    color: var(--cz-text);
+    font-size: 14px;
+    font-weight: 600;
+
+    &:hover { color: var(--cz-ink); text-decoration: underline; text-underline-offset: 3px; }
+    &.tree-root { color: var(--cz-ink); font-weight: 800; }
+  }
+
+  .active, .td-sidebar-nav-active-item { color: var(--cz-ink) !important; font-weight: 800; }
+  .td-sidebar-link__page { font-weight: 500; }
+}
+
+.version-switcher__toggle {
+  border: 1px solid var(--cz-line) !important;
+  border-radius: var(--cz-radius) !important;
+  background: #fff !important;
+  color: var(--cz-ink) !important;
+  font-weight: 600;
+}
+
+.version-switcher__menu {
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  box-shadow: 0 12px 32px rgba(17, 17, 17, .08);
+}
+
+// Right column: page links and table of contents
+.td-sidebar-toc {
+  .td-page-meta a, .td-page-meta { color: var(--cz-text); font-size: 13px; font-weight: 600; text-decoration: none; }
+  a { color: var(--cz-text); }
+  a.active, a:hover { color: var(--cz-ink); }
+  border-left: 1px solid var(--cz-line);
+}
+
+#TableOfContents a { font-size: 13px; }
+#TableOfContents a.active, #TableOfContents li.active > a { color: var(--cz-ink); font-weight: 700; }
+
+.td-page-meta a { color: var(--cz-text); }
+
+// Blog
+.td-blog, .td-content .blog-post-card {
+  .blog-post-card h5 { margin: 0 0 .25rem; font-size: 24px; font-weight: 800; line-height: 1.25; letter-spacing: -0.025em; }
+}
+
+.blog-post-card {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--cz-line);
+
+  h5 a { color: var(--cz-ink); text-decoration: none !important; &:hover { text-decoration: underline !important; text-underline-offset: 3px; } }
+  .media-body > p:last-child a, .media-body a.read-more { font-weight: 700; }
+}
+
+.taxonomy-title, .td-content h5.taxonomy-title { display: inline; margin: 0 8px 0 0; font-size: 13px; font-weight: 700; color: var(--cz-muted); letter-spacing: .02em; }
+.td-sidebar-toc h5, .td-sidebar-toc .taxonomy-title { color: var(--cz-ink); font-size: 14px; font-weight: 800; }
+
+.taxonomy-term,
+.td-sidebar-toc .taxonomy-term,
+a.taxonomy-term {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1px solid var(--cz-line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--cz-text) !important;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none !important;
+
+  &::before, &::after { display: none !important; }
+  &:hover { background: var(--cz-surface); color: var(--cz-ink) !important; }
+}
+
+.blog-filter, .filter-container {
+  border-radius: var(--cz-radius);
+
+  select, .form-select {
+    border: 1px solid var(--cz-line);
+    border-radius: var(--cz-radius);
+    background-color: #fff;
+    color: var(--cz-ink);
+    font-weight: 600;
+  }
+}
+
+// Support, community and resource pages use plain tables and lists inside .td-content,
+// so they pick up the table and link styles above.
+
+// Pagination
+.pagination .page-link {
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  color: var(--cz-ink);
+  margin: 0 2px;
+
+  &:hover { background: var(--cz-surface); }
+}
+.pagination .page-item.active .page-link { background: var(--cz-ink); border-color: var(--cz-ink); color: #fff; }
+
+// Page meta footer
+.td-page-meta, .td-content .lastmod, .td-content > footer { color: var(--cz-muted); font-size: 13px; }
+
+// "Article types:" / "Topics:" labels in the blog list: small and muted, on the same line as the chips.
+.td-content .taxonomy .taxonomy-title,
+header.article-meta .taxonomy-title {
+  display: inline-block !important;
+  margin: 0 8px 0 0 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: .02em;
+  color: var(--cz-muted) !important;
+  vertical-align: middle;
+}
+
+// Year headings in the blog list ("Posts in 2026").
+.blog-year-group > h2 {
+  margin: 2rem 0 .75rem;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--cz-ink);
+}
+
+// Sidebar toggle (docs and blog, below md): ThreeBarsIcon from the kit.
+.td-sidebar__toggle { color: var(--cz-ink); line-height: 1; svg { display: block; width: 24px; height: 24px; } }
+
+// Octicons used in the page links (right column) and the blog RSS button.
+.cz-oct { display: inline-flex; width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; svg { width: 16px; height: 16px; fill: currentColor; } }
+.td-rss-button .cz-oct { width: 20px; height: 20px; margin: 0; vertical-align: middle; svg { width: 20px; height: 20px; } }

@@ -1,26 +1,16 @@
 {{ $features := $.Page.Params.features -}}
-
-<div class="container features">
-    <div class="row feature-section mb-5">
-      <div class="col-lg-12 mt-5 mb-5">
-        <h2 class="text-center">{{ T "home_features" }}</h2>
-      </div>
-
+<section class="cz-features">
+  <div class="container">
+    <h2 class="cz-section-title">{{ T "home_features" }}</h2>
+    <div class="cz-cols">
       {{ range $features -}}
-      {{ $icon  := .icon -}}
-      {{ $desc := .description | markdownify -}}
-      {{ $title := .title | markdownify -}}
-
-      <div class="col-lg-4 mb-5">
-        <div class="feature-card">
-          <div class="card-header-custom">
-            <i class="{{ $icon }} fa-2x"></i>
-            <h4 class="my-3">{{ $title }}</h4>
-          </div>
-          <p class="section-text">{{ $desc }}</p>
-        </div>
-      </div>
+      {{ $icon := .icon }}
+      <article class="cz-col">
+        <span class="cz-col__icon" aria-hidden="true">{{ with resources.Get (printf "icons/home/%s.svg" $icon) }}{{ .Content | safeHTML }}{{ end }}</span>
+        <h3 class="cz-col__title">{{ .title | markdownify }}</h3>
+        <div class="cz-col__text">{{ .description | markdownify }}</div>
+      </article>
       {{ end }}
     </div>
   </div>
-</div>
+</section>

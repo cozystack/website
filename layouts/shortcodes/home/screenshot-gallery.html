@@ -1,113 +1,31 @@
 {{ $_hugo_config := `{ "version": 1 }` -}}
-<section class="screenshot-gallery">
+<section class="screenshot-gallery cz-shots">
   <div class="container">
-    <div class="row mb-5"></div>
-    <div class="row">
-      <div class="col-lg-12 mt-5 mb-3">
-        <h2 class="text-center">{{ T "home_screenshots" }}</h2>
-      </div>
-    </div>
+    <h2 class="visually-hidden">{{ T "home_screenshots" }}</h2>
 
     <div id="galleryCarousel" class="carousel slide" data-bs-ride="false">
-      <div class="carousel-inner">
+      <div class="carousel-inner cz-shots__frame">
         {{- range $idx, $n := seq 16 }}
         <div class="carousel-item{{ if eq $idx 0 }} active{{ end }}">
-          <div class="screenshot-wrapper">
-            <img src="/img/carousel/{{ $n }}.png" class="screenshot-img" alt="Screenshot {{ $n }}">
-          </div>
+          <img src="/img/carousel/{{ $n }}.png" class="screenshot-img" alt="Screenshot {{ $n }}"{{ if gt $idx 0 }} loading="lazy"{{ end }}>
         </div>
         {{- end }}
       </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
-      <div class="carousel-indicators" aria-label="Screenshot navigation">
-        {{- range $idx, $n := seq 16 }}
-        <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="{{ $idx }}"{{ if eq $idx 0 }} class="active" aria-current="true"{{ end }} aria-label="Slide {{ $n }}"></button>
-        {{- end }}
+      <div class="cz-shots__bar">
+        <div class="carousel-indicators" aria-label="Screenshot navigation">
+          {{- range $idx, $n := seq 16 }}
+          <button type="button" data-bs-target="#galleryCarousel" data-bs-slide-to="{{ $idx }}"{{ if eq $idx 0 }} class="active" aria-current="true"{{ end }} aria-label="Slide {{ $n }}"></button>
+          {{- end }}
+        </div>
+        <div class="cz-shots__nav">
+          <button class="cz-iconbtn" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev" aria-label="Previous">
+            {{ with resources.Get "icons/ui/arrow-left.svg" }}{{ .Content | safeHTML }}{{ end }}
+          </button>
+          <button class="cz-iconbtn" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next" aria-label="Next">
+            {{ with resources.Get "icons/ui/arrow-right.svg" }}{{ .Content | safeHTML }}{{ end }}
+          </button>
+        </div>
       </div>
     </div>
-
-    <div class="row mb-5"></div>
   </div>
 </section>
-
-<style>
-.screenshot-gallery .carousel {
-  position: relative;
-}
-
-.screenshot-gallery .screenshot-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.screenshot-gallery .screenshot-img {
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.screenshot-gallery .carousel-control-prev,
-.screenshot-gallery .carousel-control-next {
-  width: 56px;
-  opacity: 1;
-}
-
-.screenshot-gallery .carousel-control-prev-icon,
-.screenshot-gallery .carousel-control-next-icon {
-  width: 48px;
-  height: 48px;
-  background-color: rgba(0, 0, 0, 0.55);
-  border-radius: 50%;
-  background-size: 50% 50%;
-  transition: background-color 0.2s ease;
-}
-
-.screenshot-gallery .carousel-control-prev:hover .carousel-control-prev-icon,
-.screenshot-gallery .carousel-control-next:hover .carousel-control-next-icon,
-.screenshot-gallery .carousel-control-prev:focus .carousel-control-prev-icon,
-.screenshot-gallery .carousel-control-next:focus .carousel-control-next-icon {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
-.screenshot-gallery .carousel-indicators {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 1rem;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.screenshot-gallery .carousel-indicators [data-bs-target] {
-  width: 12px;
-  height: 12px;
-  padding: 0;
-  margin: 0;
-  border: 0;
-  border-radius: 50%;
-  background-color: #c7ccd1;
-  opacity: 1;
-  text-indent: 0;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.screenshot-gallery .carousel-indicators [data-bs-target]:hover {
-  background-color: #8a939c;
-}
-
-.screenshot-gallery .carousel-indicators [data-bs-target].active {
-  background-color: #1a73e8;
-  transform: scale(1.15);
-}
-</style>

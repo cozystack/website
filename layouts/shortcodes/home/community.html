@@ -1,8 +1,12 @@
-{{ $icon := .Get "icon" | default "fa-lightbulb" }}
+{{/*
+  home/community: one channel in the community section.
+  `icon` is the name of an SVG in assets/icons/home/ (the icons come from the Figma kit).
+*/ -}}
+{{ $icon := .Get "icon" | default "github-discussions" }}
 <div class="text-center community-item">
   <div class="community-item-header">
     <div class="h1">
-      <i class="{{ if not (or (hasPrefix $icon "fas ") (hasPrefix $icon "fab ")) }}fas {{ end }}{{ $icon }}"></i>
+      {{ with resources.Get (printf "icons/home/%s.svg" $icon) }}<span class="cz-icon" aria-hidden="true">{{ .Content | safeHTML }}</span>{{ end }}
     </div>
     <h4 class="h3">
       {{ .Get "title" | htmlUnescape | safeHTML }}

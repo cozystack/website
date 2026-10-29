@@ -1,0 +1,28 @@
+{{- /*
+  Markdown tables are wrapped in a scroll container so a wide table (parameter
+  references, API tables) scrolls inside the column instead of widening the page.
+  Tables written as raw HTML are not touched; the stylesheet gives them their own
+  horizontal scroll.
+*/ -}}
+<div class="cz-table-wrap">
+<table{{ range $k, $v := .Attributes }} {{ $k }}="{{ $v }}"{{ end }}>
+  <thead>
+    {{- range .THead }}
+    <tr>
+      {{- range . }}
+      <th{{ with .Alignment }} style="text-align: {{ . }}"{{ end }}>{{ .Text }}</th>
+      {{- end }}
+    </tr>
+    {{- end }}
+  </thead>
+  <tbody>
+    {{- range .TBody }}
+    <tr>
+      {{- range . }}
+      <td{{ with .Alignment }} style="text-align: {{ . }}"{{ end }}>{{ .Text }}</td>
+      {{- end }}
+    </tr>
+    {{- end }}
+  </tbody>
+</table>
+</div>

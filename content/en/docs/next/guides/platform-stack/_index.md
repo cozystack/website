@@ -129,8 +129,6 @@ Cozystack-maintained charts, CRDs, controllers, and application APIs are license
 ## Managed networking services
 
 {{< oss-cards >}}
-{{< oss-card name="NGINX" logo="nginx" license="BSD-2-Clause" source="https://github.com/nginx/nginx/blob/master/LICENSE" description="Powers the managed HTTP Cache service with reverse-proxy caching and GeoIP filtering. Scales horizontally without a shared filesystem." >}}
-{{< oss-card name="HAProxy" logo="haproxy" license="GPL-2.0 with exceptions" source="https://github.com/haproxy/haproxy/blob/master/LICENSE" description="Enterprise TCP/HTTP load balancer powering the managed TCP Balancer and HTTP Cache. Provides active health checks and high-throughput connection handling." >}}
-{{< oss-card name="IP2Location modules" license="MIT" source="https://github.com/ip2location/ip2location-nginx/blob/master/LICENSE" description="GeoIP modules (IP2Location and IP2Proxy) bundled into the HTTP Cache. Enables country-based traffic filtering and proxy/VPN detection." >}}
+{{< oss-card name="HAProxy" logo="haproxy" license="GPL-2.0 with exceptions" source="https://github.com/haproxy/haproxy/blob/master/LICENSE" description="Enterprise TCP/HTTP load balancer powering the managed TCP Balancer. Provides active health checks and high-throughput connection handling." >}}
 {{< oss-card name="Outline Server (Shadowsocks)" logo="outline" license="Apache-2.0" source="https://github.com/OutlineFoundation/outline-server/blob/master/LICENSE" description="Shadowsocks-based VPN backend developed by Google's Jigsaw team. Manages Shadowsocks instances with symmetric encryption to resist DPI traffic analysis." >}}
 {{< /oss-cards >}}

@@ -93,7 +93,7 @@ spec:
 | Value | Default | Description |
 | --- | --- | --- |
 | `networking.clusterDomain` | `"cozy.local"` | Internal cluster domain name. |
-| `networking.podCIDR` | `"10.244.0.0/16"` | The pod subnet used by Pods to assign IPs. |
+| `networking.podCIDR` | `"10.244.0.0/16"` | The pod subnet used by Pods to assign IPs. On the Kube-OVN variants (`isp-full`, `isp-full-generic`) its last /21 is reserved for the router and Gateway API Ingress addresses of Cilium and Kube-OVN does not hand it out, so it needs a prefix of /20 or shorter. Each node takes a /29 of that /21, which caps these variants at 256 nodes. |
 | `networking.podGateway` | `"10.244.0.1"` | The gateway address for the pod subnet. |
 | `networking.serviceCIDR` | `"10.96.0.0/16"` | The service subnet used by Services to assign IPs. |
 | `networking.joinCIDR` | `"100.64.0.0/16"` | The `join` subnet for network communication between the Node and Pod. Follow the [kube-ovn] documentation to learn more. |

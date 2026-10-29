@@ -176,6 +176,20 @@
       color: #fff;
     }
   }
+
+  // Three 7rem buttons don't fit on phones and push the page sideways.
+  @include media-breakpoint-down(lg) {
+    display: flex;
+    max-width: 100%;
+    width: 100%;
+
+    &__button {
+      flex: 1 1 0;
+      min-width: 0;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+  }
 }
 
 .oss-health-grid {
