@@ -246,8 +246,12 @@ params:
   offlineSearch: false
   version_menu: "Versions"
   version_menu_pagelinks: true
-  latest_version_id: "v1.6"
+  latest_version_id: "v1.7"
   versions:
+    - version: "v1.7"
+      url: "/docs/v1.7/"
+      id: "v1.7"
+      order: 9
     - version: "v1.6"
       url: "/docs/v1.6/"
       id: "v1.6"

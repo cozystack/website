@@ -1,0 +1,13 @@
+# Pinned upstream-tool versions for the Cozystack v1.7 docs.
+#
+# Snapshotted from data/versions/next.yaml by hack/release_next.sh when v1.7
+# was released. 'make update-all' does not rewrite it; patch releases
+# update it by hand (hack/release-checklist.md).
+
+# Cozystack release the docs are pinned to.
+cozystack_version: "1.7.0"
+cozystack_tag:     "v1.7.0"
+
+# Talos version shipped by the Cozystack installer for this minor.
+talos:       "v1.14.2"
+talos_minor: "v1.14"           # the docs minor used by talos.dev URLs
