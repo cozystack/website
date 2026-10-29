@@ -9,21 +9,29 @@ Cozystack v1.7 changes the behaviour of running clusters in several places. This
 
 {{% alert title="Platform migrations do not run on the default variant" color="warning" %}}
 
-On every other variant the v1.7 platform release runs platform migrations 54 to 59 as a pre-upgrade hook, before any package moves to its new chart. The [`default`]({{% ref "/docs/next/operations/configuration/variants#default" %}}) variant runs none, so on such a cluster the steps those migrations would take for SeaweedFS, VM volume hotplug and HTTPCache are yours, before the upgrade.
+On every other variant the v1.7 platform release runs platform migrations 54 to 60 as a pre-upgrade hook, before any package moves to its new chart. The [`default`]({{% ref "/docs/next/operations/configuration/variants#default" %}}) variant runs none, so on such a cluster the steps those migrations would take for SeaweedFS, VM volume hotplug, HTTPCache and FoundationDB are yours, before the upgrade.
 
 {{% /alert %}}
 
 ## Before you upgrade
 
 - Every node: add `drbd_transport_tcp` to the Talos kernel modules before the node moves to Talos v1.14. See [Talos v1.14](#talos-v114).
+- Every node: make sure it has free disk space. On a test cluster, nodes reported `DiskPressure` during the platform upgrade and the kubelet evicted pods.
+- Right after the upgrade: read the log of the migration hook. On a test cluster it could no longer be read about 20 minutes after the run. See [Platform migrations](#platform-migrations).
 - `isp-full` and `isp-full-generic`: check that `networking.podCIDR` has a prefix of /20 or shorter. See [Cilium address block](#cilium-address-block).
+- A `cozystack.networking` variant set by hand: list `cozystack.networking` in `bundles.disabledPackages`. See [Networking variant switch](#networking-variant-switch).
 - Tenant Kubernetes clusters: remove `controlPlane.apiServer.extraArgs` entries that name a flag the tenant control plane sets itself. See [Kamaji and tenant control planes](#kamaji-and-tenant-control-planes).
+- Tenant Kubernetes clusters: plan for every tenant kube-apiserver to roll at least twice. See [Kamaji and tenant control planes](#kamaji-and-tenant-control-planes).
 - Tenant Kubernetes clusters: plan for the Talos workers of every pool to be replaced once. See [Worker pools become KubernetesNodes resources](#worker-pools-become-kubernetesnodes-resources).
 - Multus: decide whether the reference CNI plugins may be written to `/opt/cni/bin` on every node. See [Multus stages CNI plugins](#multus-stages-cni-plugins).
-- FoundationDB: upgrade every cluster that runs 7.1.x to 7.3. See [FoundationDB 7.1](#foundationdb-71).
+- FoundationDB: upgrade every cluster that runs 7.1.x to 7.3, and check the running patch of every cluster. On the `default` variant, also set `version` on every release. See [FoundationDB](#foundationdb).
+- Kubernetes, KubernetesNodes and OpenSearch: check releases that set `images.*`, OpenSearch releases that run a custom image, and OpenSearch releases that store `version: null`. See [Image overrides](#image-overrides).
 - PostgreSQL with `external: true`: find clients that disable TLS. See [PostgreSQL](#postgresql).
+- PostgreSQL: plan for every instance to restart at least once, and find clients that log in with a role no longer listed in `users`. See [PostgreSQL](#postgresql) and [PostgreSQL and MariaDB passwords](#postgresql-and-mariadb-passwords).
 - OpenSearch with `external: true` or Dashboards: see [OpenSearch](#opensearch).
 - Gateway API: check the certificate served on `api.<apex>` and the hostnames of routes in tenant namespaces. See [Gateway API](#gateway-api).
+- `VMInstance` VMs: move every volume hot-plugged only on the running VM into `spec.disks`. See [Declarative volume hotplug](#declarative-volume-hotplug).
+- VM disks: let running imports finish. See [VM disks](#vm-disks).
 - VM instances: fix `resources` values that cannot size a VM. See [Smaller changes](#smaller-changes).
 - Kafka: plan a maintenance window for every instance. See [Kafka moves to KRaft](#kafka-moves-to-kraft).
 - `default` variant only: pin the SeaweedFS volume size limit and look for volumes hotplugged on a VM instance only. See [SeaweedFS volume size limit](#seaweedfs-volume-size-limit) and [Declarative volume hotplug](#declarative-volume-hotplug).
@@ -31,7 +39,7 @@ On every other variant the v1.7 platform release runs platform migrations 54 to 
 
 ## Platform migrations
 
-The platform migration version moves from 54, where v1.6 left it, to 60. On every variant except `default`, the migrations below run once each, in order, as a pre-upgrade hook of the platform release:
+The platform migration version moves from 54, where v1.6 left it, to 61. On every variant except `default`, the migrations below run once each, in order, as a pre-upgrade hook of the platform release:
 
 | Migration | What it does |
 | --- | --- |
@@ -41,6 +49,7 @@ The platform migration version moves from 54, where v1.6 left it, to 60. On ever
 | 57 | Writes `master.volumeSizeLimitMB: 1000` into every SeaweedFS instance that has no valid value of its own. See [SeaweedFS volume size limit](#seaweedfs-volume-size-limit). |
 | 58 | Freezes HTTPCache on the packages artifact the cluster already runs, or removes it from the platform where no instance exists. See [Smaller changes](#smaller-changes). |
 | 59 | Copies volumes that are hotplugged on a running VM instance but missing from its `VirtualMachine` spec into that spec. See [Declarative volume hotplug](#declarative-volume-hotplug). |
+| 60 | Carries the release line of every FoundationDB release's `cluster.version` over to the new `version` value, and records the FoundationDB, OpenSearch, Kubernetes and KubernetesNodes releases that need attention in the `cozystack.io/migration-60-needs-attention` annotation of the `cozystack-version` ConfigMap. See [FoundationDB](#foundationdb) and [Image overrides](#image-overrides). |
 
 After the upgrade, the `cozystack-version` ConfigMap shows the version the migrations reached:
 
@@ -49,6 +58,18 @@ kubectl -n cozy-system get configmap cozystack-version -o jsonpath='{.data.versi
 ```
 
 A migration that fails stops the platform upgrade and is retried on the next attempt; one that succeeded does not run again.
+
+The migrations write what they did, warnings included, to the log of the `cozystack-migration-hook` Job. Read it as soon as the migrations finish. The chart does not delete the Job when it finishes, but on a test cluster the container log of its pod was gone about 20 minutes after the run, while nodes reported disk pressure. The cause is not established.
+
+```bash
+kubectl -n cozy-system logs job/cozystack-migration-hook
+```
+
+If the log can no longer be read, migration 60's records are still in the annotation it writes on the `cozystack-version` ConfigMap, which exists only when the migration recorded at least one release:
+
+```bash
+kubectl -n cozy-system get configmap cozystack-version -o jsonpath='{.metadata.annotations.cozystack\.io/migration-60-needs-attention}{"\n"}'
+```
 
 ## Talos v1.14
 
@@ -75,6 +96,13 @@ extraKernelModules:
 
 Talos v1.14 accepts a direct upgrade from v1.12.0 or later, and supports Kubernetes 1.32 to 1.37. See [talm]({{% ref "/docs/next/install/kubernetes/talm" %}}) for how nodes are configured and upgraded.
 
+**A drain can stop on a PodDisruptionBudget.** CloudNativePG covers the primary of each PostgreSQL instance with a PodDisruptionBudget, `<release>-primary`, that allows no disruption. On a test cluster, `kubectl drain` evicted most pods of the node within the first minute, but every eviction of the primary of an instance with a single replica, or of one whose second replica was pending, was refused until the drain ran into its timeout and exited with the node cordoned. Before draining a node, list the budgets that allow no disruption, and plan for the downtime of what they cover:
+
+```bash
+kubectl get poddisruptionbudgets -A -o json \
+  | jq -r '.items[] | select(.status.disruptionsAllowed == 0) | "\(.metadata.namespace)/\(.metadata.name)"'
+```
+
 **etcd metrics move to port 2383.** Talos v1.14 serves etcd's HTTP endpoints, such as `/metrics` and `/health`, on a separate listener on port 2383, and port 2379 serves gRPC only. On the variants where Cozystack manages Cilium, the host network policy `restrict-system-components` denies port 2383 from outside the cluster, as it does 2379 and 2380. Cozystack's own monitoring reads neither port. A scraper of your own inside the cluster that reads etcd's HTTP endpoints from port 2379 has to move to 2383.
 
 Tenant Kubernetes clusters are not part of this: their workers keep the Talos version their `KubernetesNodes` pool sets.
@@ -83,7 +111,7 @@ Tenant Kubernetes clusters are not part of this: their workers keep the Talos ve
 
 ### Worker pools become KubernetesNodes resources
 
-The `Kubernetes` resource no longer describes worker nodes. `spec.nodeGroups` and `spec.nodeHealthCheck` are removed, and each worker pool is a `KubernetesNodes` resource (`apps.cozystack.io/v1alpha1`) in the same namespace, named `<cluster>-<pool>`, whose `spec.cluster` names the parent cluster. Pool size and machine settings, the health-check settings (`maxUnhealthy`, `nodeStartupTimeout`, `readyUnknownTimeout`, `readyFalseTimeout`) and the autoscaler budget `maxNodeProvisionTime` are set per pool. `cluster` and `storageClass` are immutable once the pool exists.
+The `Kubernetes` resource no longer describes worker nodes. `spec.nodeGroups` and `spec.nodeHealthCheck` are removed, and each worker pool is a `KubernetesNodes` resource (`apps.cozystack.io/v1alpha1`) in the same namespace, named `<cluster>-<pool>`, whose `spec.cluster` names the parent cluster. Pool size and machine settings, the health-check settings (`maxUnhealthy`, `nodeStartupTimeout`, `readyUnknownTimeout`, `readyFalseTimeout`) and the autoscaler budget `maxNodeProvisionTime` are set per pool. `cluster` and `storageClass` are meant to stay fixed once the pool exists, but the API accepts an edit of either. The pool's release refuses to render a changed `cluster` until it is restored, and a changed `storageClass` rolls the pool's workers onto the new class. For now only the dashboard refuses a `storageClass` edit.
 
 Platform migration 56 moves the pools of existing clusters. For every pool in `spec.nodeGroups` it creates a `kubernetes-nodes-<cluster>-<pool>` release, which appears as a `KubernetesNodes` resource, and hands the pool's existing worker objects over to it. A cluster that had no `nodeGroups` gets a pool named `md0` with the defaults the old chart used for it: `u1.medium` workers, 0 to 10 replicas, a 20Gi disk and the `ingress-nginx` role.
 
@@ -99,7 +127,7 @@ kubectl -n cozy-system get configmap cozystack-migration-56-unadopted -o yaml
 
 The ConfigMap exists only when at least one pool was skipped. Migration 56 does not run again, so such a pool has to be recreated or adopted by hand.
 
-The removed fields stay stored on upgraded `Kubernetes` resources and have no effect. Every write to a resource that still carries one returns a warning such as `spec.nodeGroups is ignored on the Kubernetes resource since Phase 2: worker pools are managed as separate KubernetesNodes resources`. Change a pool through its `KubernetesNodes` resource instead.
+The removed fields stay stored on upgraded `Kubernetes` resources and have no effect. Every write to a resource that still carries one returns a warning such as `spec.nodeGroups is ignored on the Kubernetes resource since Phase 2: worker pools are managed as separate KubernetesNodes resources`. Change a pool through its `KubernetesNodes` resource instead. `talos.registryMirrors` is new in v1.7 and only the `KubernetesNodes` chart reads it, so set it on each pool. The `Kubernetes` resource accepts the same key, but no template of the `kubernetes` chart reads it.
 
 Rolling the platform back to v1.6 after migration 56 is not automatic: the old chart cannot render worker objects that now belong to the per-pool releases.
 
@@ -133,7 +161,7 @@ An `addons.fluxcd` key left in a `Kubernetes` resource is accepted and has no ef
 
 ### Kamaji and tenant control planes
 
-Kamaji moves from 26.3.6-edge to 26.9.4-edge. Kamaji now tracks the kube-apiserver arguments of a tenant control plane by a hash of its `extraArgs` and rebuilds the list from scratch whenever the hash differs, so on the first reconcile after the upgrade every tenant control plane rebuilds its arguments and its kube-apiserver rolls once. A tenant with OIDC enabled can roll a second time when the chart's own flags land. Plan the upgrade window for that.
+Kamaji moves from 26.3.6-edge to 26.9.4-edge. Kamaji now tracks the kube-apiserver arguments of a tenant control plane by a hash of its `extraArgs` and rebuilds the list from scratch whenever the hash differs, so on the first reconcile after the upgrade every tenant control plane rebuilds its arguments and its kube-apiserver rolls once. It also rolls when the tenant's `kubernetes` release moves to the new chart, which changes the image of the talos-csr-signer sidecar, as every Cozystack upgrade does. A tenant with OIDC enabled can roll a third time when the chart's own flags land. Plan the upgrade window for that.
 
 Kamaji now sets a list of kube-apiserver flags itself and drops any `controlPlane.apiServer.extraArgs` entry that names one, and the `Kubernetes` application refuses to render such an entry. A tenant cluster that carries one stops reconciling after the upgrade until the entry is fixed. Two of these flags are moved instead of refused: an `--enable-admission-plugins=<list>` entry goes into the new `controlPlane.apiServer.admissionControllers`, and a `--kubelet-preferred-address-types=<list>` entry into the new `controlPlane.kubelet.preferredAddressTypes`, as long as the field is empty and the entry is a single unquoted `--flag=value` string. List the entries to look at before upgrading:
 
@@ -141,7 +169,7 @@ Kamaji now sets a list of kube-apiserver flags itself and drops any `controlPlan
 kubectl get kuberneteses.apps.cozystack.io --all-namespaces --output json | jq --raw-output '["--advertise-address","--client-ca-file","--enable-admission-plugins","--service-cluster-ip-range","--kubelet-client-certificate","--kubelet-client-key","--kubelet-preferred-address-types","--proxy-client-cert-file","--proxy-client-key-file","--requestheader-allowed-names","--requestheader-client-ca-file","--secure-port","--service-account-key-file","--service-account-signing-key-file","--tls-cert-file","--tls-private-key-file","--etcd-servers","--etcd-cafile","--etcd-certfile","--etcd-keyfile","--etcd-prefix","--etcd-compaction-interval","--egress-selector-config-file"] as $owned | .items[] | .metadata as $m | (.spec.controlPlane.apiServer.extraArgs // [])[] | select((split("=")[0]) as $f | $owned | index($f)) | "\($m.namespace)/\($m.name): \(.)"'
 ```
 
-Remove every entry it lists, together with its value if the value sits in a separate entry. The exceptions are the two moved flags written as one unquoted `--flag=value` entry next to an empty field, which need no change.
+Remove every entry it lists, together with its value if the value sits in a separate entry. The exceptions are the two moved flags written as one unquoted `--flag=value` entry next to an empty field, which need no change. Between the Kamaji update and the upgrade of the tenant's `kubernetes` release, though, a tenant with an `--enable-admission-plugins=` entry runs its kube-apiserver with Kamaji's default admission plugins, which do not include NodeRestriction. On a test cluster this lasted about seven minutes.
 
 Do not roll Kamaji back to an earlier build after the upgrade. The older build expects a number where the new one stores the hash, and from then on it never removes a flag you take out of `extraArgs`, on any tenant control plane, until the annotation `kube-apiserver.kamaji.clastix.io/args` is set back to a number by hand.
 
@@ -151,7 +179,7 @@ Do not roll Kamaji back to an earlier build after the upgrade. The older build e
 
 On `isp-full` and `isp-full-generic`, Cilium now takes the addresses of its router and of its Gateway API ingress from the last /21 of `networking.podCIDR`, and Kube-OVN no longer hands out addresses from that block. `networking.podCIDR` therefore needs a prefix of /20 or shorter; a narrower one fails the platform render with `networking.podCIDR <cidr> is too small`. The default `10.244.0.0/16` qualifies. Each node takes a /29 of the block, which caps these variants at 256 nodes.
 
-An existing cluster moves to the block in a post-upgrade hook of the Cilium release, the Job `cilium-ipam-migration` in `cozy-cilium`. It excludes the block from the Kube-OVN default subnet, then moves the nodes one at a time, so each Cilium agent restarts twice: once for the configuration change and once in the hook. The hook stops, and the Cilium release upgrade fails, if pods still hold addresses inside the block; its log names them, and once they are recreated the next upgrade attempt continues. A failed Job is kept for its log.
+An existing cluster moves to the block in a post-upgrade hook of the Cilium release, the Job `cilium-ipam-migration` in `cozy-cilium`. It excludes the block from the Kube-OVN default subnet, then moves the nodes one at a time, so each Cilium agent restarts twice: once for the configuration change and once in the hook. The hook stops, and the Cilium release upgrade fails, if pods still hold addresses inside the block; its log names them, and once they are recreated the next upgrade attempt continues. A failed Job is kept for its log. A cluster on v1.6.5 already moved to the block in that patch release: the move, and the two restarts it takes, apply only when upgrading from v1.6.4 or earlier.
 
 ### Multus stages CNI plugins
 
@@ -163,13 +191,20 @@ To decline, set `networking.stageCniPlugins: false` on the `platform` component 
 
 `networking.encryption.enabled` is a new opt-in that encrypts pod traffic between nodes with Kube-OVN IPsec on `isp-full` and `isp-full-generic`. It is off by default, so the upgrade changes nothing. See the [Platform Package reference]({{% ref "/docs/next/operations/configuration/platform-package" %}}).
 
+### Networking variant switch
+
+The platform render now refuses to change the variant of the live `cozystack.networking` Package, because the operator would then delete every HelmRelease of that Package the new variant does not install: `isp-full` to `isp-hosted` removes Cilium and Kube-OVN, and `isp-full` to `isp-slim` removes Kube-OVN. The error names the value that lets one switch through, `networking.acknowledgeVariantChange` set to the new networking variant on the `platform` component of the Platform Package.
+
+A cluster whose `cozystack.networking` variant was set by hand fails the upgrade until `cozystack.networking` is listed in `bundles.disabledPackages`. Acknowledging the switch does not help there, because the render writes the bundle's variant over the one set by hand.
+
 ### Gateway API
 
 These apply where Gateway API resources are in use.
 
-- An `HTTPRoute`, `TLSRoute` or `GRPCRoute` in a `tenant-*` namespace must declare a non-empty `spec.hostnames`. A route that relied on inheriting its listener's hostnames is refused on its next create or update and has to name them.
+- An `HTTPRoute`, `TLSRoute` or `GRPCRoute` in a `tenant-*` namespace must declare a non-empty `spec.hostnames`. An existing route that relied on inheriting its listener's hostnames keeps serving, but its next update is refused until it names them, a Helm upgrade of the chart that renders it included.
 - Under HTTP-01, a hostname a TLS-passthrough listener answers is reserved to that listener and gets no HTTPS listener and no certificate on 443. With `gateway.enabled` on, the publishing tenant therefore passes `api.<apex>`, `vm-exportproxy.<apex>` and `cdi-uploadproxy.<apex>` through after the upgrade, for the names `publishing.exposedServices` lists, and the only certificate on `api.<apex>` is the management kube-apiserver's own serving certificate. It has to carry `api.<apex>` in its SANs before the upgrade. A cluster that came to the Gateway from ingress-nginx already meets this.
 - The three platform passthrough listeners are rendered only on the publishing tenant. A child tenant that rendered them before loses them, together with any `TLSRoute` attached to them by hand.
+- An existing `TLSRoute` whose hostname no passthrough listener answers stays unattached after the upgrade. Remove it, or declare a `tlsPassthroughListeners` entry for its hostname on the `TenantGateway`.
 - The certificates of the shed HTTPS listeners are deleted, but their TLS Secrets stay in the namespace and can be removed by hand.
 
 See [Gateway API]({{% ref "/docs/next/networking/gateway-api" %}}) for the details, including `tlsPassthroughListeners`, the new native-port passthrough form.
@@ -186,7 +221,9 @@ A running VM instance keeps the strategy it was created with, so a non-migratabl
 
 KubeVirt v1.9.0 runs with `DeclarativeHotplugVolumes` instead of the deprecated `HotplugVolumes` feature gate, and the kubevirt-csi driver of tenant Kubernetes clusters no longer hot-plugs volumes through the VM instance. Hotplugged volumes now follow the `VirtualMachine` spec: on its first reconcile, KubeVirt removes every hotplugged volume of a running VM instance that the VM spec does not list.
 
-Platform migration 59 copies such volumes into the VM spec before that happens, so they stay attached. This also makes a volume that was added to the VM instance only, without being persisted, permanent: it attaches again after a VM restart, and from then on it can be removed only through the VM.
+Platform migration 59 copies such volumes into the VM spec before that happens, so on the workers of tenant Kubernetes clusters they stay attached. This also makes a volume that was added to the VM instance only, without being persisted, permanent: it attaches again after a VM restart, and from then on it can be removed only through the VM.
+
+A `VMInstance` does not keep the copy. Its VM is rendered by its own release, which the same upgrade moves to the new chart, and that release writes the VM's volume list back from `spec.disks`, so KubeVirt unplugs the copied volume from the running VM. To keep such a volume, before upgrading and on every variant, detach it inside the guest, remove it with `virtctl removevolume`, and list the disk in the VMInstance's `spec.disks`, which takes only `VMDisk` names. On v1.6.5 a disk added to `spec.disks` attaches only at the VM's next restart, because nothing restarts the VM for it. These steps follow from the charts and were not run on a live VM.
 
 On the `default` variant this migration does not run. Before upgrading such a cluster, list the affected volumes:
 
@@ -204,7 +241,17 @@ kubectl get vm,vmi --all-namespaces --output json | jq --raw-output '
   | "\($key) \($n)"'
 ```
 
-Empty output means nothing is affected. Each line names a VM and a volume the upgrade would detach. Recreate each tenant Kubernetes node it lists before the upgrade, so that its volumes are attached the new way.
+Empty output means nothing is affected. Each line names a VM and a volume the upgrade would detach. Recreate each tenant Kubernetes node it lists before the upgrade, so that its volumes are attached the new way. For the VM of a `VMInstance`, named `vm-instance-<name>`, handle the volume as described above instead.
+
+### VM disks
+
+A `vm-disk` release created before v1.7 moves to the new chart during the platform upgrade, and until cozystack-controller copies the new readiness settings onto it, helm-controller waits for the disk's DataVolume to be ready. cozystack-controller is upgraded only after the `cozystack.networking` Package, which holds Cilium and Kube-OVN on `isp-full` and `isp-full-generic`, so the release of a disk whose import is still running, or never finishes, can fail its upgrade and hold one helm-controller worker until an attempt starts after the settings were copied. An attempt already running when they arrive still waits out its 10-minute timeout: on a test cluster that took two failed 10-minute attempts, about 20 minutes. The release then upgrades whether or not the import has finished. Let running imports finish before upgrading. `kubectl get dv -A` shows the phase of every DataVolume.
+
+A new disk created from a golden image is refused when CDI would clone it into a LINSTOR StorageClass that does not allow remote volume access from every node, a node-local class for example. Before, such a disk stayed pending forever without an error. Use the golden image's StorageClass, or have the platform administrator set the CDI `cloneStrategyOverride` to `copy` in the kubevirt-cdi package. Existing disks are exempt.
+
+## Monitoring
+
+Container logs now keep only the pod, namespace and container name of their Kubernetes metadata. The node name (`host`), labels, annotations, pod ID, container image and container ID are removed from every container log, in platform namespaces as well, so saved log queries and alerts that filter on those fields have to be updated.
 
 ## Managed applications
 
@@ -228,6 +275,8 @@ The rule covers every client of such an instance, in-cluster ones included. libp
 
 An instance with a memory limit below 512Mi and no explicit `shared_buffers` (the `t1.nano` preset and the default `t1.micro`) now gets `shared_buffers` set to a quarter of the limit, 64MB for `t1.micro`, where PostgreSQL used its built-in 128MB before. The setting needs a restart, so on upgrade CloudNativePG restarts the replicas first and then the primary in place: writes pause for one restart, and an instance with a single replica is unavailable during it. A cluster that already runs v1.6.5 or later has this value from that patch and is not restarted for it again. Set `postgresql.parameters.shared_buffers` before the upgrade to take the restart on your own schedule.
 
+Apart from `shared_buffers`, the upgrade moves the CloudNativePG operator from 1.28 to 1.30.0. On a test cluster upgraded from v1.6.5, every PostgreSQL instance restarted once in it, and an instance with a single replica was unavailable while its pod restarted. Upgrades from v1.6.4 or earlier were not tested, and there an instance can also take the `shared_buffers` restart described above.
+
 ### PostgreSQL and MariaDB passwords
 
 User passwords can no longer be set from values: `users.<name>.password` is removed from both applications, and every password, MariaDB's `root` included, is generated into the `<release>-credentials` Secret. On upgrade the charts keep the passwords already stored in that Secret, so existing logins keep working. A `password` left in values is ignored with an admission warning, but the value it set stays the live password until it is rotated. Read a user's password from the Secret:
@@ -238,16 +287,31 @@ kubectl get secret <release>-credentials -o json | jq -r '.data["user1"]' | base
 
 An upgraded MariaDB release refuses to render if its `<release>-credentials` Secret is missing, rather than generating new passwords that would not match the server.
 
+On the first reconcile after the upgrade, a PostgreSQL release drops the roles of users that were removed from `users` while on v1.6.x but were left behind in the database, and their objects move to the `cozystack:orphaned` role. Clients that still log in with such a role lose access.
+
 ### OpenSearch
 
 - An external release that never set `tls.issuer` moves from the operator's certificate authority to a per-release cert-manager CA the first time it reconciles after the upgrade. That rolls the cluster and re-anchors it on the new CA, published to the tenant as `opensearch-<name>.tenant-ca`, so anything pinned to the old CA has to move. Set `tls.issuer: operator` before the upgrade to stay on the operator's CA.
 - The external-dns names of an external release move from the in-cluster domain to `<release>.<tenant host>` and `<release>-dashboards.<tenant host>`, whatever `tls.issuer` says. The old records are not deleted and have to be removed from the zone by hand.
 - With `dashboards.enabled`, an application name is limited to 41 characters, and to 32 when `external` is also on. A longer existing release stops rendering after the upgrade; set `dashboards.enabled: false`, or recreate the application under a shorter name to keep Dashboards.
 - Every OpenSearch cluster rolls once on upgrade.
+- A release that stores `version: null` fails to render after the upgrade instead of falling back to `v2`, although the API still reads it back as `v2`. Set its `version` before upgrading.
+- On a cluster whose `networking.clusterDomain` is not `cluster.local`, the default `cozy.local` included, an instance created on v1.6.x keeps its `<release>-securityconfig-update` Job, which targets the `.svc.cluster.local` host that does not resolve there. The operator leaves that Job in place: on a test cluster it had ended `Failed` with `BackoffLimitExceeded`, and no new Job followed. Deleting the Job there made the operator create a new one 3 seconds later, with the host on the platform's cluster domain, and the new Job connected to the cluster. Whether the instance then finishes initializing was not confirmed.
 
-### FoundationDB 7.1
+### FoundationDB
 
-The FoundationDB operator no longer ships the 7.1 client, so it cannot manage or upgrade a cluster that runs FoundationDB 7.1.x. Before upgrading the platform, move every such cluster to 7.3 through its `cluster.version` value.
+A FoundationDB release now selects a release line with `version`, `v7.3` by default or `v7.4`, and the platform pins the patch: `v7.3` deploys 7.3.63 and `v7.4` deploys 7.4.1. `cluster.version` no longer selects the deployed version.
+
+- Platform migration 60 carries each release's line over from `cluster.version`. A cluster that runs another patch of its line is moved to the pinned one, downwards included: on a test cluster a 7.3.69 cluster was moved to 7.3.63, and the migration's annotation entry was the only lasting signal. Before upgrading, check the running patch of every cluster in the `VERSION` column of `kubectl get foundationdbclusters.apps.foundationdb.org -A`.
+- The FoundationDB operator no longer ships the 7.1 client, so it cannot manage or upgrade a cluster that runs FoundationDB 7.1.x. Before upgrading the platform, move every such cluster to 7.3 through its `cluster.version` value. A release whose `cluster.version` still names 7.1 is refused when it renders, whatever its `version` is, so the release stays on its current revision and the cluster on 7.1, which the operator can no longer upgrade.
+- A release whose `cluster.version` is on a different line than its `version` is refused, with a message that names both.
+- On the `default` variant migration 60 does not run. Before upgrading such a cluster, set `version` to the line each FoundationDB cluster runs.
+
+### Image overrides
+
+The Kubernetes, KubernetesNodes and OpenSearch charts no longer read their image overrides: `images.kubectl`, `images.waitForKubeconfig` and `images.talosCsrSigner` of `Kubernetes`, `images.kubectl` of `KubernetesNodes`, and `images.opensearch` of `OpenSearch`. They use the images the platform ships. A release that still carries such a value keeps it stored, the chart ignores it, and the API shows no warning for it. Migration 60 lists such releases in its annotation.
+
+On the first reconcile, OpenSearch nodes move to the image of their selected version, and Kubernetes components whose image changed restart. Before upgrading, check every OpenSearch release that runs a custom image: if it runs a newer OpenSearch version than its `version` maps to, switching back can leave the nodes unable to read their data. An air-gapped installation needs `docker.io` and `ghcr.io` mirrored on the nodes of the management cluster.
 
 ### Kafka moves to KRaft
 
@@ -303,6 +367,7 @@ The full check to run before lowering the limit of an instance that holds data i
 
 - **VM instances.** `resources.cpu` and `resources.sockets` must be positive whole numbers and `resources.memory` at least `1M`. A value such as `500m`, `1.5` or `0` now fails the render of the release, and a release carrying one fails its next upgrade until the value is fixed, with an error such as `resources.cpu (500m) must be a positive whole number, such as 2`. A value such as `1e1` or `2.`, which used to give the VM one core, now sizes it with the number it spells.
 - **HTTPCache.** The HTTPCache application is removed from the catalog and no new instance can be created. On a cluster that runs one, platform migration 58 freezes it on the packages artifact the cluster already renders from: it keeps working and stays manageable, but receives no further updates, security fixes included. On a cluster without one, the migration removes it from the platform. The `default` variant runs no migration, so check for instances there before upgrading with `kubectl get httpcaches.apps.cozystack.io -A`.
-- **Application definitions.** `ApplicationDefinition.spec.application.release.prefix` must match `^[a-z0-9-]*$`. A definition whose prefix holds a dot or any other character is refused when it is applied, so check definitions that come from external application repositories.
+- **Application definitions.** `ApplicationDefinition.spec.release.prefix` must match `^[a-z0-9-]*$`. A definition whose prefix holds a dot or any other character is refused when it is created, so check definitions that come from external application repositories.
 - **RabbitMQ and Redis TLS** are new and off by default; nothing changes on upgrade until TLS is enabled on an instance.
 - **Keycloak realm name.** The realm is now configurable with `authentication.oidc.realmName`, `cozy` by default. Set it only at install time; see the [Platform Package reference]({{% ref "/docs/next/operations/configuration/platform-package" %}}).
+- **Pod rolls.** Besides the rolls described above, every Kafka cluster rolls once because its JVM environment changes, the SeaweedFS master, volume, filer and S3 components move to a patched image, the `kube-multus` DaemonSet rolls node by node for its new resources, and the LINSTOR controller and satellite pods move to a rebuilt `piraeus-server` image.
