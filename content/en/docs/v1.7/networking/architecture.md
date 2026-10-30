@@ -76,6 +76,45 @@ balancer.
 The rest of this document describes the default `kubeovn-cilium` variant.
 {{% /alert %}}
 
+### FQDN and Layer 7 Policy Limitations
+
+{{% alert color="warning" %}}
+On the default Kube-OVN + Cilium stack, do not rely on `toFQDNs` rules
+for FQDN-based egress enforcement. Cilium's `generic-veth` chaining mode
+has [upstream Layer 7 policy limitations](https://docs.cilium.io/en/stable/installation/cni-chaining-generic-veth/).
+FQDN rules depend on DNS traffic passing through Cilium's DNS proxy;
+adding `rules.dns` to enable that proxy can also disrupt pod DNS in this
+configuration. Acceptance of a `CiliumNetworkPolicy` by the API does not
+confirm that its rules work on the dataplane.
+{{% /alert %}}
+
+For workloads in the management cluster, use L3/L4 rules with endpoint,
+entity, or CIDR selectors as appropriate for the destination. These rules
+restrict addresses and ports; they do not provide domain-name filtering.
+See [cozystack/cozystack#3820](https://github.com/cozystack/cozystack/issues/3820)
+for the reported limitation.
+
+#### Keeping VM Networking While Using FQDN Policies
+
+When workloads require FQDN or other L7 policies alongside the platform's
+Kube-OVN-based VM networking, an option is to run those workloads in a
+[managed Kubernetes cluster](/docs/v1.7/kubernetes/) with Cilium as its
+primary CNI. Keep the management cluster on Kube-OVN + Cilium; apply the
+workload policies inside the managed cluster, where Cilium is not chained
+to Kube-OVN.
+
+This separates the two networking requirements without changing the
+management cluster's CNI. It adds another cluster to operate, and its
+policies apply to its own workloads, not to pods or VMs in the management
+cluster. FQDN rules allow destination IPs learned from matching DNS
+responses; they do not distinguish names sharing an IP address, inspect
+encrypted application content, or replace a WAF.
+
+Before relying on the policies, test pod DNS, an allowed destination, a
+denied destination, and any required internal Service or LoadBalancer
+paths in the deployed cluster. Check all policies selecting the workload:
+another egress allow rule can broaden access beyond the FQDN allowlist.
+
 ### Pod CIDR Allocation (Kube-OVN)
 
 Kube-OVN uses a **shared Pod CIDR** model:
