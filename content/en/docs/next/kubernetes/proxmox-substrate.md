@@ -12,6 +12,10 @@ not yet covered by the project's release gate. Track the decision on support
 tier in [cozystack/cozystack#3481](https://github.com/cozystack/cozystack/issues/3481).
 {{< /note >}}
 
+This page is about running the **workers of tenant clusters** on Proxmox VE.
+To run the management cluster itself on Proxmox VE VMs, follow the regular
+[deployment guide]({{% ref "/docs/next/install" %}}).
+
 ## What it is
 
 By default a managed (tenant) Kubernetes cluster in Cozystack has its control
@@ -49,6 +53,7 @@ The hypervisor token never enters the tenant cluster.
 | Cozystack | v1.7.0-rc.1 and `main` | the substrate is not in v1.6 |
 | Proxmox VE | 9.2.x | 8.x untested; the API calls used exist since 8.x |
 | capmox | v0.7.7 (shipped) | |
+| Proxmox CCM | v0.16.1 (shipped) | pinned by digest |
 | Talos | the version in `kubernetes-nodes` `talos.version` | template must match it |
 | Storage for workers | ZFS pool (linked clones verified) | any storage that supports clones should work; LVM-thin untested |
 | Storage for PVs | any Proxmox storage with `images` content | one storage per tenant recommended, see *Isolation* |
@@ -70,22 +75,28 @@ On the **Proxmox VE** side:
 
 On the **Cozystack** side:
 
-- a working management cluster with the `iaas` bundle;
+- a working management cluster on a variant with the `iaas` bundle, such as
+  `isp-full` or `isp-full-generic`;
 - a MetalLB / LoadBalancer pool, since each tenant apiserver needs one address.
 
-## 1. Enable the packages
+## 1. Enable the Proxmox provider
 
-Add the Proxmox infrastructure provider to the platform's enabled packages.
-The in-cluster IPAM provider is pulled in as its dependency.
+The provider is an opt-in package, because it needs a Proxmox API token before
+it can do anything. On a Proxmox VE node, create a user and a token for capmox,
+following the provider's own
+[usage guide](https://github.com/ionos-cloud/cluster-api-provider-proxmox/blob/main/docs/Usage.md):
 
-```yaml
-# ConfigMap cozystack in cozy-system, or the platform values
-bundles:
-  enabledPackages:
-    - cozystack.capi-provider-infra-proxmox
+```bash
+pveum user add capmox@pve
+pveum aclmod / -user capmox@pve -role PVEVMAdmin
+pveum user token add capmox@pve cozystack -privsep 0
 ```
 
-Before the provider is deployed, create the Secret it authenticates with.
+`PVEVMAdmin` on `/` is what the provider documents; a narrower set is
+described in its advanced-setup docs. This token is platform-wide: capmox
+clones the workers of every tenant with it (see *Isolation*).
+
+Put the token into the Secret the provider authenticates with.
 capi-operator fetches it first; while it is missing nothing is installed and
 the `InfrastructureProvider` reports the fetch error.
 
@@ -102,6 +113,28 @@ Three things that are easy to get wrong:
 - `PROXMOX_TOKEN` is the full id `user@realm!tokenid`, not the token id alone.
 - a rotated token is picked up only after a restart of the capmox manager pod.
 
+Then add the provider to the platform's enabled packages. The in-cluster IPAM
+provider is pulled in as its dependency.
+
+```bash
+kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
+  "spec": {
+    "components": {
+      "platform": {
+        "values": {
+          "bundles": {
+            "enabledPackages": ["cozystack.capi-provider-infra-proxmox"]
+          }
+        }
+      }
+    }
+  }
+}'
+```
+
+A merge patch replaces the whole list: if `bundles.enabledPackages` already has
+entries, repeat them here.
+
 Check:
 
 ```bash
@@ -109,27 +142,12 @@ kubectl -n cozy-cluster-api get infrastructureproviders,ipamproviders
 kubectl -n cozy-cluster-api get deploy | grep -E 'capmox|ipam'
 ```
 
-## 2. Prepare Proxmox: user, tokens, pool
-
-Create a user and tokens for the platform. Use **privilege-separated tokens**
-and grant the privileges to the user as well: Proxmox caps a token at its
-user's permissions.
-
-For capmox itself, follow the provider's own
-[usage guide](https://github.com/ionos-cloud/cluster-api-provider-proxmox/blob/main/docs/Usage.md):
-
-```bash
-pveum user add capmox@pve
-pveum aclmod / -user capmox@pve -role PVEVMAdmin
-pveum user token add capmox@pve cozystack -privsep 0
-```
-
-`PVEVMAdmin` on `/` is what the provider documents; a narrower set is
-described in its advanced-setup docs. This token is platform-wide: capmox
-clones the workers of every tenant with it (see *Isolation*).
+## 2. Prepare a tenant: pool and tokens
 
 For each **tenant** create a resource pool and a dedicated storage, and grant
-the tenant's CCM and CSI tokens their privileges on those paths only:
+the tenant's CCM and CSI tokens their privileges on those paths only. Use
+**privilege-separated tokens** and grant the privileges to the user as well:
+Proxmox caps a token at its user's permissions.
 
 | Component | Privileges | Path |
 |---|---|---|
@@ -168,6 +186,7 @@ Workers are cloned from a Talos VM template that already exists on the
 hypervisor. Build it with the script shipped in the repository; it reads
 `talos.version` and `talos.schematicID` from the `kubernetes-nodes` chart so
 the template matches what the chart will render into the machine config.
+Run it from a checkout of the Cozystack version the management cluster runs.
 
 ```bash
 # prints the program it would run, for review
@@ -223,7 +242,13 @@ Nodes as `topology.kubernetes.io/region`. Note the URL here carries
 kubectl -n tenant-a create secret generic proxmox-csi \
   --from-literal=url='https://pve.example.com:8006/api2/json' \
   --from-literal=token_id='tenant-a@pve!csi' \
-  --from-literal=token_secret='<secret>' \
+  --from-literal=token_secret='<csi token secret>' \
+  --from-literal=region='pve'
+
+kubectl -n tenant-a create secret generic proxmox-ccm \
+  --from-literal=url='https://pve.example.com:8006/api2/json' \
+  --from-literal=token_id='tenant-a@pve!ccm' \
+  --from-literal=token_secret='<ccm token secret>' \
   --from-literal=region='pve'
 ```
 
@@ -241,7 +266,8 @@ metadata:
 spec:
   cluster: px
   substrate: proxmox
-  replicas: 2
+  minReplicas: 2
+  maxReplicas: 2
   resources:
     cpu: 4
     memory: 8Gi
@@ -269,7 +295,7 @@ are plainly present on the template.
 kubectl -n tenant-a get cluster,proxmoxcluster,machinedeployment,machine
 kubectl -n tenant-a get proxmoxmachines -o custom-columns='NAME:.metadata.name,VMID:.spec.virtualMachineID,NODE:.status.proxmoxNode,IP:.status.ipAddresses.net0.ipv4,STATE:.status.vmStatus'
 kubectl -n tenant-a get inclusterippools,ipaddresses.ipam.cluster.x-k8s.io
-kubectl -n tenant-a get deploy px-pccm px-pcsi-controller
+kubectl -n tenant-a get deploy kubernetes-px-pccm kubernetes-px-pcsi-controller
 
 # tenant cluster
 kubectl --kubeconfig <tenant kubeconfig> get nodes -o wide
@@ -319,8 +345,8 @@ MachineHealthCheck.
 | every API call returns 501 | `PROXMOX_URL` already contains `/api2/json` | use bare `https://host:8006` |
 | `found 0 VM templates with tags ...` | `templateTags` ≠ the template's tag set | list every tag, exactly |
 | Machine `VMProvisioned=True`, node never joins, no CSR | workers cannot reach the tenant apiserver LoadBalancer IP, or no reachable `dnsServers` | fix L3 / DNS |
-| Nodes `Ready` but keep `uninitialized` taint, pool `ScalingUp` forever | CCM not running or crash-looping | `kubectl -n <tenant ns> logs deploy/<cluster>-pccm` |
-| CSI node plugin `CrashLoopBackOff`, `Failed to get region or zone` | CCM has not labelled the node yet | wait for the CCM; the CSI release depends on it |
+| Nodes `Ready` but keep `uninitialized` taint, pool `ScalingUp` forever | CCM not running or crash-looping | `kubectl -n <tenant ns> logs deploy/kubernetes-<cluster>-pccm` |
+| CSI node plugin `CrashLoopBackOff`, `Failed to get region or zone` | CCM has not labelled the node yet | wait for the CCM |
 | VM reboots every ~70 min, never joins | template built from the bare-metal `nocloud` image | rebuild with `hack/proxmox-talos-template.sh` |
 | `TalosConfigTemplate.Spec is immutable` | apiserver address changed on an existing cluster | delete the template; the reconcile Job recreates it |
 | capmox stuck at `Waiting for Cluster Controller to set OwnerRef` | `cluster.x-k8s.io/managed-by` annotation on the `ProxmoxCluster` | not expected from the chart; report it |
