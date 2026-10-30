@@ -34,7 +34,7 @@ On every other variant the v1.7 platform release runs platform migrations 54 to 
 - VM disks: let running imports finish. See [VM disks](#vm-disks).
 - VM instances: fix `resources` values that cannot size a VM. See [Smaller changes](#smaller-changes).
 - Kafka: plan a maintenance window for every instance. See [Kafka moves to KRaft](#kafka-moves-to-kraft).
-- `default` variant only: pin the SeaweedFS volume size limit and look for volumes hotplugged on a VM instance only. See [SeaweedFS volume size limit](#seaweedfs-volume-size-limit) and [Declarative volume hotplug](#declarative-volume-hotplug).
+- `default` variant only: pin the SeaweedFS volume size limit, look for volumes hotplugged on a VM instance only, and freeze HTTPCache or remove it from the platform. See [SeaweedFS volume size limit](#seaweedfs-volume-size-limit), [Declarative volume hotplug](#declarative-volume-hotplug) and [HTTPCache](#httpcache).
 - While the platform upgrade runs, do not edit `Kubernetes` resources. See [Worker pools become KubernetesNodes resources](#worker-pools-become-kubernetesnodes-resources).
 
 ## Platform migrations
@@ -47,7 +47,7 @@ The platform migration version moves from 54, where v1.6 left it, to 61. On ever
 | 55 | Detaches the HelmReleases of the removed FluxCD addon of tenant Kubernetes clusters without uninstalling Flux inside the tenant cluster. See [FluxCD addon removed](#fluxcd-addon-removed). |
 | 56 | Moves the worker pools of every tenant Kubernetes cluster into one `kubernetes-nodes-<cluster>-<pool>` release per pool. See [Worker pools become KubernetesNodes resources](#worker-pools-become-kubernetesnodes-resources). |
 | 57 | Writes `master.volumeSizeLimitMB: 1000` into every SeaweedFS instance that has no valid value of its own. See [SeaweedFS volume size limit](#seaweedfs-volume-size-limit). |
-| 58 | Freezes HTTPCache on the packages artifact the cluster already runs, or removes it from the platform where no instance exists. See [Smaller changes](#smaller-changes). |
+| 58 | Freezes HTTPCache on the packages artifact the cluster already runs, or removes it from the platform where no instance exists. See [HTTPCache](#httpcache). |
 | 59 | Copies volumes that are hotplugged on a running VM instance but missing from its `VirtualMachine` spec into that spec. See [Declarative volume hotplug](#declarative-volume-hotplug). |
 | 60 | Carries the release line of every FoundationDB release's `cluster.version` over to the new `version` value, and records the FoundationDB, OpenSearch, Kubernetes and KubernetesNodes releases that need attention in the `cozystack.io/migration-60-needs-attention` annotation of the `cozystack-version` ConfigMap. See [FoundationDB](#foundationdb) and [Image overrides](#image-overrides). |
 
@@ -363,10 +363,91 @@ The last line must read `complete` with the same number as the first. If it is m
 
 The full check to run before lowering the limit of an instance that holds data is in [SeaweedFS volume size limit: lowering it on an existing instance](https://github.com/cozystack/cozystack/blob/main/docs/operations/seaweedfs-lowering-the-volume-size-limit.md).
 
+### HTTPCache
+
+The HTTPCache application is removed from the catalog and no new instance can be created. Its PackageSource, `cozystack.http-cache-application`, is no longer part of the platform release, so the upgrade prunes it, and the ArtifactGenerator and both ExternalArtifacts it owns go with it. They are the chart sources of `http-cache-rd` in `cozy-system` and of every tenant `http-cache-<name>` release. Left alone, those releases stay `Ready=False` for good: each instance reads as not ready while its pods keep serving, and `HelmReleaseNotReady` fires where the monitoring agents run.
+
+- On every variant except `default`, platform migration 58 handles this. On a cluster that runs an instance, it freezes the application on the packages artifact the cluster already renders from: the instance keeps working and stays manageable, but receives no further updates, security fixes included. On a cluster without one, the migration removes the application from the platform.
+- On the `default` variant nothing does. Before upgrading such a cluster, take the migration's steps yourself with the commands below, while `cozystack-packages` still resolves the release the cluster runs.
+
+List the HTTPCache releases. They are selected by chart and by application label, so a release whose chart reference was never rewritten is found too:
+
+```bash
+kubectl get helmreleases.helm.toolkit.fluxcd.io --all-namespaces -o json \
+  | jq -r '.items[]
+      | select(.spec.chartRef.name == "cozystack-http-cache-application-default-http-cache"
+            or .metadata.labels["apps.cozystack.io/application.kind"] == "HTTPCache")
+      | "\(.metadata.namespace)/\(.metadata.name)"'
+```
+
+If it prints nothing, remove the application from the platform. Run the commands in this order: the first one waits until the Package is gone, so that a reconcile already in flight does not re-create what the others remove. On a cluster where the application was never installed they change nothing.
+
+```bash
+kubectl delete packages.cozystack.io cozystack.http-cache-application --ignore-not-found
+kubectl -n cozy-system delete helmreleases.helm.toolkit.fluxcd.io http-cache-rd --ignore-not-found --wait=false
+kubectl delete applicationdefinitions.cozystack.io http-cache --ignore-not-found
+kubectl -n cozy-system delete secret -l owner=helm,name=http-cache-rd --ignore-not-found
+```
+
+An instance that is no longer needed can be deleted before the check, so that the cluster takes this path instead of the freeze.
+
+Otherwise, freeze the application. Run the remaining commands in one shell session, because they carry the digest from one step to the next. First read the manifest digest `cozystack-packages` resolves to now:
+
+```bash
+src=$(kubectl -n cozy-system get ocirepositories.source.toolkit.fluxcd.io cozystack-packages -o json)
+digest=$(printf '%s' "$src" | jq -r '
+  .spec.ref.digest
+    // ((.status.artifact.revision // "") | capture("@(?<d>sha256:[0-9a-f]{64})$").d)
+    // empty')
+echo "$digest"
+```
+
+It must print `sha256:` followed by 64 hexadecimal characters. If it prints nothing, `cozystack-packages` has neither a digest ref nor a resolved artifact revision, and there is nothing to freeze on: do not go further until it has one. The freeze also assumes `cozystack-packages` is pinned to a fixed release, since a floating tag re-pointed in place would pin an artifact that no longer carries the chart.
+
+Then create the frozen source, point the application at it, and keep the access of instance owners:
+
+```bash
+printf '%s' "$src" | jq --arg name cozystack-packages-http-cache --arg digest "$digest" '
+  {
+    apiVersion: .apiVersion,
+    kind: .kind,
+    metadata: {
+      name: $name,
+      namespace: .metadata.namespace,
+      labels: { "platform.cozystack.io/no-delete": "true" },
+      annotations: { "platform.cozystack.io/frozen": "http-cache" }
+    },
+    spec: (.spec | .ref = { digest: $digest })
+  }' | kubectl apply --filename -
+
+kubectl patch packagesources.cozystack.io cozystack.http-cache-application --type=merge \
+  -p '{"metadata":{"annotations":{"helm.sh/resource-policy":"keep","meta.helm.sh/release-name":null,"meta.helm.sh/release-namespace":null},"labels":{"app.kubernetes.io/managed-by":null}},"spec":{"sourceRef":{"name":"cozystack-packages-http-cache"}}}'
+
+kubectl patch packages.cozystack.io cozystack.http-cache-application --type=merge \
+  -p '{"metadata":{"annotations":{"meta.helm.sh/release-name":null,"meta.helm.sh/release-namespace":null},"labels":{"app.kubernetes.io/managed-by":null}}}'
+
+kubectl apply --filename - <<'YAML'
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cozy:tenant:admin:http-cache-frozen
+  labels:
+    rbac.cozystack.io/aggregate-to-tenant-admin: "true"
+    platform.cozystack.io/no-delete: "true"
+  annotations:
+    platform.cozystack.io/frozen: http-cache
+rules:
+- apiGroups: ["apps.cozystack.io"]
+  resources: ["httpcaches"]
+  verbs: ["create", "update", "patch", "delete"]
+YAML
+```
+
+The first command creates `cozystack-packages-http-cache`, a copy of `cozystack-packages` pinned to that digest. It keeps the registry, pull secret and verification settings of the original and carries no owner references or Helm metadata, so nothing reconciles or prunes it. The two patches point the PackageSource at the copy and detach it and the Package from the platform release, so the upgrade does not prune them. The ClusterRole keeps the owner of an instance able to change and delete it once v1.7 drops `httpcaches` from `cozy:tenant:admin:base`. After the upgrade, `http-cache-rd` and every release the first listing printed stay `Ready`.
+
 ### Smaller changes
 
 - **VM instances.** `resources.cpu` and `resources.sockets` must be positive whole numbers and `resources.memory` at least `1M`. A value such as `500m`, `1.5` or `0` now fails the render of the release, and a release carrying one fails its next upgrade until the value is fixed, with an error such as `resources.cpu (500m) must be a positive whole number, such as 2`. A value such as `1e1` or `2.`, which used to give the VM one core, now sizes it with the number it spells.
-- **HTTPCache.** The HTTPCache application is removed from the catalog and no new instance can be created. On a cluster that runs one, platform migration 58 freezes it on the packages artifact the cluster already renders from: it keeps working and stays manageable, but receives no further updates, security fixes included. On a cluster without one, the migration removes it from the platform. The `default` variant runs no migration, so check for instances there before upgrading with `kubectl get httpcaches.apps.cozystack.io -A`.
 - **Application definitions.** `ApplicationDefinition.spec.release.prefix` must match `^[a-z0-9-]*$`. A definition whose prefix holds a dot or any other character is refused when it is created, so check definitions that come from external application repositories.
 - **RabbitMQ and Redis TLS** are new and off by default; nothing changes on upgrade until TLS is enabled on an instance.
 - **Keycloak realm name.** The realm is now configurable with `authentication.oidc.realmName`, `cozy` by default. Set it only at install time; see the [Platform Package reference]({{% ref "/docs/next/operations/configuration/platform-package" %}}).
