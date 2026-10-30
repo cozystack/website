@@ -42,7 +42,7 @@ Complete the following steps to prepare your servers for installing Cozystack:
 
 1.  Make network configuration settings in Hetzner (only for the **vSwitch subnet** option).
 
-    Complete the steps from the [Prerequisites section](https://github.com/Intreecom/robotlb/blob/master/README.md#prerequisites)
+    Complete the steps from the [Prerequisites section](https://github.com/Treetscom/robotlb/blob/master/README.md#prerequisites)
     of RobotLB's README:
 
     1.  Create a [vSwitch](https://docs.hetzner.com/cloud/networks/connect-dedi-vswitch/).
