@@ -77,7 +77,7 @@ Use this decision table before you start editing:
 | Your change is…                                                     | Edit here                                       |
 |---------------------------------------------------------------------|-------------------------------------------------|
 | A doc for a **feature that ships in a future release**              | `content/en/docs/next/`                         |
-| A **bug fix** or addition **for the current release**               | `content/en/docs/<latest_version_id>/` (`v1.2`) |
+| A **bug fix** or addition **for the current release**               | `content/en/docs/<latest_version_id>/`          |
 | A fix that also applies to an **older supported version**           | Copy the change into each relevant `vX.Y/`      |
 | Cross-version content (the landing page, overview)                  | `content/en/docs/_index.md`                     |
 | A **blog post**                                                     | `content/en/blog/`                              |
@@ -237,6 +237,7 @@ If you need to understand or change the versioning machinery itself:
 - `hugo.yaml` — site-wide config; `params.versions[]` is the list of
   registered versions (including `next` with `hidden: true`), and
   `params.latest_version_id` is the current stable.
+- `params.versions_visible` (in `hugo.yaml`) — how many of the newest released versions, ranked by `order` (minimum 1), stay in the version switcher, the version table and the sidebar tree on the version-selection page (`/docs/versions/`); the rest are grouped under "Older versions".
 - `config/production/hugo.yaml` — production-only overrides; excludes
   `docs/next/**` from GitHub Pages builds. Netlify deploy previews set
   `HUGO_ENV=preview` so they skip this override.
@@ -250,11 +251,10 @@ If you need to understand or change the versioning machinery itself:
   cozystack/cozystack.
 - `hack/download_openapi.sh` — fetches `openapi.json` per version at build
   time (v1.1+; v0 and v1.0 ship their `api.json` in-tree).
-- `layouts/docs/docs-landing.html` — the version-selection landing template,
-  published at `/docs/versions/`; builds the version table from `params.versions[]`,
-  filtering out hidden entries.
-- `layouts/partials/version-switcher.html` — top-navbar version dropdown;
-  filters out hidden entries.
+- `layouts/partials/docs-versions.html` — splits `params.versions[]` into the newest `params.versions_visible` released versions and the older rest, skipping hidden entries; shared by the three consumers below.
+- `layouts/docs/docs-landing.html` — the version-selection landing template, published at `/docs/versions/`; builds the version table from that split, with the older versions in a collapsed block.
+- `layouts/partials/version-switcher.html` — top-navbar version dropdown; lists the recent versions and puts the older ones under an "Older versions" disclosure that is open when the current page belongs to one.
+- `layouts/partials/sidebar-tree.html` — on the version-selection landing it leaves out the roots of older versions.
 - `hack/mirror_latest.sh` calls `hack/mirror_latest.py` after Hugo to copy current
   docs to `/docs/` and `/docs/v<major>/`. It also copies translated docs
   when they exist. The original landing is published at `/docs/versions/`, with a

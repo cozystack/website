@@ -20,29 +20,40 @@
 
   {{ .Content }}
 
+  {{- $groups := partial "docs-versions.html" . -}}
   <h3>{{ T "docs_landing_available_versions" }}</h3>
-  <table class="table">
-    <thead>
-      <tr>
-        <th>{{ T "docs_landing_col_version" }}</th>
-        <th>{{ T "docs_landing_col_status" }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{- range .Site.Params.versions -}}
-        {{- if not .hidden -}}
-        {{- $isLatest := eq .id $latestID -}}
-        {{- $status := T "docs_landing_status_previous" -}}
-        {{- if $isLatest -}}
-          {{- $status = T "docs_landing_status_latest" -}}
-        {{- end -}}
-        <tr>
-          <td><a href="{{ .url }}">{{ .version }}</a></td>
-          <td>{{ $status }}</td>
-        </tr>
-        {{- end -}}
-      {{- end -}}
-    </tbody>
-  </table>
+  {{ template "versions-table" (dict "versions" $groups.recent "latestID" $latestID) }}
+  {{- with $groups.older }}
+  <details id="older-versions" class="mb-3">
+    <summary class="h5">{{ T "docs_older_versions" }} ({{ len . }})</summary>
+    {{ template "versions-table" (dict "versions" . "latestID" $latestID) }}
+  </details>
+  <script>
+    (function () {
+      var d = document.getElementById('older-versions');
+      if (d && location.hash === '#older-versions') d.open = true;
+    })();
+  </script>
+  {{- end }}
 </div>
+{{ end }}
+
+{{ define "versions-table" }}
+<table class="table">
+  <thead>
+    <tr>
+      <th>{{ T "docs_landing_col_version" }}</th>
+      <th>{{ T "docs_landing_col_status" }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{- $latestID := .latestID -}}
+    {{- range .versions }}
+    <tr>
+      <td><a href="{{ .url }}">{{ .version }}</a></td>
+      <td>{{ if eq .id $latestID }}{{ T "docs_landing_status_latest" }}{{ else }}{{ T "docs_landing_status_previous" }}{{ end }}</td>
+    </tr>
+    {{- end }}
+  </tbody>
+</table>
 {{ end }}
