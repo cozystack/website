@@ -6,7 +6,7 @@ weight: 50
 ---
 
 This guide explains how to deploy Cozystack on generic Kubernetes distributions such as k3s, kubeadm, or RKE2.
-While Talos Linux remains the recommended platform for production deployments, Cozystack supports deployment on other Kubernetes distributions using the `isp-full-generic` bundle.
+While Talos Linux remains the recommended platform for production deployments, Cozystack supports deployment on other Kubernetes distributions using the `isp-full-generic` bundle, or the minimal `isp-slim-generic` bundle (see [Variants]({{% ref "/docs/next/operations/configuration/variants#isp-slim-generic" %}})).
 
 ## When to Use Generic Kubernetes
 
@@ -160,7 +160,7 @@ Initialize the cluster without the default CNI:
 kubeadm init --config kubeadm-config.yaml --skip-phases=addon/kube-proxy
 ```
 
-Do not install a CNI plugin after `kubeadm init` — Cozystack will deploy Kube-OVN and Cilium automatically.
+Do not install a CNI plugin after `kubeadm init` — Cozystack will deploy Kube-OVN and Cilium automatically (Cilium alone on `isp-slim-generic`).
 
 {{% /tab %}}
 {{% tab name="RKE2" %}}
@@ -208,7 +208,7 @@ The manifest includes the operator deployment, the `cozystack-operator-config` C
 After the operator starts and reconciles the `PackageSource`, create a `Package` resource to trigger the platform installation.
 
 {{% alert color="warning" %}}
-:warning: **Important**: The `podCIDR` and `serviceCIDR` values **must match** your Kubernetes cluster configuration.
+:warning: **Important**: The `podCIDR` and `serviceCIDR` values **must match** your Kubernetes cluster configuration. On `isp-slim-generic` they are not used, but the cluster must allocate pod CIDRs to nodes (`networking.podSubnet` in the kubeadm config above).
 Different distributions use different defaults:
 
 - **k3s**: `10.42.0.0/16` (pods), `10.43.0.0/16` (services)

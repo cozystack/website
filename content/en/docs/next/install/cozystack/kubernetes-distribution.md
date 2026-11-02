@@ -92,9 +92,12 @@ PackageSource: cozystack.cozystack-platform
 Available variants:
   1. default
   2. isp-full
-  3. isp-full-generic
-  4. isp-hosted
-Select variant (1-4): 1
+  3. isp-hosted
+  4. isp-full-generic
+  5. isp-slim
+  6. isp-slim-generic
+  7. isp-hosted-slim
+Select variant (1-7): 1
 ```
 
 After the platform package is installed, all other PackageSources become available:

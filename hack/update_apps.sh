@@ -19,6 +19,8 @@ Options:
 Notes:
   * Template markdown files are expected in DEST_DIR/_include (derived automatically).
   * Each template file should be named <app>.md.
+  * An app without a template is skipped with a warning: the templates decide which apps
+    that docs version covers.
 
 Examples:
   hack/update_apps.sh --apps "tenant redis" --dest content/en/docs/reference/applications
@@ -84,7 +86,7 @@ RAW_BASE_URL="https://raw.githubusercontent.com/${SOURCE_REPO}/${BRANCH}/package
 
 
 # The per-app temp file is removed on every explicit exit path below; the trap
-# covers aborts between mktemp and those paths (set -e on touch/cp/heredoc).
+# covers aborts between mktemp and those paths (set -e on cp/heredoc).
 trap 'rm -f "${tmp:-}"' EXIT
 
 for app in "${APPS[@]}"; do
@@ -99,6 +101,15 @@ for app in "${APPS[@]}"; do
       src_file="${DEST_DIR%/}/_include/${app}.md"
       dest_file="${DEST_DIR%/}/${app}.md"
     fi
+  fi
+
+  # A patch release of an older line runs these same lists against a tree and a tag
+  # that predate newer apps, whose README may 404 at that tag. Such a tree has no
+  # template for them, so skip the app instead of fetching it or writing a page
+  # without front matter.
+  if [[ ! -f "$src_file" ]]; then
+    echo "⚠️  Skipping $app: no template $src_file in this docs version" >&2
+    continue
   fi
 
   readme_url="${RAW_BASE_URL}/${app}/README.md"
@@ -118,9 +129,6 @@ for app in "${APPS[@]}"; do
     echo "Error: fetched empty README for $app from $readme_url" >&2
     exit 1
   fi
-
-  # Ensure template exists (touch if missing)
-  [[ -f "$src_file" ]] || touch "$src_file"
 
   # Copy template to destination (overwrite)
   cp "$src_file" "$dest_file"

@@ -10,31 +10,26 @@
 <script src="https://analytics.ahrefs.com/analytics.js" data-key="{{ . }}" async></script>
 {{ end }}
 
-{{/* SEO: canonical + noindex for legacy doc versions.
-     Older non-latest doc versions (v0, v1.0, v1.1, …) duplicate content from
-     the latest version (v1.2). Without dedup signals, search engines split
-     ranking signals across all five copies. We mark old versions as noindex
-     (still crawlable for users following links) and canonicalize current
-     pages to themselves. */}}
-{{- $latestVersion := .Site.Params.latest_version_id | default "v1.2" -}}
-{{- $isOldDocsVersion := false -}}
-{{- range .Site.Params.versions -}}
-  {{- if and .id (ne .id $latestVersion) (ne .id "next") -}}
-    {{- if in $.RelPermalink (printf "/docs/%s/" .id) -}}
-      {{- $isOldDocsVersion = true -}}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-{{/* SEO: localized (non-English) trees are intentionally indexable from day
-     one. They are machine-translated pending native-speaker ratification, but
-     we deliberately let search engines and AI crawlers index them immediately
-     (publish-then-review model) rather than gating discovery on ratification.
-     Each localized page canonicalizes to itself so per-language versions rank
-     independently. */}}
-{{- if $isOldDocsVersion }}
-<meta name="robots" content="noindex, follow" />
-{{- else }}
-<link rel="canonical" href="{{ .Permalink }}" />
+{{- if ne (partial "outputformat.html" .) "print" -}}
+{{- with (partial "docs-seo.html" .).canonical }}
+<link rel="canonical" href="{{ . }}" />
+{{- end }}
+{{- end }}
+
+{{/* SEO: hreflang alternates. Emitted only when a page has translations, so
+     search engines and AI crawlers map the per-language versions to each other.
+     Language codes come from `languageCode` in hugo.yaml (proper BCP-47:
+     zh-Hans, pt-BR, …). English doubles as x-default. */}}
+{{- if and (gt (len .AllTranslations) 1) (ne (partial "outputformat.html" .) "print") }}
+{{- range .AllTranslations }}
+{{- $alternate := partial "docs-seo.html" . -}}
+{{- if $alternate.indexable }}
+<link rel="alternate" hreflang="{{ .Language.LanguageCode }}" href="{{ $alternate.canonical }}" />
+{{- if eq .Language.Lang "en" }}
+<link rel="alternate" hreflang="x-default" href="{{ $alternate.canonical }}" />
+{{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 
 {{/* JSON-LD Organization (every page) */}}

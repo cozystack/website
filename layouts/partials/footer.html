@@ -1,15 +1,23 @@
-<footer class="td-footer row d-print-none">
-  <div class="container-fluid">
-    <div class="row mx-md-2">
-      <div class="td-footer__left col-6 col-sm-4 order-sm-1">
-        {{ partial "footer/left.html" . }}
-      </div>
-      <div class="td-footer__right col-6 col-sm-4 order-sm-3">
-        {{ partial "footer/right.html" . }}
-      </div>
-      <div class="td-footer__center col-12 col-sm-4 py-2 order-sm-2">
-        {{ partial "footer/center.html" . }}
-      </div>
+{{/*
+  Site footer, as in the Figma kit: logo and link row on top, legal lines below.
+  Links come from params.links (user first, then developer), so the list is
+  maintained in hugo.yaml as before.
+*/ -}}
+{{- $logo := resources.Get "icons/logo.svg" -}}
+<footer class="cz-footer d-print-none">
+  <div class="cz-footer__inner">
+    <div class="cz-footer__top">
+      <a class="cz-footer__brand" href="{{ .Site.Home.RelPermalink }}" aria-label="{{ .Site.Title }}">
+        {{- with $logo }}{{ (. | minify).Content | safeHTML }}{{ end -}}
+      </a>
+      <nav class="cz-footer__links" aria-label="Footer">
+        {{- range (site.Params.links.user | append site.Params.links.developer) }}
+        <a href="{{ .url }}"{{ if hasPrefix .url "http" }} target="_blank" rel="noopener noreferrer"{{ end }}>{{ .name }}</a>
+        {{- end }}
+      </nav>
+    </div>
+    <div class="cz-footer__legal td-footer__center">
+      {{ partial "footer/center.html" . }}
     </div>
   </div>
 </footer>
