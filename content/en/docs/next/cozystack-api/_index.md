@@ -27,7 +27,6 @@ clickhouses       apps.cozystack.io/v1alpha1      true      ClickHouse
 etcds             apps.cozystack.io/v1alpha1      true      Etcd
 foundationdbs     apps.cozystack.io/v1alpha1      true      FoundationDB
 harbors           apps.cozystack.io/v1alpha1      true      Harbor
-httpcaches        apps.cozystack.io/v1alpha1      true      HTTPCache
 infos             apps.cozystack.io/v1alpha1      true      Info
 ingresses         apps.cozystack.io/v1alpha1      true      Ingress
 kafkas            apps.cozystack.io/v1alpha1      true      Kafka

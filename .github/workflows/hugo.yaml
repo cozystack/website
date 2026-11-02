@@ -71,6 +71,9 @@ jobs:
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Mirror latest docs under /docs/ and /docs/v<major>/
+        # GitHub Pages cannot redirect, so the stable aliases are real copies.
+        run: ./hack/mirror_latest.sh public
       - name: Patch robots.txt
         # if built in a contributor's repo and deployed to personal pages, disallow search indexing
         if: github.repository_owner != 'cozystack'

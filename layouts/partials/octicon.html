@@ -1,0 +1,2 @@
+{{- /* Inline one of the Octicons in assets/icons/octicons/ (the family the Figma kit icons come from). */ -}}
+{{- with resources.Get (printf "icons/octicons/%s.svg" .) }}<span class="cz-oct" aria-hidden="true">{{ .Content | safeHTML }}</span>{{ end -}}

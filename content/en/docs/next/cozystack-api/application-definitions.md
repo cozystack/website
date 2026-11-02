@@ -40,45 +40,45 @@ the chart referenced by the definition.
 sets them explicitly, and the relationship between them is **not derivable
 by any string transform**:
 
-| Field | Style | Example (HTTP cache) | Example (VM disk) | Example (TCP balancer) |
+| Field | Style | Example (VM instance) | Example (VM disk) | Example (TCP balancer) |
 | --- | --- | --- | --- | --- |
-| `metadata.name` | lowercase-with-hyphens | `http-cache` | `vm-disk` | `tcp-balancer` |
-| `spec.application.kind` | CamelCase, preserves acronyms | `HTTPCache` | `VMDisk` | `TCPBalancer` |
-| `spec.application.singular` | lowercase, no hyphens | `httpcache` | `vmdisk` | `tcpbalancer` |
-| `spec.application.plural` | lowercase, no hyphens | `httpcaches` | `vmdisks` | `tcpbalancers` |
+| `metadata.name` | lowercase-with-hyphens | `vm-instance` | `vm-disk` | `tcp-balancer` |
+| `spec.application.kind` | CamelCase, preserves acronyms | `VMInstance` | `VMDisk` | `TCPBalancer` |
+| `spec.application.singular` | lowercase, no hyphens | `vminstance` | `vmdisk` | `tcpbalancer` |
+| `spec.application.plural` | lowercase, no hyphens | `vminstances` | `vmdisks` | `tcpbalancers` |
 
 Note that `metadata.name` is not a function of `spec.application.kind`. The
-hyphen positions (`tcp-balancer`, `vm-disk`, `http-cache`) and the absence of
-hyphens in `singular`/`plural` (`tcpbalancer`, `vmdisk`, `httpcache`) are
+hyphen positions (`tcp-balancer`, `vm-disk`, `vm-instance`) and the absence of
+hyphens in `singular`/`plural` (`tcpbalancer`, `vmdisk`, `vminstance`) are
 conventions chosen per application, not outputs of a shared algorithm.
-`strings.ToLower(kind)` yields `httpcache`, which matches
+`strings.ToLower(kind)` yields `vminstance`, which matches
 `spec.application.singular` but **not** `metadata.name`. A direct lookup by
 the lowercased kind therefore fails:
 
 ```bash
 # The aggregated API resource uses the lowercased plural:
-$ kubectl get httpcaches --namespace tenant-demo
+$ kubectl get vminstances --namespace tenant-demo
 NAME       READY   AGE   VERSION
 frontend   True    2m    1.2.0
 
 # But the ApplicationDefinition that backs it is stored under a different name:
-$ kubectl get applicationdefinition httpcache
-Error from server (NotFound): applicationdefinitions.cozystack.io "httpcache" not found
+$ kubectl get applicationdefinition vminstance
+Error from server (NotFound): applicationdefinitions.cozystack.io "vminstance" not found
 
-$ kubectl get applicationdefinition http-cache
-NAME         AGE
-http-cache   14d
+$ kubectl get applicationdefinition vm-instance
+NAME          AGE
+vm-instance   14d
 ```
 
-Acronyms make this more visible: `TCPBalancer`, `HTTPCache`, and `VMDisk` all
+Acronyms make this more visible: `TCPBalancer`, `VMInstance`, and `VMDisk` all
 lose their capitalisation in the aggregated resource name (`tcpbalancers`,
-`httpcaches`, `vmdisks`) but keep hyphens in the CRD name (`tcp-balancer`,
-`http-cache`, `vm-disk`).
+`vminstances`, `vmdisks`) but keep hyphens in the CRD name (`tcp-balancer`,
+`vm-instance`, `vm-disk`).
 
 ## Recommended lookup pattern
 
 Client code that needs to resolve a Cozystack kind — for example a dashboard
-that receives `HTTPCache` from a HelmRelease label and wants to render the
+that receives `VMInstance` from a HelmRelease label and wants to render the
 matching form — should **list all `ApplicationDefinition`s and filter by
 `spec.application.kind`** instead of attempting a direct `Get` by the lowercased
 kind. The set of definitions is small (tens of items) and changes rarely, so
@@ -175,7 +175,7 @@ aggressively a client should cache therefore depends on its own lifetime:
   driven rolling restart of `cozystack-api` completes.
 
 {{% alert color="info" %}}
-The lowercased plural (`httpcaches`, `vmdisks`) **is** the correct name for
+The lowercased plural (`vminstances`, `vmdisks`) **is** the correct name for
 tenant-facing resources under `apps.cozystack.io/v1alpha1`. It is only the
 `applicationdefinitions.cozystack.io` CRD that uses the hyphenated form.
 {{% /alert %}}

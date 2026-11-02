@@ -1,90 +1,42 @@
-{{ $_hugo_config := `{ "version": 1 }` -}}
-{{ $blockID := printf "td-cover-block-%d" .Ordinal -}}
-{{ $promo_image := (.Page.Resources.ByType "image").GetMatch "**background*" -}}
-{{ $logo_image := (.Page.Resources.ByType "image").GetMatch "**logo*" -}}
-{{ $col_id := .Get "color" | default "dark" -}}
-{{ $image_anchor := .Get "image_anchor" | default "smart" -}}
-{{ $logo_anchor := .Get "logo_anchor" | default "smart" -}}
-{{/* Height can be one of: auto, min, med, max, full. */ -}}
-{{ $height := .Get "height" | default "max" -}}
-{{ $link_url := .Get "link_url" | default "#" -}}
-{{ $link_title := .Get "link_title" | default "Get started" -}}
+{{/*
+  blocks/hero: the home page hero.
 
-{{ with $promo_image -}}
-{{ $promo_image_big := . -}}
-{{ $promo_image_small := . -}}
-{{ if ne $promo_image.MediaType.SubType "svg" -}}
-  {{ $promo_image_big = .Fill (printf "1920x1080 %s" $image_anchor) -}}
-  {{ $promo_image_small = .Fill (printf "960x540 %s" $image_anchor) -}}
-{{ end -}}
-<link rel="preload" as="image" href="{{ $promo_image_small.RelPermalink }}" media="(max-width: 1200px)">
-<link rel="preload" as="image" href="{{ $promo_image_big.RelPermalink }}" media="(min-width: 1200px)">
-<style>
-#{{ $blockID }} {
-  background-image: url({{ $promo_image_small.RelPermalink }});
-}
-@media only screen and (min-width: 1200px) {
-  #{{ $blockID }} {
-    background-image: url({{ $promo_image_big.RelPermalink }});
-  }
-}
-</style>
-{{ end -}}
+  Renders "Cozystack:" as a small eyebrow above the headline when the title has
+  the form "Name: headline" (a half-width colon is handled as well), then the
+  one-line lead (the shortcode body), the two calls to action and the CNCF
+  line. The long project description and the certification badges live in
+  home/intro, below the screenshots.
 
-<section id="{{ $blockID }}" class="row td-cover-block td-cover-block--height-{{ $height -}}
-  {{ if not .Site.Params.ui.navbar_translucent_over_cover_disable }} js-td-cover
-  {{- end }} td-overlay td-overlay--dark td-hero-block">
-  <div class="col-12">
-    <div class="container td-overlay__inner">
-      <!-- Title row with Kubernetes logo -->
-      <div class="row align-items-start mb-4">
-        <div class="col-lg-9">
-          {{ with .Get "title" }}<h1 class="display-1">{{ . | html }}</h1>{{ end }}
-          {{ with .Get "subtitle" }}<p class="display-2">{{ . | html }}</p>{{ end }}
-          {{ with .Page.Params.taglines }}
-          <ul class="hero-taglines" aria-label="Cozystack platform positioning">
-            {{ range . }}<li class="hero-tagline">{{ . | html }}</li>{{ end }}
-          </ul>
-          {{ end }}
-        </div>
-        <div class="col-lg-3 d-none d-lg-block text-end">
-          <a href="https://landscape.cncf.io/?group=certified-partners-and-providers&item=orchestration-management--scheduling-orchestration--cozystack" target="_blank" rel="noopener noreferrer">
-            <img src="https://github.com/cncf/artwork/raw/main/projects/kubernetes/certified-kubernetes/versionless/color/certified-kubernetes-color.svg" height="100" alt="Certified Kubernetes">
-          </a>
-        </div>
-      </div>
-
-      <!-- Description and Video row -->
-      <div class="row">
-        <div class="col-lg-6">
-          <div class="lead hero-details">
-            {{ if eq .Page.File.Ext "md" }}
-                {{ .Inner | markdownify }}
-            {{ else }}
-                {{ .Inner | htmlUnescape | safeHTML }}
-            {{ end }}
-            
-            {{ if ne $link_url "#" }}
-            <a class="btn btn-lg btn-info mt-3" href="{{ $link_url }}">{{ $link_title }} <i class="fas fa-arrow-right"></i></a>
-            {{ end }}
-            
-            <!-- Video for mobile devices -->
-            <div class="hero-video-mobile d-lg-none mt-4">
-              <div class="ratio ratio-16x9">
-                <iframe src="https://www.youtube-nocookie.com/embed/UBppH7GqQTA?rel=0&modestbranding=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-6 d-none d-lg-block">
-          <div class="hero-image">
-            <div class="ratio ratio-16x9">
-              <iframe src="https://www.youtube-nocookie.com/embed/UBppH7GqQTA?rel=0&modestbranding=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-            </div>
-          </div>
-        </div>
-      </div>
+  Parameters: title, link_title, link_url, demo_title (default "Live Demo"),
+  demo_url (default "/demo/").
+*/ -}}
+{{- $title := .Get "title" | default "" -}}
+{{- $link_url := .Get "link_url" | default "#" -}}
+{{- $link_title := .Get "link_title" | default "Get started" -}}
+{{- $demo_url := .Get "demo_url" | default "/demo/" -}}
+{{- $demo_title := .Get "demo_title" | default "Live Demo" -}}
+{{- $eyebrow := "" -}}
+{{- $heading := $title -}}
+{{- with findRE `^[^:：]{1,40}[:：]` $title 1 -}}
+  {{- $eyebrow = index . 0 -}}
+  {{- $heading = trim (strings.TrimPrefix $eyebrow $title) " " -}}
+{{- end -}}
+<section class="cz-hero">
+  <div class="container cz-hero__inner">
+    {{/* The project name stays in the heading for screen readers and search engines,
+         but is not shown: the design starts with the headline itself. */ -}}
+    <h1 class="cz-hero__title">{{ with $eyebrow }}<span class="visually-hidden">{{ . | html }} </span>{{ end }}{{ strings.FirstUpper $heading | html }}</h1>
+    <div class="cz-hero__lead">
+      {{ if eq .Page.File.Ext "md" }}{{ .Inner | markdownify }}{{ else }}{{ .Inner | htmlUnescape | safeHTML }}{{ end }}
     </div>
+    <div class="cz-hero__actions">
+      {{ if ne $link_url "#" }}
+      <a class="cz-btn cz-btn--dark" href="{{ $link_url }}">{{ $link_title }}
+        {{ with resources.Get "icons/ui/arrow-right.svg" }}{{ .Content | safeHTML }}{{ end }}
+      </a>
+      {{ end }}
+      <a class="cz-btn cz-btn--light" href="{{ $demo_url }}">{{ $demo_title }}</a>
+    </div>
+    <p class="cz-hero__note">{{ T "home_cncf_sandbox" | safeHTML }}</p>
   </div>
 </section>

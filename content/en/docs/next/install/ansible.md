@@ -178,7 +178,7 @@ The playbook performs the following steps automatically:
 | --- | --- | --- |
 | `cozystack_api_server_host` | *(required)* | Internal IP of the control-plane node. |
 | `cozystack_chart_version` | `{{< version-pin "cozystack_version" >}}` | Version of the Cozystack Helm chart. **Pin this explicitly.** |
-| `cozystack_platform_variant` | `isp-full-generic` | Platform variant: `default`, `isp-full`, `isp-hosted`, `isp-full-generic`. |
+| `cozystack_platform_variant` | `isp-full-generic` | Platform variant: `default`, `isp-full`, `isp-hosted`, `isp-full-generic`, `isp-slim`, `isp-slim-generic`, `isp-hosted-slim`. On k3s use a `-generic` variant: `isp-full-generic`, or `isp-slim-generic` for a minimal install. |
 | `cozystack_root_host` | `""` | Domain for Cozystack services. Leave empty to skip publishing configuration. |
 
 ### Networking

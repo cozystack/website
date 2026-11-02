@@ -23,7 +23,7 @@
             {{ partial "version-banner.html" . }}
             {{ with .CurrentSection.OutputFormats.Get "rss" -}}
             <a class="td-rss-button" title="RSS" href="{{ .Permalink | safeURL }}" target="_blank" rel="noopener">
-              <i class="fa-solid fa-rss" aria-hidden="true"></i>
+              {{ partial "octicon.html" "rss" }}
             </a>
             {{ end -}}
             <!-- Deprecate posts over 1yo: https://github.com/fluxcd/website/pull/832 -->
