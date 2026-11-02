@@ -148,227 +148,67 @@ talosctl bootstrap -n <ip> -e <ip>
 
 Read the [`talosctl` configuration guide]({{% ref "/docs/v1.6/install/kubernetes/talosctl" %}}) to learn more.
 
-## 5. Configure Container Registry Mirrors for Tenant Kubernetes
+## 5. Configure Registry Mirrors for Tenant Kubernetes
 
-Tenant Kubernetes clusters in Cozystack use [Kamaji](https://kamaji.clastix.io/) for the control plane.
-The control plane components run as pods on the management cluster nodes,
-so they automatically use the registry mirrors configured in [step 2](#2-configure-container-registry-mirrors) for Talos.
+Tenant Kubernetes clusters use [Kamaji](https://kamaji.clastix.io/) for the
+control plane. Control-plane components run as pods on the management-cluster
+nodes, so they already use the Talos registry mirrors from
+[step 2](#2-configure-container-registry-mirrors).
 
-However, tenant **worker nodes** run as separate virtual machines with their own containerd instance.
-These worker nodes need a separate registry mirror configuration.
-
-To perform this configuration, you first need to deploy a Cozystack cluster of
-(or upgrade your cluster to) version v0.32.0 or later.
-Check your current cluster version with:
-
-```bash
-kubectl get deploy -n cozy-system cozystack -oyaml | grep installer
-```
-
-### Option A: Configure via platform package
-
-The platform package can automatically generate the `patch-containerd` secret
-from the `registries` section in the platform values.
-
-Add the `registries` section to your **cozystack-platform.yaml**:
-
-```yaml
-apiVersion: cozystack.io/v1alpha1
-kind: Package
-metadata:
-  name: cozystack.cozystack-platform
-spec:
-  variant: isp-full
-  components:
-    platform:
-      values:
-        # ... your existing publishing, networking, etc. ...
-        registries:
-          mirrors:
-            docker.io:
-              endpoints:
-                - http://10.0.0.1:8082
-            ghcr.io:
-              endpoints:
-                - http://10.0.0.1:8083
-            gcr.io:
-              endpoints:
-                - http://10.0.0.1:8084
-            registry.k8s.io:
-              endpoints:
-                - http://10.0.0.1:8085
-            quay.io:
-              endpoints:
-                - http://10.0.0.1:8086
-            cr.fluentbit.io:
-              endpoints:
-                - http://10.0.0.1:8087
-            docker-registry3.mariadb.com:
-              endpoints:
-                - http://10.0.0.1:8088
-          config:
-            "10.0.0.1:8082":
-              tls:
-                insecureSkipVerify: true
-              auth:
-                username: myuser
-                password: mypass
-```
-
-Then apply it:
-
-```bash
-kubectl apply -f cozystack-platform.yaml
-```
-
-This will create a `patch-containerd` secret in the `cozy-system` namespace,
-which is automatically copied to every tenant Kubernetes cluster.
-
-<details class="alert alert-info p-3 mb-4">
-<summary><strong>Alternatively, patch an existing platform package</strong></summary>
-
-If the platform package is already deployed, you can add registry mirrors with a patch:
-
-```bash
-kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
-  "spec": {
-    "components": {
-      "platform": {
-        "values": {
-          "registries": {
-            "mirrors": {
-              "docker.io": {
-                "endpoints": ["http://10.0.0.1:8082"]
-              },
-              "ghcr.io": {
-                "endpoints": ["http://10.0.0.1:8083"]
-              },
-              "gcr.io": {
-                "endpoints": ["http://10.0.0.1:8084"]
-              },
-              "registry.k8s.io": {
-                "endpoints": ["http://10.0.0.1:8085"]
-              },
-              "quay.io": {
-                "endpoints": ["http://10.0.0.1:8086"]
-              },
-              "cr.fluentbit.io": {
-                "endpoints": ["http://10.0.0.1:8087"]
-              },
-              "docker-registry3.mariadb.com": {
-                "endpoints": ["http://10.0.0.1:8088"]
-              }
-            },
-            "config": {
-              "10.0.0.1:8082": {
-                "tls": {
-                  "insecureSkipVerify": true
-                },
-                "auth": {
-                  "username": "myuser",
-                  "password": "mypass"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}'
-```
-
-</details>
-
-### Option B: Create the secret manually
-
-Alternatively, create a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/) named `patch-containerd` directly:
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: patch-containerd
-  namespace: cozy-system
-type: Opaque
-stringData:
-  docker.io.toml: |
-    server = "https://registry-1.docker.io"
-    [host."http://10.0.0.1:8082"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  ghcr.io.toml: |
-    server = "https://ghcr.io"
-    [host."http://10.0.0.1:8083"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  gcr.io.toml: |
-    server = "https://gcr.io"
-    [host."http://10.0.0.1:8084"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  registry.k8s.io.toml: |
-    server = "https://registry.k8s.io"
-    [host."http://10.0.0.1:8085"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  quay.io.toml: |
-    server = "https://quay.io"
-    [host."http://10.0.0.1:8086"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  cr.fluentbit.io.toml: |
-    server = "https://cr.fluentbit.io"
-    [host."http://10.0.0.1:8087"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  docker-registry3.mariadb.com.toml: |
-    server = "https://docker-registry3.mariadb.com"
-    [host."http://10.0.0.1:8088"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-```
-
-If your registry mirrors require authentication, add a custom `Authorization` header
-with Base64-encoded credentials:
-
-```toml
-server = "https://registry-1.docker.io"
-[host."http://10.0.0.1:8082"]
-  capabilities = ["pull", "resolve"]
-  skip_verify = true
-  [host."http://10.0.0.1:8082".header]
-    Authorization = "Basic bXl1c2VyOm15cGFzcw=="
-```
-
-To generate the Base64-encoded value, run:
-
-```bash
-echo -n 'myuser:mypass' | base64
-```
-
-For dynamic or token-based authentication (e.g., Docker Hub), use
-[Kubernetes image pull secrets](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
-instead of plaintext credentials.
-
-### How it works
-
-The `patch-containerd` secret from the `cozy-system` namespace is automatically copied
-to every tenant Kubernetes cluster namespace during deployment.
-The secret data is mounted into worker node VMs as containerd registry configuration files
-at `/etc/containerd/certs.d/<registry>/hosts.toml`.
-
-### Per-cluster configuration
-
-It is possible to configure registry mirrors for a particular tenant Kubernetes cluster
-instead of using the global `patch-containerd` secret:
-
-- The tenant cluster must be deployed with a Kubernetes package version 0.23.1 or later, which is available since Cozystack 0.32.1.
-- Before deploying the tenant cluster, create a Kubernetes Secret named `kubernetes-<cluster-name>-patch-containerd` in the tenant cluster namespace, using the same format as the examples above.
+Tenant **worker nodes** run as separate virtual machines with their own Talos
+instance, so they are configured through the `Kubernetes` resource, not through
+the management nodes' machine config.
 
 {{% alert color="warning" %}}
-**Important:** If both the global `patch-containerd` secret and a per-cluster secret exist, the global secret takes precedence and the per-cluster secret is ignored. To use a per-cluster configuration, ensure that the global `patch-containerd` secret in the `cozy-system` namespace is not present.
+The `patch-containerd` Secret used by earlier releases was removed in Cozystack
+v1.6: it had no consumer in the Talos-based worker machine config. Use the
+`talos.*` fields below instead.
 {{% /alert %}}
 
-To learn more about registry configuration values, read the [CRI Plugin configuration guide](
-https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration)
+A worker node needs three things reachable without public egress: its **OS disk
+image**, the **Talos installer**, and the **container images** it pulls. Set
+them on the `Kubernetes` resource:
+
+```yaml
+apiVersion: apps.cozystack.io/v1alpha1
+kind: Kubernetes
+metadata:
+  name: my-cluster
+spec:
+  talos:
+    # OS disk image streamed in by CDI over HTTP
+    imageFactoryURL: https://factory.example.com
+    # installer image for in-guest upgrades: <repo>/<schematicID>:<version>
+    installerRepository: registry.example.com/installer
+    # machine.registries.mirrors passthrough for worker nodes
+    registryMirrors:
+      docker.io:
+        endpoints:
+          - https://registry.example.com/v2/docker.io
+        skipFallback: true
+      ghcr.io:
+        endpoints:
+          - https://registry.example.com/v2/ghcr.io
+        skipFallback: true
+      registry.k8s.io:
+        endpoints:
+          - https://registry.example.com/v2/registry.k8s.io
+        skipFallback: true
+```
+
+- `talos.imageFactoryURL` (default `https://factory.talos.dev`) points at a
+  self-hosted Image Factory, a caching mirror, or an internal HTTP file server.
+- `talos.installerRepository` (default `factory.talos.dev/installer`) is a
+  mirrored OCI registry; it is resolved as `<installerRepository>/<schematicID>:<version>`.
+- `talos.registryMirrors` has the same shape as the node mirrors in
+  [step 2](#2-configure-container-registry-mirrors). By default Talos falls back
+  to the upstream registry, so set `skipFallback: true` per host to enforce a
+  true air-gap.
+
+{{% alert color="info" %}}
+**Current limitation.** These fields cover a worker node's boot: the OS image,
+the installer, and the images Talos itself pulls (such as `kubelet`). Mirroring
+of in-guest pod pulls (workloads inside the tenant cluster pulling from
+registries) is a follow-up; track it in the project roadmap and file an issue if
+you depend on it.
+{{% /alert %}}
