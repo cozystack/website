@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import socket
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -528,6 +529,68 @@ aliases: [/docs/v1.6/old-links/]
         self.assertFalse((self.public / "docs/v1/reference/applications/mysql/index.html").exists())
         self.assertIn("v2.0", (self.public / "docs/v2/reference/applications/mysql/index.html").read_text())
         self.assertTrue((self.public / "docs/v1.6/applications/mariadb/index.html").is_file())
+
+    def check_output(self, environment, success=True):
+        result = subprocess.run(
+            [sys.executable, str(REPO / "hack/test_docs_seo.py"), str(self.public),
+             "--latest", "v1.6", "--environment", environment,
+             "--base-url", "https://example.org/project/"],
+            capture_output=True, text=True)
+        if success:
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        else:
+            self.assertNotEqual(result.returncode, 0, "corrupted output passed checks")
+        return result.stdout + result.stderr
+
+    def test_production_output_checker_rejects_corruption(self):
+        self.legacy_site()
+        self.configure(base="https://example.org/project/")
+        self.write("config/production/hugo.yaml", '''module:
+  mounts:
+    - source: content/en
+      target: content
+      lang: en
+      files: ['! docs/next/**']
+    - source: content/ru
+      target: content
+      lang: ru
+      files: ['! docs/next/**']
+''')
+        self.build()
+        self.check_output("production")
+        guide = self.public / "docs/guide/index.html"
+        original = guide.read_text()
+        guide.write_text(original.replace("https://example.org/project/docs/guide/", "https://wrong.example/docs/guide/"))
+        self.assertIn("test_current_docs_canonical", self.check_output("production", success=False))
+        guide.write_text(original)
+        old = self.public / "docs/reference/applications/mysql/index.html"
+        original = old.read_bytes()
+        old.unlink()
+        self.assertIn("test_legacy_urls", self.check_output("production", success=False))
+        old.write_bytes(original)
+        sitemap = next(path for path in self.public.rglob("sitemap.xml")
+                       if ET.parse(path).getroot().tag.endswith("urlset"))
+        original = sitemap.read_bytes()
+        tree = ET.parse(sitemap)
+        item = ET.SubElement(tree.getroot(), "{http://www.sitemaps.org/schemas/sitemap/0.9}url")
+        ET.SubElement(item, "{http://www.sitemaps.org/schemas/sitemap/0.9}loc").text = "https://example.org/project/private/"
+        tree.write(sitemap)
+        self.assertIn("test_sitemap_matches_canonical", self.check_output("production", success=False))
+        sitemap.write_bytes(original)
+
+    def test_preview_output_checker_requires_next_and_noindex(self):
+        self.legacy_site()
+        self.configure(base="https://example.org/project/")
+        self.build("preview")
+        self.check_output("preview")
+        guide = self.public / "ru/docs/guide/index.html"
+        original = guide.read_text()
+        guide.write_text(original.replace("noindex, nofollow", "index, follow"))
+        self.assertIn("test_preview_docs_are_noindex", self.check_output("preview", success=False))
+        guide.write_text(original)
+        next_page = self.public / "docs/next/index.html"
+        next_page.unlink()
+        self.assertIn("preview must build next/", self.check_output("preview", success=False))
 
 
 if __name__ == "__main__":
