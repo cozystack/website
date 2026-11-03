@@ -91,7 +91,7 @@ features:
       该 Web UI 便于快速上手平台，并直观展示其能力。
 ---
 
-{{< blocks/hero title="Cozystack：基于 Kubernetes 的自由云平台" link_title="开始使用" link_url="/zh-cn/docs/v1.4/getting-started/" >}}
+{{< blocks/hero title="Cozystack：基于 Kubernetes 的自由云平台" link_title="开始使用" link_url="/docs/getting-started/" >}}
 使用 Cozystack 构建你自己的云，或提供高性价比的开发环境。
 {{< /blocks/hero >}}
 
