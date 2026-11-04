@@ -407,6 +407,22 @@ elif name != "udevadm":
         self.conf.symlink_to(self.outside)
         self.run_script(ok=False)
 
+    def test_workflow_runs_both_lanes_and_windows_engines(self):
+        workflow = (ROOT / ".github/workflows/vgpu-guest.yml").read_text()
+        linux = workflow.split("\n  linux:\n", 1)[1].split("\n  windows:\n", 1)[0]
+        windows = workflow.split("\n  windows:\n", 1)[1]
+        self.assertIn("python3 -I hack/test_vgpu_guest.py", linux)
+        self.assertIn("shell: [powershell, pwsh]", windows)
+        self.assertIn("shell: ${{ matrix.shell }}", windows)
+        self.assertIn("$config.Run.Path = './hack/Test-VgpuGuest.Tests.ps1'", windows)
+        self.assertIn("$config.Run.Throw = $true", windows)
+        self.assertIn("$result.TotalCount -eq 0", windows)
+        for lane in (linux, windows):
+            self.assertIn("fail-fast: false", lane)
+        for path in ("static/examples/vgpu-guest/**", "hack/test_vgpu_guest.py",
+                     "hack/Test-VgpuGuest.Tests.ps1", ".github/workflows/vgpu-guest.yml"):
+            self.assertEqual(workflow.count(f"      - '{path}'"), 2, path)
+
     def test_empty_test_selection_is_not_success(self):
         result = subprocess.run([sys.executable, "-I", __file__, "-k", "NO_MATCHING_VGPU_TEST"],
                                 capture_output=True, text=True)

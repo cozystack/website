@@ -1,0 +1,93 @@
+name: vGPU guest references
+
+on:
+  pull_request:
+    paths:
+      - 'static/examples/vgpu-guest/**'
+      - 'hack/test_vgpu_guest.py'
+      - 'hack/Test-VgpuGuest.Tests.ps1'
+      - 'content/en/docs/next/virtualization/vgpu-licensing.md'
+      - 'content/en/docs/next/virtualization/vgpu.md'
+      - 'content/en/docs/next/operations/configuration/platform-package.md'
+      - '.github/workflows/vgpu-guest.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'static/examples/vgpu-guest/**'
+      - 'hack/test_vgpu_guest.py'
+      - 'hack/Test-VgpuGuest.Tests.ps1'
+      - 'content/en/docs/next/virtualization/vgpu-licensing.md'
+      - 'content/en/docs/next/virtualization/vgpu.md'
+      - 'content/en/docs/next/operations/configuration/platform-package.md'
+      - '.github/workflows/vgpu-guest.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        awk: [mawk, gawk]
+    env:
+      VGPU_TEST_AWK: ${{ matrix.awk }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Syntax and sandbox tests
+        run: |
+          shellcheck --version
+          python3 --version
+          sh -n static/examples/vgpu-guest/v1/linux/cozystack-vgpu-license.sh
+          shellcheck --shell=sh static/examples/vgpu-guest/v1/linux/cozystack-vgpu-license.sh
+          python3 -I hack/test_vgpu_guest.py
+      - name: Verify systemd dependency wiring
+        shell: bash
+        run: |
+          units=$(mktemp --directory)
+          cp static/examples/vgpu-guest/v1/linux/cozystack-vgpu-license.service "$units/"
+          mkdir "$units/nvidia-gridd.service.d"
+          cp static/examples/vgpu-guest/v1/linux/nvidia-gridd.service.d/cozystack-vgpu-license.conf "$units/nvidia-gridd.service.d/"
+          printf '[Service]\nExecStart=/usr/bin/true\n' > "$units/nvidia-gridd.service"
+          printf '[Unit]\n' > "$units/sysinit.target"
+          printf '[Unit]\n' > "$units/basic.target"
+          printf '[Unit]\n' > "$units/shutdown.target"
+          # Only executable existence is substituted; the sandbox suite pins the installed path.
+          sed --in-place 's|ExecStart=/usr/local/sbin/cozystack-vgpu-license|ExecStart=/usr/bin/true|' "$units/cozystack-vgpu-license.service"
+          SYSTEMD_UNIT_PATH="$units" systemd-analyze verify "$units/cozystack-vgpu-license.service" "$units/nvidia-gridd.service"
+      - name: Check downloadable checksums
+        working-directory: static/examples/vgpu-guest/v1
+        run: sha256sum --check SHA256SUMS
+
+  windows:
+    runs-on: windows-2025
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [powershell, pwsh]
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Test Windows token cleanup and service sequence
+        run: |
+          Write-Host "PowerShell $($PSVersionTable.PSVersion) ($($PSVersionTable.PSEdition))"
+          Import-Module Pester -RequiredVersion 5.9.0 -ErrorAction Stop
+          $config = New-PesterConfiguration
+          $config.Run.Path = './hack/Test-VgpuGuest.Tests.ps1'
+          $config.Run.Throw = $true
+          $config.Run.PassThru = $true
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = Join-Path $env:RUNNER_TEMP 'vgpu-guest.xml'
+          $result = Invoke-Pester -Configuration $config
+          if ($null -eq $result -or $result.TotalCount -eq 0 -or $result.PassedCount -eq 0) {
+              throw 'No vGPU guest tests passed'
+          }

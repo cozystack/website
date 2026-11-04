@@ -1,11 +1,22 @@
 BeforeAll {
     $script:Asset = Join-Path $PSScriptRoot '../static/examples/vgpu-guest/v1/windows/Set-CozystackVgpuLicense.ps1'
+    # Keep cmdlet objects: module-qualified names can still resolve to Pester mocks.
+    $script:RemoveItemCmdlet = Get-Command -Name Remove-Item -Module Microsoft.PowerShell.Management -CommandType Cmdlet -All -ErrorAction Stop
+    $script:CopyItemCmdlet = Get-Command -Name Copy-Item -Module Microsoft.PowerShell.Management -CommandType Cmdlet -All -ErrorAction Stop
+
+    function Remove-GuestFixture([string]$Path, [switch]$Recurse) {
+        if (-not $Path.StartsWith($script:Root + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Fixture cleanup outside owned TestDrive root'
+        }
+        & $script:RemoveItemCmdlet -LiteralPath $Path -Recurse:$Recurse -Force -ErrorAction Stop
+    }
 }
 
 Describe 'Platform vGPU guest token' {
     BeforeEach {
         $script:Root = Join-Path $TestDrive ([guid]::NewGuid().ToString())
-        $script:Folder = Join-Path $Root 'Program Files/NVIDIA Corporation/vGPU Licensing/ClientConfigToken'
+        # Same separators as the script: the mocks compare paths as strings.
+        $script:Folder = Join-Path $Root 'Program Files\NVIDIA Corporation\vGPU Licensing\ClientConfigToken'
         $script:Media = Join-Path $Root 'media with spaces'
         New-Item -ItemType Directory -Path $Folder, $Media -Force | Out-Null
         Set-Content -LiteralPath (Join-Path $Folder 'old.tok') -Value 'SYNTHETIC-STALE'
@@ -19,14 +30,14 @@ Describe 'Platform vGPU guest token' {
                 throw 'Deletion outside TestDrive token directory'
             }
             $script:Events.Add('cleanup')
-            Microsoft.PowerShell.Management\Remove-Item -LiteralPath $LiteralPath -Force -ErrorAction Stop
+            & $script:RemoveItemCmdlet -LiteralPath $LiteralPath -Force -ErrorAction Stop
         }
         Mock Copy-Item {
             if (-not $Destination.StartsWith($script:Folder + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
                 throw 'Copy outside TestDrive token directory'
             }
             $script:Events.Add('copy')
-            Microsoft.PowerShell.Management\Copy-Item -LiteralPath $LiteralPath -Destination $Destination -ErrorAction Stop
+            & $script:CopyItemCmdlet -LiteralPath $LiteralPath -Destination $Destination -ErrorAction Stop
         }
         $script:ClientState = 'Running'
         Mock Restart-Service {
@@ -60,7 +71,7 @@ Describe 'Platform vGPU guest token' {
     }
 
     It 'creates a missing token directory and restarts without media' {
-        Microsoft.PowerShell.Management\Remove-Item -LiteralPath $Folder -Recurse -Force
+        Remove-GuestFixture -Path $Folder -Recurse
         Mock Get-Volume { @() }
         & $Asset -TestRoot $Root
         Test-Path -LiteralPath $Folder -PathType Container | Should -BeTrue
@@ -78,7 +89,7 @@ Describe 'Platform vGPU guest token' {
         @{ Kind = 'missing' }, @{ Kind = 'empty' }, @{ Kind = 'directory' }, @{ Kind = 'symlink' }
     ) {
         $token = Join-Path $Media 'client_configuration_token.tok'
-        Microsoft.PowerShell.Management\Remove-Item -LiteralPath $token -Force
+        Remove-GuestFixture -Path $token
         switch ($Kind) {
             empty { New-Item -ItemType File -Path $token | Out-Null }
             directory { New-Item -ItemType Directory -Path $token | Out-Null }
@@ -108,13 +119,35 @@ Describe 'Platform vGPU guest token' {
     It 'reports cleanup failure without copying or claiming a restart succeeded' {
         Mock Remove-Item { throw 'SYNTHETIC-SECRET-ERROR' }
         { & $Asset -TestRoot $Root } | Should -Throw '*vGPU license token cleanup failed*'
+        Should -Invoke Remove-Item -Times 1 -Exactly
         Should -Invoke Copy-Item -Times 0
         Should -Invoke Restart-Service -Times 0
+    }
+
+    It 'reports a real locked-file cleanup error before copy or restart' {
+        $stale = Join-Path $Folder 'old.tok'
+        $handle = [IO.File]::Open($stale, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
+        try {
+            { & $Asset -TestRoot $Root } | Should -Throw '*vGPU license token cleanup failed*'
+            Test-Path -LiteralPath $stale | Should -BeTrue
+            Should -Invoke Remove-Item -Times 1 -Exactly
+            Should -Invoke Copy-Item -Times 0
+            Should -Invoke Restart-Service -Times 0
+        } finally {
+            $handle.Dispose()
+        }
     }
 
     It 'reports service restart failure' {
         Mock Restart-Service { throw 'SYNTHETIC-SECRET-ERROR' }
         { & $Asset -TestRoot $Root } | Should -Throw '*vGPU license client restart failed*'
+    }
+
+    It 'rejects fixture cleanup outside the owned TestDrive subdirectory' {
+        $outside = Join-Path $TestDrive ([guid]::NewGuid().ToString() + '.tok')
+        Set-Content -LiteralPath $outside -Value 'SYNTHETIC-OUTSIDE'
+        { Remove-GuestFixture -Path $outside } | Should -Throw '*Fixture cleanup outside owned TestDrive root*'
+        Get-Content -LiteralPath $outside | Should -Be 'SYNTHETIC-OUTSIDE'
     }
 
     It 'rejects a foreign sandbox before filesystem or service operations' {
@@ -124,11 +157,32 @@ Describe 'Platform vGPU guest token' {
     }
 }
 
+Describe 'Nonempty Windows CI selection' {
+    BeforeAll {
+        $workflow = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot '../.github/workflows/vgpu-guest.yml')
+        $guard = [regex]::Match($workflow, '(?ms)^          if \(\$null -eq \$result.*?^          \}')
+        if (-not $guard.Success) { throw 'Missing nonempty Pester selection guard' }
+        $script:SelectionGuard = [scriptblock]::Create($guard.Value)
+    }
+
+    It 'rejects a run with <Total> tests and <Passed> passes' -ForEach @(
+        @{ Total = 0; Passed = 0 }, @{ Total = 4; Passed = 0 }
+    ) {
+        $result = [pscustomobject]@{ TotalCount = $Total; PassedCount = $Passed }
+        { & $script:SelectionGuard } | Should -Throw '*No vGPU guest tests passed*'
+    }
+
+    It 'accepts a nonempty passing run' {
+        $result = [pscustomobject]@{ TotalCount = 1; PassedCount = 1 }
+        { & $script:SelectionGuard } | Should -Not -Throw
+    }
+}
+
 Describe 'Documented Windows startup task wiring' {
     It 'registers only the owned task under SYSTEM at startup without a policy bypass' {
-        Mock New-ScheduledTaskAction { [pscustomobject]@{ Kind = 'Action' } }
-        Mock New-ScheduledTaskTrigger { [pscustomobject]@{ Kind = 'Trigger' } }
-        Mock New-ScheduledTaskPrincipal { [pscustomobject]@{ Kind = 'Principal' } }
+        Mock New-ScheduledTaskAction { [Microsoft.Management.Infrastructure.CimInstance]::new('MSFT_TaskAction', 'root/Microsoft/Windows/TaskScheduler') }
+        Mock New-ScheduledTaskTrigger { [Microsoft.Management.Infrastructure.CimInstance]::new('MSFT_TaskTrigger', 'root/Microsoft/Windows/TaskScheduler') }
+        Mock New-ScheduledTaskPrincipal { [Microsoft.Management.Infrastructure.CimInstance]::new('MSFT_TaskPrincipal', 'root/Microsoft/Windows/TaskScheduler') }
         Mock Register-ScheduledTask { }
         $guide = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot '../content/en/docs/next/virtualization/vgpu-licensing.md')
         $blocks = [regex]::Matches($guide, '(?s)```powershell\r?\n(.*?)```')
