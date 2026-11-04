@@ -54,7 +54,62 @@ kubectl annotate configmap -n cozy-system cozystack-version helm.sh/resource-pol
 release could delete the `cozy-system` namespace and all resources within it.
 {{% /alert %}}
 
-### 3. Upgrade the Cozystack Operator
+### 3. Pre-pull the new images (optional)
+
+By default Talos Linux keeps `/var/lib/etcd` and `/var/lib/containerd` as directories on the same `EPHEMERAL` volume, and its kubelet pulls images in parallel.
+During the upgrade many platform components restart at once, so every node pulls and unpacks their new images at the same time.
+If this delays the disk writes of the etcd leader long enough, etcd logs `slow fdatasync` and `failed to send out heartbeat on time`, the other members elect a new leader, and requests to the Kubernetes API stall during each election.
+Pulling the new images before the upgrade, one node at a time, keeps this load out of the rollout.
+
+Build the list of new images from the Cozystack images the cluster runs now.
+Set `FROM` to the installed version and `TO` to the target version.
+
+```bash
+FROM=v1.6.4
+TO=v1.6.5
+kubectl get pods --all-namespaces --output json \
+  | jq --raw-output '.items[].spec | (.initContainers // [])[], .containers[] | .image' \
+  | grep -E "^ghcr.io/cozystack/cozystack/[^:]+:${FROM}(@|$)" \
+  | sed -E "s/:${FROM}(@sha256:[0-9a-f]+)?$/:${TO}/" \
+  | sort -u > images.txt
+```
+
+The list covers the images that carry the Cozystack version in their tag.
+Add other images that change in the release to `images.txt` by hand if you want them pulled too.
+
+Find the etcd leader.
+It is the node whose `MEMBER` matches the `LEADER` column.
+
+```bash
+talosctl --nodes <node1>,<node2>,<node3> etcd status
+```
+
+Then pull the images on each control plane node in turn, the leader last.
+Nodes that do not run etcd can skip this step.
+
+```bash
+while read -r image; do
+  talosctl --nodes <node> image pull --namespace cri "$image"
+done < images.txt
+```
+
+Before you move to the next node, run `etcd status` again and check that the leader and the `RAFT TERM` are the same, and that the etcd log of the node has no new `slow fdatasync` warnings.
+
+```bash
+talosctl --nodes <node> logs etcd | grep 'slow fdatasync'
+```
+
+A pull on the leader node can still delay its heartbeats.
+To avoid that, move the leadership to a node that already has the images before you pull on the leader.
+
+```bash
+talosctl --nodes <leader-node> etcd forfeit-leadership
+```
+
+Start the upgrade soon after the pull.
+The pre-pulled images stay unused until the rollout, and the kubelet removes unused images once the disk usage goes above its garbage collection threshold, 85% by default.
+
+### 4. Upgrade the Cozystack Operator
 
 Upgrade the Cozystack operator Helm release to the target version:
 
@@ -72,7 +127,7 @@ You can read the logs of the operator:
 kubectl logs -n cozy-system deploy/cozystack-operator -f
 ```
 
-### 4. Check the cluster status after upgrading
+### 5. Check the cluster status after upgrading
 
 ```bash
 kubectl get pods -n cozy-system
