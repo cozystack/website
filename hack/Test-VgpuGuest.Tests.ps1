@@ -1,0 +1,152 @@
+BeforeAll {
+    $script:Asset = Join-Path $PSScriptRoot '../static/examples/vgpu-guest/v1/windows/Set-CozystackVgpuLicense.ps1'
+}
+
+Describe 'Platform vGPU guest token' {
+    BeforeEach {
+        $script:Root = Join-Path $TestDrive ([guid]::NewGuid().ToString())
+        $script:Folder = Join-Path $Root 'Program Files/NVIDIA Corporation/vGPU Licensing/ClientConfigToken'
+        $script:Media = Join-Path $Root 'media with spaces'
+        New-Item -ItemType Directory -Path $Folder, $Media -Force | Out-Null
+        Set-Content -LiteralPath (Join-Path $Folder 'old.tok') -Value 'SYNTHETIC-STALE'
+        Set-Content -LiteralPath (Join-Path $Media 'client_configuration_token.tok') -Value 'SYNTHETIC-TOKEN-A'
+        Set-Content -LiteralPath (Join-Path $Media 'gridd.conf') -Value 'FeatureType=4'
+        $env:COZYSTACK_VGPU_TEST_ROOT = $Root
+        $script:Events = [System.Collections.Generic.List[string]]::new()
+        Mock Get-Volume { [pscustomobject]@{ FileSystemLabel = 'GPULICENSE'; Path = $script:Media } }
+        Mock Remove-Item {
+            if (-not $LiteralPath.StartsWith($script:Folder + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+                throw 'Deletion outside TestDrive token directory'
+            }
+            $script:Events.Add('cleanup')
+            Microsoft.PowerShell.Management\Remove-Item -LiteralPath $LiteralPath -Force -ErrorAction Stop
+        }
+        Mock Copy-Item {
+            if (-not $Destination.StartsWith($script:Folder + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+                throw 'Copy outside TestDrive token directory'
+            }
+            $script:Events.Add('copy')
+            Microsoft.PowerShell.Management\Copy-Item -LiteralPath $LiteralPath -Destination $Destination -ErrorAction Stop
+        }
+        $script:ClientState = 'Running'
+        Mock Restart-Service {
+            $script:ClientState | Should -Be 'Running'
+            $script:Events.Add('restart')
+            $script:ClientState = 'Running'
+        }
+        Mock Set-ItemProperty { throw 'Registry writes are forbidden' }
+    }
+
+    AfterEach {
+        $env:COZYSTACK_VGPU_TEST_ROOT = $null
+    }
+
+    It 'cleans an already-running client folder, copies only token, then restarts the actual client' {
+        & $Asset -TestRoot $Root
+        @($Events) -join ',' | Should -Be 'cleanup,copy,restart'
+        (@(Get-ChildItem -LiteralPath $Folder).Name -join ',') | Should -Be 'client_configuration_token.tok'
+        Get-Content -LiteralPath (Join-Path $Folder 'client_configuration_token.tok') | Should -Be 'SYNTHETIC-TOKEN-A'
+        Should -Invoke Restart-Service -Times 1 -Exactly -ParameterFilter { $Name -eq 'NvDisplayContainer' }
+        Should -Invoke Set-ItemProperty -Times 0
+        & $Asset -TestRoot $Root
+        Should -Invoke Restart-Service -Times 2 -Exactly
+    }
+
+    It 'cleans stale tokens and restarts when media is absent' {
+        Mock Get-Volume { @() }
+        & $Asset -TestRoot $Root
+        @(Get-ChildItem -LiteralPath $Folder).Count | Should -Be 0
+        @($Events) -join ',' | Should -Be 'cleanup,restart'
+    }
+
+    It 'creates a missing token directory and restarts without media' {
+        Microsoft.PowerShell.Management\Remove-Item -LiteralPath $Folder -Recurse -Force
+        Mock Get-Volume { @() }
+        & $Asset -TestRoot $Root
+        Test-Path -LiteralPath $Folder -PathType Container | Should -BeTrue
+        @($Events) -join ',' | Should -Be 'restart'
+    }
+
+    It 'rejects ambiguous media after cleanup and still restarts' {
+        Mock Get-Volume { @([pscustomobject]@{ FileSystemLabel = 'GPULICENSE'; Path = $script:Media }) * 2 }
+        { & $Asset -TestRoot $Root } | Should -Throw '*vGPU license media preparation failed*'
+        @(Get-ChildItem -LiteralPath $Folder).Count | Should -Be 0
+        @($Events) -join ',' | Should -Be 'cleanup,restart'
+    }
+
+    It 'fails closed for a <Kind> token' -ForEach @(
+        @{ Kind = 'missing' }, @{ Kind = 'empty' }, @{ Kind = 'directory' }, @{ Kind = 'symlink' }
+    ) {
+        $token = Join-Path $Media 'client_configuration_token.tok'
+        Microsoft.PowerShell.Management\Remove-Item -LiteralPath $token -Force
+        switch ($Kind) {
+            empty { New-Item -ItemType File -Path $token | Out-Null }
+            directory { New-Item -ItemType Directory -Path $token | Out-Null }
+            symlink { New-Item -ItemType Junction -Path $token -Target $Folder | Out-Null }
+        }
+        { & $Asset -TestRoot $Root } | Should -Throw '*vGPU license media preparation failed*'
+        @(Get-ChildItem -LiteralPath $Folder).Count | Should -Be 0
+        Should -Invoke Copy-Item -Times 0
+        Should -Invoke Restart-Service -Times 1 -Exactly
+    }
+
+    It 'removes partial copies before restart and emits no payload on copy failure' {
+        Mock Copy-Item {
+            Set-Content -LiteralPath $Destination -Value 'SYNTHETIC-PARTIAL'
+            throw 'SYNTHETIC-SECRET-ERROR'
+        }
+        try {
+            & $Asset -TestRoot $Root
+            throw 'Expected failure was missing'
+        } catch {
+            $_.Exception.Message | Should -Be 'vGPU license media preparation failed'
+        }
+        @(Get-ChildItem -LiteralPath $Folder).Count | Should -Be 0
+        Should -Invoke Restart-Service -Times 1 -Exactly
+    }
+
+    It 'reports cleanup failure without copying or claiming a restart succeeded' {
+        Mock Remove-Item { throw 'SYNTHETIC-SECRET-ERROR' }
+        { & $Asset -TestRoot $Root } | Should -Throw '*vGPU license token cleanup failed*'
+        Should -Invoke Copy-Item -Times 0
+        Should -Invoke Restart-Service -Times 0
+    }
+
+    It 'reports service restart failure' {
+        Mock Restart-Service { throw 'SYNTHETIC-SECRET-ERROR' }
+        { & $Asset -TestRoot $Root } | Should -Throw '*vGPU license client restart failed*'
+    }
+
+    It 'rejects a foreign sandbox before filesystem or service operations' {
+        { & $Asset -TestRoot 'C:\' } | Should -Throw '*Invalid sandbox invocation*'
+        Should -Invoke Remove-Item -Times 0
+        Should -Invoke Restart-Service -Times 0
+    }
+}
+
+Describe 'Documented Windows startup task wiring' {
+    It 'registers only the owned task under SYSTEM at startup without a policy bypass' {
+        Mock New-ScheduledTaskAction { [pscustomobject]@{ Kind = 'Action' } }
+        Mock New-ScheduledTaskTrigger { [pscustomobject]@{ Kind = 'Trigger' } }
+        Mock New-ScheduledTaskPrincipal { [pscustomobject]@{ Kind = 'Principal' } }
+        Mock Register-ScheduledTask { }
+        $guide = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot '../content/en/docs/next/virtualization/vgpu-licensing.md')
+        $blocks = [regex]::Matches($guide, '(?s)```powershell\r?\n(.*?)```')
+        $task = @($blocks | Where-Object { $_.Groups[1].Value.Contains('Register-ScheduledTask') })
+        $task.Count | Should -Be 1
+        $code = $task[0].Groups[1].Value
+        $code | Should -Not -Match 'ExecutionPolicy|Bypass|Unregister-ScheduledTask'
+        & ([scriptblock]::Create($code)) | Out-Null
+        Should -Invoke New-ScheduledTaskAction -Times 1 -Exactly -ParameterFilter {
+            $Execute -eq (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe') -and
+            $Argument -eq '-NoProfile -NonInteractive -File "C:\ProgramData\Cozystack\Set-CozystackVgpuLicense.ps1"'
+        }
+        Should -Invoke New-ScheduledTaskTrigger -Times 1 -Exactly -ParameterFilter { $AtStartup }
+        Should -Invoke New-ScheduledTaskPrincipal -Times 1 -Exactly -ParameterFilter {
+            $UserId -eq 'SYSTEM' -and $LogonType -eq 'ServiceAccount' -and $RunLevel -eq 'Highest'
+        }
+        Should -Invoke Register-ScheduledTask -Times 1 -Exactly -ParameterFilter {
+            $TaskName -eq 'Cozystack-vGPU-License' -and $Force
+        }
+    }
+}
