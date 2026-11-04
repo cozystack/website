@@ -138,7 +138,7 @@ The chart declares that storage as `s3-storage`, which the `cozy-default-mongodb
 
 For a to-copy restore the operator reads the dump from the **source** backup's bucket/endpoint. The driver re-points the restore at the **target** cluster's own S3 credentials only when the target declares a storage on that same bucket (the common case where both share one bucket), since the source release's Secret dies with it in a DR scenario; a system-bucket source keeps its projected `cozy-backups-creds` reference, which outlives the source app. A target whose storages are all on a different bucket gets no credential swap: the restore keeps the source's Secret reference and is held at `Ready=False RestoreCredentialsMissing` naming that Secret until it exists in the restore namespace, so a cross-bucket restore never runs with a credential for the wrong bucket. Re-create the source release's `-s3-creds` Secret by name to let it proceed.
 
-A full, scripted example (write a marker document, back up, restore to a copy, assert the round-trip while the source stays untouched) is in the Cozystack repository at [`examples/backups/mongodb/`](https://github.com/cozystack/cozystack/tree/main/examples/backups/mongodb), driven by `run-all.sh`.
+A full, scripted example (write a marker document, back up, restore it into a copy that declares the marker's database, and assert the round-trip while the source stays untouched) is in the Cozystack repository at [`examples/backups/mongodb/`](https://github.com/cozystack/cozystack/tree/main/examples/backups/mongodb), driven by `run-all.sh`, which the `mongodb-2-backup-roundtrip` Chainsaw suite runs end to end.
 
 ### Opt-in to the system bucket
 
@@ -166,6 +166,12 @@ A dump that has started streaming on this flow is not cancelled on the 30-minute
 
 **Opting back out** (`useSystemBucket` true→false) is not automatic in reverse: the driver stops injecting, but the `s3-storage` entry it already applied stays on the live `PerconaServerMongoDB` under the driver's own field manager (`cozystack-psmdb-backup-driver`) — the chart does not own it and so never prunes it. It is inert once `backup.enabled=false`; to fully return a release to the legacy flow, delete that storage entry from the `PerconaServerMongoDB` by hand before re-declaring the tenant's own `backup.*` S3 values. Until it is removed, a new `BackupJob` on that release is refused rather than written into the platform bucket unowned: the driver recognises the injected entry by its `credentialsSecret` and holds the job at `Ready=False` (`PerconaServerMongoDBStorageStale`) naming that manual step, failing it at the backup deadline. A backup already streaming when the flag was flipped is unaffected — its flow is fixed by the finalizer on its own operator CR.
 
+### Restoring into another application (MongoDB)
+
+A to-copy restore copies data and keeps the target's own users. A full logical restore would replay the source cluster's `admin.system.users` into the target, after which neither the target's `<release>-percona-server-mongodb-users` and `internal-<release>-users` Secrets nor the operator can authenticate to it, and giving the target the source's Secret instead would hand one application's credentials to another. So the driver hands the operator a selective restore (`spec.selective` with `withUsersAndRoles: false`) of exactly the databases the target application declares under `spec.databases`, the ones the chart grants the target's users their roles on. Declare every database to copy there before creating the `RestoreJob`, with an empty `roles` map for a database no user needs yet. A database the target does not declare is not copied. A target that declares none, or lists `admin`, `config`, `local` or a name that is not a database name, is refused with `Ready=False ToCopyRestoreRefused` before anything is restored. An in-place restore (no `targetApplicationRef`, or one naming the source) is still a full restore, users included.
+
+A MongoDB `RestoreJob` reports `Succeeded` after the operator restore completes, the target reports `ready`, and a separate Job authenticates with the operator's internal users Secret and runs a TLS-verified ping. The target's status alone can predate the restore. Until these checks pass the job stays at `Ready=False WaitingForTargetReady`; reaching the restore deadline fails it with `TargetNotReadyAfterRestore`. A replay that finishes at the deadline gets one minute for the check. After a full restore, the backup's system users may no longer match the target's users Secret, for example if the application was deleted and recreated after the backup was taken.
+
 ### Point-in-time recovery (MongoDB)
 
 psmdb records an oplog stream between logical backups. A MongoDB `RestoreJob` recovers to a timestamp via `spec.options.recoveryTime` — the same option name and RFC3339 format the Postgres/CNPG driver uses, so the two are uniform:
@@ -175,6 +181,8 @@ spec:
   options:
     recoveryTime: "2026-08-05T12:34:56Z"   # RFC3339 (UTC), same as the CNPG driver
 ```
+
+On a sharded target a to-copy restore refuses `recoveryTime`, since percona-backup-mongodb restores selected databases to a point in time on replica sets only.
 
 The driver converts `recoveryTime` to the psmdb oplog target internally. Unlike CNPG (whose empty `recoveryTime` replays WAL to the latest archived point), an empty `recoveryTime` here restores the backup snapshot as taken — a psmdb logical backup is already a consistent point, so "restore this backup" is the safe default. `spec.options.restoreTimeoutSeconds` caps how long the driver waits for the operator restore before failing (default 30m), matching the CNPG option. Any unrecognised key under `spec.options` (e.g. a `recoverytime` typo) is ignored but surfaced as a `UnknownRestoreOption` Warning event on the RestoreJob rather than silently dropped.
 
