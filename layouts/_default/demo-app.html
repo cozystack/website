@@ -13,7 +13,8 @@
   body.demo-embed-page .td-outer { flex: 1 1 auto; min-height: 0; padding: 0; display: flex; flex-direction: column; }
   body.demo-embed-page .td-main { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
   .demo-embed { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; display: block; overscroll-behavior: contain; }
-  .demo-embed__hint { flex: 0 0 auto; font-size: .85rem; color: var(--bs-secondary, #6c757d); padding: .4rem 1rem; text-align: center; }
+  .demo-embed__hint { flex: 0 0 auto; position: relative; font-size: .85rem; color: var(--cz-muted); background: var(--cz-surface); border-top: 1px solid var(--cz-line); padding: .4rem 2.75rem; text-align: center; }
+  .demo-embed__hint[hidden] { display: none; }
   footer { display: none; }
   /* On a short window let the page scroll rather than squeezing the app. */
   @media (max-height: 620px) {
@@ -45,6 +46,16 @@
   .demo-header-toggle svg { width: 14px; height: 14px; transition: transform .25s ease; }
   .demo-header-toggle[aria-expanded="false"] svg { transform: rotate(180deg); }
 
+  .demo-hint__close {
+    position: absolute; top: 50%; right: .5rem; transform: translateY(-50%);
+    display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; margin: 0; padding: 0;
+    border: 0; border-radius: var(--cz-radius); background: transparent; color: inherit;
+    cursor: pointer; transition: background-color .15s, color .15s;
+  }
+  .demo-hint__close:hover { background: var(--cz-surface-2); color: var(--cz-ink); }
+  .demo-hint__close:focus-visible { outline: 2px solid var(--cz-ink); outline-offset: 1px; }
+  .demo-hint__close svg { width: 14px; height: 14px; }
 
   @media (prefers-reduced-motion: reduce) {
     body.demo-embed-page > header, .demo-header-toggle svg { transition: none; }
@@ -57,13 +68,14 @@
 </div>
 <iframe class="demo-embed" src="/demo-app/" title="Cozystack live demo"
   allow="clipboard-read; clipboard-write"></iframe>
-<div class="demo-embed__hint">Interactive demo — real Cozystack console with mock data, running in your browser. Nothing here touches a real cluster.</div>
+<div class="demo-embed__hint" id="demo-hint">Interactive demo — real Cozystack console with mock data, running in your browser. Nothing here touches a real cluster.<button type="button" class="demo-hint__close" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button></div>
 <script>
   (function () {
     var header = document.querySelector("body > header");
     var toggle = document.querySelector(".demo-header-toggle");
     var row = document.querySelector(".demo-header-toggle-row");
     var frame = document.querySelector(".demo-embed");
+    var hint = document.getElementById("demo-hint");
 
     // The header starts expanded on every visit.
     if (header && toggle) {
@@ -125,6 +137,16 @@
       }
     }
 
+    // A closed hint stays closed for the browser session.
+    if (hint) {
+      var key = "demo-hint-closed:" + hint.id;
+      try { if (sessionStorage.getItem(key)) hint.hidden = true; } catch (e) {}
+      hint.querySelector(".demo-hint__close").addEventListener("click", function () {
+        hint.hidden = true;
+        try { sessionStorage.setItem(key, "1"); } catch (e) {}
+        if (frame) frame.focus();
+      });
+    }
   })();
 </script>
 {{ end }}
