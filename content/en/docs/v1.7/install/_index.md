@@ -45,6 +45,13 @@ If that's your case, we recommend using the guides below:
 - [Servers.com]({{% ref "/docs/v1.7/install/providers/servers-com" %}})
 
 
+## Proxmox VE
+
+There are two ways to use Cozystack with an existing Proxmox VE cluster, and they can be combined:
+
+- Run the Cozystack cluster itself in Proxmox VE VMs: follow the [generic installation path](#generic-installation-path), treating the VMs like any other machines. Set the VM CPU type to `host` if tenants will run KubeVirt VMs on them.
+- Run the workers of tenant Kubernetes clusters as VMs on Proxmox VE instead of KubeVirt: [enable the Proxmox VE substrate]({{% ref "/docs/v1.7/kubernetes/proxmox-substrate" %}}). This is opt-in and experimental.
+
 ## Upgrading and Post-deployment Configuration
 
 After you've deployed a cluster, proceed to the [Cluster Administration]({{% ref "/docs/v1.7/operations" %}}) section for
