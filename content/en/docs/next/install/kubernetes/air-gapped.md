@@ -148,7 +148,66 @@ talosctl bootstrap -n <ip> -e <ip>
 
 Read the [`talosctl` configuration guide]({{% ref "/docs/next/install/kubernetes/talosctl" %}}) to learn more.
 
-## 5. Configure Container Registry Mirrors for Tenant Kubernetes
+## 5. Install Cozystack from the Private Registry
+
+The registry mirrors from [step 2](#2-configure-container-registry-mirrors) and the CA from [step 3](#3-add-ca-certificate) apply to images that containerd pulls on the nodes.
+The platform package is fetched differently: the Cozystack operator creates the `cozystack-platform` OCIRepository, and Flux source-controller downloads it from inside its pod.
+It uses neither the node mirrors nor the node trust store, so the installer has to point it at your registry directly.
+
+The registry must serve a copy of `ghcr.io/cozystack/cozystack/cozystack-packages` under the same path and with the same digest.
+A pull-through proxy of `ghcr.io` provides both.
+
+{{% alert color="warning" %}}
+Flux requests the registry API at the root of the host (`https://<host>/v2/...`).
+An endpoint that serves the registry under a path prefix, such as `https://nexus.example.org/repository/ghcr-proxy`, works as a containerd mirror but not here.
+Use an endpoint that serves the registry at its root, for example a dedicated port of the repository manager.
+{{% /alert %}}
+
+Install the operator from your registry and point the platform source at it.
+If the registry certificate is issued by a private CA, pass the CA file to Helm as well:
+
+```bash
+helm registry login registry.example.org:8443 --ca-file ca.crt
+
+helm upgrade --install cozystack oci://registry.example.org:8443/cozystack/cozystack/cozy-installer \
+  --version X.Y.Z \
+  --ca-file ca.crt \
+  --namespace cozy-system \
+  --create-namespace \
+  --set cozystackOperator.platformSourceUrl=oci://registry.example.org:8443/cozystack/cozystack/cozystack-packages \
+  --set cozystackOperator.platformSourceSecret=platform-source-creds \
+  --set cozystackOperator.platformSourceCertSecret=platform-source-ca
+```
+
+Then create the two Secrets that the platform source refers to:
+
+```bash
+kubectl create secret docker-registry platform-source-creds \
+  --namespace cozy-system \
+  --docker-server=registry.example.org:8443 \
+  --docker-username=myuser \
+  --docker-password=mypass
+
+kubectl create secret generic platform-source-ca \
+  --namespace cozy-system \
+  --from-file=ca.crt=ca.crt
+```
+
+- `platformSourceSecret` holds the pull credentials. Include the port in `--docker-server` when the registry listens on a non-default port: an entry for the bare hostname does not match it.
+- `platformSourceCertSecret` holds the CA certificate under the `ca.crt` key. Create it as a generic (`Opaque`) Secret: a `kubernetes.io/tls` Secret requires `tls.crt` and `tls.key` as well.
+- Omit either `--set` flag when the registry needs no credentials or uses a publicly trusted certificate.
+
+Until both Secrets exist, the `cozystack-platform` OCIRepository reports a failed condition; it recovers on its own on the next reconciliation.
+The operator rewrites this OCIRepository on every start, so set these values through the installer rather than by patching the object.
+Check that the source is ready:
+
+```bash
+kubectl get ocirepository --namespace cozy-system cozystack-platform
+```
+
+Continue with the [platform package]({{% ref "/docs/next/getting-started/install-cozystack#2-prepare-and-apply-the-platform-package" %}}) as in a regular installation.
+
+## 6. Configure Container Registry Mirrors for Tenant Kubernetes
 
 Tenant Kubernetes clusters in Cozystack use [Kamaji](https://kamaji.clastix.io/) for the control plane.
 The control plane components run as pods on the management cluster nodes,
