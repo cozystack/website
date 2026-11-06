@@ -159,7 +159,7 @@ The website documentation has been updated: a [comprehensive guide](https://cozy
 Beyond the major architectural shifts, versions 1.0.0 & 1.1.0 bring a wide range of incremental updates to monitoring, tenant management, and core system components, as well as streamlined development and build processes and various stability fixes.
 
 ## Migration Guide
-A [detailed guide](https://cozystack.io/docs/v1.6/operations/upgrades/) for migrating from v0.41 to v1.0 is available. ⚠️ Please note the [mandatory steps](https://cozystack.io/docs/v1.6/operations/upgrades/#step-1-protect-critical-resources).
+A [detailed guide](https://cozystack.io/docs/v1.0/operations/upgrades/) for migrating from v0.41 to v1.0 is available. ⚠️ Please note the [mandatory steps](https://cozystack.io/docs/v1.0/operations/upgrades/#step-1-protect-critical-resources).
 
 
 Huge thanks to everyone who contributed to the bottom line:
