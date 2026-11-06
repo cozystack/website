@@ -115,7 +115,7 @@ features:
       Веб-интерфейс облегчает быстрое погружение в платформу и наглядно демонстрирует её возможности.
 ---
 
-{{< blocks/hero title="Cozystack: свободная облачная платформа на базе Kubernetes" link_title="Начать" link_url="/ru/docs/v1.4/getting-started/" >}}
+{{< blocks/hero title="Cozystack: свободная облачная платформа на базе Kubernetes" link_title="Начать" link_url="/docs/getting-started/" >}}
 Используйте Cozystack, чтобы построить собственное облако или предоставлять экономичные среды разработки.
 {{< /blocks/hero >}}
 
