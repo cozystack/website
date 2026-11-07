@@ -50,7 +50,7 @@ spec:
 
 | Field | Description |
 | --- | --- |
-| `spec.variant` | Variant to use for installation (e.g., `isp-full`, `isp-full-generic`, `isp-hosted`, `distro-full`). |
+| `spec.variant` | Variant to use for installation (e.g., `isp-full`, `isp-full-generic`, `isp-hosted`, `isp-slim`, `isp-slim-generic`, `isp-hosted-slim`). |
 
 ### Platform values (`spec.components.platform.values.*`)
 
@@ -83,6 +83,7 @@ spec:
 | `publishing.certificates.dns01.rfc2136.tsigAlgorithm` | `"HMACSHA256"` | TSIG HMAC algorithm. |
 | `publishing.certificates.dns01.rfc2136.secretName` | `""` | Secret name holding the TSIG key material. Required when `provider=rfc2136`. |
 | `publishing.certificates.dns01.rfc2136.secretKey` | `"tsig-secret-key"` | Key inside the Secret holding the TSIG key. |
+| `publishing.serviceDomain` | `""` | DNS suffix the dashboard appends to the name of a LoadBalancer Service on the application **Services** tab, shown under the external IP as `<service-name>.<serviceDomain>` (for example `demo-external-write.svc.example.org` for a postgres release named `demo`). Display-only: nothing in the platform creates DNS records for it. Set it only when your DNS already resolves exactly that name to the Service's LoadBalancer IP, for example external-dns with a matching fqdn template. A CoreDNS `k8s_external` zone does not fit: it answers `<service>.<namespace>.<zone>`, which this suffix cannot express. This is not the `<release>.<tenant host>` name the app charts put into their certificates, so a TLS client may see a SAN mismatch unless DNS and certificates are aligned by the operator. The suffix is cluster-wide, so two tenants with a release of the same name get the same hostname. Empty (the default) shows no hostname. |
 | `publishing.proxyProtocol` | `false` | Enables PROXY-protocol on the host ingress-nginx and auto-deploys [ouroboros]({{% ref "/docs/next/networking/hairpin-proxy-protocol" %}}) to fix the resulting hairpin-NAT problem. The upstream L4 LB in front of ingress-nginx must already be injecting PROXY-v1 headers before this flag flips on; see the linked page for verification recipes and the disable path. |
 | `publishing.proxyProtocolAcknowledgeUnclean` | `false` | Acknowledgement gate for the `helm.sh/resource-policy: keep` asymmetry on the host disable path. Flipping `publishing.proxyProtocol` from `true` back to `false` stops emitting the `cozystack.ouroboros` Package CR but does not uninstall the existing one — the platform render fails until either the Package CR is deleted (which triggers the chart's pre-delete cleanup hook) or this flag is set to `true` to confirm the operator has handled the asymmetry. See [hairpin-proxy-protocol → Disable path]({{% ref "/docs/next/networking/hairpin-proxy-protocol#disable-path" %}}) for the full sequence. |
 
@@ -93,18 +94,19 @@ spec:
 | Value | Default | Description |
 | --- | --- | --- |
 | `networking.clusterDomain` | `"cozy.local"` | Internal cluster domain name. |
-| `networking.podCIDR` | `"10.244.0.0/16"` | The pod subnet used by Pods to assign IPs. |
-| `networking.podGateway` | `"10.244.0.1"` | The gateway address for the pod subnet. |
-| `networking.serviceCIDR` | `"10.96.0.0/16"` | The service subnet used by Services to assign IPs. |
-| `networking.joinCIDR` | `"100.64.0.0/16"` | The `join` subnet for network communication between the Node and Pod. Follow the [kube-ovn] documentation to learn more. |
+| `networking.podCIDR` | `"10.244.0.0/16"` | The pod subnet used by Pods to assign IPs. Used by Kube-OVN only: ignored on `isp-hosted` and the slim variants. On the Kube-OVN variants its last /21 is reserved for the router and Gateway API Ingress addresses of Cilium and Kube-OVN does not hand it out, so it needs a prefix of /20 or shorter. Each node takes a /29 of that /21, which caps these variants at 256 nodes. |
+| `networking.podGateway` | `"10.244.0.1"` | The gateway address for the pod subnet. Kube-OVN only. |
+| `networking.serviceCIDR` | `"10.96.0.0/16"` | The service subnet used by Services to assign IPs. Kube-OVN only. |
+| `networking.joinCIDR` | `"100.64.0.0/16"` | The `join` subnet for network communication between the Node and Pod. Follow the [kube-ovn] documentation to learn more. Kube-OVN only. |
 | `networking.kubeovn.MASTER_NODES` | `""` | Comma-separated list of KubeOVN master node IPs. By default, KubeOVN uses `lookup` to find control-plane nodes by label `node-role.kubernetes.io/control-plane`. On fresh clusters, lookup may return empty results. Set this to override. |
+| `networking.encryption.enabled` | `false` | Opt-in encryption of pod-to-pod traffic that crosses nodes, at the network layer and whether or not the workload speaks TLS. On `isp-full` and `isp-full-generic`, where Kube-OVN owns the datapath, it turns on Kube-OVN IPsec for the Geneve overlay; Kube-OVN provisions the IPsec CA and the per-node certificates itself through the Kubernetes CSR API, so no cert-manager setup is needed. `isp-slim` and `isp-slim-generic` refuse it and fail the platform render, because their Cilium-only datapath has no encryption wiring yet. On `isp-hosted` and `isp-hosted-slim`, where Cozystack does not manage the CNI, it has no effect. Traffic between pods on the same node is not tunneled and stays unencrypted. The ESP overhead lowers the effective MTU, so east-west throughput drops and latency rises, most for high-bandwidth flows. Turning it on for an existing cluster rolls out the CNI components. It complements TLS on exposed endpoints and does not replace it: no external client and no tenant certificate is involved. |
 
 #### Bundles
 
 | Value | Default | Description |
 | --- | --- | --- |
 | `bundles.system.enabled` | `false` | Enable the system bundle. Managed by the operator based on `spec.variant`. |
-| `bundles.system.variant` | `"isp-full"` | System bundle variant. Options: `isp-full`, `isp-full-generic`, `isp-hosted`. Managed by the operator based on `spec.variant`. |
+| `bundles.system.variant` | `"isp-full"` | System bundle variant. Options: `isp-full`, `isp-full-generic`, `isp-hosted`, `isp-slim`, `isp-slim-generic`, `isp-hosted-slim`. Managed by the operator based on `spec.variant`. |
 | `bundles.iaas.enabled` | `false` | Enable the IaaS bundle. Managed by the operator based on `spec.variant`. |
 | `bundles.paas.enabled` | `false` | Enable the PaaS bundle. Managed by the operator based on `spec.variant`. |
 | `bundles.naas.enabled` | `false` | Enable the NaaS bundle. Managed by the operator based on `spec.variant`. |
@@ -118,7 +120,8 @@ spec:
 | `authentication.oidc.enabled` | `false` | Enable [OIDC][oidc] feature in Cozystack. |
 | `authentication.oidc.insecureSkipVerify` | `false` | Skip TLS certificate verification for the OIDC provider. |
 | `authentication.oidc.keycloakExtraRedirectUri` | `""` | Additional redirect URI for Keycloak OIDC client. |
-| `authentication.oidc.keycloakInternalUrl` | `""` | Internal URL for backend-to-backend requests to Keycloak. When set, the dashboard's oauth2-proxy skips OIDC discovery and routes token, JWKS, userinfo, and logout requests through this URL while keeping browser redirects on the external URL. Example: `http://keycloak-http.cozy-keycloak.svc:8080/realms/cozy`. |
+| `authentication.oidc.realmName` | `"cozy"` | Name of the Keycloak realm that holds the Cozystack clients and the cluster-admin roles. `keycloak-configure` creates the realm under this name, and the dashboard, linstor-gui, the generated kubeconfig and the derived `keycloakInternalUrl` point at `/realms/<realmName>`. The OIDC issuer of the management cluster's API server is configured outside this Package, through the talm `oidcIssuerUrl`, and must name the same realm, or the tokens issued here are rejected. The value must be a quoted string of letters, digits, `.`, `_` and `-` that starts with a letter or digit, and `master` is refused because that realm holds the Keycloak super-admin; any other value fails the platform render. Set it at install time. Changing it on a running cluster does not rename the realm: a new, empty realm is created under the new name and every account, session and client in the old one is left behind. |
+| `authentication.oidc.keycloakInternalUrl` | `null` | Internal URL for backend-to-backend requests to Keycloak. The dashboard's oauth2-proxy skips OIDC discovery and sends token, JWKS, userinfo and logout requests to this URL, while browser redirects keep the external URL. Left unset, it is derived from `realmName` as `http://keycloak-http.cozy-keycloak.svc:8080/realms/<realmName>`. An empty string `""` restores full OIDC discovery against the external issuer. Any other value is used as is, so an explicit URL has to name the same realm as `realmName`. |
 
 #### Gateway
 
@@ -127,7 +130,7 @@ Platform-wide Gateway API integration. The actual per-tenant Gateway is material
 | Value | Default | Description |
 | --- | --- | --- |
 | `gateway.enabled` | `false` | Enable Gateway API support across the platform. When `true`, cert-manager `ClusterIssuer`s use an `http01.gatewayHTTPRoute` solver attached to the publishing tenant's Gateway, and exposed services (`dashboard`, `keycloak`, `grafana`, `alerta`, `harbor`, `bucket`, `cozystack-api`, `vm-exportproxy`, `cdi-uploadproxy`) render `HTTPRoute`/`TLSRoute` instead of `Ingress`. Materialising the actual per-tenant Gateway still requires an owning tenant to set `tenant.spec.gateway: true`. |
-| `gateway.http2` | `true` | Advertise HTTP/2 via TLS ALPN (`h2`, then `http/1.1`) on every Gateway API listener served by the bundled Cilium dataplane. Browsers negotiate HTTP/2 exclusively through ALPN, so with this off every client silently falls back to HTTP/1.1 — the pre-Gateway ingress-nginx path advertised `h2` out of the box, hence on by default. Affects only the client↔gateway hop: gateway↔backend connections stay HTTP/1.1 unless a `Service` opts in per [GEP-1911](https://gateway-api.sigs.k8s.io/geps/gep-1911/) by declaring `appProtocol: kubernetes.io/h2c` on its port (that backend-protocol support is switched on together with ALPN). Maps to Cilium's cluster-wide `enable-gateway-api-alpn` agent setting, so it covers the root and all tenant Gateways at once, with no per-Gateway granularity; only effective on bundles where Cozystack manages Cilium (`isp-full`, `isp-full-generic`). Flipping it re-rolls the `cilium` DaemonSet on the next platform upgrade, the same disruption profile as any other Cilium config change. |
+| `gateway.http2` | `true` | Advertise HTTP/2 via TLS ALPN (`h2`, then `http/1.1`) on every Gateway API listener served by the bundled Cilium dataplane. Browsers negotiate HTTP/2 exclusively through ALPN, so with this off every client silently falls back to HTTP/1.1 — the pre-Gateway ingress-nginx path advertised `h2` out of the box, hence on by default. Affects only the client↔gateway hop: gateway↔backend connections stay HTTP/1.1 unless a `Service` opts in per [GEP-1911](https://gateway-api.sigs.k8s.io/geps/gep-1911/) by declaring `appProtocol: kubernetes.io/h2c` on its port (that backend-protocol support is switched on together with ALPN). Maps to Cilium's cluster-wide `enable-gateway-api-alpn` agent setting, so it covers the root and all tenant Gateways at once, with no per-Gateway granularity; only effective on bundles where Cozystack manages Cilium (`isp-full`, `isp-full-generic`, `isp-slim`, `isp-slim-generic`). Flipping it re-rolls the `cilium` DaemonSet on the next platform upgrade, the same disruption profile as any other Cilium config change. |
 | `gateway.className` | `"cilium"` | The `GatewayClass` every tenant Gateway uses unless the tenant names another one via `tenant.spec.gatewayClass`. Nothing checks the name against the classes the cluster has installed — a name no controller claims produces a `Gateway` that is created but never programmed, surfacing as `Ready=False` with reason `GatewayNotAccepted` on the `TenantGateway`. Changing it while a tenant pins the outgoing name fails that tenant's gateway release, because the set a tenant may name is built from the *current* default; add the outgoing class to `gateway.tenantSelectableClasses` first. |
 | `gateway.tenantSelectableClasses` | `[]` | Additional `GatewayClass` names a tenant may select for its own Gateway with `tenant.spec.gatewayClass`. The set a tenant may name is this list plus the current `gateway.className`, so a tenant may always name the default explicitly; anything else fails that tenant's own gateway release at render time, naming the class and the allowed set, and reaches no other tenant. Empty means no tenant can pick anything but the default. The allowlist exists because `Tenant` is tenant-writable while a `GatewayClass` is cluster-scoped. |
 | `gateway.edgeTerminatedClasses` | `[]` | `GatewayClass` names whose provider terminates TLS upstream of the Gateway. Membership here is the only thing that puts a tenant into `edge` cert mode, which renders port-80 listeners only and issues no `Issuer` and no `Certificate`; it wins over `publishing.certificates.wildcardSecretName` and over the solver. Nothing verifies the assertion — listing a class whose provider does *not* terminate TLS makes its Gateways serve every application hostname over plain HTTP, with no redirect and no certificate. Setting `gateway.className` to a class in this list also puts the publishing tenant on it, which unpublishes whichever of the TLS-passthrough endpoints (Kubernetes API, VM export, CDI upload) are published at all — each renders its `TLSRoute` only when `gateway.enabled` is on and its name is in `publishing.exposedServices`. Nothing fails at render time and nothing reports it: the controller writes no route conditions in this mode and removes none, so an orphaned `TLSRoute` can still show the `Accepted=True` it was given under the previous mode. |
@@ -157,11 +160,32 @@ gateway:
 | --- | --- | --- |
 | `scheduling.globalAppTopologySpreadConstraints` | `""` | Global pod topology spread constraints applied to all managed applications. |
 
+#### Monitoring
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `monitoring.rootEnabled` | `true` | Whether the root tenant hosts the platform metrics and logs stack, that is, whether `Tenant/root` has `spec.monitoring: true`. When `true`, the platform creates the `ExternalName` Services in `cozy-monitoring` that redirect metrics and logs into `tenant-root`. Nothing sets `spec.monitoring` on the root Tenant from this value: set it to match the root Tenant. With `true` while the root tenant has monitoring disabled, the redirects lead nowhere and fluent-bit silently drops logs. The default `true` keeps the earlier behaviour of always creating them; the slim variants (`isp-slim`, `isp-slim-generic`, `isp-hosted-slim`) default to `false`. |
+| `monitoring.tracingCentralTenantBytesPerSecond` | `0` | The rate, in bytes per second counted uncompressed and before sampling, at which each tenant using shared-central tracing may write into the traces store that `tenant-root` hosts. Each tenant's collector refuses data above it: an OTLP/HTTP sender gets a `429` and retries, while an OTLP/gRPC sender gets `RESOURCE_EXHAUSTED` and drops the spans, so central tenants should export over HTTP. An OTLP/HTTP request larger than 3 MiB gets a `400` and is not retried. `0` keeps the default of about 97 KiB/s, at which one tenant alone cannot fill the disk cap of a default 10Gi store within the two days VictoriaTraces always keeps, so a larger store needs the rate raised with it. The value must be a whole number of bytes per second, or a string of plain decimal digits, up to `1099511627776` (1 TiB/s); anything else, such as `"1Mi"` or `1.5`, fails the platform render. Each collector pod starts with a full bucket, so a pod start lets through up to 5 MiB above the rate, or one second of the pod's share of the rate when that is larger. The rate bounds each tenant, not the sum of all tenants. A change upgrades every release in every tenant once, since it travels in the `cozystack-values` Secret they all read. |
+
 #### Backup storage
 
 | Value | Default | Description |
 | --- | --- | --- |
 | `backupStorage` | `{}` | S3 coordinates for the platform-managed `cozy-default` BackupClass. The whole block is forwarded into the `backupstrategy-controller` component and deep-merged over its chart defaults; keys include `provisionBucket`, `bucketName`, `endpoint`, `region`, `forcePathStyle`, `systemSecretName`, and `systemNamespaces`. See [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) for the knob-by-knob reference. |
+| `backupStrategyController` | `{}` | Overrides for the backup strategy objects the platform ships, forwarded as is into the `backupstrategy-controller` component as its `backupStrategyController` values. The knob that needs it is `redisBackupResources`, the requests and limits of the Pod the Redis strategy runs. The restore side holds the whole dataset in memory and writes it to ephemeral storage, so a large Redis needs more memory and `ephemeral-storage` than the defaults, which suit small and medium instances. The `cozy-default-redis` strategy is managed by Helm and a direct edit is reverted on upgrade, so raise the values here. Empty forwards nothing. |
+
+Example under `spec.components.platform.values`:
+
+```yaml
+backupStrategyController:
+  redisBackupResources:
+    requests:
+      memory: 2Gi
+      ephemeral-storage: 8Gi
+    limits:
+      memory: 4Gi
+      ephemeral-storage: 16Gi
+```
 
 #### Branding
 
@@ -221,6 +245,36 @@ kubevirt:
 ```
 
 `bandwidthPerMigration` is a quantity in bytes per second: `625M` is 625,000,000 bytes/s (5 Gbit/s) per migration. This example allows up to two migrations across the cluster and one outbound migration per node.
+
+#### Kubernetes worker images
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `kubernetesWorkerImage` | `{}` | Values for the optional `cozystack.kubernetes-worker-image` package, forwarded as is into that component. The package keeps a catalog of golden Talos worker OS images as DataVolumes in the `cozy-public` namespace, and a `KubernetesNodes` pool that sets `osImage.builtin` boots its workers from a storage-level clone of one instead of each worker importing the image from the Talos Image Factory. The package is opt-in: add `cozystack.kubernetes-worker-image` to `bundles.enabledPackages`, since this key alone does not enable it. Empty forwards nothing and keeps the chart defaults. |
+
+The keys the package accepts:
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `imageFactoryURL` | `"https://factory.talos.dev"` | Base URL of the Talos Image Factory the golden images are imported from, without a trailing slash. Repoint it on an air-gapped or rate-limited cluster. |
+| `storageClass` | `"replicated"` | StorageClass of the golden images. It must match the StorageClass of the worker disks that clone them, because CDI cannot clone across StorageClasses; a pool whose class differs fails its render. Use a class whose volumes are reachable from any node, in practice a replicated DRBD class: cloning on a node-pinned class is unsupported. |
+| `storage` | `"6Gi"` | Size of each golden image. It must be at least the imported image size and at most the smallest worker disk that clones it. |
+| `images` | one entry | The catalog, a list of entries with `schematicID` and `version` and optionally their own `imageFactoryURL`, `storage` and `storageClass`. Each entry becomes a golden named `talos-worker-<schematicID>-<version>`. |
+
+A list set here replaces the shipped `images` list rather than extending it. A pool that names a `(schematicID, version)` pair missing from `images`, or one whose golden failed to import, fails its render rather than falling back to the HTTP import, so add an entry before any pool points at it. An entry is effectively immutable once its golden exists: its size, class and source URL cannot be patched in place, so treat a change to any of them as a new entry and move the pools onto it. Removing an entry stops managing its golden but does not delete it.
+
+Example under `spec.components.platform.values`:
+
+```yaml
+bundles:
+  enabledPackages:
+    - cozystack.kubernetes-worker-image
+kubernetesWorkerImage:
+  imageFactoryURL: "https://factory.internal.example.org"
+  images:
+    - schematicID: "<schematicID>"
+      version: "<talos version>"
+```
 
 #### Internal fields
 

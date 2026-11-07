@@ -1,0 +1,36 @@
+{{/*
+  home/video: the introductory talk, at the end of the community section.
+
+  Shows the poster from the Figma frame (black, play icon, "YouTube"). The player is only
+  created on click, so the page makes no request to YouTube until the visitor asks for the
+  video. Without JavaScript the poster is a plain link to the video.
+*/ -}}
+{{- $id := .Get "id" | default "UBppH7GqQTA" -}}
+{{- $title := .Get "title" | default "Cozystack 5 min Lightning Talk" -}}
+<div class="cz-video" data-video-id="{{ $id }}" data-video-title="{{ $title }}">
+  <div class="ratio ratio-16x9">
+    <a class="cz-video__poster" href="https://www.youtube.com/watch?v={{ $id }}" target="_blank" rel="noopener noreferrer" aria-label="Play video: {{ $title }}">
+      <span class="cz-video__play">{{ with resources.Get "icons/ui/play.svg" }}{{ .Content | safeHTML }}{{ end }}</span>
+      <span class="cz-video__label">YouTube</span>
+    </a>
+  </div>
+</div>
+<script>
+(function () {
+  document.querySelectorAll('.cz-video').forEach(function (box) {
+    var poster = box.querySelector('.cz-video__poster');
+    if (!poster) return;
+    poster.addEventListener('click', function (e) {
+      e.preventDefault();
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + box.getAttribute('data-video-id') + '?autoplay=1&rel=0&modestbranding=1';
+      f.title = box.getAttribute('data-video-title');
+      f.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      f.setAttribute('allowfullscreen', '');
+      f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      f.setAttribute('frameborder', '0');
+      poster.replaceWith(f);
+    });
+  });
+})();
+</script>

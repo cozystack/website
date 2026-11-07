@@ -1,0 +1,27 @@
+{{/* Shared by the document head and sitemap. Archive URLs remain readable. */}}
+{{- $canonical := .Permalink -}}
+{{- $robots := "index, follow" -}}
+{{- $latest := .Site.Params.latest_version_id -}}
+{{- if not $latest -}}
+  {{- errorf "docs-seo.html: Site.Params.latest_version_id is required but is unset" -}}
+{{- end -}}
+{{- with .File -}}
+  {{- if eq .Path "docs/_index.md" -}}
+    {{- $canonical = printf "%sversions/" $canonical -}}
+  {{- else if findRE `^docs/(v[0-9]+(\.[0-9]+)?|next)/` .Path -}}
+    {{- if hasPrefix .Path (printf "docs/%s/" $latest) -}}
+      {{- $canonical = replace $canonical (printf "/docs/%s/" $latest) "/docs/" 1 -}}
+    {{- else -}}
+      {{- $robots = "noindex, follow" -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- if or .Params.noindex (eq .Kind "404") -}}
+  {{- $robots = "noindex, follow" -}}
+{{- end -}}
+{{- if not hugo.IsProduction -}}
+  {{- $robots = "noindex, nofollow" -}}
+{{- end -}}
+{{- $indexable := not (in $robots "noindex") -}}
+{{- if not $indexable -}}{{- $canonical = "" -}}{{- end -}}
+{{- return (dict "canonical" $canonical "robots" $robots "indexable" $indexable) -}}

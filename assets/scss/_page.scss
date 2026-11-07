@@ -86,3 +86,9 @@
     }
   }
 }
+
+// Long URLs and inline-code links in docs and blog posts must wrap,
+// otherwise they overflow the viewport on mobile.
+.td-content a {
+  overflow-wrap: anywhere;
+}

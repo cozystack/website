@@ -72,13 +72,16 @@ else
 endif
 
 # App lists (override on the command line: `make update-apps APPS="tenant redis"`)
-APPS       ?= tenant clickhouse foundationdb harbor redis mongodb openbao rabbitmq postgres nats kafka mariadb qdrant
+APPS       ?= tenant clickhouse foundationdb harbor redis mongodb openbao rabbitmq postgres nats kafka mariadb qdrant valkey opensearch bucket
 K8S       ?= kubernetes
+K8S_NODES       ?= kubernetes-nodes
 VMS       ?= vm-disk vm-instance
-NETWORKING       ?= vpc vpn http-cache tcp-balancer
+NETWORKING       ?= vpc vpn tcp-balancer
 SERVICES       ?= bootbox etcd ingress monitoring seaweedfs
+SERVICES       += computeplane gateway
 APPS_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/applications
 K8S_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)
+K8S_NODES_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/kubernetes
 VMS_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/virtualization
 NETWORKING_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/networking
 SERVICES_DEST_DIR   ?= content/en/docs/$(DOC_VERSION)/operations/services
@@ -99,6 +102,7 @@ update-networking:
 
 update-k8s:
 	./hack/update_apps.sh --index --apps "$(K8S)" --dest "$(K8S_DEST_DIR)" --branch "$(FETCH_REF)" --source-ref "$(SOURCE_REF)"
+	./hack/update_apps.sh --apps "$(K8S_NODES)" --dest "$(K8S_NODES_DEST_DIR)" --branch "$(FETCH_REF)" --source-ref "$(SOURCE_REF)"
 
 update-services:
 	./hack/update_apps.sh --apps "$(SERVICES)" --dest "$(SERVICES_DEST_DIR)" --branch "$(FETCH_REF)" --source-ref "$(SOURCE_REF)" --pkgdir extra
@@ -186,6 +190,7 @@ template-networking:
 	./hack/fill_templates.sh --apps "$(NETWORKING)" --dest "$(NETWORKING_DEST_DIR)" --branch "$(BRANCH)"
 template-k8s:
 	./hack/fill_templates.sh --apps "$(K8S)" --dest "$(K8S_DEST_DIR)" --branch "$(BRANCH)"
+	./hack/fill_templates.sh --apps "$(K8S_NODES)" --dest "$(K8S_NODES_DEST_DIR)" --branch "$(BRANCH)"
 
 template-services:
 	./hack/fill_templates.sh --apps "$(SERVICES)" --dest "$(SERVICES_DEST_DIR)" --branch "$(BRANCH)" --pkgdir extra

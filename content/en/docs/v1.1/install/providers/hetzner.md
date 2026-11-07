@@ -161,7 +161,7 @@ but has instructions and examples specific to Hetzner.
 
     A bunch of files is now created in the `hetzner-cluster` directory.
     To learn more about the role of each file, refer to the
-    [Talm guide]({{% ref "/docs/v1.1/install/kubernetes/talm#1-initialize-cluster-configuration" %}}).
+    [Talm guide]({{% ref "/docs/v1.1/install/kubernetes/talm#2-initialize-cluster-configuration" %}}).
 
 1.  Edit `values.yaml`, modifying the following values:
 
@@ -344,9 +344,9 @@ The final stage of deploying a Cozystack cluster on Hetzner is to install Cozyst
           values:
             bundles:
               disabledPackages:
-                - metallb
+                - cozystack.metallb
               enabledPackages:
-                - hetzner-robotlb
+                - cozystack.hetzner-robotlb
             publishing:
               host: "example.org"
               apiServerEndpoint: "https://api.example.org:443"
