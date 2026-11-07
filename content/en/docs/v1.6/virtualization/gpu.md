@@ -118,7 +118,7 @@ kubectl -n cozy-kubevirt get kubevirt kubevirt -o json \
 
 {{% alert color="info" %}}
 
-**My GPU isn't in the default table — where's the old `kubectl edit kubevirt` step?** It is gone on purpose. `permittedHostDevices` is now owned by the chart template and reconciled from platform values, so any hand edit to the live CR is reverted on the next Flux/Helm reconcile. Add your card through `.gpu.permittedHostDevices` instead — see [Extending or replacing the NVIDIA defaults](#extending-or-replacing-the-nvidia-defaults) below. If you are upgrading from a release where you hand-edited the CR, follow [Upgrading from a hand-edited KubeVirt CR](#upgrading-from-a-hand-edited-kubevirt-cr) first.
+**My GPU isn't in the default table — where's the old `kubectl edit kubevirt` step?** It is gone on purpose. `permittedHostDevices` is now owned by the chart template and reconciled from platform values, so a hand edit to the live CR does not last: it is overwritten the next time the platform upgrades the kubevirt release, for example on a version bump. Add your card through `.gpu.permittedHostDevices` instead — see [Extending or replacing the NVIDIA defaults](#extending-or-replacing-the-nvidia-defaults) below. If you are upgrading from a release where you hand-edited the CR, follow [Upgrading from a hand-edited KubeVirt CR](#upgrading-from-a-hand-edited-kubevirt-cr) first.
 
 {{% /alert %}}
 
