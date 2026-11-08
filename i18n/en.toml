@@ -92,3 +92,6 @@ other = 'Spotted a mistake? <a href="{{ .IssueURL }}">Open an issue</a>.'
 
 [translation_see_original]
 other = 'See the <a href="{{ .Link }}">English original</a>.'
+
+[docs_older_versions]
+other = "Older versions"
