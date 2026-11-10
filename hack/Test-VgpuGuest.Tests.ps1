@@ -1,49 +1,50 @@
 BeforeAll {
-    $script:Asset = Join-Path $PSScriptRoot '../static/examples/vgpu-guest/v1/windows/Set-CozystackVgpuLicense.ps1'
+    $Asset = Join-Path $PSScriptRoot '../static/examples/vgpu-guest/v1/windows/Set-CozystackVgpuLicense.ps1'
     # Keep cmdlet objects: module-qualified names can still resolve to Pester mocks.
-    $script:RemoveItemCmdlet = Get-Command -Name Remove-Item -Module Microsoft.PowerShell.Management -CommandType Cmdlet -All -ErrorAction Stop
-    $script:CopyItemCmdlet = Get-Command -Name Copy-Item -Module Microsoft.PowerShell.Management -CommandType Cmdlet -All -ErrorAction Stop
+    $RemoveItemCmdlet = Get-Command -Name Remove-Item -Module Microsoft.PowerShell.Management -CommandType Cmdlet -All -ErrorAction Stop
+    $CopyItemCmdlet = Get-Command -Name Copy-Item -Module Microsoft.PowerShell.Management -CommandType Cmdlet -All -ErrorAction Stop
 
     function Remove-GuestFixture([string]$Path, [switch]$Recurse) {
-        if (-not $Path.StartsWith($script:Root + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+        if (-not $Path.StartsWith($Root + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
             throw 'Fixture cleanup outside owned TestDrive root'
         }
-        & $script:RemoveItemCmdlet -LiteralPath $Path -Recurse:$Recurse -Force -ErrorAction Stop
+        & $RemoveItemCmdlet -LiteralPath $Path -Recurse:$Recurse -Force -ErrorAction Stop
     }
 }
 
 Describe 'Platform vGPU guest token' {
     BeforeEach {
-        $script:Root = Join-Path $TestDrive ([guid]::NewGuid().ToString())
+        $Root = Join-Path $TestDrive ([guid]::NewGuid().ToString())
         # Same separators as the script: the mocks compare paths as strings.
-        $script:Folder = Join-Path $Root 'Program Files\NVIDIA Corporation\vGPU Licensing\ClientConfigToken'
-        $script:Media = Join-Path $Root 'media with spaces'
+        $Folder = Join-Path $Root 'Program Files\NVIDIA Corporation\vGPU Licensing\ClientConfigToken'
+        $Media = Join-Path $Root 'media with spaces'
         New-Item -ItemType Directory -Path $Folder, $Media -Force | Out-Null
         Set-Content -LiteralPath (Join-Path $Folder 'old.tok') -Value 'SYNTHETIC-STALE'
         Set-Content -LiteralPath (Join-Path $Media 'client_configuration_token.tok') -Value 'SYNTHETIC-TOKEN-A'
         Set-Content -LiteralPath (Join-Path $Media 'gridd.conf') -Value 'FeatureType=4'
         $env:COZYSTACK_VGPU_TEST_ROOT = $Root
-        $script:Events = [System.Collections.Generic.List[string]]::new()
-        Mock Get-Volume { [pscustomobject]@{ FileSystemLabel = 'GPULICENSE'; Path = $script:Media } }
+        $Events = [System.Collections.Generic.List[string]]::new()
+        Mock Get-Volume { [pscustomobject]@{ FileSystemLabel = 'GPULICENSE'; Path = $Media } }
         Mock Remove-Item {
-            if (-not $LiteralPath.StartsWith($script:Folder + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+            if (-not $LiteralPath.StartsWith($Folder + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
                 throw 'Deletion outside TestDrive token directory'
             }
-            $script:Events.Add('cleanup')
-            & $script:RemoveItemCmdlet -LiteralPath $LiteralPath -Force -ErrorAction Stop
+            $Events.Add('cleanup')
+            & $RemoveItemCmdlet -LiteralPath $LiteralPath -Force -ErrorAction Stop
         }
         Mock Copy-Item {
-            if (-not $Destination.StartsWith($script:Folder + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+            if (-not $Destination.StartsWith($Folder + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
                 throw 'Copy outside TestDrive token directory'
             }
-            $script:Events.Add('copy')
-            & $script:CopyItemCmdlet -LiteralPath $LiteralPath -Destination $Destination -ErrorAction Stop
+            $Events.Add('copy')
+            & $CopyItemCmdlet -LiteralPath $LiteralPath -Destination $Destination -ErrorAction Stop
         }
-        $script:ClientState = 'Running'
+        $Client = @{ State = 'Running'; Restarts = 0 }
         Mock Restart-Service {
-            $script:ClientState | Should -Be 'Running'
-            $script:Events.Add('restart')
-            $script:ClientState = 'Running'
+            $Client.State | Should -Be 'Running'
+            $Events.Add('restart')
+            $Client.State = 'Restarted'
+            $Client.Restarts++
         }
         Mock Set-ItemProperty { throw 'Registry writes are forbidden' }
     }
@@ -59,7 +60,12 @@ Describe 'Platform vGPU guest token' {
         Get-Content -LiteralPath (Join-Path $Folder 'client_configuration_token.tok') | Should -Be 'SYNTHETIC-TOKEN-A'
         Should -Invoke Restart-Service -Times 1 -Exactly -ParameterFilter { $Name -eq 'NvDisplayContainer' }
         Should -Invoke Set-ItemProperty -Times 0
+        $Client.State | Should -Be 'Restarted'
+        $Client.Restarts | Should -Be 1
+        $Client.State = 'Running'
         & $Asset -TestRoot $Root
+        $Client.State | Should -Be 'Restarted'
+        $Client.Restarts | Should -Be 2
         Should -Invoke Restart-Service -Times 2 -Exactly
     }
 
@@ -79,7 +85,7 @@ Describe 'Platform vGPU guest token' {
     }
 
     It 'rejects ambiguous media after cleanup and still restarts' {
-        Mock Get-Volume { @([pscustomobject]@{ FileSystemLabel = 'GPULICENSE'; Path = $script:Media }) * 2 }
+        Mock Get-Volume { @([pscustomobject]@{ FileSystemLabel = 'GPULICENSE'; Path = $Media }) * 2 }
         { & $Asset -TestRoot $Root } | Should -Throw '*vGPU license media preparation failed*'
         @(Get-ChildItem -LiteralPath $Folder).Count | Should -Be 0
         @($Events) -join ',' | Should -Be 'cleanup,restart'
@@ -162,19 +168,19 @@ Describe 'Nonempty Windows CI selection' {
         $workflow = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot '../.github/workflows/vgpu-guest.yml')
         $guard = [regex]::Match($workflow, '(?ms)^          if \(\$null -eq \$result.*?^          \}')
         if (-not $guard.Success) { throw 'Missing nonempty Pester selection guard' }
-        $script:SelectionGuard = [scriptblock]::Create($guard.Value)
+        $SelectionGuard = [scriptblock]::Create($guard.Value)
     }
 
     It 'rejects a run with <Total> tests and <Passed> passes' -ForEach @(
         @{ Total = 0; Passed = 0 }, @{ Total = 4; Passed = 0 }
     ) {
         $result = [pscustomobject]@{ TotalCount = $Total; PassedCount = $Passed }
-        { & $script:SelectionGuard } | Should -Throw '*No vGPU guest tests passed*'
+        { & $SelectionGuard } | Should -Throw '*No vGPU guest tests passed*'
     }
 
     It 'accepts a nonempty passing run' {
         $result = [pscustomobject]@{ TotalCount = 1; PassedCount = 1 }
-        { & $script:SelectionGuard } | Should -Not -Throw
+        { & $SelectionGuard } | Should -Not -Throw
     }
 }
 
