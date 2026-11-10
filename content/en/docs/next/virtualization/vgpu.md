@@ -9,6 +9,8 @@ This page describes how to configure the GPU Operator package with NVIDIA vGPU s
 
 Verified 2026-04-29 against KubeVirt `main` (`virt-handler` nightly `20260429_74d7c52588`), the `vgpu` variant of `cozystack.gpu-operator`, the NVIDIA vGPU 20.0 host driver `595.58.02` and GRID guest driver `595.58.03`.
 
+For the unreleased hoster catalog and tenant class selection, see [GPU class catalog]({{% ref "/docs/next/operations/configuration/gpu-classes" %}}). A catalog entry does not replace the host profile setup described here.
+
 ## Two driver models
 
 NVIDIA's vGPU driver uses two different host-side models depending on GPU generation:
