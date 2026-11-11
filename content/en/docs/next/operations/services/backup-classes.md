@@ -52,11 +52,11 @@ Different operators expect different endpoint shapes; the strategy templates ren
 | MongoDB         | `s3.endpointUrl`                | full URL (scheme preserved); on the default flow the app's `backup.endpointURL`, on `useSystemBucket` the strategy coordinate injected by the driver |
 | FoundationDB    | `blobStoreConfiguration.accountName` + `urlParameters.secure_connection` | bare host:port + derived secure flag |
 | Velero          | `BackupStorageLocation.spec.config.s3Url` | full URL (scheme preserved) |
-| ClickHouse sidecar | `S3_ENDPOINT` env | bare host:port (from projected Secret) |
+| ClickHouse sidecar | `s3.endpoint` in the mounted `clickhouse-backup.yml` | full URL: the projector adds `https://` to the bare host |
 | Redis (dump Job)   | `S3_ENDPOINT` env | bare host:port (from projected Secret); `https://` prepended when unscheme'd |
 | Kafka           | `S3_ENDPOINT` env on the strategy Job | full URL (scheme preserved); the Job's `curl --aws-sigv4` prepends `https://` if the endpoint carries no scheme, honours `backupStorage.forcePathStyle`, and (for the image's curl 7.76.1) signs a portless URL with `--connect-to` to the real port so a ported endpoint still verifies |
 
-The projected `cozy-backups-creds.endpoint` key is **stripped of scheme** so chart-emitted sidecars (ClickHouse) consume it directly. Drivers that need the full URL receive the resolved endpoint described above — derived from the COSI system Secret (forced `https://`) for a provisioned bucket, or the `backupStorage.endpoint` fallback for external S3.
+The projected `cozy-backups-creds.endpoint` key is **stripped of scheme**, and each consumer adds its own: the Redis dump Job prepends `https://`, and the `clickhouse-backup.yml` key the projector writes for the ClickHouse sidecar carries the endpoint with `https://` already added. Drivers that need the full URL receive the resolved endpoint described above — derived from the COSI system Secret (forced `https://`) for a provisioned bucket, or the `backupStorage.endpoint` fallback for external S3.
 
 VM-driven (Velero) backups land in the same `cozy-backups` bucket under the `velero/` prefix. A `BackupStorageLocation` named `cozy-default` is shipped by the `backupstrategy-controller` chart (`packages/system/backupstrategy-controller/templates/velero-bsl.yaml`) so endpoint/bucket/region come from the same `backupStorage` values block used by Strategy CRs and the projector.
 
@@ -106,10 +106,16 @@ backup:
 When `useSystemBucket: true`:
 
 - The chart-emitted `<release>-backup-s3` Secret is no longer rendered.
-- The sidecar consumes `cozy-backups-creds` (projected by the platform).
+- The sidecar reads its S3 settings (bucket, endpoint, keys, region when set, and `force_path_style` from `backupStorage.forcePathStyle`) from the `clickhouse-backup.yml` key of `cozy-backups-creds`, which the chart mounts, optionally, as its config file instead of setting `S3_*` environment variables.
 - `S3_PATH` is set to `<namespace>/<release>` so two tenants with the same ClickHouse release name never share a prefix.
 
 `s3Region`, `s3Bucket`, `endpoint`, `s3AccessKey`, `s3SecretKey`, and `s3CredentialsSecret` are ignored in this mode.
+
+The platform projects `cozy-backups-creds` into the namespace at the first BackupJob or RestoreJob, usually after the ClickHouse Pod has started, and may rewrite it later when the source credentials rotate. kubelet rewrites a mounted Secret in place, and clickhouse-backup reloads its config file in each API handler that reaches S3, among them the `create_remote`, `restore_remote` and `list` calls the Altinity strategy makes, so projected and rotated credentials reach the running sidecar without a Pod restart.
+
+kubelet refreshes the mounted file about a minute after the Secret changes. To cover that delay, the projector stamps `cozy-backups-creds` with the `backups.cozystack.io/credentials-updated-at` annotation whenever the projected content changes, and the Altinity driver holds a new backup or restore Job for up to two minutes after that stamp. Meanwhile the BackupJob or RestoreJob reports `Ready=False` with reason `WaitingForCredentials`. The first backup or restore in each namespace after the platform upgrade waits too, because adding the `clickhouse-backup.yml` key counts as a change.
+
+During a platform upgrade, a ClickHouse release rendered by the new chart while the previous `backupstrategy-controller` still runs has no S3 settings: the previous controller does not write `clickhouse-backup.yml`, and the sidecar no longer reads `S3_*` environment variables. A system-bucket backup or restore started in that window fails. Once the new controller runs, the next BackupJob or RestoreJob projects the key, waits as described above and runs against the mounted file, with no Pod restart. Upgrade the platform as a whole rather than holding `backupstrategy-controller` back.
 
 ## MongoDB: backup storage
 
@@ -193,11 +199,12 @@ The bucket lives in `tenant-root` and is provisioned through the `apps.cozystack
 | Key                                           | Consumer                                  |
 |-----------------------------------------------|-------------------------------------------|
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | CNPG, MariaDB, Etcd, RabbitMQ, Redis      |
-| `accessKey` / `secretKey` (plus `bucketName`, `endpoint`, `region`) | ClickHouse sidecar  |
+| `accessKey` / `secretKey` (plus `bucketName`, `endpoint`, `region`) | ClickHouse sidecars rendered by a chart that predates `clickhouse-backup.yml`; the Redis dump Job reads only `bucketName`, `endpoint` and `region` |
+| `clickhouse-backup.yml` | ClickHouse sidecar (mounted as its config file) |
 | `cloud`                                       | Velero (AWS credentials file format)      |
 | `blob_credentials.json`                       | FoundationDB backup_agent                 |
 
-The Redis dump Job additionally reads the `endpoint`, `bucketName`, and `region` keys (alongside the `AWS_*` pair) via `secretKeyRef`, the same set the ClickHouse sidecar consumes.
+The Redis dump Job additionally reads the `endpoint`, `bucketName`, and `region` keys (alongside the `AWS_*` pair) via `secretKeyRef`.
 
 The dump Job also speaks to the Redis app's own Sentinel and master, which is a separate TLS axis from the S3 endpoint above. When the `Redis` app has `tls.enabled`, the operator moves both to a TLS-only listener and publishes the CA at `redis-<app>.ca-cert`; the Job mounts that Secret optionally and connects with `--tls --cacert` exactly when its `ca.crt` is present, so a plaintext (non-TLS) app is unaffected. This covers the default `tls.authClients: no`. Mutual TLS (`authClients: yes`) is not supported for backup — it requires a client certificate signed by the release CA, which the platform does not issue.
 
@@ -322,7 +329,7 @@ spec:
 | `endpoint` | **Fallback** S3 endpoint. For a provisioned bucket the strategy CRs + Velero BSL derive the endpoint from the COSI system Secret (external ACME ingress, forced `https://`) instead; this value is used only for external S3 (`provisionBucket: false`) and offline renders. For external S3, switching it to `https://` enables TLS in the MariaDB/FoundationDB strategies, which derive TLS from the scheme. The Redis dump Job is not scheme-driven: the projector delivers a bare host and the script prepends `https://` unconditionally, so the Job always connects over TLS — point `endpointCASecretName` (below) at the private CA rather than relying on the scheme, and ensure that CA is reachable to the relevant Pods. |
 | `endpointCASecretName` | Optional Secret (key `ca.crt`) in the app namespace the Redis Job trusts for a self-signed S3 endpoint. Empty by default: the projected endpoint is always `https://` and the platform bucket's ACME cert verifies against the image's system CA store unaided. Set it only for a private CA. The Job mounts it optionally (nothing projects this Secret automatically), so a name typo does not wedge the Pod on `FailedMount`: a missing `ca.crt` falls through to the system CA store and the Job fails fast at the TLS handshake with a legible error — it does not skip verification, which still needs the explicit `insecureSkipTLSVerify` opt-in. |
 | `insecureSkipTLSVerify` | Disables S3 certificate verification for the Redis Job (`curl -k`). `false` by default and an explicit opt-in, never a fallback — an untrusted-cert endpoint fails closed unless this is set. Prefer `endpointCASecretName`. |
-| `region` | Re-projected into `cozy-backups-creds` on the next reconcile. Pod-restart required for chart-emitted clients consuming the region via env (ClickHouse sidecar today). |
+| `region` | Re-projected into `cozy-backups-creds` on the next reconcile; consumers pick it up on their next job. The ClickHouse sidecar reads it from the mounted `clickhouse-backup.yml` without a restart, once kubelet has refreshed the file. |
 | `forcePathStyle` | Path-style addressing; SeaweedFS S3 requires it, AWS S3 typically doesn't. |
 | `systemSecretName` | Name of the human-friendly Secret produced by the Bucket app (or pre-created manually for external S3). The projector also accepts the raw COSI Secret format. |
 | `systemNamespaces` | Namespaces where the controller eagerly projects `cozy-backups-creds` (Velero BSL, FDB operator). Tenants are projected lazily during BackupJob reconcile. |
