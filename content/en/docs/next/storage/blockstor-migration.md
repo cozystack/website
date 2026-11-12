@@ -21,13 +21,13 @@ The order matters, and it is the opposite of what feels natural. You switch the 
 
 You need:
 
-- `linstor-migrate`, the converter shipped with Blockstor. Build it from the Blockstor repository with `make build` or take it from a release.
-- A Cozystack release whose pinned Blockstor can register your storage pools. This is not optional and it is the first thing to check — see the box below.
+- `linstor-migrate` from Blockstor v0.2.0 or later. Build it from the Blockstor repository with `make build` or take it from a release.
+- A Cozystack release that pins Blockstor v0.2.0 or later. This is not optional and it is the first thing to check, see the box below.
 - Enough of a maintenance window that CSI cannot attach or detach volumes for its duration. Running workloads keep their volumes; new pods that need an attach will wait.
 - Room in the storage pool for the replicas adoption will add. Blockstor brings replica counts up to each resource group's `placeCount`, and a volume LINSTOR left under-replicated is topped up as soon as the controller starts — a new replica and a full sync each. Check that against your free space before you switch, not after.
 
 {{% alert color="warning" %}}
-**Check your Cozystack version before anything else.** You do not pick a Blockstor version: it arrives pinned inside the Cozystack release, so what decides whether the migration can work is which Cozystack you are on. Registering a storage pool that LINSTOR created requires reading the pool name from `StorDriver/StorPoolName`, which is where LINSTOR stores it; a pinned Blockstor without that support logs `unknown storage pool "<name>"` on every reconcile and adopts nothing. The failure is safe — Blockstor refuses before touching the data plane — but the migration cannot proceed, and the fix is to upgrade Cozystack rather than to swap an image.
+**Check your Cozystack version before anything else.** You do not pick a Blockstor version: it arrives pinned inside the Cozystack release, so what decides whether the migration can work is which Cozystack you are on. It needs Blockstor v0.2.0 or later. Earlier releases cannot register a storage pool that LINSTOR created: they do not read the pool name from `StorDriver/StorPoolName`, where LINSTOR stores it, log `unknown storage pool "<name>"` on every reconcile and adopt nothing. The failure is safe, Blockstor refuses before touching the data plane, but the migration cannot proceed, and the fix is to upgrade Cozystack rather than to swap an image.
 {{% /alert %}}
 
 ## 1. Stop everything that writes
@@ -105,7 +105,7 @@ A single-replica volume has no peer and therefore no port to preserve; it will n
 linstor-migrate -in linstor-dump -drbd-ports drbd-ports.txt -out blockstor-resources.yaml
 ```
 
-Read the warnings. Resources that LINSTOR has marked for deletion are skipped and named. Flags the converter does not recognise are reported and dropped rather than guessed at.
+Read the warnings. Resources that LINSTOR has marked for deletion are skipped and named. Flags the converter does not recognise are reported and dropped rather than guessed at. A definition that cannot be adopted safely is skipped with its replicas and named too: one whose replicas disagree on the layer stack, or one with external DRBD metadata, which Blockstor does not adopt. LUKS volumes convert, but Blockstor opens them with the cluster passphrase rather than LINSTOR's per-volume keys; add that passphrase to each one as a key slot before you adopt it. The [Blockstor migration runbook](https://blockstor.org/docs/migration/) covers each of these.
 
 ## 6. Switch the backend
 
@@ -120,13 +120,12 @@ spec:
       values:
         storage:
           backend: blockstor
+          acknowledgeBackendChange: blockstor
 ```
 
-Apply it and wait for the Blockstor control plane to come up. The LINSTOR controller and the piraeus-managed satellites go away; piraeus-operator stays on in external mode to keep driving the CSI driver.
+The platform refuses to change the backend of a running cluster on its own, because the volumes the cluster already has are known only to the backend that created them. `acknowledgeBackendChange` confirms this exact switch; adoption in step 7 is what hands the volumes to Blockstor.
 
-{{% alert color="info" %}}
-On a cluster that already ran LINSTOR, the compatibility Service that Blockstor provides for the scheduler and GUI collides with the one piraeus-operator owns. Helm refuses to import it. Take ownership of the existing Service so the release can proceed; a fresh install never hits this.
-{{% /alert %}}
+Apply it and wait for the Blockstor control plane to come up. The LINSTOR controller and the piraeus-managed satellites go away; piraeus-operator stays on in external mode to keep driving the CSI driver.
 
 Your volumes keep serving throughout this step. Blockstor does not yet know about them, so CSI cannot attach or detach until adoption finishes.
 
@@ -149,7 +148,7 @@ With the controller stopped, the whole file lands before anything reacts to it.
 Confirm every replica was adopted rather than recreated, and that the ports match what the kernel is using:
 
 ```bash
-kubectl get resources.blockstor.cozystack.io -o custom-columns=\
+kubectl get resources.blockstor.org -o custom-columns=\
 'RD:.spec.resourceDefinitionName,NODE:.spec.nodeName,PORT:.spec.drbdPort'
 ```
 
@@ -171,4 +170,4 @@ kubectl -n cozy-linstor scale deploy/linstor-csi-controller --replicas=1
 
 ## Rolling back
 
-Switching back is the same operation in reverse: set `storage.backend` to `linstor` and apply. LINSTOR's custom resources are not deleted by the migration, so its controller finds its state where it left it. The Blockstor custom resources can be removed afterwards.
+Switching back is the same operation in reverse: set `storage.backend` and `storage.acknowledgeBackendChange` to `linstor` and apply. LINSTOR's custom resources are not deleted by the migration, so its controller finds its state where it left it. The Blockstor custom resources can be removed afterwards.

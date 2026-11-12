@@ -146,7 +146,7 @@ Blockstor is **experimental**. Use it on clusters where you can tolerate storage
 
 An unrecognised value fails the render rather than falling back to a default, so a typo cannot quietly deploy the storage control plane you did not ask for.
 
-To move an existing cluster from LINSTOR to Blockstor, see [Migrating from LINSTOR to Blockstor]({{% ref "/docs/next/storage/blockstor-migration" %}}). Do not simply flip this value on a cluster that already holds data — the switch installs a new control plane that knows nothing about the existing volumes until they are adopted.
+To move an existing cluster from LINSTOR to Blockstor, see [Migrating from LINSTOR to Blockstor]({{% ref "/docs/next/storage/blockstor-migration" %}}). Do not simply flip this value on a cluster that already holds data: the switch installs a new control plane that knows nothing about the existing volumes until they are adopted. The platform refuses such a switch unless `storage.acknowledgeBackendChange` names the new backend, which the migration guide sets at the right step.
 
 ### 2.4. Define Network Configuration
 
