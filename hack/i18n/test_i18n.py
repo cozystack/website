@@ -783,13 +783,14 @@ class TestStaleReportCleanup(unittest.TestCase):
         # Once the backlog drains, build_worklist() is empty and main() returns
         # early. A report left by an earlier run must still be cleared, or
         # run-daily.sh reposts stale findings stamped with today's date.
-        orig_wl, orig_orph, orig_argv = (
-            lib.build_worklist, lib.find_orphan_translations, sys.argv)
+        orig_wl, orig_orph, orig_tc, orig_argv = (
+            lib.build_worklist, lib.find_orphan_translations, lib.find_transcreated, sys.argv)
         existed = os.path.exists(translate.REPORT_PATH)
         backup = open(translate.REPORT_PATH).read() if existed else None
         try:
             lib.build_worklist = lambda *a, **k: []
             lib.find_orphan_translations = lambda *a, **k: []
+            lib.find_transcreated = lambda *a, **k: []
             sys.argv = ["translate.py"]
             with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
                 fh.write("### stale findings from a previous run\n- something\n")
@@ -798,8 +799,8 @@ class TestStaleReportCleanup(unittest.TestCase):
             self.assertFalse(os.path.exists(translate.REPORT_PATH),
                              "stale report was not cleared on an empty worklist")
         finally:
-            lib.build_worklist, lib.find_orphan_translations, sys.argv = (
-                orig_wl, orig_orph, orig_argv)
+            (lib.build_worklist, lib.find_orphan_translations,
+             lib.find_transcreated, sys.argv) = (orig_wl, orig_orph, orig_tc, orig_argv)
             if backup is not None:
                 with open(translate.REPORT_PATH, "w", encoding="utf-8") as fh:
                     fh.write(backup)
