@@ -160,6 +160,12 @@ gateway:
 | --- | --- | --- |
 | `scheduling.globalAppTopologySpreadConstraints` | `""` | Global pod topology spread constraints applied to all managed applications. |
 
+#### Ingress
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `ingress.rootEnabled` | `true` | Whether the root tenant runs its own ingress-nginx, that is, whether `Tenant/root` has `spec.ingress: true`. When `true`, applications in `tenant-root`, and every tenant that inherits its ingress from the root, are told their ingress lives in `tenant-root`: they render `Ingress` objects with the `tenant-root` class, and SeaweedFS in `tenant-root` waits for `ingress-nginx-system` before it starts. When `false`, they are told there is no ingress: SeaweedFS starts without waiting, its S3 `Ingress`, Grafana's `Ingress` and the proxied ingress-nginx addon `Ingress` of a tenant Kubernetes cluster are not created, and the remaining `Ingress` objects are created without a class. Nothing sets `spec.ingress` on the root Tenant from this value: set it to match the root Tenant. With `true` while the root tenant has ingress disabled, SeaweedFS in `tenant-root` waits for an ingress-nginx that never comes up, and so does the platform backup bucket. The default `true` keeps the earlier behaviour. |
+
 #### Monitoring
 
 | Value | Default | Description |
