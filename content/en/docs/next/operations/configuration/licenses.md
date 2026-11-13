@@ -32,6 +32,8 @@ Pinned upstream versions of managed runtimes (PostgreSQL, MariaDB, Kafka, etc.) 
 {{< oss-card name="Kube-OVN" logo="kubeovn" license="Apache-2.0" source="https://github.com/cozystack/kubeovn-chart/blob/main/LICENSE" description="OVN-based virtual networking, used for VPC and floating IPs." >}}
 {{< oss-card name="Multus CNI" logo="multus" license="Apache-2.0" source="https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/LICENSE" description="Multiple network interfaces per pod." >}}
 {{< oss-card name="MetalLB" logo="metallb" license="Apache-2.0" source="https://github.com/metallb/metallb/blob/main/LICENSE" description="Bare-metal load balancer for Kubernetes Services." >}}
+{{< oss-card name="address-controller" license="Apache-2.0" source="https://github.com/cozystack/address-controller/blob/main/LICENSE" description="IP addresses as a first-class resource (IPAddressClass, IPAddress, IPAddressClaim). Optional; off by default." >}}
+{{< oss-card name="metallb-iad" license="Apache-2.0" source="https://github.com/cozystack/metallb-iad/blob/main/LICENSE" description="MetalLB driver for address-controller. Optional; off by default." >}}
 {{< oss-card name="ingress-nginx" logo="nginx" license="Apache-2.0" source="https://github.com/kubernetes/ingress-nginx/blob/main/LICENSE" description="HTTP ingress controller." >}}
 {{< oss-card name="Gateway API CRDs" logo="kubernetes" license="Apache-2.0" source="https://github.com/kubernetes-sigs/gateway-api/blob/main/LICENSE" description="Standard Kubernetes Gateway API definitions." >}}
 {{< oss-card name="CoreDNS" logo="coredns" license="Apache-2.0" source="https://github.com/coredns/coredns/blob/master/LICENSE" description="Cluster DNS server." >}}
