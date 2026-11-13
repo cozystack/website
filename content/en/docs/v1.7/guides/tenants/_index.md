@@ -71,8 +71,31 @@ labels:
     own etcd (only applicable when the tenant was created with
     `etcd: true`).
 
-See [Tenant `isolated` flag removed]({{% ref "/docs/v1.7/operations/upgrades#tenant-isolated-flag-removed" %}})
-in the upgrade notes for a full worked example.
+The `allow-to-apiserver` policy the tenant chart installs matches traffic against Cilium's built-in `kube-apiserver` entity, which Cilium resolves to the real API server endpoints. You do not need to know your Service CIDR or the address of the `kubernetes` Service — the label on the pod is enough.
+
+Example — allowing a Deployment's pods to reach `kube-apiserver`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-operator
+spec:
+  selector:
+    matchLabels:
+      app: my-operator
+  template:
+    metadata:
+      labels:
+        app: my-operator
+        policy.cozystack.io/allow-to-apiserver: "true"
+    spec:
+      containers:
+        - name: my-operator
+          image: example.com/my-operator:v1.0.0
+```
+
+Without the label, traffic to `kube-apiserver` is blocked by the `allow-to-apiserver` `CiliumNetworkPolicy` that the tenant chart installs in every tenant namespace. The same pattern applies to `allow-to-etcd`.
 
 
 ### Customizing Tenant Services

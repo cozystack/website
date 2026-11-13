@@ -226,6 +226,6 @@ After deploying a theme image, activate it in Keycloak:
 
 ## Migration from v0
 
-In Cozystack v0, branding was configured via a standalone `cozystack-branding` ConfigMap in the `cozy-system` namespace. In v1, this ConfigMap is no longer used. The [migration script]({{% ref "/docs/next/operations/upgrades#step-3-generate-the-platform-package" %}}) automatically converts the old ConfigMap values into the Platform Package `branding` field.
+In Cozystack v0, branding was configured via a standalone `cozystack-branding` ConfigMap in the `cozy-system` namespace. In v1, this ConfigMap is no longer used. The [migration script]({{% ref "/docs/v1.0/operations/upgrades#step-3-generate-the-platform-package" %}}) automatically converts the old ConfigMap values into the Platform Package `branding` field.
 
 If you previously used the ConfigMap approach, no manual migration is needed — the upgrade process handles it automatically.
