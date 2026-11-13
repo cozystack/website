@@ -42,7 +42,7 @@ Cozystack-maintained charts, CRDs, controllers, and application APIs are license
 {{< oss-card name="CoreDNS" logo="coredns" license="Apache-2.0" source="https://github.com/coredns/coredns/blob/master/LICENSE" description="Cluster DNS server for service discovery and internal name resolution. Resolves cluster.local service names for all pod-to-service lookups." >}}
 {{< oss-card name="ExternalDNS" logo="externaldns" license="Apache-2.0" source="https://github.com/kubernetes-sigs/external-dns/blob/master/LICENSE.md" description="Syncs Kubernetes Service and Ingress resources to external DNS providers automatically. Eliminates manual DNS record management for platform and tenant endpoints." >}}
 {{< oss-card name="Kilo" logo="kilo" license="Apache-2.0" source="https://github.com/squat/kilo/blob/main/LICENSE" description="WireGuard-based mesh networking for clusters spanning multiple geographic locations. Creates encrypted tunnels for seamless cross-site pod-to-pod communication." >}}
-{{< oss-card name="Hetzner RobotLB" logo="hetzner" license="MIT" source="https://github.com/Intreecom/robotlb/blob/master/LICENSE" description="Load balancer controller for Hetzner dedicated hardware via the Robot API. Enables LoadBalancer-type Services on Hetzner bare-metal without Hetzner Cloud." >}}
+{{< oss-card name="Hetzner RobotLB" logo="hetzner" license="MIT" source="https://github.com/Treetscom/robotlb/blob/master/LICENSE" description="Load balancer controller for Hetzner dedicated hardware via the Robot API. Enables LoadBalancer-type Services on Hetzner bare-metal without Hetzner Cloud." >}}
 {{< /oss-cards >}}
 
 ## Storage and backup
