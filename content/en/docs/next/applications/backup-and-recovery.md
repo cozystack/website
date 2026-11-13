@@ -183,10 +183,10 @@ The source application stays untouched. Cross-namespace restores are **not** sup
 ## Limitations and lifecycle
 
 - **Data-only scope.** Application CRs, HelmReleases, chart values, and operator-managed Secrets (e.g. `cnpg.io` superuser secret, `clickhouse-installation` users) are not captured. Pre-provision the target application before a to-copy restore.
-- **Archive retention is driver-owned.** Deleting a Cozystack `Backup` CR removes the artefact reference but leaves the actual S3 object intact. Each driver enforces its own retention:
+- **Archive retention is driver-owned.** Deleting a Cozystack `Backup` CR removes the artefact reference; whether the S3 object goes with it depends on the driver:
   - CNPG: `retentionPolicy` on the strategy (admin-owned; default `30d` in the admin example).
   - MariaDB: `cleanupStrategy` on the operator-side `Backup` CR or rotation at the bucket level (admin-owned).
-  - ClickHouse: governed by the in-pod sidecar's retention configuration. To purge an archive ahead of schedule, ask your administrator — the call goes against the `clickhouse-backup` HTTP API on the sidecar.
+  - ClickHouse: on `backup.useSystemBucket: true`, deleting the `Backup` deletes its archive through the in-pod `clickhouse-backup` sidecar, and the `Backup` stays until that delete finished; an archive it cannot or must not delete is named in an `ArtifactNotDeleted` Warning Event on the `Backup` (see [ClickHouse archive cleanup]({{% ref "/docs/next/operations/services/backup-classes#clickhouse-archive-cleanup" %}})). On the application's own bucket the archive stays until removed through the sidecar's `POST /backup/delete/remote/<name>` or the bucket's lifecycle rules.
 - **ClickHouse depends on the in-chart sidecar.** The Altinity strategy is a thin HTTP client; the backup itself runs inside each `chi-*` Pod via `clickhouse-backup`. Disabling `backup.enabled` on the application also disables the BackupClass flow.
 
 ## Troubleshooting

@@ -111,6 +111,16 @@ When `useSystemBucket: true`:
 
 `s3Region`, `s3Bucket`, `endpoint`, `s3AccessKey`, `s3SecretKey`, and `s3CredentialsSecret` are ignored in this mode.
 
+### ClickHouse archive cleanup
+
+On `backup.useSystemBucket: true` the driver owns the archive, which nothing else prunes in the shared bucket. Each backup names its archive after the run (`<release>-<start time>-<part of the BackupJob UID>`) and records it on the `Backup`, together with the `useSystemBucket` setting and the system bucket the projected `cozy-backups-creds` named when the backup Job was created. Deleting such a `Backup` runs a one-shot cleanup Job that calls `POST /backup/delete/remote/<name>` on the application's sidecar, and the `Backup` stays until that delete finished. An archive already gone counts as deleted.
+
+The cleanup Job waits out a sidecar that is busy with another operation or restarting, and starts only once changed credentials have reached the sidecar. A delete that still fails is reported as an `ArtifactCleanupFailed` Warning Event on the `Backup` and retried after a wait that starts at 30 seconds and doubles with each failure, up to 30 minutes. The cleanup Pod runs the strategy container's image with its pull settings and is scheduled like the strategy's own Pods (node selector, tolerations, affinity, priority class).
+
+The `Backup` is released without deleting the archive, with an `ArtifactNotDeleted` Warning Event naming the archive left in the bucket, when the namespace is terminating; the strategy, the application or its `clickhouse-<release>-backup-api-auth` Secret is gone; the application no longer uses the system bucket, or the system bucket is no longer the one the `Backup` records or cannot be read (also when either changes while the delete runs, in which case the Event says the archive may remain); another Job holds the cleanup Job name; or the archive is named in the older `clickhouse-<release>-<YYYYMMDDTHHMMSSZ>` form, which two runs started in the same second could share. The `backups.cozystack.io/skip-artifact-cleanup: "true"` annotation releases a `Backup` without starting a delete; a delete the sidecar already accepted still runs to the end.
+
+A `Backup` that records no archive name, as one taken by a strategy that does not use `.ArchiveName` does, or no bucket setting, as one taken before this behaviour does, is released without an Event, leaving its archive. On the application's own bucket the archive's lifecycle stays the tenant's: delete it through the sidecar's `POST /backup/delete/remote/<name>` or with the bucket's lifecycle rules.
+
 ## MongoDB: backup storage
 
 MongoDB supports two storage flows. By default the S3 target lives on the app CR and the tenant supplies its own credentials; alternatively the tenant opts into the platform system bucket and the driver injects the storage onto the live cluster at backup time.
