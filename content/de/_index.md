@@ -121,7 +121,7 @@ features:
       Die Web-UI erleichtert den schnellen Einstieg in die Plattform und demonstriert ihre Möglichkeiten anschaulich.
 ---
 
-{{< blocks/hero title="Cozystack: Freie Cloud-Plattform auf Basis von Kubernetes" link_title="Erste Schritte" link_url="/de/docs/v1.4/getting-started/" >}}
+{{< blocks/hero title="Cozystack: Freie Cloud-Plattform auf Basis von Kubernetes" link_title="Erste Schritte" link_url="/docs/getting-started/" >}}
 Nutzen Sie Cozystack, um Ihre eigene Cloud aufzubauen oder kosteneffiziente Entwicklungsumgebungen bereitzustellen.
 {{< /blocks/hero >}}
 
