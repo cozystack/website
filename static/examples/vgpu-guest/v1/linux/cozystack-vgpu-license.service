@@ -1,0 +1,8 @@
+[Unit]
+Description=Prepare the platform vGPU license token
+Before=nvidia-gridd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/cozystack-vgpu-license
+UMask=0022
