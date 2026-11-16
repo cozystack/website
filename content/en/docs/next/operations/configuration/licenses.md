@@ -65,6 +65,7 @@ Pinned upstream versions of managed runtimes (PostgreSQL, MariaDB, Kafka, etc.) 
 {{< oss-card name="Prometheus Operator CRDs" logo="prometheus" license="Apache-2.0" source="https://github.com/prometheus-community/helm-charts/blob/main/LICENSE" description="CRDs for Prometheus-style monitoring resources, consumed by VictoriaMetrics." >}}
 {{< oss-card name="Metrics Server" logo="kubernetes" license="Apache-2.0" source="https://github.com/kubernetes-sigs/metrics-server/blob/master/LICENSE" description="Kubelet metrics for HPA and `kubectl top`." >}}
 {{< oss-card name="Goldpinger" logo="goldpinger" license="Apache-2.0" source="https://github.com/bloomberg/goldpinger/blob/master/LICENSE" description="Pod-to-pod connectivity checks across the cluster." >}}
+{{< oss-card name="OpenCost" license="Apache-2.0" source="https://github.com/opencost/opencost/blob/develop/LICENSE" description="Per-namespace and per-workload cost allocation from cluster metrics. Optional; off by default." >}}
 {{< /oss-cards >}}
 
 ## Autoscaling and resource management
