@@ -124,6 +124,40 @@ spec:
             - vm-exportproxy
 ```
 
+#### Networking variant
+
+On `isp-full`, `bundles.system.networkingVariant` selects the CNI. The default, `kubeovn-cilium`, runs Kube-OVN with Cilium. `cozyplane` replaces Kube-OVN, Cilium and kube-proxy with the [cozyplane](https://github.com/lllamnyp/cozyplane) eBPF CNI, its aggregated `sdn.cozystack.io` API server and `cozyplane-kpr`, a socket-LB replacement for kube-proxy. The value applies only to `isp-full`: on any other variant, the slim ones included, the platform render fails.
+
+{{% warning %}}
+The `cozyplane` networking variant is **experimental**. It has no end-to-end test coverage and is not for production clusters.
+{{% /warning %}}
+
+On `cozyplane`, CiliumNetworkPolicy and CiliumClusterwideNetworkPolicy objects still apply, so the components that ship them install, but nothing enforces them. Tenant isolation on the default network is not in effect, and neither are the platform components' own Cilium policies, including their `ingressDeny` rules.
+
+The platform refuses the following combinations on `cozyplane` and fails the render:
+
+- `gateway.enabled` with the default `cilium` GatewayClass, because nothing serves that class without Cilium. Set `gateway.className` to a class another implementation serves.
+- `networking.encryption.enabled`.
+- Switching the networking variant of a running cluster, unless `networking.acknowledgeVariantChange` names the target variant. The switch removes the CNI the cluster runs on, so only confirm it once the cluster no longer needs that CNI.
+
+```yaml
+apiVersion: cozystack.io/v1alpha1
+kind: Package
+metadata:
+  name: cozystack.cozystack-platform
+spec:
+  variant: isp-full
+  components:
+    platform:
+      values:
+        bundles:
+          system:
+            networkingVariant: cozyplane
+        networking:
+          podCIDR: "10.244.0.0/16"
+          serviceCIDR: "10.96.0.0/16"
+```
+
 ### `isp-full-generic`
 
 `isp-full-generic` provides the same full-featured PaaS and IaaS experience as `isp-full`, but is designed for generic Kubernetes distributions such as k3s, kubeadm, or RKE2.
