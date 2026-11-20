@@ -9,11 +9,11 @@ A `WorkerClass` describes how a managed Kubernetes worker boots and joins its cl
 
 {{< warning >}}
 
-This page describes the accepted, unreleased WorkerClass contract, not the old NodeGroupClass draft. Examples are contract examples, not deployment instructions for an installed release. Package settings, application schema and the restore-tool interface must be checked against the release being deployed. No released restore command or verified Kairos recovery procedure is supplied here.
+This page describes the unreleased WorkerClass implementation and its compatibility limits, not the old NodeGroupClass draft. Check package settings, application schema and tool availability against the release being deployed. Examples require the stated operator permissions and prerequisites; they do not establish a verified Kairos recovery procedure.
 
 {{< /warning >}}
 
-The accepted [WorkerClass and Kairos design](https://github.com/cozystack/community/blob/77458b33a379e6e8def79ebfd97664129ee4a6f3/design-proposals/kairos-tenant-worker-pools/README.md) defines this contract. [Managed Kubernetes]({{% ref "/docs/next/kubernetes" %}}) remains the starting point for creating the parent cluster. A class does not replace that cluster or its control plane.
+The accepted [WorkerClass and Kairos design](https://github.com/cozystack/community/blob/9e08371b1e95119872cff57d739b21cd00a56930/design-proposals/kairos-tenant-worker-pools/README.md) defines this contract. [Managed Kubernetes]({{% ref "/docs/next/kubernetes" %}}) remains the starting point for creating the parent cluster. A class does not replace that cluster or its control plane.
 
 ## Classes and the platform default
 
@@ -55,7 +55,7 @@ spec:
 
 Kairos initially supports KubeVirt, not Proxmox. It boots an immutable disk and joins through the Kairos bootstrap provider's kubeadm path. Bootstrap changes require replacement workers; this is not mutable in-place OS management or general cloud-init support.
 
-`sshKeys` is a list of public-key strings. Kairos currently accepts zero or one key; more than one is rejected. An empty list configures no SSH login through this mechanism. A supplied key authorizes a sudo-capable guest user. Talos has no SSH server: a nonempty list is rejected, while an empty list is allowed. Never put a private key in pool values.
+`sshKeys` is a list of public-key strings. Kairos currently accepts zero or one key; more than one is rejected. An empty list configures no SSH login through this mechanism. A supplied key authorizes the sudo-capable `kairos` guest user. The key is part of the worker template, so changing it rolls the pool. Talos has no SSH server: a nonempty list is rejected, while an empty list is allowed. Never put a private key in pool values.
 
 For a Kairos pool that needs SSH, replace `<SSH_PUBLIC_KEY>` with one complete public-key string in this pool-values fragment:
 
@@ -123,16 +123,18 @@ Both fixed-image fields are required together. This interface does not accept a 
 
 Resolve the class baseline, apply supported tenant overrides, then check the final image's compatibility contract. An override cannot change bootstrap family. Unsupported nonempty Talos settings on Kairos are rejected rather than silently interpreted as Kairos configuration.
 
+Classified pools have a compatibility exception for values the old application schema stored by default. A value equal to the legacy default counts as unset, even when supplied explicitly. This covers the legacy Talos version, schematic, image-factory URL and installer repository, empty `talos.registryMirrors` and `talos.imageFactoryCA`, empty `osImage`, and empty `proxmox.templateTags`. The class baseline wins in these cases: `{}` cannot clear its registry mirrors, and a legacy-default scalar cannot override it. Classless pools keep their legacy resolution. Before adopting a class, align the stored Talos settings with that class; adoption is refused when they differ.
+
 | Setting | Resolution |
 | --- | --- |
-| Talos scalars | An explicitly supplied pool value replaces the baseline. An explicit empty scalar is not silently replaced by the baseline. |
-| `registryMirrors` | A supplied map replaces the baseline map; `{}` clears it, without deep merging. |
+| Talos scalars | A supplied value replaces the baseline unless it matches a legacy default above. Other explicit empty scalars remain subject to validation; they do not silently inherit the baseline. |
+| `registryMirrors` | A nonempty supplied map replaces the baseline map without deep merging. The legacy empty map counts as unset on a classified pool, so it cannot clear the baseline. |
 | `kernelModules` | A supplied list replaces the baseline; `[]` disables loading. The automatic NVIDIA rule runs only when neither baseline nor pool supplies a list. |
 | KubeVirt `osImage` absent | Use the class's KubeVirt source when present; otherwise resolve the default factory path from effective Talos settings. |
-| KubeVirt `osImage` supplied | Replace source selection as a unit. `{}` selects the default factory path; builtin and factory cannot both be set. |
+| KubeVirt `osImage` supplied | Replace source selection as a unit unless it is the legacy empty object. On a classified pool, `{}` leaves the baseline source selected; builtin and factory cannot both be set. |
 | Builtin version/schematic | Nonempty selected source values take precedence; omitted or empty values use effective `talos.version` and `talos.schematicID`. The matching golden must exist. |
 | Factory version/schematic/endpoint | Nonempty selected source values take precedence; omitted or empty values use the corresponding effective Talos settings. |
-| Proxmox template tags | A supplied pool list replaces the baseline; an empty final list fails. Nonempty `osImage` is not a Proxmox source. |
+| Proxmox template tags | A nonempty pool list replaces the baseline. The legacy empty list counts as unset on a classified pool; an empty final list fails. Nonempty `osImage` is not a Proxmox source. |
 
 A factory baseline derives its image from effective Talos settings. A fixed artifact identifies particular bytes or an existing golden/template with declared version and schematic compatibility. After resolving overrides, a conflicting artifact, version or schematic is rejected. Another source selection does not waive this check. Matching Proxmox declarations does not verify an external template's bytes.
 
@@ -159,7 +161,25 @@ Rollback to a chart without class support needs an operator-controlled plan:
 3. Already-classless pools need no class restoration. Retain custom classes and the worker controller while live classified pools depend on them.
 4. Establish supported re-upgrade behavior separately. Restoring old fields does not prove automatic return to a prior class on re-upgrade.
 
-A restore recipe requires a published interface and verified prerequisites. No command is shown because the accepted design is not a shipped CLI specification. Do not substitute hand-written class-field removal for a validated restore procedure. Removing the controller can also leave custom classes with finalizers needing hoster handling.
+The unreleased implementation provides [`workerclass-restore`](https://github.com/cozystack/cozystack/blob/4fb723857a910f604479904592b34c480cab562c/cmd/workerclass-restore/main.go). Use the tool and chart inputs matching the deployment; this source interface does not imply that a released binary is available or that rollback has been verified in your environment. It needs hoster access to the pool HelmRelease, its value references and WorkerClass, plus Helm and both extracted chart versions.
+
+The tool refuses a non-empty `valuesFrom.targetPath`, even when `workerClassName` is inline. Resolve that producer explicitly before restoration; do not approximate its Helm assignment semantics.
+
+Without `--apply`, the tool reads those inputs, performs server-backed renders for the current classified pool and its restored legacy values, and runs the render comparison before printing the proposed values. This is not an offline preview: it accesses the cluster even without `--apply`. Keep the output private.
+
+```bash
+workerclass-restore \
+  --kubeconfig /path/to/hoster-kubeconfig \
+  --context example-context \
+  --namespace tenant-example \
+  --release kubernetes-nodes-example-talos \
+  --current-chart /path/to/current/kubernetes-nodes \
+  --old-chart /path/to/pre-class/kubernetes-nodes
+```
+
+Stop concurrent pool, value-reference and WorkerClass changes for the entire rollback window. This is an operator prerequisite, not a check enforced by the helper. The HelmRelease write guards only its own UID/resourceVersion, not the referenced objects. If any input changes or a write conflicts, re-read all inputs and repeat the render comparison before attempting a write.
+
+The tool refuses a class selected through `valuesFrom`, because removing only the inline field would leave that selection active. Do not edit a referenced object merely to bypass the refusal. For a GitOps-managed pool, commit the reviewed restored values to its source of truth before reconciliation; a direct write is not a substitute. The tool's `--apply` option performs a direct HelmRelease update after the same checks pass and needs explicit operator authorization. Do not substitute hand-written class-field removal for this process or treat a successful comparison as proof of worker recovery. Removing the controller can also leave custom classes with finalizers needing hoster handling.
 
 ## Recovery and support boundaries
 
