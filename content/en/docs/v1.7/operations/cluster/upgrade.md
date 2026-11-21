@@ -63,49 +63,57 @@ During the upgrade many platform components restart at once, so every node pulls
 If this delays the disk writes of the etcd leader long enough, etcd logs `slow fdatasync` and `failed to send out heartbeat on time`, the other members elect a new leader, and requests to the Kubernetes API stall during each election.
 Pulling the new images before the upgrade, one node at a time, keeps this load out of the rollout.
 
-Build the list of new images from the Cozystack images the cluster runs now.
-Set `FROM` to the installed version and `TO` to the target version.
+To limit I/O during this and later rollouts, configure the control-plane kubelets to pull at most two images at once. With the Cozystack talm preset, set these values for the control-plane nodes and check the rendered kubelet configuration before applying it:
+
+```yaml
+extraKubeletExtraArgs:
+  serializeImagePulls: false
+  maxParallelImagePulls: 2
+```
+
+On Talos 1.14, a new control-plane node can keep etcd on a separate physical disk. Set the disk selector in the provisioning section of the `ETCD` `VolumeConfig` when creating the node. Talos does not migrate existing etcd data when this setting changes.
+
+Prepare `images.txt` from the images used by your workloads and the image references in the target release. The following command lists candidates for images tagged with the installed Cozystack version. Set `FROM` and `TO` to your versions.
 
 ```bash
 FROM=v1.6.4
 TO=v1.6.5
-kubectl get pods --all-namespaces --output json \
-  | jq --raw-output '.items[].spec | (.initContainers // [])[], .containers[] | .image' \
-  | grep -E "^ghcr.io/cozystack/cozystack/[^:]+:${FROM}(@|$)" \
-  | sed -E "s/:${FROM}(@sha256:[0-9a-f]+)?$/:${TO}/" \
-  | sort -u > images.txt
+kubectl get pods --all-namespaces --output json | jq --raw-output --arg from "$FROM" --arg to "$TO" '
+  [.items[].spec | (.initContainers // [])[], .containers[] | .image | split("@")[0]
+   | select(startswith("ghcr.io/cozystack/cozystack/") and endswith(":" + $from))
+   | rtrimstr(":" + $from) + ":" + $to] | unique[]' > images.txt
 ```
 
-The list covers the images that carry the Cozystack version in their tag.
-Add other images that change in the release to `images.txt` by hand if you want them pulled too.
+Check each candidate against the target release and use its published image reference. Add changed images that use a different tag or registry.
 
-Find the etcd leader.
-It is the node whose `MEMBER` matches the `LEADER` column.
+On a healthy multi-member etcd cluster, pre-pull on one control-plane node at a time, starting with a follower. Set `CONTROL_PLANES` to the comma-separated control-plane addresses and `NODE` to the address you are about to pull on. Before each node, check which member is leader:
 
 ```bash
-talosctl --nodes <node1>,<node2>,<node3> etcd status
+talosctl --nodes "$CONTROL_PLANES" etcd status
 ```
 
-Then pull the images on each control plane node in turn, the leader last.
-Nodes that do not run etcd can skip this step.
+If the target node's `MEMBER` matches `LEADER`, transfer leadership first:
 
 ```bash
-while read -r image; do
-  talosctl --nodes <node> image pull --namespace cri "$image"
-done < images.txt
+talosctl --nodes "$NODE" etcd forfeit-leadership
+talosctl --nodes "$CONTROL_PLANES" etcd status
 ```
 
-Before you move to the next node, run `etcd status` again and check that the leader and the `RAFT TERM` are the same, and that the etcd log of the node has no new `slow fdatasync` warnings.
+Wait until all members report the same new leader and the target is a follower. Use that Raft term as the baseline for the pull. A single-member cluster has no follower to take leadership.
 
 ```bash
-talosctl --nodes <node> logs etcd | grep 'slow fdatasync'
+(
+  set -e
+  while IFS= read -r image; do
+    talosctl --nodes "$NODE" image pull --namespace cri "$image"
+  done < images.txt
+)
 ```
 
-A pull on the leader node can still delay its heartbeats.
-To avoid that, move the leadership to a node that already has the images before you pull on the leader.
+Check `etcd status` and the target node's etcd logs after each pull batch. If the term changed during the pull or new slow disk writes appeared, pause before starting the next node.
 
 ```bash
-talosctl --nodes <leader-node> etcd forfeit-leadership
+talosctl --nodes "$NODE" logs etcd | grep 'slow fdatasync'
 ```
 
 Start the upgrade soon after the pull.
