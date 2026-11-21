@@ -1,0 +1,30 @@
+{{/*
+  home/intro: the project description, the certification badges and the
+  positioning line, shown right after the screenshots.
+
+  The shortcode body is the description. `taglines` come from the page front
+  matter, so each language carries its own.
+*/ -}}
+{{- $cncf := printf "img/logos/%s" site.Params.logos.cncf | relURL -}}
+<section class="cz-intro">
+  <div class="container">
+    <div class="cz-intro__main">
+      <div class="cz-intro__text">
+        {{ if eq .Page.File.Ext "md" }}{{ .Inner | markdownify }}{{ else }}{{ .Inner | htmlUnescape | safeHTML }}{{ end }}
+      </div>
+      <div class="cz-intro__badges">
+        <a href="https://landscape.cncf.io/?group=certified-partners-and-providers&item=orchestration-management--scheduling-orchestration--cozystack" target="_blank" rel="noopener noreferrer">
+          <img class="cz-intro__k8s" src="{{ "img/logos/certified-kubernetes.svg" | relURL }}" alt="Certified Kubernetes" height="84">
+        </a>
+        <a href="https://cncf.io" target="_blank" rel="noopener noreferrer">
+          <img class="cz-intro__cncf" src="{{ $cncf }}" alt="Cloud Native Computing Foundation logo" height="34">
+        </a>
+      </div>
+    </div>
+    {{ with .Page.Params.taglines }}
+    <ul class="cz-intro__taglines" aria-label="Cozystack platform positioning">
+      {{ range . }}<li>{{ . | html }}</li>{{ end }}
+    </ul>
+    {{ end }}
+  </div>
+</section>

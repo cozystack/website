@@ -1,0 +1,149 @@
+// ---------- Tokens ----------
+:root {
+  --cz-ink: #111111;
+  --cz-text: #414750;
+  --cz-muted: #6b7280;
+  --cz-line: #e0e3e7;
+  --cz-surface: #f8f9fa;
+  --cz-surface-2: #f1f2f3;
+  --cz-dark: #171717;
+  --cz-dark-2: #111111;
+  --cz-radius: 6px;
+  --cz-container: 1240px;
+}
+
+// ---------- Base ----------
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: $font-family-base;
+  color: var(--cz-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: $font-family-base;
+  color: var(--cz-ink);
+}
+
+a {
+  color: var(--cz-ink);
+  text-decoration: none;
+
+  &:hover { color: #000; text-decoration: none; }
+}
+
+::selection { background: #111; color: #fff; }
+
+// ---------- Buttons ----------
+.cz-btn,
+.btn.cz-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 50px;
+  padding: 0 26px;
+  border: 1px solid transparent;
+  border-radius: var(--cz-radius);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s, color .15s, border-color .15s;
+
+  svg { flex: none; width: 24px; height: 24px; }
+
+  &--dark { background: var(--cz-ink); color: #fff; &:hover { background: #000; color: #fff; } }
+  &--light { background: #fff; border-color: var(--cz-line); color: var(--cz-ink); &:hover { background: var(--cz-surface); color: var(--cz-ink); } }
+  &--white { background: #fff; color: var(--cz-ink); &:hover { background: #eee; color: var(--cz-ink); } }
+}
+
+.cz-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--cz-line);
+  border-radius: var(--cz-radius);
+  background: #fff;
+  color: var(--cz-ink);
+  cursor: pointer;
+  transition: background-color .15s;
+
+  svg { width: 24px; height: 24px; }
+
+  &:hover { background: var(--cz-surface); }
+}
+
+// Bootstrap buttons used across docs, support and resources follow the same look.
+.btn {
+  border-radius: var(--cz-radius);
+  font-weight: 700;
+}
+
+.btn-primary,
+.btn-info {
+  background: var(--cz-ink);
+  border-color: var(--cz-ink);
+  color: #fff;
+
+  &:hover, &:focus, &:active { background: #000 !important; border-color: #000 !important; color: #fff !important; }
+}
+
+.btn-outline-primary,
+.btn-secondary,
+.btn-light {
+  background: #fff;
+  border-color: var(--cz-line);
+  color: var(--cz-ink);
+
+  &:hover, &:focus, &:active { background: var(--cz-surface) !important; border-color: var(--cz-line) !important; color: var(--cz-ink) !important; }
+}
+
+.cz-link {
+  font-weight: 700;
+  color: var(--cz-ink);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
+
+// ---------- Shared section headings ----------
+.cz-section-title {
+  margin: 0;
+  font-size: clamp(30px, 3.2vw, 40px);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.035em;
+  color: var(--cz-ink);
+}
+
+.cz-section-lead {
+  margin: 14px 0 36px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--cz-text);
+}
+
+// ---------- Circuit artwork ----------
+// The artwork is a single asset ("circuits" in Figma), placed per section with
+// the same transforms as the Figma instances. Right/bottom-anchored pieces
+// start at left:100% / top:100% so they stay attached to the edge of a section
+// that is wider or taller than the Figma frame. Always behind the content.
+@mixin cz-art($img, $w, $h, $op) {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: #{$w}px;
+  height: #{$h}px;
+  background: url("/img/circuits/#{$img}") no-repeat 0 0 / 100% 100%;
+  transform-origin: 0 0;
+  opacity: $op;
+  pointer-events: none;
+}

@@ -217,7 +217,7 @@ Other examples of this pattern: `extra/ingress`, `extra/seaweedfs`, `extra/monit
 Similar to `apps` but not shown in the application catalog. They can only be installed as part of a tenant.
 They are allowed to use by bottom tenants installed in current tenant namespace.
 
-Read more about [Tenant System](/docs/guides/concepts/#tenant-system) on the Core Concepts page.
+Read more about [Tenant System]({{% ref "/docs/v1.3/guides/concepts#tenant" %}}) on the Core Concepts page.
 
 It is possible to use only one application type within a single tenant namespace.
 

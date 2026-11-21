@@ -99,6 +99,7 @@ spec:
 | `networking.serviceCIDR` | `"10.96.0.0/16"` | The service subnet used by Services to assign IPs. Kube-OVN only. |
 | `networking.joinCIDR` | `"100.64.0.0/16"` | The `join` subnet for network communication between the Node and Pod. Follow the [kube-ovn] documentation to learn more. Kube-OVN only. |
 | `networking.kubeovn.MASTER_NODES` | `""` | Comma-separated list of KubeOVN master node IPs. By default, KubeOVN uses `lookup` to find control-plane nodes by label `node-role.kubernetes.io/control-plane`. On fresh clusters, lookup may return empty results. Set this to override. |
+| `networking.encryption.enabled` | `false` | Opt-in encryption of pod-to-pod traffic that crosses nodes, at the network layer and whether or not the workload speaks TLS. On `isp-full` and `isp-full-generic`, where Kube-OVN owns the datapath, it turns on Kube-OVN IPsec for the Geneve overlay; Kube-OVN provisions the IPsec CA and the per-node certificates itself through the Kubernetes CSR API, so no cert-manager setup is needed. `isp-slim` and `isp-slim-generic` refuse it and fail the platform render, because their Cilium-only datapath has no encryption wiring yet. On `isp-hosted` and `isp-hosted-slim`, where Cozystack does not manage the CNI, it has no effect. Traffic between pods on the same node is not tunneled and stays unencrypted. The ESP overhead lowers the effective MTU, so east-west throughput drops and latency rises, most for high-bandwidth flows. Turning it on for an existing cluster rolls out the CNI components. It complements TLS on exposed endpoints and does not replace it: no external client and no tenant certificate is involved. |
 
 #### Bundles
 
@@ -119,7 +120,8 @@ spec:
 | `authentication.oidc.enabled` | `false` | Enable [OIDC][oidc] feature in Cozystack. |
 | `authentication.oidc.insecureSkipVerify` | `false` | Skip TLS certificate verification for the OIDC provider. |
 | `authentication.oidc.keycloakExtraRedirectUri` | `""` | Additional redirect URI for Keycloak OIDC client. |
-| `authentication.oidc.keycloakInternalUrl` | `""` | Internal URL for backend-to-backend requests to Keycloak. When set, the dashboard's oauth2-proxy skips OIDC discovery and routes token, JWKS, userinfo, and logout requests through this URL while keeping browser redirects on the external URL. Example: `http://keycloak-http.cozy-keycloak.svc:8080/realms/cozy`. |
+| `authentication.oidc.realmName` | `"cozy"` | Name of the Keycloak realm that holds the Cozystack clients and the cluster-admin roles. `keycloak-configure` creates the realm under this name, and the dashboard, linstor-gui, the generated kubeconfig and the derived `keycloakInternalUrl` point at `/realms/<realmName>`. The OIDC issuer of the management cluster's API server is configured outside this Package, through the talm `oidcIssuerUrl`, and must name the same realm, or the tokens issued here are rejected. The value must be a quoted string of letters, digits, `.`, `_` and `-` that starts with a letter or digit, and `master` is refused because that realm holds the Keycloak super-admin; any other value fails the platform render. Set it at install time. Changing it on a running cluster does not rename the realm: a new, empty realm is created under the new name and every account, session and client in the old one is left behind. |
+| `authentication.oidc.keycloakInternalUrl` | `null` | Internal URL for backend-to-backend requests to Keycloak. The dashboard's oauth2-proxy skips OIDC discovery and sends token, JWKS, userinfo and logout requests to this URL, while browser redirects keep the external URL. Left unset, it is derived from `realmName` as `http://keycloak-http.cozy-keycloak.svc:8080/realms/<realmName>`. An empty string `""` restores full OIDC discovery against the external issuer. Any other value is used as is, so an explicit URL has to name the same realm as `realmName`. |
 
 #### Gateway
 
@@ -170,6 +172,20 @@ gateway:
 | Value | Default | Description |
 | --- | --- | --- |
 | `backupStorage` | `{}` | S3 coordinates for the platform-managed `cozy-default` BackupClass. The whole block is forwarded into the `backupstrategy-controller` component and deep-merged over its chart defaults; keys include `provisionBucket`, `bucketName`, `endpoint`, `region`, `forcePathStyle`, `systemSecretName`, and `systemNamespaces`. See [Backup Classes]({{% ref "/docs/next/operations/services/backup-classes" %}}) for the knob-by-knob reference. |
+| `backupStrategyController` | `{}` | Overrides for the backup strategy objects the platform ships, forwarded as is into the `backupstrategy-controller` component as its `backupStrategyController` values. The knob that needs it is `redisBackupResources`, the requests and limits of the Pod the Redis strategy runs. The restore side holds the whole dataset in memory and writes it to ephemeral storage, so a large Redis needs more memory and `ephemeral-storage` than the defaults, which suit small and medium instances. The `cozy-default-redis` strategy is managed by Helm and a direct edit is reverted on upgrade, so raise the values here. Empty forwards nothing. |
+
+Example under `spec.components.platform.values`:
+
+```yaml
+backupStrategyController:
+  redisBackupResources:
+    requests:
+      memory: 2Gi
+      ephemeral-storage: 8Gi
+    limits:
+      memory: 4Gi
+      ephemeral-storage: 16Gi
+```
 
 #### Branding
 
@@ -229,6 +245,36 @@ kubevirt:
 ```
 
 `bandwidthPerMigration` is a quantity in bytes per second: `625M` is 625,000,000 bytes/s (5 Gbit/s) per migration. This example allows up to two migrations across the cluster and one outbound migration per node.
+
+#### Kubernetes worker images
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `kubernetesWorkerImage` | `{}` | Values for the optional `cozystack.kubernetes-worker-image` package, forwarded as is into that component. The package keeps a catalog of golden Talos worker OS images as DataVolumes in the `cozy-public` namespace, and a `KubernetesNodes` pool that sets `osImage.builtin` boots its workers from a storage-level clone of one instead of each worker importing the image from the Talos Image Factory. The package is opt-in: add `cozystack.kubernetes-worker-image` to `bundles.enabledPackages`, since this key alone does not enable it. Empty forwards nothing and keeps the chart defaults. |
+
+The keys the package accepts:
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `imageFactoryURL` | `"https://factory.talos.dev"` | Base URL of the Talos Image Factory the golden images are imported from, without a trailing slash. Repoint it on an air-gapped or rate-limited cluster. |
+| `storageClass` | `"replicated"` | StorageClass of the golden images. It must match the StorageClass of the worker disks that clone them, because CDI cannot clone across StorageClasses; a pool whose class differs fails its render. Use a class whose volumes are reachable from any node, in practice a replicated DRBD class: cloning on a node-pinned class is unsupported. |
+| `storage` | `"6Gi"` | Size of each golden image. It must be at least the imported image size and at most the smallest worker disk that clones it. |
+| `images` | one entry | The catalog, a list of entries with `schematicID` and `version` and optionally their own `imageFactoryURL`, `storage` and `storageClass`. Each entry becomes a golden named `talos-worker-<schematicID>-<version>`. |
+
+A list set here replaces the shipped `images` list rather than extending it. A pool that names a `(schematicID, version)` pair missing from `images`, or one whose golden failed to import, fails its render rather than falling back to the HTTP import, so add an entry before any pool points at it. An entry is effectively immutable once its golden exists: its size, class and source URL cannot be patched in place, so treat a change to any of them as a new entry and move the pools onto it. Removing an entry stops managing its golden but does not delete it.
+
+Example under `spec.components.platform.values`:
+
+```yaml
+bundles:
+  enabledPackages:
+    - cozystack.kubernetes-worker-image
+kubernetesWorkerImage:
+  imageFactoryURL: "https://factory.internal.example.org"
+  images:
+    - schematicID: "<schematicID>"
+      version: "<talos version>"
+```
 
 #### Internal fields
 

@@ -70,5 +70,7 @@ volumeBindingMode: Immediate
 allowVolumeExpansion: true
 ```
 
+`replicated-encrypted` requires DRBD: the `drbd` layer in `layerList: "drbd luks storage"` is served inside the LINSTOR satellite, so it works only where the `drbd` kernel module is loadable and each node has its own kernel. On Talos nodes that cannot provide that, where the `linstor` package is installed with `drbd.enabled: false`, create only `local-encrypted`. The flag works on Talos only, on other distributions the DRBD module has to be loadable on the host. LUKS encryption itself is independent of DRBD and works either way.
+
 Now you can use the `StorageClass` to create `PersistentVolumeClaims` (PVCs) for encrypted storage.
 

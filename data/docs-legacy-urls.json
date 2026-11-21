@@ -1,0 +1,8 @@
+{
+  "/docs/reference/applications/": "/docs/applications/",
+  "/docs/reference/applications/mysql/": "/docs/applications/mariadb/",
+  "/docs/install/talos/kexec/": "/docs/install/talos/boot-to-talos/",
+  "/roadmap/": "/docs/roadmap/",
+  "/docs/bundles/distro-hosted/": "/docs/v0/operations/configuration/bundles/",
+  "/docs/operations/storage/linstor/": "/docs/storage/"
+}

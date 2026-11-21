@@ -48,7 +48,7 @@ flowchart TD
 The controller:
 
 - Materialises the `Gateway`, the redirect HTTPRoute, and — on the ACME cert modes — the per-tenant `Issuer` and the Certificate(s) from `TenantGateway.spec`. In `existingSecret` mode it mints neither, and points the listeners at the operator-supplied Secret instead. In `edge` mode it renders no redirect HTTPRoute either, and deletes one it previously owned.
-- Watches `HTTPRoute` and `TLSRoute` resources cluster-wide. For each route attached to its Gateway, it picks up the hostnames and (in HTTP-01 mode) appends a per-app HTTPS listener + a per-app `Certificate`.
+- Watches `HTTPRoute` and `TLSRoute` resources cluster-wide. For each hostname an `HTTPRoute` attached to its Gateway claims, it (in HTTP-01 mode) appends a per-app HTTPS listener + a per-app `Certificate`, unless a TLS-passthrough listener answers that hostname. A hostname that only a `TLSRoute` claims earns neither: its backend presents its own certificate.
 - In DNS-01 mode, extends the wildcard `Certificate` with `<child-apex>` + `*.<child-apex>` SANs for every tenant inheriting through this Gateway (discovered by listing namespaces with `namespace.cozystack.io/gateway = <owner>` and reading their `namespace.cozystack.io/host`), and adds one `*.<child-apex>` HTTPS listener per inheriting child.
 - Patches `namespace.cozystack.io/gateway = <owner>` onto every namespace in `TenantGateway.spec.attachedNamespaces` (the cozy-* system namespaces published through the Gateway). The patch is annotated with `cozystack.io/gateway-attached-by` so the controller knows which labels it wrote and which are owned by the `apps/tenant` chart — labels written by the chart are never touched. Labels written by the controller are garbage-collected when the namespace is removed from `attachedNamespaces`.
 - In HTTP-01 mode, resolves cross-namespace hostname conflicts: `cozy-*` namespaces (cluster-admin-managed platform services) win over tenant namespaces; the loser receives a `HostnameConflict` condition under the controller's name in `Status.Parents`. The other modes gather no claims, so nothing is resolved and no route condition is written.
@@ -93,19 +93,19 @@ On every cert mode except [edge](#edge-tls-terminated-by-the-class-provider), a 
 
 Plus HTTPS listeners that depend on cert mode:
 
-- **HTTP-01 mode (default):** one HTTPS listener per attached route hostname — `HTTPRoute` and `TLSRoute` alike, because the controller collects hostnames from both kinds without distinguishing them — named `https-<first-label>-<8-hex>`. Every claimed hostname gets exactly one listener and one certificate, owned by the route that wins it; a route that loses a cross-namespace race is marked `Accepted=False` by [conflict resolution](#hostnameconflict-resolution) rather than rejected, and the hostname itself is still served. The hex suffix is the first 32 bits of `sha256` over the **lower-cased** hostname, so two different hostnames sharing the same first label (`harbor.foo.example.com` vs `harbor.alice.example.com`) get distinct listener names. Each listener's `tls.certificateRefs` points at a per-listener `Certificate` named `<tgw>-<first-label>-<8-hex>-tls`, also auto-issued.
+- **HTTP-01 mode (default):** one HTTPS listener per hostname an attached `HTTPRoute` claims, named `https-<first-label>-<8-hex>`. A hostname a TLS-passthrough listener answers is reserved to that listener and gets no HTTPS listener (see [TLS passthrough](#tlsroute-tls-passthrough)), and a hostname that only a `TLSRoute` claims gets none either. Every other claimed hostname gets exactly one listener and one certificate, owned by the route that wins it; a route that loses a cross-namespace race is marked `Accepted=False` by [conflict resolution](#hostnameconflict-resolution) rather than rejected, and the hostname itself is still served. The hex suffix is the first 32 bits of `sha256` over the **lower-cased** hostname, so two different hostnames sharing the same first label (`harbor.foo.example.com` vs `harbor.alice.example.com`) get distinct listener names. Each listener's `tls.certificateRefs` points at a per-listener `Certificate` named `<tgw>-<first-label>-<8-hex>-tls`, also auto-issued.
 - **DNS-01 mode (opt-in):** `https` (`*.<owner apex>`) and `https-apex` (`<owner apex>`) listeners consuming a single wildcard Certificate, plus one `https-child-<first-label>-<8-hex>` listener per inheriting child apex (referencing the same wildcard cert, whose dnsNames are extended with `<child-apex>` + `*.<child-apex>` SANs).
 - **existingSecret mode (operator-provided wildcard):** the same listener set as DNS-01 — `https` (`*.<owner apex>`), `https-apex` (`<owner apex>`), and one `https-child-<first-label>-<8-hex>` per inheriting child apex — except that every `tls.certificateRefs` points at the operator-supplied Secret named by `publishing.certificates.wildcardSecretName`, and no `Certificate` is issued for any of them.
 - **[edge mode](#edge-tls-terminated-by-the-class-provider):** no HTTPS listeners at all. The Gateway serves port 80 only, with `edge` (`*.<owner apex>`), `edge-apex` (`<owner apex>`) and one `edge-child-<first-label>-<8-hex>` per inheriting child apex, and neither the hostname-less `http` listener above nor any passthrough listener is rendered.
 
-Plus one extra listener per TLS-passthrough service (see [TLS passthrough](#tlsroute-tls-passthrough)), on every mode except edge.
+Plus, on every mode except edge, one extra listener per TLS-passthrough service on the publishing tenant (see [TLS passthrough](#tlsroute-tls-passthrough)) and one per entry in the `TenantGateway`'s `tlsPassthroughListeners` (see [TLS passthrough on native ports](#tls-passthrough-on-native-ports)).
 
 Listener `allowedRoutes.namespaces` uses two different selectors by listener role:
 
 - **HTTPS and TLS-passthrough listeners — and, in [edge](#edge-tls-terminated-by-the-class-provider) mode, the port-80 `edge*` listeners that stand in for them** — match the `namespace.cozystack.io/gateway` label and admit routes from any namespace whose label equals the owner tenant's namespace name (e.g. `tenant-root`, `tenant-alice` — the namespace name, not the bare tenant name). This is the inheritance hinge — every inheriting child's namespace carries the same label value (written by the `apps/tenant` chart), and cozy-* system namespaces in `attachedNamespaces` get the same label patched on by the controller.
 - **The plain-HTTP listener (port 80)** uses a strictly narrower whitelist on the built-in `kubernetes.io/metadata.name` label — only the owner tenant's namespace itself (where the controller-owned redirect HTTPRoute lives) and `cozy-cert-manager` (HTTP-01 ACME challenge HTTPRoutes). App HTTPRoutes attaching to the Gateway by hostname therefore cannot bind to port 80 and serve plaintext. This listener, and with it that guarantee, exists only on the non-edge modes: an [edge](#edge-tls-terminated-by-the-class-provider) Gateway has no hostname-less port-80 listener, and the port-80 listeners it does render carry the wide selector, so app routes bind them by design.
 
-Port-443 listeners pin `allowedRoutes.kinds` to `HTTPRoute` and `TLSRoute` (the pair is listed on each of them so that Cilium keeps the listeners apart), preventing GRPCRoute / TCPRoute / UDPRoute from attaching outside the route-hostname VAP's coverage.
+Port-443 listeners pin `allowedRoutes.kinds` to `HTTPRoute` and `TLSRoute` (the pair is listed on each of them so that Cilium keeps the listeners apart), so `GRPCRoute`, `TCPRoute` and `UDPRoute` cannot attach to them. The port-80 listener leaves `allowedRoutes.kinds` unset, which for an HTTP listener admits `GRPCRoute` as well, so the route-hostname VAP covers `GRPCRoute` too (Layer 5 under [Security](#security)).
 
 ## Enabling Gateway API
 
@@ -287,7 +287,7 @@ Edge therefore wins over an operator-supplied wildcard Secret, which wins over t
 Out of the box, no extra config required. The controller:
 
 - Renders an ACME `Issuer` in the tenant namespace with an `http01.gatewayHTTPRoute` solver pointing at the tenant's own Gateway / `http` listener.
-- Watches HTTPRoutes / TLSRoutes attached to the Gateway (parentRefs pointing at it), collecting hostnames from both kinds without distinguishing them. For each unique hostname claimed it adds one per-app HTTPS listener and one per-app `Certificate` (dnsNames containing exactly that hostname), owned by the route that wins that hostname.
+- Watches HTTPRoutes / TLSRoutes attached to the Gateway (parentRefs pointing at it). For each unique hostname an `HTTPRoute` claims it adds one per-app HTTPS listener and one per-app `Certificate` (dnsNames containing exactly that hostname), owned by the route that wins that hostname. A hostname a TLS-passthrough listener answers earns neither, whether or not a `TLSRoute` is attached there, and neither does a hostname that only a `TLSRoute` claims.
 - Per-app listener naming: `https-<first-label>-<8-hex>` (e.g. `https-harbor-deadbeef`).
 - Per-app cert naming: `<tgw>-<first-label>-<8-hex>-tls`.
 
@@ -310,7 +310,7 @@ DNS-01 mode renders a single wildcard `Certificate` covering `<owner apex>` and 
 
 The platform chart writes the provider config into `_cluster.dns01-*` keys consumed by both the per-tenant gateway chart (rendering the TenantGateway CR) and the cluster-wide `letsencrypt-prod` / `letsencrypt-stage` ClusterIssuers used by the legacy ingress flow. Both paths agree on which provider is active.
 
-Pick DNS-01 when you specifically want a wildcard cert — a long-lived cluster with many apps under one apex, deep inheritance trees, or tight Let's Encrypt rate limits. Gateway API caps `Gateway.spec.listeners` at 64, and HTTP-01 spends that budget fastest: one HTTPS listener per published hostname, plus the mandatory `http` listener, plus one passthrough listener per TLS-passthrough service. Budget those passthrough services at **two** slots each, not one — the controller collects hostnames from `TLSRoute` as well as `HTTPRoute`, so each passthrough FQDN also claims an HTTPS listener of its own. With the three default passthrough services that is `1 + N + 6`, and a single-tenant deployment approaching 60 published apps on HTTP-01 will hit the cap, at which point the rendered `Gateway` fails admission. DNS-01 collapses every hostname under the apex into a small fixed number of listeners.
+Pick DNS-01 when you specifically want a wildcard cert — a long-lived cluster with many apps under one apex, deep inheritance trees, or tight Let's Encrypt rate limits. Gateway API caps `Gateway.spec.listeners` at 64, and HTTP-01 spends that budget fastest: one HTTPS listener per published hostname, plus the mandatory `http` listener, plus one passthrough listener per TLS-passthrough service and one per `tlsPassthroughListeners` entry. A passthrough hostname takes one slot, not two: it is reserved to its passthrough listener and earns no HTTPS listener of its own. On the publishing tenant with the three default passthrough services that is `1 + N + 3`, so a single-tenant deployment approaching 60 published apps on HTTP-01 will hit the cap. The controller counts the assembled listeners before it writes the `Gateway` and reports a total over 64 as `Ready=False` on the `TenantGateway`, with a message naming the budget. DNS-01 collapses every hostname under the apex into a small fixed number of listeners.
 
 ### existingSecret (operator-provided wildcard)
 
@@ -387,9 +387,63 @@ Services that need SNI-based passthrough (clients present certificates, backend 
 | KubeVirt VM export | `cozy-kubevirt` | `vm-exportproxy` | `vm-exportproxy:443` | `tls-vm-exportproxy` | `gateway.enabled` AND `vm-exportproxy` in `publishing.exposedServices` |
 | KubeVirt CDI upload | `cozy-kubevirt-cdi` | `cdi-uploadproxy` | `cdi-uploadproxy:443` | `tls-cdi-uploadproxy` | `gateway.enabled` AND `cdi-uploadproxy` in `publishing.exposedServices` |
 
-On every cert mode except [edge](#edge-tls-terminated-by-the-class-provider), all three Passthrough listeners (`tls-api`, `tls-vm-exportproxy`, `tls-cdi-uploadproxy`) are rendered on the Gateway regardless of `publishing.exposedServices` — the controller materialises one per entry in the chart's `tlsPassthroughServices` value (defaults: `[api, vm-exportproxy, cdi-uploadproxy]`). In edge mode that value is not written at all and none of the three exists, so the paragraph below does not apply there. What `publishing.exposedServices` actually gates is the matching `TLSRoute` template in each upstream chart: if a service is removed from `publishing.exposedServices`, its listener still exists but nothing attaches, so no traffic is admitted.
+The controller materialises one Passthrough listener per entry in the gateway chart's `tlsPassthroughServices` value (defaults: `[api, vm-exportproxy, cdi-uploadproxy]`), and the chart writes that value only where the platform's own `TLSRoute`s attach: on the publishing tenant, the namespace `publishing.ingressName` names (`tenant-root` by default), while `gateway.enabled` is on, and only for the names `publishing.exposedServices` lists. No other tenant's Gateway carries these listeners, and a service removed from `publishing.exposedServices` loses its listener together with its `TLSRoute`. In [edge](#edge-tls-terminated-by-the-class-provider) mode the value is not written at all and none of the three exists.
+
+Under HTTP-01, a hostname a passthrough listener answers is reserved to that listener by the `TenantGateway` spec alone: no HTTPS listener and no certificate is rendered for it on 443, whether or not a `TLSRoute` is attached and wherever that route's backends point. An `HTTPRoute` whose every hostname is reserved this way reads `Accepted=False` with reason `NoMatchingListenerHostname`; one that also claims a free hostname stays `Accepted` and is served on that one. For `api.<apex>` this means clients always reach the management kube-apiserver's own serving certificate, so that certificate has to carry `api.<apex>` in its SANs.
 
 `TLSRoute` comes from the Gateway API experimental channel, which is the bundle Cozystack vendors. That bundle serves `tlsroutes` at `v1` — the storage version — alongside `v1alpha2` and `v1alpha3`, both still served and both marked deprecated. The platform's own TLSRoute templates (`cozystack-api`, `kubevirt`, `kubevirt-cdi`) write `v1alpha2`, so moving them onto `v1` is a change on the Cozystack side rather than something to wait for upstream.
+
+### TLS passthrough on native ports
+
+A `TenantGateway` also accepts `spec.tlsPassthroughListeners`, a list of layer-4 TLS-passthrough listeners on ports other than 443. Each entry renders one listener named `tls-<name>` on its own port, in `Passthrough` mode, matching one SNI hostname, next to the tenant's other listeners. The listener never terminates TLS: the SNI in the `ClientHello` selects the route and the raw TLS stream goes to the backend, so a database engine can present its own certificate to clients on the port they already expect while sharing the tenant Gateway's address. It is independent of `tlsPassthroughServices`, the port-443 form described above, and neither replaces the other.
+
+No chart or platform value sets the field yet, and no managed application attaches a route to such a listener, so an entry is written onto the `TenantGateway` directly. A merge patch replaces the whole list, so include every entry you want to keep:
+
+```bash
+kubectl -n tenant-root patch tenantgateway cozystack --type=merge \
+  -p '{"spec":{"tlsPassthroughListeners":[{"name":"redis","port":6379,"hostname":"redis.example.org"}]}}'
+```
+
+Each entry has three required fields:
+
+| Field | Rule |
+| --- | --- |
+| `name` | A DNS-1123 label of at most 63 characters, unique in the list. The rendered listener is `tls-<name>`. It must not repeat an entry of `tlsPassthroughServices`, which renders a listener of the same name. |
+| `port` | From 1 to 65535, distinct from every other entry, and neither 80 nor 443, which belong to the Gateway's own listeners. |
+| `hostname` | The SNI the listener matches, either an exact hostname or a wildcard in the left-most label such as `*.db.example.org`. It must equal the tenant apex or be a subdomain of it. |
+
+The port, distinct-port, apex and name-collision rules are CEL rules on the CRD, so a bad entry is refused when it is written. The controller checks two more rules and reports a violation as `Ready=False` on the `TenantGateway`: no two passthrough listeners may match the same SNI, counting the port-443 `tls-<svc>` listeners and counting wildcards (so `*.<apex>` is refused next to the shipped `api.<apex>` listener), and the assembled listener count must stay within the Gateway API cap of 64.
+
+The listener is all an entry creates. Nothing is served until a `TLSRoute` attaches to it with `sectionName: tls-<name>` and names a backend `Service`, and that backend, not the Gateway, has to present a certificate for the listener's hostname:
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TLSRoute
+metadata:
+  name: redis
+  namespace: tenant-root
+spec:
+  parentRefs:
+    - name: cozystack
+      sectionName: tls-redis
+  hostnames:
+    - redis.example.org
+  rules:
+    - backendRefs:
+        - name: <backend-service>
+          port: 6379
+```
+
+Only routes from the namespace of the tenant that owns the Gateway can attach. These listeners select on the `kubernetes.io/metadata.name` label rather than on `namespace.cozystack.io/gateway`, so neither inheriting child tenants nor `attachedNamespaces` entries reach a database port. Under HTTP-01 the hostname is reserved from the moment the entry is declared: no HTTPS listener or certificate is rendered for it on 443, route or no route.
+
+The engine has to open the connection with a TLS handshake. A protocol whose server speaks first in plaintext, MySQL and MariaDB on 3306 among them, never sends the `ClientHello` the listener waits for, so it cannot be published this way. PostgreSQL on 5432 works only where both the server and the client negotiate TLS directly.
+
+Current limitations:
+
+- The field is refused while the tenant is in `edge` cert mode, and a stored entry blocks a later move of that tenant to `edge`: its gateway release keeps failing until the field is removed. `http01`, `dns01` and `existingSecret` accept it.
+- Each entry needs its own port, so two instances of the same engine cannot share the engine's native port and be told apart by SNI alone.
+- The declared port is not an access boundary. Depending on the rest of the Gateway, Cilium may serve every port of the Gateway from one proxy listener matched by SNI alone, so a `ClientHello` carrying the hostname can reach the backend through another port the load balancer forwards. Treat the hostname as public and give the backend its own authentication.
+- The gateway release neither reverts nor removes a hand-added entry, so a published port stays published until someone deletes the entry. Record what you added.
 
 ## Security
 
@@ -414,7 +468,7 @@ flowchart TD
     L1["L1: Listener allowedRoutes selector<br/>(HTTPS: namespace.cozystack.io/gateway;<br/>HTTP-80: kubernetes.io/metadata.name;<br/>edge mode: no HTTP-80 whitelist)"]
     L2["L2 VAP: Gateway listener hostname<br/>matches namespace.cozystack.io/host"]
     L4["L4 VAP: namespace.cozystack.io/host label<br/>writes restricted to trusted callers"]
-    L5["L5 VAP: HTTPRoute/TLSRoute hostnames<br/>match namespace label (tenant-* only)"]
+    L5["L5 VAP: HTTPRoute/TLSRoute/GRPCRoute<br/>hostnames required, match namespace label<br/>(tenant-* only)"]
 
     GW["Cross-tenant hostname hijack<br/>BLOCKED"]
 
@@ -440,7 +494,7 @@ Every listener on a tenant Gateway pins `allowedRoutes.namespaces.from: Selector
 - **HTTPS and TLS-passthrough listeners** use `matchLabels: { namespace.cozystack.io/gateway: <owner-namespace> }`. In [edge](#edge-tls-terminated-by-the-class-provider) mode there are none of either, and the port-80 `edge*` listeners that replace them carry this same wide selector. The label value is the namespace of the TenantGateway — for `tenant-root` that resolves to `tenant-root`, for `tenant-alice` to `tenant-alice` (i.e. the namespace name, not the bare tenant name). The label is written by the `apps/tenant` chart on every tenant namespace (own namespace name when owning a Gateway, inherited ancestor's namespace name otherwise) and patched by the controller onto every namespace in `attachedNamespaces`. Namespaces without the matching value cannot attach any HTTPRoute / TLSRoute to those listeners.
 - **The plain-HTTP listener (port 80)** uses a strictly narrower `matchExpressions` whitelist on the built-in `kubernetes.io/metadata.name` label — only the owner tenant's own namespace (where the controller-owned redirect HTTPRoute lives) and `cozy-cert-manager` (HTTP-01 ACME challenge HTTPRoutes). App HTTPRoutes attaching by hostname therefore cannot bind to port 80 and silently serve plaintext. **This layer does not apply in [`edge` cert mode](#edge-tls-terminated-by-the-class-provider)**, which renders no hostname-less port-80 listener at all and gives its port-80 listeners the same wide `namespace.cozystack.io/gateway` selector the HTTPS listeners carry elsewhere. There, app routes bind port 80 and are served in cleartext deliberately, because TLS ended at the class provider's edge — see [What this does NOT defend](#what-this-does-not-defend).
 
-Port-443 listeners pin `allowedRoutes.kinds` to `HTTPRoute` and `TLSRoute` — the pair is listed on each so Cilium keeps them apart — preventing `GRPCRoute` / `TCPRoute` / `UDPRoute` from attaching outside the Layer 5 VAP's coverage.
+Port-443 listeners pin `allowedRoutes.kinds` to `HTTPRoute` and `TLSRoute` (the pair is listed on each so Cilium keeps them apart), so `GRPCRoute`, `TCPRoute` and `UDPRoute` cannot attach to them. The port-80 listener leaves the kinds unset, which for an HTTP listener admits `GRPCRoute` too, and Layer 5 covers `GRPCRoute` for that reason.
 
 ### Layer 2 — `cozystack-gateway-hostname-policy`
 
@@ -464,9 +518,9 @@ This closes the path where a tenant user creates a Tenant with `spec.host=dashbo
 
 Combined with Layer 3, a tenant user cannot establish or change their host through either the Tenant CR or the namespace label.
 
-### Layer 5 — `cozystack-route-hostname-policy` (HTTPRoute) and `cozystack-route-hostname-policy-tls` (TLSRoute)
+### Layer 5 — `cozystack-route-hostname-policy` (HTTPRoute), `cozystack-route-hostname-policy-tls` (TLSRoute) and `cozystack-route-hostname-policy-grpc` (GRPCRoute)
 
-A pair of `ValidatingAdmissionPolicy` objects sharing the same CEL expression. `cozystack-route-hostname-policy` targets `gateway.networking.k8s.io` `HTTPRoute` CREATE/UPDATE, naming `v1` and `v1beta1`; `cozystack-route-hostname-policy-tls` targets `TLSRoute`. Whichever versions a rule names, coverage is not limited to them: `matchConstraints.matchPolicy` is unset on both policies and so defaults to `Equivalent`, which has the apiserver convert a request submitted under another served version of the same resource into one the rule does name, before the policy evaluates it. It does not reach a *different* resource, which is why `GRPCRoute` — a CRD of its own, not a version of `httproutes` — is outside both policies rather than converted into one. Both are scoped to `tenant-*` namespaces (cozy-* are cluster-admin-managed and trusted to publish under any apex) and reject any `spec.hostnames` entry that is not equal to the namespace's `namespace.cozystack.io/host` label or a subdomain of it. **Fail-closed when the label is absent** — a `tenant-*` namespace without `namespace.cozystack.io/host` is rejected, not silently allowed. It does, however, admit a route that declares no `spec.hostnames` at all: the CEL short-circuits before the suffix test, so a hostname-less route is allowed in a labelled namespace. That is the hole the Cloudflare Tunnel package closes with its own ownership layer, because on a shared tunnel a hostname-less route would match every host. Operators querying `kubectl get validatingadmissionpolicy` will see both objects.
+Three `ValidatingAdmissionPolicy` objects sharing one CEL expression: `cozystack-route-hostname-policy` targets `gateway.networking.k8s.io` `HTTPRoute` CREATE/UPDATE, `cozystack-route-hostname-policy-tls` targets `TLSRoute`, and `cozystack-route-hostname-policy-grpc` targets `GRPCRoute`. Each rule names every version the vendored CRD bundle serves for its resource: `v1` and `v1beta1` for `HTTPRoute`, `v1`, `v1alpha2` and `v1alpha3` for `TLSRoute`, and `v1` for `GRPCRoute`. `GRPCRoute` is covered because the port-80 listener leaves `allowedRoutes.kinds` unset, and for an HTTP listener an unset list admits `GRPCRoute`, which carries `spec.hostnames` of its own. All three are scoped to `tenant-*` namespaces (cozy-* are cluster-admin-managed and trusted to publish under any apex). A route must declare a non-empty `spec.hostnames`, and every entry must equal the namespace's `namespace.cozystack.io/host` label or be a subdomain of it. A route that omits `spec.hostnames`, or sets it to an empty list, is rejected: under Gateway API such a route does not match nothing, it inherits the hostnames of every listener it attaches to, and a policy cannot resolve the parent Gateway to check them. **Fail-closed when the label is absent:** a `tenant-*` namespace without `namespace.cozystack.io/host` is rejected, not silently allowed. Operators querying `kubectl get validatingadmissionpolicy` will see all three objects.
 
 Defense-in-depth against an app chart bug or supply-chain compromise that emits Gateway API resources outside the tenant's apex — tenants in Cozystack do not hold `gateway.networking.k8s.io/*` RBAC by design, so this is not a tenant-user defense. The within-apex cross-namespace case (a tenant chart claiming a hostname owned by a `cozy-*` app) is handled by the controller at reconcile time **in HTTP-01 mode only** — see [HostnameConflict resolution](#hostnameconflict-resolution) below for which modes resolve it and which leave it to the class controller.
 
@@ -538,7 +592,7 @@ Let's Encrypt enforces per-account and per-registered-domain quotas:
 - 5 duplicate certificates per week for the same hostname set
 - 300 new orders per account per 3 hours
 
-Setting `publishing.certificates.wildcardSecretName` sidesteps the quotas entirely — that mode issues no ACME certificates at all — at the cost of the caveats in [Certificates](#certificates). A cluster where many tenants share the same apex domain can exhaust these quickly, especially in HTTP-01 mode where each published app contributes one certificate — and so does each TLS-passthrough service, since its hostname is claimed the same way even though the backend, not the Gateway, terminates its TLS. Mitigations:
+Setting `publishing.certificates.wildcardSecretName` sidesteps the quotas entirely — that mode issues no ACME certificates at all — at the cost of the caveats in [Certificates](#certificates). A cluster where many tenants share the same apex domain can exhaust these quickly, especially in HTTP-01 mode where each published app contributes one certificate. A TLS-passthrough hostname contributes none, because its backend presents its own certificate. Mitigations:
 
 - `publishing.certificates.issuerName: letsencrypt-stage` for non-production clusters (staging quotas do not affect prod).
 - `tenant.spec.resourceQuotas.count/certificates.cert-manager.io` to cap per-tenant certificate creations.
@@ -734,9 +788,9 @@ Look for an entry under `Status.Parents` with `controllerName: gateway.cozystack
 
 Layer 2 (`cozystack-gateway-hostname-policy`) rejected the Gateway because a listener hostname does not match `namespace.cozystack.io/host` on the Gateway's namespace. Fix the listener hostname, or (if the namespace label is wrong) update the tenant's `spec.host` via a trusted caller.
 
-### Admission denied: "HTTPRoute hostnames must equal..."
+### Admission denied: "HTTPRoute must declare spec.hostnames, and each hostname must equal..."
 
-Layer 5 (`cozystack-route-hostname-policy`) rejected the HTTPRoute or TLSRoute because a hostname falls outside the apex of the namespace's `namespace.cozystack.io/host` label. Either change the hostname to live under the apex, or move the route to a namespace whose label covers the desired hostname.
+Layer 5 rejected the route. The message starts with the route kind, `HTTPRoute`, `TLSRoute` or `GRPCRoute`, and the cause is one of two: the route declares no `spec.hostnames` (or an empty list), or a hostname falls outside the apex of the namespace's `namespace.cozystack.io/host` label. Name the route's hostnames explicitly under the apex instead of relying on the listener's, or move the route to a namespace whose label covers the desired hostname.
 
 ### Admission denied: "tenant.spec.host can only be set..."
 

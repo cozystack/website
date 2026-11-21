@@ -24,7 +24,7 @@ Here they're bundled and tested to work together seamlessly.
 The virtualization platform is also built-in and does not require additional hardware.
 Instead, virtual machines run directly inside Kubernetes.
 
-Another powerful feature is the [tenant system]({{% ref "/docs/next/guides/concepts#tenant-system" %}}).
+Another powerful feature is the [tenant system]({{% ref "/docs/next/guides/concepts#tenant" %}}).
 It allows you to isolate individual developers, teams, or even entire companies in their own fully functional spaces—all on the same hardware.
 
 ## Key features
@@ -36,7 +36,7 @@ The traditional approach of assigning each team a dedicated namespace can be too
 Teams may need multiple environments with identical namespace names,
 or they may lack the root permissions required to manage their own access models.
 
-Cozystack's [tenant system]({{% ref "/docs/next/guides/concepts#tenant-system" %}}) solves these issues
+Cozystack's [tenant system]({{% ref "/docs/next/guides/concepts#tenant" %}}) solves these issues
 by allowing users to deploy a Kubernetes-in-Kubernetes environment with a single app.
 Users of nested Kubernetes clusters have full access and control.
 The quota system ensures optimal hardware utilization while isolating resources to prevent the “noisy neighbor” problem.

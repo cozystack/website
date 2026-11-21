@@ -92,3 +92,6 @@ other = '发现错误？<a href="{{ .IssueURL }}">提交 issue</a>。'
 
 [translation_see_original]
 other = '请参阅<a href="{{ .Link }}">英文原文</a>。'
+
+[docs_older_versions]
+other = "更早的版本"

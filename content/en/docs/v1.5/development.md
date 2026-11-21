@@ -267,7 +267,7 @@ supply tenant-wide infrastructure rather than orderable services: `extra/ingress
 `extra/gateway` (per-tenant Gateway API backed by Cilium; toggle-only — it has no
 dashboard presence and is enabled automatically for tenants with a derived apex domain).
 
-Read more about [Tenant System](/docs/guides/concepts/#tenant-system) on the Core Concepts page.
+Read more about [Tenant System]({{% ref "/docs/v1.5/guides/concepts#tenant" %}}) on the Core Concepts page.
 
 It is possible to use only one application type within a single tenant namespace.
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Hugo documentation website for Cozystack (Kubernetes-based cloud platform) using the Google Docsy theme. **Production is served by GitHub Pages** — Netlify is only used for deploy previews on PRs. Do not rely on Netlify-specific features (`netlify.toml` redirects, headers, edge functions) for production behavior; they only work in deploy previews. For redirects, use Hugo aliases (per-page) or the JS fallback in `layouts/404.html`.
+Hugo documentation website for Cozystack (Kubernetes-based cloud platform) using the Google Docsy theme. **Production is served by GitHub Pages**. Netlify is only used for deploy previews on PRs. Do not rely on Netlify-specific redirects or headers for production behavior. The stable `/docs/` and `/docs/v<major>/` paths are real copies of the latest version, produced after `hugo` by `hack/mirror_latest.sh` (Python 3 standard library). Current numbered docs and both copies use canonical URLs under `/docs/`. Older numbered docs remain noindex and are excluded from sitemaps. Preview builds are noindex. The version-selection landing is copied to `/docs/versions/`; mirroring preserves numbered versions and unrelated legacy aliases. The `.docs-mirror.json` file tracks root and major copies for cleanup on repeat builds. Under `hugo server`, version-selection links use the existing `/docs/` landing.
 
 ## Build & Development Commands
 
@@ -16,7 +16,7 @@ npm install
 make serve
 
 # Production build
-./hack/download_openapi.sh && hugo --gc --minify
+./hack/download_openapi.sh && hugo --gc --minify && ./hack/mirror_latest.sh
 
 # Sync app docs from cozystack/cozystack repo.
 # By default targets content/en/docs/next/ (the version-agnostic trunk).
@@ -66,17 +66,18 @@ Docs are versioned per Cozystack minor release. Each version is an independent c
 - One directory per minor version: `content/en/docs/v0/`, `v1.0/`, `v1.1/`, `v1.2/`
 - Version name derivation: major `0` → `v0` (legacy, covers all 0.x); major ≥ 1 → `v<major>.<minor>` (e.g., `v1.2`). Patch level is not reflected in the directory name
 - Each version directory is self-contained: all pages under `applications/`, `virtualization/`, `networking/`, `operations/`, `storage/`, `install/`, `guides/`, etc. live once per version
-- `content/en/docs/_index.md` is the single version-agnostic landing page
+- `content/en/docs/_index.md` is the version-selection landing, published at `/docs/versions/` after mirroring
 - `content/en/docs/next/` is the permanent trunk for upcoming/unreleased docs. Internal links use `/docs/next/`; these are rewritten at release time by `hack/release_next.sh`. Excluded from production builds via the `hidden: true` entry in `hugo.yaml` and the content mount exclusion `- '! docs/next/**'`
 
 **Version registration (`hugo.yaml`)**
 - `params.latest_version_id` — id of the current/default version
 - `params.versions[]` — ordered list consumed by the version switcher (`layouts/partials/version-switcher.html`). Newest goes first, `order` highest. **When adding a new version, update both fields.**
+- `params.versions_visible` — how many of the newest non-hidden versions (ranked by `order`, minimum 1) stay in the switcher, the version table and the sidebar tree on the version-selection page (`/docs/versions/`); the rest are grouped under "Older versions". `hack/register_version.sh` needs no change: a new release pushes the oldest visible version into the group on its own. The split lives in `layouts/partials/docs-versions.html`.
 - `hidden: true` on a version entry hides it from the dropdown selector. Combined with the content mount exclusion pattern (`- '! docs/<id>/**'`), the whole version is also excluded from production builds. Used for the `next` trunk; the dev server and Netlify deploy previews still render it at `/docs/next/`.
 
 **Where to add changes**
 - Docs for an upcoming (unreleased) feature → edit `content/en/docs/next/`. These materialize as `v<next-release>/` when `make release-next RELEASE_TAG=vX.Y.Z` runs
-- Bug fix or addition to the current release → edit only `content/en/docs/<latest_version_id>/` (currently `v1.2`)
+- Bug fix or addition to the current release → edit only `content/en/docs/<latest_version_id>/` (the `params.latest_version_id` value in `hugo.yaml`)
 - Content that also applies to older supported versions → copy the change into each relevant `v*/` directory (no automatic backport)
 - Cross-version/landing content → `content/en/docs/_index.md`
 - Blog posts are version-independent → `content/en/blog/`

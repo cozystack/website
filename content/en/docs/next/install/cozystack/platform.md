@@ -361,6 +361,8 @@ Create storage classes, one of which should be the default class.
     allowVolumeExpansion: true
     ```
 
+    The `replicated` class requires DRBD: `layerList: "drbd storage"` is served by the DRBD layer inside the LINSTOR satellite, so it works only where the `drbd` kernel module is loadable and each node has its own kernel. On Talos nodes that cannot provide that, such as nodes running as containers on a shared kernel, install the `linstor` package with `drbd.enabled: false` (without it the satellite pod never becomes Ready, LINSTOR registers no nodes at all and every PVC stays Pending) and omit `replicated` from this file. The flag works on Talos only, the chart refuses it on other distributions. There the DRBD module has to be loadable on the host, support for other substrates is tracked in [cozystack/cozystack#4092](https://github.com/cozystack/cozystack/issues/4092). What remains is `local`: storage-only volumes, pinned to the node that provisioned them, kept in a single copy with no replication and no remote access.
+
 1.  Apply the storage class configuration
 
     ```bash

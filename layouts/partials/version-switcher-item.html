@@ -1,0 +1,29 @@
+{{- /* One dropdown entry. Context: dict "v" <version entry> "logicalPath"
+       (current page path without the language base) "currentID" "currentUrl".
+       Each target is the most specific page that is actually built, so no link
+       404s. The pipeline translates only the latest version, so most localized
+       pages and version roots never exist. Staying on the same topic matters more
+       than staying in the language, so the order is: English version root (always
+       built), localized version root, the same page in English, the same page
+       localized. site.GetPage resolves in the current-language site;
+       hugo.Sites.Default is the English site. */ -}}
+{{- $v := .v -}}
+{{- $targetPath := $v.url -}}
+{{- with site.GetPage (strings.TrimRight "/" $v.url) -}}
+  {{- $targetPath = .RelPermalink -}}
+{{- end -}}
+{{- if .currentUrl -}}
+  {{- $subPath := strings.TrimPrefix .currentUrl .logicalPath -}}
+  {{- $trimmed := strings.TrimRight "/" (printf "%s%s" $v.url $subPath) -}}
+  {{- with hugo.Sites.Default.GetPage $trimmed -}}
+    {{- $targetPath = .RelPermalink -}}
+  {{- end -}}
+  {{- with site.GetPage $trimmed -}}
+    {{- $targetPath = .RelPermalink -}}
+  {{- end -}}
+{{- end -}}
+<li>
+  <a href="{{ $targetPath }}" class="dropdown-item{{ if eq $v.id .currentID }} active{{ end }}">
+    {{- $v.version -}}
+  </a>
+</li>

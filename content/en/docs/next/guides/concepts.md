@@ -269,17 +269,17 @@ flowchart TD
     DETECT["FluxPlunger detects the error"]
     FIND["Finds the last release Secret"]
     SUSPEND["Suspends HelmRelease"]
-    DEL["Deletes the stale Secret"]
     ANNOTATE["Records processed version<br/>in annotation (crash recovery)"]
+    DEL["Deletes the stale Secret"]
     RESUME["Resumes HelmRelease"]
     REINSTALL["Flux performs a clean reinstall"]
 
     ERR --> DETECT
     DETECT --> FIND
     FIND --> SUSPEND
-    SUSPEND --> DEL
-    DEL --> ANNOTATE
-    ANNOTATE --> RESUME
+    SUSPEND --> ANNOTATE
+    ANNOTATE --> DEL
+    DEL --> RESUME
     RESUME --> REINSTALL
 ```
 
