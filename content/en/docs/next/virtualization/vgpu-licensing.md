@@ -117,7 +117,7 @@ On every invocation, including without media, the script clears the contents of 
 
 ## License server connectivity and driver compatibility
 
-The hoster chooses CLS or DLS and DLS placement, including a management cluster. From the guest, verify DNS resolution, routing, TLS trust and access to the endpoints named by its token. Check the actual DLS deployment's listening ports and the client's requirements in NLS §2.4; do not use a remembered port list as an allow-list. An in-cluster DLS may need explicit tenant network-policy exceptions under the installed CNI. Current isolation defaults are not an architectural prohibition on that placement.
+The hoster chooses CLS or DLS and DLS placement, including a management cluster. From the guest, verify DNS resolution, routing, TLS trust and access to the endpoints named by its token. Check the actual DLS deployment's listening ports and the client's requirements in NLS §2.3; do not use a remembered port list as an allow-list. An in-cluster DLS may need explicit tenant network-policy exceptions under the installed CNI. Current isolation defaults are not an architectural prohibition on that placement.
 
 If acquisition or renewal fails, check the guest client logs, available licenses, endpoint reachability and guest configuration. Inspect `nvidia-smi -q` for license status with the product's enforcement mode in mind: it is not independently a server-side lease audit. A connectivity fix may need a client restart; a platform token change needs a new VMI. NVIDIA's release-specific grace and degradation rules apply. A recovered guest can regain full capability, although applications started while degraded may require restarting.
 
