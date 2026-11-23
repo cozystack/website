@@ -1,0 +1,138 @@
+# Cozystack translation glossary.
+#
+# Two lists:
+#   do_not_translate — terms kept verbatim in every language (brands, product
+#     names, protocols, CLIs, APIs). The translator is instructed to never
+#     translate, transliterate, or inflect these.
+#   preferred — for terms that DO get translated, the canonical rendering per
+#     language, so translations stay consistent across pages. Derived from the
+#     CNCF Cloud Native Glossary and kubernetes.io localization teams.
+#
+# THE LISTS ARE CASE-SENSITIVE, and one term appears in both on purpose:
+#   `Tenant`  (do_not_translate) — the Cozystack API kind. A reader has to be
+#     able to match it to `kind: Tenant` in a manifest, so it stays verbatim.
+#   `tenant`  (preferred)        — the ordinary noun ("a tenant's workloads").
+#     Leaving this in English makes the prose unreadable, so it gets translated.
+# This is a real distinction, not a mistake — keep the capitalization exact if
+# you edit either entry.
+#
+# Code blocks, inline `code`, Hugo shortcodes ({{< >}} / {{% %}}), URLs, and
+# front-matter keys are protected structurally by the pipeline (see lib.py),
+# not via this list.
+
+do_not_translate:
+  # Project / brand
+  - Cozystack
+  - Ænix
+  - Aenix
+  # CNCF ecosystem
+  - Kubernetes
+  - k8s
+  - KubeVirt
+  - Cilium
+  - LINSTOR
+  - Talos
+  - Talos Linux
+  - FluxCD
+  - Flux
+  - Argo CD
+  - VictoriaMetrics
+  - VictoriaLogs
+  - Helm
+  - Prometheus
+  - Grafana
+  - etcd
+  - containerd
+  - CNCF
+  # Vendors / external
+  - VMware
+  - vSphere
+  - Proxmox
+  - OpenStack
+  - AWS
+  - GCP
+  - Azure
+  - Broadcom
+  # Protocols / specs / formats
+  - CSI
+  - CNI
+  - CRI
+  - OCI
+  - API
+  - REST
+  - gRPC
+  - YAML
+  - JSON
+  - TLS
+  - DNS
+  - SBOM
+  - CSAF
+  - VEX
+  - SLSA
+  # Cozystack nouns kept as-is
+  - Package
+  - PackageSource
+  - ApplicationDefinition
+  - Tenant
+  - SchedulingClass
+
+# Preferred translations for translatable terms. Keys are the English term;
+# values are per-language canonical renderings. Omitted languages fall back to
+# the translator's judgement (still consistent within a run via glossary hint).
+preferred:
+  cluster:
+    ru: кластер
+    de: Cluster
+    es: clúster
+    pt-br: cluster
+    zh-cn: 集群
+    hi: क्लस्टर
+  node:
+    ru: узел
+    de: Knoten
+    es: nodo
+    pt-br: nó
+    zh-cn: 节点
+    hi: नोड
+  storage:
+    ru: хранилище
+    de: Speicher
+    es: almacenamiento
+    pt-br: armazenamento
+    zh-cn: 存储
+    hi: स्टोरेज
+  workload:
+    ru: рабочая нагрузка
+    de: Workload
+    es: carga de trabajo
+    pt-br: carga de trabalho
+    zh-cn: 工作负载
+    hi: वर्कलोड
+  deployment:
+    ru: развёртывание
+    de: Deployment
+    es: despliegue
+    pt-br: implantação
+    zh-cn: 部署
+    hi: डिप्लॉयमेंट
+  virtual machine:
+    ru: виртуальная машина
+    de: virtuelle Maschine
+    es: máquina virtual
+    pt-br: máquina virtual
+    zh-cn: 虚拟机
+    hi: वर्चुअल मशीन
+  bare metal:
+    ru: bare-metal
+    de: Bare-Metal
+    es: bare metal
+    pt-br: bare metal
+    zh-cn: 裸金属
+    hi: बेयर मेटल
+  tenant:
+    ru: тенант
+    de: Mandant
+    es: inquilino (tenant)
+    pt-br: tenant
+    zh-cn: 租户
+    hi: टेनेंट

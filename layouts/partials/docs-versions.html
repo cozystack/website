@@ -1,0 +1,19 @@
+{{- /* Splits params.versions into the newest `versions_visible` released entries
+       and the rest. `hidden` entries (the `next` trunk) are in neither group.
+       Ranking uses `order`, which hack/register_version.sh assigns on release,
+       so a new release pushes the oldest visible version into "older" on its own.
+       Returns dict "recent" "older" (both slices of version entries, newest first). */ -}}
+{{- $released := slice -}}
+{{- range site.Params.versions -}}
+  {{- if not .hidden -}}
+    {{- $released = $released | append . -}}
+  {{- end -}}
+{{- end -}}
+{{- $sorted := sort $released "order" "desc" -}}
+{{- /* `default 2` would turn an explicit 0 into 2; isset keeps it and max clamps it to 1. */ -}}
+{{- $n := 2 -}}
+{{- if isset site.Params "versions_visible" -}}
+  {{- $n = int site.Params.versions_visible -}}
+{{- end -}}
+{{- $n = int (math.Max 1 $n) -}}
+{{- return dict "recent" (first $n $sorted) "older" (after $n $sorted) -}}

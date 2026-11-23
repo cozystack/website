@@ -1,0 +1,8 @@
+// Cozystack site redesign (monochrome, Nunito Sans, circuit artwork).
+// Imported last from main.scss so it overrides Docsy and the older partials.
+// Tokens and component names follow the "Cozystack website kit" in Figma.
+@import "base";
+@import "chrome";
+@import "home";
+@import "content";
+@import "oss";

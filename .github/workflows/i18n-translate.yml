@@ -1,0 +1,111 @@
+name: i18n translate
+
+# Daily translation run, one weekly PR — the same contract as hack/i18n/run-daily.sh,
+# moved off a maintainer's clone and personal Max subscription onto CI and an
+# ORG-OWNED Anthropic API key (auth: api-key). Nothing reaches production
+# automatically: the run pushes to a weekly branch and opens a PR a maintainer
+# merges. No auto-merge, CODEOWNERS/branch protection untouched.
+#
+# Required secret:
+#   I18N_ANTHROPIC_API_KEY  — an organization-owned Anthropic API key (metered).
+# Optional secret:
+#   I18N_GH_TOKEN           — a PAT/app token used to push the branch and open the
+#                             PR so its checks (i18n-lint, DCO) actually run; the
+#                             default GITHUB_TOKEN cannot trigger them. Without it
+#                             the run still works, but the PR opens with no checks.
+#
+# Until I18N_ANTHROPIC_API_KEY exists the job is a green no-op (see the guard step),
+# so enabling the schedule before provisioning the key does not spam failures.
+#
+# Spend is bounded twice per run: a page limit (DEFAULT_PAGE_LIMIT on the schedule)
+# and a wall-clock budget well inside timeout-minutes, so translate.py stops taking
+# new pages while there is still time to commit and push what it has. A run killed
+# by the timeout would lose every page it translated. Set a spend limit on the
+# key's Anthropic workspace as the outer guard.
+
+on:
+  schedule:
+    - cron: '17 3 * * *'   # daily, 03:17 UTC
+  workflow_dispatch:
+    inputs:
+      lang:
+        description: 'Limit to one language code (e.g. ru); empty = all'
+        required: false
+        default: ''
+      limit:
+        description: 'Max pages this run; empty = the scheduled default (40)'
+        required: false
+        default: ''
+
+concurrency:
+  group: i18n-translate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      I18N_AUTH: api-key
+      DEFAULT_PAGE_LIMIT: '40'
+      # Leaves an hour of the 300-minute timeout for the page in flight and the
+      # commit/push/PR steps.
+      I18N_TIME_BUDGET_MIN: '240'
+      CLAUDE_CODE_VERSION: '2.1.287'
+    steps:
+      - name: Guard — org API key provisioned
+        id: guard
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.I18N_ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY}" ]; then
+            echo "::notice::secret I18N_ANTHROPIC_API_KEY is not set yet — skipping this run."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.I18N_GH_TOKEN || github.token }}
+
+      - name: Fetch all branches (weekly-branch bookkeeping needs origin/i18n/week-*)
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+          git fetch --prune origin
+
+      - name: Set up Python
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude CLI (driven by the Agent SDK)
+        if: steps.guard.outputs.skip != 'true'
+        run: npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}"
+
+      - name: Run translation pipeline
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          # Secrets only reach the step that needs them, not the npm/pip installs.
+          ANTHROPIC_API_KEY: ${{ secrets.I18N_ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.I18N_GH_TOKEN || github.token }}
+          # Dispatch inputs go through env, never interpolated into the script.
+          INPUT_LANG: ${{ github.event.inputs.lang }}
+          INPUT_LIMIT: ${{ github.event.inputs.limit }}
+        run: |
+          args=(--limit "${INPUT_LIMIT:-$DEFAULT_PAGE_LIMIT}")
+          if [ -n "${INPUT_LANG}" ]; then args+=(--lang "${INPUT_LANG}"); fi
+          hack/i18n/run-daily.sh "${args[@]}"

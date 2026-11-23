@@ -5,7 +5,7 @@ description: "Free PaaS platform and framework for building clouds"
 taxonomyCloud: []
 cascade:
   type: docs
-weight: 20
+weight: 30
 ---
 
 Cozystack is a free PaaS platform and framework for building clouds

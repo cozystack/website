@@ -1,10 +1,152 @@
 {{ define "main" }}
 <style>
-  .demo-embed { width: 100%; height: calc(100vh - 4rem); min-height: 560px; border: 0; display: block; }
-  .demo-embed__hint { font-size: .85rem; color: var(--bs-secondary, #6c757d); padding: .4rem 1rem; text-align: center; }
+  /* The demo is a full-screen app, not a document: the page never scrolls,
+     and the iframe takes exactly the height left over from the navbar, the
+     header toggle row and the hint. The navbar is taken out of `position:
+     fixed` here so the flex layout can account for it (and so it can be
+     collapsed). `overscroll-behavior: contain` stops the scroll from chaining
+     out of the app when it reaches its end. */
+  html, body.demo-embed-page { height: 100%; overflow: hidden; }
+  body.demo-embed-page { display: flex; flex-direction: column; padding-top: 0 !important; }
+  body.demo-embed-page > header { flex: 0 0 auto; transition: margin-top .25s ease; }
+  body.demo-embed-page nav.navbar.td-navbar { position: relative; }
+  body.demo-embed-page .td-outer { flex: 1 1 auto; min-height: 0; padding: 0; display: flex; flex-direction: column; }
+  body.demo-embed-page .td-main { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .demo-embed { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; display: block; overscroll-behavior: contain; }
+  .demo-embed__hint { flex: 0 0 auto; position: relative; font-size: .85rem; color: var(--cz-muted); background: var(--cz-surface); border-top: 1px solid var(--cz-line); padding: .4rem 2.75rem; text-align: center; }
+  .demo-embed__hint[hidden] { display: none; }
   footer { display: none; }
+  /* On a short window let the page scroll rather than squeezing the app. */
+  @media (max-height: 620px) {
+    html, body.demo-embed-page { height: auto; overflow: auto; }
+    .demo-embed { height: 560px; flex: 0 0 auto; }
+  }
+
+  /* Header toggle: a tab hanging from the navbar, \__^__/. It sits in its own
+     row, as tall as the tab, rather than over the app: the console's top bar
+     has controls under the centre at narrow widths. The row takes the colour
+     of the app's top edge (set from JS), so the tab still reads as part of
+     the navbar. */
+  .demo-header-toggle-row { position: relative; flex: 0 0 auto; height: 20px; background: var(--demo-strip-bg, #fff); }
+  .demo-header-toggle {
+    position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; justify-content: center;
+    width: 56px; height: 21px; margin: 0; padding: 0 0 2px;
+    border: 1px solid var(--cz-line); border-top: 0; border-radius: 0 0 var(--cz-radius) var(--cz-radius);
+    background: #fff; color: var(--cz-muted);
+    cursor: pointer; transition: color .15s;
+  }
+  /* Concave shoulders that carry the navbar's bottom border into the tab. */
+  .demo-header-toggle::before,
+  .demo-header-toggle::after { content: ""; position: absolute; top: 0; width: var(--cz-radius); height: var(--cz-radius); }
+  .demo-header-toggle::before { right: calc(100% + 1px); background: radial-gradient(circle at 0 100%, transparent calc(var(--cz-radius) - 1px), var(--cz-line) calc(var(--cz-radius) - 1px), var(--cz-line) var(--cz-radius), #fff var(--cz-radius)); }
+  .demo-header-toggle::after { left: calc(100% + 1px); background: radial-gradient(circle at 100% 100%, transparent calc(var(--cz-radius) - 1px), var(--cz-line) calc(var(--cz-radius) - 1px), var(--cz-line) var(--cz-radius), #fff var(--cz-radius)); }
+  .demo-header-toggle:hover { color: var(--cz-ink); }
+  .demo-header-toggle:focus-visible { outline: 2px solid var(--cz-ink); outline-offset: 2px; color: var(--cz-ink); }
+  .demo-header-toggle svg { width: 14px; height: 14px; transition: transform .25s ease; }
+  .demo-header-toggle[aria-expanded="false"] svg { transform: rotate(180deg); }
+
+  .demo-hint__close {
+    position: absolute; top: 50%; right: .5rem; transform: translateY(-50%);
+    display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; margin: 0; padding: 0;
+    border: 0; border-radius: var(--cz-radius); background: transparent; color: inherit;
+    cursor: pointer; transition: background-color .15s, color .15s;
+  }
+  .demo-hint__close:hover { background: var(--cz-surface-2); color: var(--cz-ink); }
+  .demo-hint__close:focus-visible { outline: 2px solid var(--cz-ink); outline-offset: 1px; }
+  .demo-hint__close svg { width: 14px; height: 14px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    body.demo-embed-page > header, .demo-header-toggle svg { transition: none; }
+  }
 </style>
+<div class="demo-header-toggle-row">
+  <button type="button" class="demo-header-toggle" aria-expanded="true" aria-label="Hide site header">
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false"><path d="M3.5 10l4.5-4.5 4.5 4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</div>
 <iframe class="demo-embed" src="/demo-app/" title="Cozystack live demo"
   allow="clipboard-read; clipboard-write"></iframe>
-<div class="demo-embed__hint">Interactive demo — real Cozystack console with mock data, running in your browser. Nothing here touches a real cluster.</div>
+<div class="demo-embed__hint" id="demo-hint">Interactive demo — real Cozystack console with mock data, running in your browser. Nothing here touches a real cluster.<button type="button" class="demo-hint__close" aria-label="Close"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button></div>
+<script>
+  (function () {
+    var header = document.querySelector("body > header");
+    var toggle = document.querySelector(".demo-header-toggle");
+    var row = document.querySelector(".demo-header-toggle-row");
+    var frame = document.querySelector(".demo-embed");
+    var hint = document.getElementById("demo-hint");
+
+    // The header starts expanded on every visit.
+    if (header && toggle) {
+      var collapsed = false;
+      var apply = function () {
+        header.style.marginTop = collapsed ? -header.offsetHeight + "px" : "";
+      };
+      toggle.addEventListener("click", function () {
+        collapsed = !collapsed;
+        apply();
+        // A hidden navbar must not keep focusable links in the tab order.
+        if (collapsed) header.setAttribute("inert", ""); else header.removeAttribute("inert");
+        toggle.setAttribute("aria-expanded", String(!collapsed));
+        toggle.setAttribute("aria-label", collapsed ? "Show site header" : "Hide site header");
+      });
+      // The navbar changes height across breakpoints and while its menu
+      // animates open or shut; keep it fully out of view when collapsed.
+      var reapply = function () { if (collapsed) apply(); };
+      if (window.ResizeObserver) new ResizeObserver(reapply).observe(header);
+      else window.addEventListener("resize", reapply);
+    }
+
+    // Paint the toggle row in the colour of the console's top edge. The app is
+    // served from the same origin, so its document can be read.
+    if (row && frame) {
+      var paint = function () {
+        try {
+          var doc = frame.contentDocument;
+          var el = doc && doc.elementFromPoint(doc.documentElement.clientWidth / 2, 1);
+          for (; el; el = el.parentElement) {
+            var bg = getComputedStyle(el).backgroundColor;
+            if (bg && bg !== "transparent" && !/rgba\(.*,\s*0\)$/.test(bg)) {
+              row.style.setProperty("--demo-strip-bg", bg);
+              return;
+            }
+          }
+        } catch (e) {}
+      };
+      var watch = function () {
+        paint();
+        try {
+          var doc = frame.contentDocument;
+          var mo = new MutationObserver(paint);
+          [doc.documentElement, doc.body].forEach(function (n) {
+            if (n) mo.observe(n, { attributes: true, attributeFilter: ["class", "data-theme", "style"] });
+          });
+        } catch (e) {}
+      };
+      // The console renders its top bar a moment after load.
+      var onLoad = function () { setTimeout(watch, 300); setTimeout(paint, 1500); };
+      frame.addEventListener("load", onLoad);
+      try {
+        var d = frame.contentDocument;
+        if (d && d.readyState === "complete" && d.location.href !== "about:blank") onLoad();
+      } catch (e) {}
+      if (window.matchMedia) {
+        var mq = window.matchMedia("(prefers-color-scheme: dark)");
+        if (mq.addEventListener) mq.addEventListener("change", function () { setTimeout(paint, 50); });
+      }
+    }
+
+    // A closed hint stays closed for the browser session.
+    if (hint) {
+      var key = "demo-hint-closed:" + hint.id;
+      try { if (sessionStorage.getItem(key)) hint.hidden = true; } catch (e) {}
+      hint.querySelector(".demo-hint__close").addEventListener("click", function () {
+        hint.hidden = true;
+        try { sessionStorage.setItem(key, "1"); } catch (e) {}
+        if (frame) frame.focus();
+      });
+    }
+  })();
+</script>
 {{ end }}
