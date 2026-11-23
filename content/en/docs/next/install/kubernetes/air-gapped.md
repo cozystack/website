@@ -148,67 +148,70 @@ talosctl bootstrap -n <ip> -e <ip>
 
 Read the [`talosctl` configuration guide]({{% ref "/docs/next/install/kubernetes/talosctl" %}}) to learn more.
 
-## 5. Configure Registry Mirrors for Tenant Kubernetes
+## 5. Configure Container Registry Mirrors for Tenant Kubernetes
 
-Tenant Kubernetes clusters use [Kamaji](https://kamaji.clastix.io/) for the
-control plane. Control-plane components run as pods on the management-cluster
-nodes, so they already use the Talos registry mirrors from
-[step 2](#2-configure-container-registry-mirrors).
+Tenant Kubernetes clusters use [Kamaji](https://kamaji.clastix.io/) for the control plane.
+The control plane components run as pods on the management cluster nodes,
+so they already use the registry mirrors configured in [step 2](#2-configure-container-registry-mirrors).
 
-Tenant **worker nodes** run as separate virtual machines with their own Talos
-instance, so they are configured through the `Kubernetes` resource, not through
-the management nodes' machine config.
+Tenant **worker nodes** run as separate virtual machines with their own Talos instance.
+They are configured per worker pool, on the `KubernetesNodes` resource.
+Nothing is inherited from the parent `Kubernetes` resource or from the management nodes, so set the fields below on every pool.
+Of the `talos.*` fields on the `Kubernetes` resource, only `talos.version` is used, so mirror settings placed there have no effect.
 
-{{% alert color="warning" %}}
-The `patch-containerd` Secret used by earlier releases was removed in Cozystack
-v1.6: it had no consumer in the Talos-based worker machine config. Use the
-`talos.*` fields below instead.
-{{% /alert %}}
-
-A worker node needs three things reachable without public egress: its **OS disk
-image**, the **Talos installer**, and the **container images** it pulls. Set
-them on the `Kubernetes` resource:
+A worker needs three things reachable without public egress: its **OS disk image**, the **Talos installer**, and the **container images** it pulls.
 
 ```yaml
 apiVersion: apps.cozystack.io/v1alpha1
-kind: Kubernetes
+kind: KubernetesNodes
 metadata:
-  name: my-cluster
+  name: my-cluster-md0
 spec:
+  cluster: my-cluster
   talos:
-    # OS disk image streamed in by CDI over HTTP
+    # OS disk image, imported by CDI over HTTP
     imageFactoryURL: https://factory.example.com
-    # installer image for in-guest upgrades: <repo>/<schematicID>:<version>
+    # only needed when the factory uses a certificate from an internal CA
+    imageFactoryCA: |
+      -----BEGIN CERTIFICATE-----
+      ...
+      -----END CERTIFICATE-----
+    # installer image, resolved as <installerRepository>/<schematicID>:<version>
     installerRepository: registry.example.com/installer
-    # machine.registries.mirrors passthrough for worker nodes
+    # rendered into the worker's machine.registries.mirrors
     registryMirrors:
       docker.io:
         endpoints:
-          - https://registry.example.com/v2/docker.io
+          - http://10.0.0.1:8082
         skipFallback: true
       ghcr.io:
         endpoints:
-          - https://registry.example.com/v2/ghcr.io
+          - http://10.0.0.1:8083
         skipFallback: true
       registry.k8s.io:
         endpoints:
-          - https://registry.example.com/v2/registry.k8s.io
+          - http://10.0.0.1:8085
         skipFallback: true
 ```
 
-- `talos.imageFactoryURL` (default `https://factory.talos.dev`) points at a
-  self-hosted Image Factory, a caching mirror, or an internal HTTP file server.
-- `talos.installerRepository` (default `factory.talos.dev/installer`) is a
-  mirrored OCI registry; it is resolved as `<installerRepository>/<schematicID>:<version>`.
-- `talos.registryMirrors` has the same shape as the node mirrors in
-  [step 2](#2-configure-container-registry-mirrors). By default Talos falls back
-  to the upstream registry, so set `skipFallback: true` per host to enforce a
-  true air-gap.
+- `talos.imageFactoryURL` (default `https://factory.talos.dev`) points at a self-hosted Image Factory, a caching mirror, or an internal HTTP file server.
+  Set `talos.imageFactoryCA` to the PEM certificate of your internal CA if the factory is served over HTTPS with such a certificate, otherwise the import fails with `x509: certificate signed by unknown authority`.
+- `talos.installerRepository` (default `factory.talos.dev/installer`) must point at a registry that mirrors the Talos installer images.
+- `talos.registryMirrors` takes the same `mirrors` map as [step 2](#2-configure-container-registry-mirrors).
+  Use bare hosts as endpoints, as in step 2: Talos appends `/v2` to the endpoint path, so an endpoint like `https://registry.example.com/v2/docker.io` only works with `overridePath: true` added to that host.
+  By default Talos falls back to the upstream registry when the mirror fails, so set `skipFallback: true` on every host to keep the workers off the public registries.
+  There is no field for `machine.registries.config`, so a mirror on this list cannot require credentials or a custom TLS configuration.
 
-{{% alert color="info" %}}
-**Current limitation.** These fields cover a worker node's boot: the OS image,
-the installer, and the images Talos itself pulls (such as `kubelet`). Mirroring
-of in-guest pod pulls (workloads inside the tenant cluster pulling from
-registries) is a follow-up; track it in the project roadmap and file an issue if
-you depend on it.
+`machine.registries.mirrors` is the containerd configuration of the whole worker node.
+It covers the images Talos itself pulls, such as `kubelet`, and the images of pods running in the tenant cluster alike.
+Changing `talos.registryMirrors` on an existing pool rolls all of its workers.
+
+A pool that sets `osImage.builtin` clones its OS disk from the worker image catalog and ignores `talos.imageFactoryURL` and `talos.imageFactoryCA`.
+The catalog imports its images on its own, from `kubernetesWorkerImage.imageFactoryURL` in the
+[platform package]({{% ref "/docs/next/operations/configuration/platform-package" %}}), so point that value at your factory as well.
+
+{{% alert color="warning" %}}
+Earlier releases configured tenant worker mirrors with the platform-wide `registries` value, which rendered the `cozy-system/patch-containerd` Secret.
+Talos-based workers never read that Secret, so it has had no effect since v1.6, and both were removed in v1.7.1.
+If you are upgrading from v1.5 and relied on `patch-containerd`, your tenant workers no longer use those mirrors: set `talos.registryMirrors` on each `KubernetesNodes` pool instead.
 {{% /alert %}}
