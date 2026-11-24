@@ -1,0 +1,49 @@
+/* security summary page */
+
+.security-page {
+  margin-top: 4rem;
+
+  @include media-breakpoint-down(sm) {
+    margin-top: 2rem;
+  }
+
+  .security-card {
+    border: none;
+    border-radius: 0.75rem;
+    transition: transform 0.15s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    .security-icon {
+      font-size: 1.75rem;
+      color: $primary;
+      margin-bottom: 0.5rem;
+    }
+
+    .security-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: $cozy-black;
+      line-height: 1.2;
+    }
+
+    .security-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: $cozy-mid-gray;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+  }
+
+  .table code {
+    color: $primary;
+    font-weight: 500;
+    background: rgba($primary, 0.06);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+  }
+}
