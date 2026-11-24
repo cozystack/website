@@ -150,225 +150,68 @@ Read the [`talosctl` configuration guide]({{% ref "/docs/v1.7/install/kubernetes
 
 ## 5. Configure Container Registry Mirrors for Tenant Kubernetes
 
-Tenant Kubernetes clusters in Cozystack use [Kamaji](https://kamaji.clastix.io/) for the control plane.
+Tenant Kubernetes clusters use [Kamaji](https://kamaji.clastix.io/) for the control plane.
 The control plane components run as pods on the management cluster nodes,
-so they automatically use the registry mirrors configured in [step 2](#2-configure-container-registry-mirrors) for Talos.
+so they already use the registry mirrors configured in [step 2](#2-configure-container-registry-mirrors).
 
-However, tenant **worker nodes** run as separate virtual machines with their own containerd instance.
-These worker nodes need a separate registry mirror configuration.
+Tenant **worker nodes** run as separate virtual machines with their own Talos instance.
+They are configured per worker pool, on the `KubernetesNodes` resource.
+Nothing is inherited from the parent `Kubernetes` resource or from the management nodes, so set the fields below on every pool.
+Of the `talos.*` fields on the `Kubernetes` resource, only `talos.version` is used, so mirror settings placed there have no effect.
 
-To perform this configuration, you first need to deploy a Cozystack cluster of
-(or upgrade your cluster to) version v0.32.0 or later.
-Check your current cluster version with:
-
-```bash
-kubectl get deploy -n cozy-system cozystack -oyaml | grep installer
-```
-
-### Option A: Configure via platform package
-
-The platform package can automatically generate the `patch-containerd` secret
-from the `registries` section in the platform values.
-
-Add the `registries` section to your **cozystack-platform.yaml**:
+A worker needs three things reachable without public egress: its **OS disk image**, the **Talos installer**, and the **container images** it pulls.
 
 ```yaml
-apiVersion: cozystack.io/v1alpha1
-kind: Package
+apiVersion: apps.cozystack.io/v1alpha1
+kind: KubernetesNodes
 metadata:
-  name: cozystack.cozystack-platform
+  name: my-cluster-md0
 spec:
-  variant: isp-full
-  components:
-    platform:
-      values:
-        # ... your existing publishing, networking, etc. ...
-        registries:
-          mirrors:
-            docker.io:
-              endpoints:
-                - http://10.0.0.1:8082
-            ghcr.io:
-              endpoints:
-                - http://10.0.0.1:8083
-            gcr.io:
-              endpoints:
-                - http://10.0.0.1:8084
-            registry.k8s.io:
-              endpoints:
-                - http://10.0.0.1:8085
-            quay.io:
-              endpoints:
-                - http://10.0.0.1:8086
-            cr.fluentbit.io:
-              endpoints:
-                - http://10.0.0.1:8087
-            docker-registry3.mariadb.com:
-              endpoints:
-                - http://10.0.0.1:8088
-          config:
-            "10.0.0.1:8082":
-              tls:
-                insecureSkipVerify: true
-              auth:
-                username: myuser
-                password: mypass
+  cluster: my-cluster
+  talos:
+    # OS disk image, imported by CDI over HTTP
+    imageFactoryURL: https://factory.example.com
+    # only needed when the factory uses a certificate from an internal CA
+    imageFactoryCA: |
+      -----BEGIN CERTIFICATE-----
+      ...
+      -----END CERTIFICATE-----
+    # installer image, resolved as <installerRepository>/<schematicID>:<version>
+    installerRepository: registry.example.com/installer
+    # rendered into the worker's machine.registries.mirrors
+    registryMirrors:
+      docker.io:
+        endpoints:
+          - http://10.0.0.1:8082
+        skipFallback: true
+      ghcr.io:
+        endpoints:
+          - http://10.0.0.1:8083
+        skipFallback: true
+      registry.k8s.io:
+        endpoints:
+          - http://10.0.0.1:8085
+        skipFallback: true
 ```
 
-Then apply it:
+- `talos.imageFactoryURL` (default `https://factory.talos.dev`) points at a self-hosted Image Factory, a caching mirror, or an internal HTTP file server.
+  Set `talos.imageFactoryCA` to the PEM certificate of your internal CA if the factory is served over HTTPS with such a certificate, otherwise the import fails with `x509: certificate signed by unknown authority`.
+- `talos.installerRepository` (default `factory.talos.dev/installer`) must point at a registry that mirrors the Talos installer images.
+- `talos.registryMirrors` takes the same `mirrors` map as [step 2](#2-configure-container-registry-mirrors).
+  Use bare hosts as endpoints, as in step 2: Talos appends `/v2` to the endpoint path, so an endpoint like `https://registry.example.com/v2/docker.io` only works with `overridePath: true` added to that host.
+  By default Talos falls back to the upstream registry when the mirror fails, so set `skipFallback: true` on every host to keep the workers off the public registries.
+  There is no field for `machine.registries.config`, so a mirror on this list cannot require credentials or a custom TLS configuration.
 
-```bash
-kubectl apply -f cozystack-platform.yaml
-```
+`machine.registries.mirrors` is the containerd configuration of the whole worker node.
+It covers the images Talos itself pulls, such as `kubelet`, and the images of pods running in the tenant cluster alike.
+Changing `talos.registryMirrors` on an existing pool rolls all of its workers.
 
-This will create a `patch-containerd` secret in the `cozy-system` namespace,
-which is automatically copied to every tenant Kubernetes cluster.
-
-<details class="alert alert-info p-3 mb-4">
-<summary><strong>Alternatively, patch an existing platform package</strong></summary>
-
-If the platform package is already deployed, you can add registry mirrors with a patch:
-
-```bash
-kubectl patch packages.cozystack.io cozystack.cozystack-platform --type=merge -p '{
-  "spec": {
-    "components": {
-      "platform": {
-        "values": {
-          "registries": {
-            "mirrors": {
-              "docker.io": {
-                "endpoints": ["http://10.0.0.1:8082"]
-              },
-              "ghcr.io": {
-                "endpoints": ["http://10.0.0.1:8083"]
-              },
-              "gcr.io": {
-                "endpoints": ["http://10.0.0.1:8084"]
-              },
-              "registry.k8s.io": {
-                "endpoints": ["http://10.0.0.1:8085"]
-              },
-              "quay.io": {
-                "endpoints": ["http://10.0.0.1:8086"]
-              },
-              "cr.fluentbit.io": {
-                "endpoints": ["http://10.0.0.1:8087"]
-              },
-              "docker-registry3.mariadb.com": {
-                "endpoints": ["http://10.0.0.1:8088"]
-              }
-            },
-            "config": {
-              "10.0.0.1:8082": {
-                "tls": {
-                  "insecureSkipVerify": true
-                },
-                "auth": {
-                  "username": "myuser",
-                  "password": "mypass"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}'
-```
-
-</details>
-
-### Option B: Create the secret manually
-
-Alternatively, create a [Kubernetes Secret](https://kubernetes.io/docs/concepts/configuration/secret/) named `patch-containerd` directly:
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: patch-containerd
-  namespace: cozy-system
-type: Opaque
-stringData:
-  docker.io.toml: |
-    server = "https://registry-1.docker.io"
-    [host."http://10.0.0.1:8082"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  ghcr.io.toml: |
-    server = "https://ghcr.io"
-    [host."http://10.0.0.1:8083"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  gcr.io.toml: |
-    server = "https://gcr.io"
-    [host."http://10.0.0.1:8084"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  registry.k8s.io.toml: |
-    server = "https://registry.k8s.io"
-    [host."http://10.0.0.1:8085"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  quay.io.toml: |
-    server = "https://quay.io"
-    [host."http://10.0.0.1:8086"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  cr.fluentbit.io.toml: |
-    server = "https://cr.fluentbit.io"
-    [host."http://10.0.0.1:8087"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-  docker-registry3.mariadb.com.toml: |
-    server = "https://docker-registry3.mariadb.com"
-    [host."http://10.0.0.1:8088"]
-      capabilities = ["pull", "resolve"]
-      skip_verify = true
-```
-
-If your registry mirrors require authentication, add a custom `Authorization` header
-with Base64-encoded credentials:
-
-```toml
-server = "https://registry-1.docker.io"
-[host."http://10.0.0.1:8082"]
-  capabilities = ["pull", "resolve"]
-  skip_verify = true
-  [host."http://10.0.0.1:8082".header]
-    Authorization = "Basic bXl1c2VyOm15cGFzcw=="
-```
-
-To generate the Base64-encoded value, run:
-
-```bash
-echo -n 'myuser:mypass' | base64
-```
-
-For dynamic or token-based authentication (e.g., Docker Hub), use
-[Kubernetes image pull secrets](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
-instead of plaintext credentials.
-
-### How it works
-
-The `patch-containerd` secret from the `cozy-system` namespace is automatically copied
-to every tenant Kubernetes cluster namespace during deployment.
-The secret data is mounted into worker node VMs as containerd registry configuration files
-at `/etc/containerd/certs.d/<registry>/hosts.toml`.
-
-### Per-cluster configuration
-
-It is possible to configure registry mirrors for a particular tenant Kubernetes cluster
-instead of using the global `patch-containerd` secret:
-
-- The tenant cluster must be deployed with a Kubernetes package version 0.23.1 or later, which is available since Cozystack 0.32.1.
-- Before deploying the tenant cluster, create a Kubernetes Secret named `kubernetes-<cluster-name>-patch-containerd` in the tenant cluster namespace, using the same format as the examples above.
+A pool that sets `osImage.builtin` clones its OS disk from the worker image catalog and ignores `talos.imageFactoryURL` and `talos.imageFactoryCA`.
+The catalog imports its images on its own, from `kubernetesWorkerImage.imageFactoryURL` in the
+[platform package]({{% ref "/docs/v1.7/operations/configuration/platform-package" %}}), so point that value at your factory as well.
 
 {{% alert color="warning" %}}
-**Important:** If both the global `patch-containerd` secret and a per-cluster secret exist, the global secret takes precedence and the per-cluster secret is ignored. To use a per-cluster configuration, ensure that the global `patch-containerd` secret in the `cozy-system` namespace is not present.
+Earlier releases configured tenant worker mirrors with the platform-wide `registries` value, which rendered the `cozy-system/patch-containerd` Secret.
+Talos-based workers never read that Secret, so it has had no effect since v1.6, and both were removed in v1.7.1.
+If you are upgrading from v1.5 and relied on `patch-containerd`, your tenant workers no longer use those mirrors: set `talos.registryMirrors` on each `KubernetesNodes` pool instead.
 {{% /alert %}}
-
-To learn more about registry configuration values, read the [CRI Plugin configuration guide](
-https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration)
