@@ -56,11 +56,30 @@ spec:
   locking: true
 ```
 
-This provisions the BucketClaim against the `-lock` BucketClass (e.g. `tenant-example-ssd-lock`).
-Lock-enabled BucketClasses use a `Retain` deletion policy and configure COMPLIANCE-mode object locking with a default retention period.
+This provisions the BucketClaim against the `-lock` BucketClass (e.g. `tenant-example-ssd-lock`), which sets a default retention of COMPLIANCE mode for 365 days on every object written to the bucket.
+
+Backup tools such as Veeam, restic and Kopia set the retention of each object themselves, and a default of one year in COMPLIANCE mode may not suit your data.
+To enable Object Lock without a default retention, also set `lockingDefaultRetention: false`:
+
+```yaml
+apiVersion: apps.cozystack.io/v1alpha1
+kind: Bucket
+metadata:
+  name: my-bucket
+  namespace: tenant-example
+spec:
+  storagePool: ssd
+  locking: true
+  lockingDefaultRetention: false
+```
+
+This provisions the BucketClaim against the `-lock-noretention` BucketClass (e.g. `tenant-example-ssd-lock-noretention`).
+Objects are not retained until a retention is set, either as a bucket default with `PutObjectLockConfiguration` or per object with `PutObjectRetention`, in GOVERNANCE or COMPLIANCE mode. Legal Hold is available as well.
+
+Both lock-enabled BucketClasses use a `Retain` deletion policy, so deleting the Bucket does not delete the data it holds.
 
 {{< note >}}
-Object locking cannot be enabled or disabled after bucket creation. Create a new bucket if you need to change this setting.
+Object locking cannot be enabled or disabled after bucket creation, and `lockingDefaultRetention` is read at creation only. Create a new bucket if you need to change either setting.
 {{< /note >}}
 
 ## Users
@@ -135,15 +154,17 @@ Update your applications with the new credentials from the Secret after step 2 c
 The BucketClass name is composed from three parts:
 
 ```text
-{seaweedfs-namespace}[-{storagePool}][-lock]
+{seaweedfs-namespace}[-{storagePool}][-lock|-lock-noretention]
 ```
 
-| storagePool | locking | BucketClass Used |
-| --- | --- | --- |
-| *(empty)* | `false` | `tenant-example` |
-| *(empty)* | `true` | `tenant-example-lock` |
-| `ssd` | `false` | `tenant-example-ssd` |
-| `ssd` | `true` | `tenant-example-ssd-lock` |
+| storagePool | locking | lockingDefaultRetention | BucketClass Used |
+| --- | --- | --- | --- |
+| *(empty)* | `false` | *(ignored)* | `tenant-example` |
+| *(empty)* | `true` | `true` | `tenant-example-lock` |
+| *(empty)* | `true` | `false` | `tenant-example-lock-noretention` |
+| `ssd` | `false` | *(ignored)* | `tenant-example-ssd` |
+| `ssd` | `true` | `true` | `tenant-example-ssd-lock` |
+| `ssd` | `true` | `false` | `tenant-example-ssd-lock-noretention` |
 
 Similarly, the BucketAccessClass is composed as:
 
