@@ -334,4 +334,4 @@ kubectl -n tenant-user get backups.k8s.mariadb.com,restores.k8s.mariadb.com
 kubectl -n tenant-user logs -l backups.cozystack.io/owned-by.BackupJobName=my-clickhouse-adhoc
 ```
 
-For ClickHouse archive purges, the tenant cannot reach the in-pod `clickhouse-backup` sidecar HTTP API directly; on their request, exec into the ClickHouse pod and call `DELETE /backup/<name>/remote` against the local sidecar (the chart-emitted `clickhouse-<release>-backup-api-auth` Secret carries the credentials).
+For ClickHouse archive purges, the tenant cannot reach the in-pod `clickhouse-backup` sidecar HTTP API directly; on their request, exec into the ClickHouse pod and call `POST /backup/delete/remote/<name>` against the local sidecar (the chart-emitted `clickhouse-<release>-backup-api-auth` Secret carries the credentials).
