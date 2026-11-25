@@ -233,6 +233,7 @@ registries:
 | --- | --- | --- |
 | `kubevirt.disabledFeatureGates` | `[]` | KubeVirt feature gates to switch off, on top of the ones the platform disables itself (`Template`, `ExternalNetResourceInjection`, and `ImageVolume` on Kubernetes older than 1.35). KubeVirt enables every Beta gate by default; list a gate here when the cluster cannot carry it, for example `ImageVolume` on a container runtime without image volume support. A gate the platform enables cannot be switched off here: the render stops and names the gate. |
 | `kubevirt.migrations` | `{}` | Cluster-wide settings forwarded to `spec.configuration.migrations` on the KubeVirt CR. Set them through the platform Package so they are part of the rendered configuration. An empty or null map leaves KubeVirt's defaults unchanged. |
+| `kubevirt.vmStateStorageClass` | `""` | StorageClass of the volumes that hold the persistent TPM and EFI state of virtual machines, forwarded to `spec.configuration.vmStateStorageClass` on the KubeVirt CR. Empty leaves the field unset, so those volumes use the cluster default StorageClass. Changing it does not move existing state volumes, which stay in the class they were created in. |
 
 Example under `spec.components.platform.values`:
 
@@ -245,6 +246,15 @@ kubevirt:
 ```
 
 `bandwidthPerMigration` is a quantity in bytes per second: `625M` is 625,000,000 bytes/s (5 Gbit/s) per migration. This example allows up to two migrations across the cluster and one outbound migration per node.
+
+Virtual machines whose preference enables persistent TPM or EFI state, such as the Windows ones shipped with the platform, keep that state in a small volume of its own. If the default StorageClass is node-local, such a machine can only start on the node that holds the volume. Point `kubevirt.vmStateStorageClass` at a class whose volumes are reachable from any node, in practice a replicated class, to avoid that:
+
+```yaml
+kubevirt:
+  vmStateStorageClass: replicated
+```
+
+The state volume is a ReadWriteOnce or ReadWriteMany filesystem volume of 10Mi, so the class does not need to offer ReadWriteMany.
 
 #### Kubernetes worker images
 
