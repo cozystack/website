@@ -83,6 +83,7 @@ Cozystack-maintained charts, CRDs, controllers, and application APIs are license
 {{< oss-card name="Prometheus Operator CRDs" logo="prometheus" license="Apache-2.0" source="https://github.com/prometheus-community/helm-charts/blob/main/LICENSE" description="CRDs for ServiceMonitor, PodMonitor, and PrometheusRule resources consumed by VictoriaMetrics. Provides a vendor-neutral monitoring target API." >}}
 {{< oss-card name="Metrics Server" logo="kubernetes" license="Apache-2.0" source="https://github.com/kubernetes-sigs/metrics-server/blob/master/LICENSE" description="Provides the Resource Metrics API for HPA and kubectl top. Aggregates kubelet-reported CPU and memory usage across cluster nodes." >}}
 {{< oss-card name="Goldpinger" logo="goldpinger" license="Apache-2.0" source="https://github.com/bloomberg/goldpinger/blob/master/LICENSE" description="Pod-to-pod connectivity checker deployed as a DaemonSet. Surfaces node-to-node network partition failures with metrics and a real-time visualization UI." >}}
+{{< oss-card name="OpenCost" license="Apache-2.0" source="https://github.com/opencost/opencost/blob/develop/LICENSE" description="Allocates cluster cost to namespaces, workloads and pods from VictoriaMetrics usage data and node prices. Optional; off by default, enabled through `bundles.enabledPackages`." >}}
 {{< /oss-cards >}}
 
 ## Autoscaling and resource management
