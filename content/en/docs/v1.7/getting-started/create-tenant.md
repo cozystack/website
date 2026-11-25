@@ -128,8 +128,7 @@ the HelmRelease values. Pods inside a tenant namespace also cannot reach
 created with `etcd: true`. To opt a pod into one of those paths, label it
 with `policy.cozystack.io/allow-to-apiserver: "true"` or
 `policy.cozystack.io/allow-to-etcd: "true"` respectively. See
-[Tenant `isolated` flag removed]({{% ref "/docs/v1.7/operations/upgrades#tenant-isolated-flag-removed" %}})
-in the upgrade notes for the full table and a worked example.
+[Network Isolation Between Tenants]({{% ref "/docs/v1.7/guides/tenants#network-isolation-between-tenants" %}}) for a worked example.
 {{% /alert %}}
 
 You can assist tenant users with installing database applications or nested Kubernetes clusters.
