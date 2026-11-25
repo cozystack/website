@@ -20,7 +20,7 @@ On every other variant the v1.7 platform release runs platform migrations 54 to 
 - Right after the upgrade: read the log of the migration hook. On a test cluster it could no longer be read about 20 minutes after the run. See [Platform migrations](#platform-migrations).
 - `isp-full` and `isp-full-generic`: check that `networking.podCIDR` has a prefix of /20 or shorter. See [Cilium address block](#cilium-address-block).
 - A `cozystack.networking` variant set by hand: list `cozystack.networking` in `bundles.disabledPackages`. See [Networking variant switch](#networking-variant-switch).
-- Tenant Kubernetes clusters: remove `controlPlane.apiServer.extraArgs` entries that name a flag the tenant control plane sets itself. See [Kamaji and tenant control planes](#kamaji-and-tenant-control-planes).
+- Tenant Kubernetes clusters: remove `controlPlane.apiServer.extraArgs` entries that name a flag the tenant control plane sets itself, and entries that spell kube feature gates both bare and `kube:`-prefixed or give a second kube emulated version. See [Kamaji and tenant control planes](#kamaji-and-tenant-control-planes).
 - Tenant Kubernetes clusters: plan for every tenant kube-apiserver to roll at least twice. See [Kamaji and tenant control planes](#kamaji-and-tenant-control-planes).
 - Tenant Kubernetes clusters: plan for the Talos workers of every pool to be replaced once. See [Worker pools become KubernetesNodes resources](#worker-pools-become-kubernetesnodes-resources).
 - Multus: decide whether the reference CNI plugins may be written to `/opt/cni/bin` on every node. See [Multus stages CNI plugins](#multus-stages-cni-plugins).
@@ -115,6 +115,8 @@ The `Kubernetes` resource no longer describes worker nodes. `spec.nodeGroups` an
 
 Platform migration 56 moves the pools of existing clusters. For every pool in `spec.nodeGroups` it creates a `kubernetes-nodes-<cluster>-<pool>` release, which appears as a `KubernetesNodes` resource, and hands the pool's existing worker objects over to it. A cluster that had no `nodeGroups` gets a pool named `md0` with the defaults the old chart used for it: `u1.medium` workers, 0 to 10 replicas, a 20Gi disk and the `ingress-nginx` role.
 
+The migration copies the cluster's `version` and `talos` values into every pool it creates, gives each pool the health-check settings its group had, the group's own value where it set one and the cluster's `nodeHealthCheck` otherwise, and carries the cluster's `maxNodeProvisionTime` over to every pool. An adopted pool therefore keeps its Talos image source, its installer and its remediation threshold. A pool created after the upgrade takes the chart defaults for whatever it does not set, among them `maxUnhealthy: "50%"`: Cluster API deletes and replaces unhealthy workers of the pool as long as no more than half of them are unhealthy. Set `maxUnhealthy: "0%"` on a pool to keep remediation off.
+
 The upgrade then rolls the Talos workers of every pool once. This is expected. v1.7 names each pool's `TalosConfigTemplate` after a hash of its content, `kubernetes-<cluster>-<pool>-<hash>`, instead of the fixed `kubernetes-<cluster>-<pool>`, so the pool's `MachineDeployment` refers to a new template and Cluster API replaces the workers under the pool's rolling-update strategy: up to `maxReplicas` new machines at once, and at most one old machine unavailable at a time. No action is needed on the pools; plan the upgrade window for the workers of every tenant cluster to be replaced. Data on a worker's own system disk, such as local-path volumes, does not survive the replacement, as with any roll of the pool. The same roll brings each pool's machine configuration up to date where the old fixed-name template could not follow a later change, and gives a pool that holds `nvidia.com/*` GPUs the NVIDIA kernel modules that v1.7 declares in its machine configuration: a Talos system extension installs a module but does not load it.
 
 While the platform upgrade runs, do not edit `Kubernetes` resources: a change in that window renders the old chart, and its apply fails until the new chart arrives.
@@ -127,7 +129,11 @@ kubectl -n cozy-system get configmap cozystack-migration-56-unadopted -o yaml
 
 The ConfigMap exists only when at least one pool was skipped. Migration 56 does not run again, so such a pool has to be recreated or adopted by hand.
 
-The removed fields stay stored on upgraded `Kubernetes` resources and have no effect. Every write to a resource that still carries one returns a warning such as `spec.nodeGroups is ignored on the Kubernetes resource since Phase 2: worker pools are managed as separate KubernetesNodes resources`. Change a pool through its `KubernetesNodes` resource instead. `talos.registryMirrors` is new in v1.7 and only the `KubernetesNodes` chart reads it, so set it on each pool. The `Kubernetes` resource accepts the same key, but no template of the `kubernetes` chart reads it.
+The removed fields stay stored on upgraded `Kubernetes` resources and have no effect. Every write to a resource that still carries one returns a warning such as `spec.nodeGroups is ignored on the Kubernetes resource since Phase 2: worker pools are managed as separate KubernetesNodes resources`. Change a pool through its `KubernetesNodes` resource instead. The same holds for the Talos image, installer and registry mirrors of the workers; see [Worker images and registry mirrors](#worker-images-and-registry-mirrors).
+
+The `WorkloadsReady` condition of a `Kubernetes` resource now covers its control plane only. Each pool reports the readiness of its workers on its own `KubernetesNodes` resource, so a dashboard check or a `kubectl wait` on the cluster no longer waits for its workers: wait on the pools as well.
+
+To delete a tenant cluster, delete its `KubernetesNodes` resources first and the `Kubernetes` resource once they are gone. A pool has its own release, which keeps managing the pool's worker objects until the pool itself is deleted. On delete, a pool that migration 56 adopted removes the `helm.sh/resource-policy: keep` pin from its worker objects, so they go with it.
 
 Rolling the platform back to v1.6 after migration 56 is not automatic: the old chart cannot render worker objects that now belong to the per-pool releases.
 
@@ -147,6 +153,18 @@ spec:
   maxReplicas: 3
   instanceType: u1.medium
 ```
+
+### Worker images and registry mirrors
+
+Each `KubernetesNodes` pool sets where its workers get Talos from, in its own values:
+
+- `talos.imageFactoryURL`, `https://factory.talos.dev` by default, is the Image Factory that serves the worker OS disk image, which CDI imports over HTTP. Point it at a self-hosted Image Factory, a caching mirror or an internal HTTP file server. A pool's `osImage.factory.imageFactoryURL` takes precedence over its `talos.imageFactoryURL`, and a pool on `osImage.builtin` clones a golden image instead and uses neither.
+- `talos.installerRepository`, `factory.talos.dev/installer` by default, is the registry the in-guest upgrade takes the Talos installer image from, whatever `osImage` says. An air-gapped pool needs it pointed at a reachable registry as well.
+- `talos.registryMirrors`, empty by default, is passed to the Talos `machine.registries.mirrors` of the workers, so it covers every image pulled on a worker, those of pods inside the tenant cluster included. Talos still falls back to the upstream registry unless a host also sets `skipFallback: true`. Changing it rolls every worker of the pool.
+
+The `Kubernetes` resource does not read `talos.schematicID`, `talos.imageFactoryURL`, `talos.installerRepository` or `talos.registryMirrors`: the workers take them from their pool. Migration 56 copies the cluster's `talos` values into the pools it creates, so an existing pool keeps the image source and installer it had; a pool created after the upgrade takes the defaults above unless it sets its own. A `Kubernetes` resource that still carries these keys keeps working, and the keys are ignored.
+
+The platform `registries` value does not reach tenant workers. It rendered the `patch-containerd` Secret in `cozy-system`, which nothing has read since tenant workers moved to Talos in v1.6. Cozystack v1.7.1 removes both: the upgrade deletes the Secret, and a Platform Package that still sets `registries` keeps installing, with the key ignored. Set registry mirrors for tenant workers on each pool through `talos.registryMirrors`.
 
 ### FluxCD addon removed
 
@@ -170,6 +188,10 @@ kubectl get kuberneteses.apps.cozystack.io --all-namespaces --output json | jq -
 ```
 
 Remove every entry it lists, together with its value if the value sits in a separate entry. The exceptions are the two moved flags written as one unquoted `--flag=value` entry next to an empty field, which need no change. Between the Kamaji update and the upgrade of the tenant's `kubernetes` release, though, a tenant with an `--enable-admission-plugins=` entry runs its kube-apiserver with Kamaji's default admission plugins, which do not include NodeRestriction. On a test cluster this lasted about seven minutes.
+
+`controlPlane.apiServer.admissionControllers` accepts only the plugin names the KamajiControlPlane CRD lists, so a plugin outside that list that the kube-apiserver leaves off by default can no longer be enabled. A moved `--enable-admission-plugins` entry that names such a plugin is not refused when the chart renders: the KamajiControlPlane fails to apply, with an error that names the plugin.
+
+Kamaji now passes every `extraArgs` entry to the kube-apiserver as written, where it used to keep only the last entry of a repeated flag. The kube-apiserver refuses to start when the entries name kube feature gates both bare and `kube:`-prefixed, or when two `--emulated-version` entries both name kube. The chart refuses neither, whatever `spec.oidc.mode` is, so both reach the kube-apiserver. Keep one spelling for kube feature gates and one kube emulated version.
 
 Do not roll Kamaji back to an earlier build after the upgrade. The older build expects a number where the new one stores the hash, and from then on it never removes a flag you take out of `extraArgs`, on any tenant control plane, until the annotation `kube-apiserver.kamaji.clastix.io/args` is set back to a number by hand.
 
