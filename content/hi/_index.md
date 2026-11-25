@@ -120,7 +120,7 @@ features:
       यह वेब UI प्लेटफ़ॉर्म में तेज़ी से उतरने में मदद करता है और इसकी क्षमताओं का दृश्य प्रदर्शन करता है।
 ---
 
-{{< blocks/hero title="Cozystack: Kubernetes पर आधारित मुक्त क्लाउड प्लेटफ़ॉर्म" link_title="शुरुआत करें" link_url="/hi/docs/v1.4/getting-started/" >}}
+{{< blocks/hero title="Cozystack: Kubernetes पर आधारित मुक्त क्लाउड प्लेटफ़ॉर्म" link_title="शुरुआत करें" link_url="/docs/getting-started/" >}}
 अपना खुद का क्लाउड बनाने या किफ़ायती डेवलपमेंट एनवायरनमेंट उपलब्ध कराने के लिए Cozystack का उपयोग करें।
 {{< /blocks/hero >}}
 
