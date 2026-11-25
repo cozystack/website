@@ -195,29 +195,36 @@ backupStrategyController:
 
 #### Registries
 
-Container registry mirrors configuration. Allows routing image pulls through local mirrors.
+Use image overrides to run images under different repository names, tags or digests without rebuilding Cozystack packages. The table applies to container and init-container images in manifests rendered by platform, application and tenant addon HelmReleases.
 
 | Value | Default | Description |
 | --- | --- | --- |
-| `registries.mirrors` | `{}` | Map of registry hostnames to mirror endpoints. Each entry maps a registry (e.g., `docker.io`) to a list of mirror endpoints. |
-| `registries.config` | `{}` | Per-endpoint configuration, such as TLS settings. |
+| `registries.imageOverrides` | `[]` | List of image replacements matched by the original image name, without its tag or digest. An empty list removes the overrides. |
 
-Example:
+Each entry accepts these fields. All field values must be strings; quote tags to prevent YAML from interpreting them as numbers.
+
+| Field | Description |
+| --- | --- |
+| `name` | Required. Original image repository, including its registry when present, without a tag or digest. Each name may appear only once. |
+| `newName` | Replacement image repository, including its registry when needed. |
+| `newTag` | Replacement image tag. |
+| `digest` | Replacement image digest in the form `sha256:<64 lowercase hexadecimal characters>`. |
+
+An entry must set at least one of `newName`, `newTag` or `digest`. Setting only `newName` preserves the original tag and digest. Setting `newTag` replaces the tag and removes the original digest; setting only `digest` replaces the digest and removes the original tag. When both `newTag` and `digest` are set, the digest determines the image content.
+
+Example under `spec.components.platform.values`:
 
 ```yaml
 registries:
-  mirrors:
-    docker.io:
-      endpoints:
-        - http://10.0.0.1:8082
-    ghcr.io:
-      endpoints:
-        - http://10.0.0.1:8083
-  config:
-    "10.0.0.1:8082":
-      tls:
-        insecureSkipVerify: true
+  imageOverrides:
+    - name: quay.io/jetstack/cert-manager-controller
+      newName: registry.example.org/platform/cert-manager-controller
+      digest: sha256:f80b60d4523dcdecb225c3113bcbd0eedc45b4d2b46f87c0ccf4f14d09a4a35f
 ```
+
+The target registry must already contain the replacement image. Changing the table updates HelmReleases across the platform and triggers upgrades; releases rendered by another chart receive the change after their parent release upgrades.
+
+Overrides do not rewrite image references in command arguments, environment variables, custom resource fields or compressed manifests stored in ConfigMaps, and do not affect images selected by operators at runtime. An operator may run its overridden image while still starting workloads with upstream images, so this setting alone does not provide an air-gapped installation. Flux and `cozystack-operator`, deployed by the installer, are also outside this mechanism.
 
 #### Resources
 
