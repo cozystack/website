@@ -276,6 +276,12 @@ kubernetesWorkerImage:
       version: "<talos version>"
 ```
 
+#### Application defaults
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `applicationDefaults` | `{}` | Values every new application of a kind starts from, keyed by the plural of its ApplicationDefinition, for example `postgreses` or `kubernetesnodeses`. The API merges an entry into the spec of an application when it is created, under the values the user submitted, and saves the result with the application. Applications that already exist are not changed. See [Application defaults][application-defaults] for the merge rules and how to check an entry. |
+
 #### Internal fields
 
 These fields are managed automatically by the Cozystack operator and should not be modified manually.
@@ -290,6 +296,7 @@ These fields are managed automatically by the Cozystack operator and should not 
 | `migrations.image` | — | Container image used for running platform migrations. |
 | `migrations.targetVersion` | — | Target migration version number. |
 
+[application-defaults]: {{% ref "/docs/next/operations/configuration/application-defaults" %}}
 [enable-disable]: {{% ref "/docs/next/operations/configuration/components#enabling-and-disabling-components" %}}
 [overwrite-parameters]: {{% ref "/docs/next/operations/configuration/components#overwriting-component-parameters" %}}
 [Resource Management]: {{% ref "/docs/next/guides/resource-management#cpu-allocation-ratio" %}}
