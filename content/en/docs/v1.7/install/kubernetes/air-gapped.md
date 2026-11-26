@@ -74,14 +74,14 @@ machine:
           - http://10.0.0.1:8088
     config:
       "10.0.0.1:8082":
-        tls:
-          insecureSkipVerify: true
         auth:
           username: myuser
           password: mypass
 ```
 
 Of course, the values for `config.[0].auth.*` are given as examples, and you need to use real credentials.
+
+These mirrors are plain HTTP, so `config` has no `tls` block for them. Talos takes TLS settings only for an HTTPS endpoint: for a plain HTTP one it refuses them and fails to pull its own images, such as kubelet, through that mirror. For a mirror served over HTTPS with a certificate the nodes do not trust, set `tls.ca` or `tls.insecureSkipVerify` under its `host:port` in `config`.
 Make sure your local registry proxies mirror all required images for Talos and Kubernetes components.
 
 ## 3. Add CA Certificate
