@@ -2,16 +2,16 @@
   Served as /llms.txt. Only the English home page renders it: the llms output
   format is defined in hugo.yaml and enabled under languages.en.outputs there.
 
-  The versioned docs links follow params.latest_version_id, so promoting a new
-  release needs no edit here. The build fails if a linked page is missing from
-  the latest version, so a renamed page cannot leave a dead link behind.
+  Docs links use stable /docs/ URLs. Targets are resolved in
+  params.latest_version_id, and the build fails if a linked page is missing
+  from that version, so a renamed page cannot leave a dead link behind.
 */ -}}
 {{- $latest := site.Params.latest_version_id -}}
 {{- $docs := dict -}}
 {{- range $name, $path := dict "quickstart" "getting-started" "components" "guides/platform-stack" "architecture" "guides/concepts" -}}
   {{- $ref := printf "/docs/%s/%s" $latest $path -}}
   {{- with site.GetPage $ref -}}
-    {{- $docs = merge $docs (dict $name (printf "https://cozystack.io%s" .RelPermalink)) -}}
+    {{- $docs = merge $docs (dict $name (printf "https://cozystack.io%s" (replace .RelPermalink (printf "/docs/%s/" $latest) "/docs/" 1))) -}}
   {{- else -}}
     {{- errorf "llms.txt: %s does not exist; update the link in layouts/home.llms.txt" $ref -}}
   {{- end -}}
@@ -27,7 +27,7 @@ Cozystack is a free and open-source platform for building managed services and p
 - Kubernetes-based control plane for VMs, containers, databases, and storage
 - Multi-tenant isolation via the Tenant Custom Resource Definition (CRD)
 - Built on Talos Linux, Kubernetes, KubeVirt, Cilium, LINSTOR
-- Customer-facing portal (cozyportal) with white-label support
+- Self-service dashboard with white-label support
 - Service catalog: VMs, managed PostgreSQL, MySQL, Redis, Kafka, ClickHouse, S3-compatible object storage, GPU workloads
 - VictoriaMetrics + VictoriaLogs for observability
 - Designed for service providers, regulated enterprises, and sovereign cloud builders
@@ -76,7 +76,7 @@ See [CONTRIBUTING.md](https://github.com/cozystack/cozystack/blob/main/CONTRIBUT
 
 Cozystack is used in production for:
 
-- Public sovereign cloud products (e.g., Beeline Kazakhstan Hyper Cloud, launched 2025-12-08)
+- Public sovereign cloud products
 - Regulated enterprise multi-tenant clouds (financial services, public sector, telco)
 - Internal Developer Platforms with multi-tenant developer workflows
 - VMware migration / OpenStack modernization paths
