@@ -90,7 +90,7 @@ spec:
 - `reclaimPolicy: Retain` keeps an address `Released` after its claim is deleted. `Delete` returns it to the pool at once.
 - `releaseDelay` returns a `Released` address to `Available` after that long. Without it, a `Released` address stays until an admin deletes it or clears its `spec.claimRef`.
 
-The driver reports a refused pool (missing, auto-assigning, or named by another class) as a `PoolRefused` event on the class. A pool that sets `serviceAllocation` must admit `cozy-metallb-iad` and every namespace whose Services name claims of the class; the driver does not check this.
+The driver reports on every class it serves in the class's status: `status.loadBalancerClass` is the `spec.loadBalancerClass` a Service consuming a claim of the class must carry (empty in Cozystack, the cluster's default implementation), and the `Accepted` condition says whether the class can be served. A refused pool (missing, auto-assigning, or named by another class) sets `Accepted` to False with reason `PoolRefused`, and the same reason is reported as an event on the class. Consumers that create Services for a class, auto-claim included, wait for `Accepted`; `kubectl get ipaddressclass` shows it in a column. A pool that sets `serviceAllocation` must admit `cozy-metallb-iad` and every namespace whose Services name claims of the class; the driver does not check this.
 
 Classes are not scoped per tenant, in the same way that StorageClasses are not: any tenant that can create claims can claim from any class.
 
@@ -119,7 +119,7 @@ kubectl -n tenant-example get ipaddressclaim web -o jsonpath='{.status.addresses
 
 A claim is `Pending` until every requested family is bound, then `Bound`.
 
-To attach the address, a `LoadBalancer` Service in the same namespace names the claim with the annotation `local.sdn.cozystack.io/ip-address-claim: web`. Removing the annotation detaches the address again, and the claim keeps it reserved. Tenants do not create Services in their namespace directly. The path that works today is a tenant Kubernetes cluster: its cloud provider copies a guest `LoadBalancer` Service's annotations onto the Service it creates in the tenant namespace, so the annotation goes on the guest Service. Managed applications do not expose the annotation yet.
+To attach the address, a `LoadBalancer` Service in the same namespace names the claim with the annotation `local.sdn.cozystack.io/ip-address-claim: web`. Removing the annotation detaches the address again, and the claim keeps it reserved. Tenants do not create Services in their namespace directly. The path that works today is a tenant Kubernetes cluster: its cloud provider copies a guest `LoadBalancer` Service's annotations onto the Service it creates in the tenant namespace, so the annotation goes on the guest Service. A managed application's Services get a reserved address through an [`EndpointAttachment`]({{% ref "/docs/next/networking/endpoint-attachments" %}}) instead, which renders the annotated Service on the tenant's behalf.
 
 ### Auto-claim
 

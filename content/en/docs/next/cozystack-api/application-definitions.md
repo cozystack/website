@@ -34,6 +34,23 @@ When a user creates a `Postgres` CR through the dashboard, `kubectl`, or a Go
 client, the aggregated layer translates it into a Flux `HelmRelease` that uses
 the chart referenced by the definition.
 
+## Tenant-facing Services
+
+`spec.services` selects which of an application's Services are tenant-facing. When a Service of the application is created, the platform's lineage webhook labels it `internal.cozystack.io/tenantresource: "true"` if it matches an entry of `include` and no entry of `exclude`, and `"false"` otherwise. Each entry is a label selector (`matchLabels`, `matchExpressions`) optionally narrowed by `resourceNames`, whose names are Go templates over `{{ .name }}` (the application's name), `{{ .kind }}` (its kind, lowercased) and `{{ .namespace }}`. `spec.secrets` selects Secrets the same way.
+
+```yaml
+spec:
+  services:
+    exclude: []
+    include:
+      - resourceNames:
+          - postgres-{{ .name }}-r
+          - postgres-{{ .name }}-ro
+          - postgres-{{ .name }}-rw
+```
+
+The selection is also the list of Services tenants can give an external address of their own: an [`EndpointAttachment`]({{% ref "/docs/next/networking/endpoint-attachments" %}}) attaches only to a Service carrying the marker. Adding a Service to `include` therefore lets tenants publish it; a Service left out stays unattachable.
+
 ## Naming convention
 
 `ApplicationDefinition` uses two independent naming styles. Each definition
