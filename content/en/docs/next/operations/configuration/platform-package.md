@@ -193,32 +193,6 @@ backupStrategyController:
 | --- | --- | --- |
 | `branding` | `{}` | UI branding configuration object. See the [White Labeling]({{% ref "/docs/next/operations/configuration/white-labeling" %}}) guide for available fields and usage. Individual fields (e.g., `titleText`, `logoSvg`) have their own defaults when not specified. |
 
-#### Registries
-
-Container registry mirrors configuration. Allows routing image pulls through local mirrors.
-
-| Value | Default | Description |
-| --- | --- | --- |
-| `registries.mirrors` | `{}` | Map of registry hostnames to mirror endpoints. Each entry maps a registry (e.g., `docker.io`) to a list of mirror endpoints. |
-| `registries.config` | `{}` | Per-endpoint configuration, such as TLS settings. |
-
-Example:
-
-```yaml
-registries:
-  mirrors:
-    docker.io:
-      endpoints:
-        - http://10.0.0.1:8082
-    ghcr.io:
-      endpoints:
-        - http://10.0.0.1:8083
-  config:
-    "10.0.0.1:8082":
-      tls:
-        insecureSkipVerify: true
-```
-
 #### Resources
 
 | Value | Default | Description |
