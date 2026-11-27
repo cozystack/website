@@ -178,7 +178,7 @@ spec:
       -----END CERTIFICATE-----
     # installer image, resolved as <installerRepository>/<schematicID>:<version>
     installerRepository: registry.example.com/installer
-    # rendered into the worker's machine.registries.mirrors
+    # rendered as RegistryMirrorConfig documents in the worker machine config
     registryMirrors:
       docker.io:
         endpoints:
@@ -200,11 +200,12 @@ spec:
 - `talos.registryMirrors` takes the same `mirrors` map as [step 2](#2-configure-container-registry-mirrors).
   Use bare hosts as endpoints, as in step 2: Talos appends `/v2` to the endpoint path, so an endpoint like `https://registry.example.com/v2/docker.io` only works with `overridePath: true` added to that host.
   By default Talos falls back to the upstream registry when the mirror fails, so set `skipFallback: true` on every host to keep the workers off the public registries.
-  There is no field for `machine.registries.config`, so a mirror on this list cannot require credentials or a custom TLS configuration.
+  A mirror served over HTTPS with a certificate from an internal CA takes it from `talos.registryConfig`, keyed by the endpoint `host:port` as written in its URL: `tls.ca` is the PEM certificate the workers trust for it, and `tls.insecureSkipVerify: true` turns verification off. A plain HTTP endpoint takes no TLS settings, the render refuses them. Credentials are not supported, the worker machine config is readable in the tenant namespace.
+  Both fields are rendered as Talos configuration documents, which need Talos 1.12 or newer on the workers: the render refuses a pool on an older release that sets them.
 
-`machine.registries.mirrors` is the containerd configuration of the whole worker node.
+The mirrors are the registry configuration of the whole worker node.
 It covers the images Talos itself pulls, such as `kubelet`, and the images of pods running in the tenant cluster alike.
-Changing `talos.registryMirrors` on an existing pool rolls all of its workers.
+Changing `talos.registryMirrors` or `talos.registryConfig` on an existing pool rolls all of its workers.
 
 A pool that sets `osImage.builtin` clones its OS disk from the worker image catalog and ignores `talos.imageFactoryURL` and `talos.imageFactoryCA`.
 The catalog imports its images on its own, from `kubernetesWorkerImage.imageFactoryURL` in the
