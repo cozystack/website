@@ -1,0 +1,18 @@
+# The closing "Join the community" section appended to blog posts.
+#
+# Single source of truth: changing a link here changes it for every post
+# published from now on, instead of requiring edits across published posts.
+# Kept in data/ so templates can read it too if that ever becomes useful.
+
+heading: Join the community
+
+links:
+  - text: Cozystack on GitHub
+    url: https://github.com/cozystack/cozystack
+  - text: Telegram group
+    url: https://t.me/cozystack
+  - text: Slack group
+    url: https://kubernetes.slack.com/archives/C06L3CPRVN1
+    note: "(get an invite at [slack.kubernetes.io](https://slack.kubernetes.io))"
+  - text: Community Meeting Calendar
+    url: https://calendar.google.com/calendar?cid=ZTQzZDIxZTVjOWI0NWE5NWYyOGM1ZDY0OWMyY2IxZTFmNDMzZTJlNjUzYjU2ZGJiZGE3NGNhMzA2ZjBkMGY2OEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t
