@@ -107,6 +107,8 @@ kubectl describe plan my-vm-daily -n tenant-user
 
 Each scheduled run creates a BackupJob (and, on success, a Backup object) named after the Plan with a timestamp suffix.
 
+A Plan does not start a run while a BackupJob it created earlier has not finished. The run starts late if none is left unfinished within five minutes of the scheduled time, and is skipped otherwise; the Plan's `RunSkipped` condition then names the BackupJob it waits for. A BackupJob that does not finish holds the schedule until you delete it.
+
 ## Back up a VMDisk
 
 You can back up a VMDisk independently — for example, to capture a specific disk without the VM configuration.
