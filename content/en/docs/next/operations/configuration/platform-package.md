@@ -246,6 +246,23 @@ kubevirt:
 
 `bandwidthPerMigration` is a quantity in bytes per second: `625M` is 625,000,000 bytes/s (5 Gbit/s) per migration. This example allows up to two migrations across the cluster and one outbound migration per node.
 
+#### Worker class default (unreleased)
+
+The accepted WorkerClass contract introduces a platform-selected default class for new standalone KubernetesNodes application API creates, initially `talos`. Admission persists that selection at CREATE; changing the platform default must not retarget existing pools. Classless legacy updates stay classless, while an omitted or empty class on a classified update preserves the stored class.
+
+The platform value `spec.components.platform.values.kubernetesWorkerClasses.defaultWorkerClass` selects this default and initially contains `talos`. It affects new standalone application API creates only; it does not rewrite the class or legacy path of existing pools.
+
+```yaml
+spec:
+  components:
+    platform:
+      values:
+        kubernetesWorkerClasses:
+          defaultWorkerClass: talos
+```
+
+The managed-Kubernetes worker package owns this admission and its class machinery; it is not a generic application schema default. The package and the selected class must be available before relying on defaulting. Direct HelmRelease producers, including ComputePlane, do not pass through that API mutation. See [worker classes and Kairos pools]({{% ref "/docs/next/kubernetes/worker-classes" %}}) for the unreleased interface, image boundaries and rollback prerequisites.
+
 #### Kubernetes worker images
 
 | Value | Default | Description |
