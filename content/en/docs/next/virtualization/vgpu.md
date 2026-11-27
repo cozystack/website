@@ -1,7 +1,7 @@
 ---
 title: "NVIDIA vGPU for Virtual Machines"
 linkTitle: "vGPU"
-description: "Slice one physical NVIDIA GPU across several virtual machines with the vgpu variant of the GPU Operator package, including SR-IOV profile assignment and DLS licensing."
+description: "Slice one physical NVIDIA GPU across several virtual machines with the vgpu variant of the GPU Operator package, including SR-IOV profile assignment and NVIDIA License System configuration."
 weight: 45
 ---
 
@@ -24,7 +24,7 @@ This guide focuses on the **SR-IOV path**, which is the only model NVIDIA suppor
 - Ubuntu 24.04 host OS. Older Ubuntu releases also work if the upstream `gpu-driver-container` repository has a matching `vgpu-manager/` Dockerfile. **Talos Linux is not recommended** for vGPU: NVIDIA does not publicly distribute the vGPU guest driver — it requires NVIDIA Enterprise Portal access — and Sidero [closed siderolabs/extensions#461](https://github.com/siderolabs/extensions/issues/461) noting that they cannot support vGPU "unless NVIDIA changes their licensing terms or provides us a way to obtain, test, and distribute the software". Building a Talos system extension that includes the driver in-tree is therefore not feasible without a private fork that violates the EULA.
 - KubeVirt v1.9.0 or newer, which is the release the platform bundles. [kubevirt/kubevirt#16890](https://github.com/kubevirt/kubevirt/pull/16890) ("vGPU: SRIOV support") shipped in v1.9.0; v1.8.x and older do not include it and backports are not planned.
 - An NVIDIA vGPU Software or NVIDIA AI Enterprise subscription (the `.run` is not redistributable).
-- A reachable NVIDIA Delegated License Service (DLS) instance and a matching `client_configuration_token.tok` file.
+- Reachable NVIDIA Cloud License Service (CLS) or Delegated License Service (DLS) endpoints and a matching client configuration token.
 
 ## Variants
 
@@ -169,47 +169,15 @@ On L40S and other Ada Lovelace cards the SR-IOV VFs report the same PCI device I
 kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{": "}{.status.allocatable.nvidia\.com/L40S-24Q}{"\n"}{end}'
 ```
 
-## Licensing (DLS)
+## Licensing (CLS or DLS) {#licensing-dls}
 
-vGPU 17/20 uses the NVIDIA Delegated License Service. The legacy `ServerAddress=` and `ServerPort=7070` lines in `gridd.conf` are no longer authoritative — `nvidia-gridd`, running **inside the guest**, reads the DLS endpoint from the ClientConfigToken file directly.
+NVIDIA License System supports CLS or DLS. The licensing client running inside the guest reads its server endpoints from the client configuration token.
 
 The host vGPU Manager DaemonSet does not request a license — it only enables SR-IOV and loads `nvidia.ko`. Licensing is consumed entirely by the guest. The gpu-operator chart's `driver.licensingConfig.secretName` would mount the Secret into the **driver pod on the host**, where it has no effect for SR-IOV vGPU; do not wire the licensing Secret through it.
 
-Instead, deliver the token and `gridd.conf` to the guest via cloud-init or a containerDisk overlay:
+For platform-licensed GPU classes, use the [guest licensing reference]({{% ref "/docs/next/virtualization/vgpu-licensing" %}}). The platform delivers `client_configuration_token.tok` and `gridd.conf` on a disk labelled `GPULICENSE`. The Linux reference prepares a token-only memory-backed directory before the licensing client; the Windows reference has persistent-token and startup-order limitations described in that guide. Rotation requires a new VMI, not an OS reboot inside the same VMI.
 
-```yaml
-# inside the VirtualMachine cloudInitNoCloud userData
-write_files:
-- path: /etc/nvidia/ClientConfigToken/client_configuration_token.tok
-  # 0744 follows NVIDIA's recommendation in the Virtual GPU Software
-  # Licensing User Guide ("Configuring a Licensed Client on Linux"):
-  # nvidia-gridd does not necessarily run as the file owner.
-  # https://docs.nvidia.com/vgpu/latest/grid-licensing-user-guide/
-  permissions: '0744'
-  encoding: b64
-  content: <base64 token>
-- path: /etc/nvidia/gridd.conf
-  permissions: '0644'
-  content: |
-    # FeatureType selects which vGPU Software license the guest requests.
-    # 0 — unlicensed state (no license requested; Q profiles run in
-    #     reduced mode after the grace period).
-    # 1 — NVIDIA vGPU. The driver auto-selects the correct license
-    #     type from the configured vGPU profile (Q → vWS, B → vPC,
-    #     A → vCS / Compute). Use this for SR-IOV vGPU profiles.
-    # 2 — explicitly NVIDIA RTX Virtual Workstation.
-    # 4 — explicitly NVIDIA Virtual Compute Server.
-    FeatureType=1
-```
-
-Verify activation inside the guest:
-
-```bash
-nvidia-smi -q | grep 'License Status'
-# License Status   : Licensed
-```
-
-If the guest reports `Unlicensed (Unrestricted)` for more than a couple of minutes, check `journalctl _COMM=nvidia-gridd` for handshake errors against the DLS endpoint baked into the token.
+Do not put platform tokens in cloud-init, containerDisk overlays or shared images. A BYOL class has no platform `license`; its tenant configures licensing separately, in an image that does not run the platform reference unit or startup task.
 
 ### Migrating from chart v25.x
 

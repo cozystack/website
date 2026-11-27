@@ -1,0 +1,4 @@
+bafc04a10e86adec242703e4265488f69d277041d96badd6eae4e4cfc2eb7b33  linux/cozystack-vgpu-license.service
+b54395362154c403104cb6f040df4e09e082d8e82a739b81f0a6d73ca9fb4b72  linux/cozystack-vgpu-license.sh
+ad155a6acb51665394a796eb445c4521cfa91529b6a1afa4b20969ef1727f1df  linux/nvidia-gridd.service.d/cozystack-vgpu-license.conf
+ba2f1185db5668a461dd49ff5ae896aeb2b5576ff5d4ea73702919ca98590215  windows/Set-CozystackVgpuLicense.ps1

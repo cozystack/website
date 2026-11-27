@@ -227,6 +227,15 @@ registries:
 | `resources.memoryAllocationRatio` | `1` | Memory allocation ratio: `1/memoryAllocationRatio` memory requested per unit of configured memory. |
 | `resources.ephemeralStorageAllocationRatio` | `40` | Ephemeral storage allocation ratio: `1/ephemeralStorageAllocationRatio` ephemeral storage requested per unit of configured storage. |
 
+#### GPU
+
+| Value | Default | Description |
+| --- | --- | --- |
+| `gpu.vgpu` | `false` | Grants the root tenant vGPU entitlement. Child tenants also need their own Tenant `gpu.vgpu` and an entitled parent at every level. This is separate from GPU quota. |
+| `gpu.resourceNames` | `[]` | Additional GPU extended resource names requested only by pods, such as `nvidia.com/gpu`, beyond names discovered from GPUClass objects and KubeVirt's NVIDIA/mediated permitted-device entries. Used to recognize GPU requests and prevent a VM using class entries from also supplying its own raw GPU requests. It neither advertises devices nor grants entitlement. |
+
+These keys belong to the unreleased GPU class configuration. For licensed classes and guest image preparation, see [vGPU guest licensing]({{% ref "/docs/next/virtualization/vgpu-licensing" %}}). Keep the hoster's GPUClass catalog and the device plugin's actual resource names aligned; the extra resource-name list does not create catalog entries.
+
 #### KubeVirt
 
 | Value | Default | Description |
