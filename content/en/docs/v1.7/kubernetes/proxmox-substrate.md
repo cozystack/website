@@ -324,6 +324,8 @@ MachineHealthCheck.
 | CSI node plugin `CrashLoopBackOff`, `Failed to get region or zone` | CCM has not labelled the node yet | wait for the CCM |
 | VM reboots every ~70 min, never joins | template built from the bare-metal `nocloud` image | rebuild with `hack/proxmox-talos-template.sh` |
 | `TalosConfigTemplate.Spec is immutable` | apiserver address changed on an existing cluster | delete the template; the reconcile Job recreates it |
+| capmox manager `OOMKilled` while it provisions a worker | capmox reads the bootstrap Secret through its cache, which keeps every Secret of the management cluster in memory (every Helm release revision is a Secret); the provider's limit is 256Mi | raise `spec.deployment.containers[manager].resources.limits.memory` of `InfrastructureProvider/proxmox`, for example to 512Mi; the package does not expose it yet, so a platform upgrade resets it. Provisioning resumes after each restart |
+| `cannot reserve <N>B of memory on node <node>: 0B available memory left` | capmox subtracts the configured memory of **every** non-template VM on the node, stopped ones included | move or shrink stopped VMs on the nodes in `allowedNodes`, or overcommit with `spec.schedulerHints.memoryAdjustment` (percent, default 100) on the `ProxmoxCluster`; the chart does not render it, set it on the object (a Helm upgrade keeps it). capmox v0.7.7 does not retry the failed clone: delete the `Machine`, or let MachineHealthCheck replace it |
 | capmox stuck at `Waiting for Cluster Controller to set OwnerRef` | `cluster.x-k8s.io/managed-by` annotation on the `ProxmoxCluster` | not expected from the chart; report it |
 
 ## See also
