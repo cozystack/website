@@ -17,6 +17,8 @@ By default, to provision a GPU Passthrough, the GPU Operator will deploy the fol
 - **Sandbox Device Plugin** to discover and advertise the passthrough GPUs to kubelet.
 - **Sandbox Validator** to validate the other operands.
 
+For the unreleased class-based application interface, see [GPU class catalog]({{% ref "/docs/next/operations/configuration/gpu-classes" %}}). It separates the hoster's offers from tenant requests; the host setup below is still required.
+
 ## Prerequisites
 
 - A Cozystack cluster with at least one GPU-enabled node.
