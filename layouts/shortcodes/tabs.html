@@ -2,7 +2,11 @@
 {{- $tab_set_id := .Get "name" | default (printf "tabset-%s-%d" (.Page.RelPermalink) (.Page.Scratch.Get "tabset-counter") ) | anchorize -}}
 {{- $tabs := .Scratch.Get "tabs" -}}
 {{- if .Inner -}}{{- /* We don't use the inner content, but Hugo will complain if we don't reference it. */ -}}{{- end -}}
-<ul class="nav nav-tabs" id="{{ $tab_set_id }}" role="tablist">
+{{- /* `sync` opts a tab set into page-wide switching: every set sharing
+       the group switches together when one of them is clicked, and the
+       choice is remembered. Tab sets without it behave exactly as before. */ -}}
+{{- $sync := .Get "sync" -}}
+<ul class="nav nav-tabs" id="{{ $tab_set_id }}" role="tablist"{{ with $sync }} data-tab-sync="{{ . }}"{{ end }}>
 	{{- range $i, $e := $tabs -}}
 	  {{- $id := printf "%s-%d" $tab_set_id $i -}}
 	  {{- if (eq $i 0) -}}
