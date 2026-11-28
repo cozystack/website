@@ -116,11 +116,24 @@ kubectl annotate -n tenant-root hr/tenant-root reconcile.fluxcd.io/forceAt=$(dat
 
 You can now access Keycloak at `https://keycloak.example.org` (replace `example.org` with your infrastructure domain).
 
-To get the Keycloak credentials for default user `admin`, run the following command:
+To get the password of the bootstrap user `admin`, run the following command:
 
 ```bash
 kubectl get secret -o yaml -n cozy-keycloak keycloak-credentials -o go-template='{{ printf "%s\n" (index .data "password" | base64decode) }}'
 ```
+
+Keycloak creates `admin` on its first start and treats it as temporary. Use it once, to create a permanent admin for yourself in realm `master`:
+
+1. Sign in to the admin console as `admin`.
+2. In realm `master`, create a user for yourself and assign it the realm role `admin`.
+3. Set a password for the user, and add the required user action **Configure OTP**, so that it signs in with an authenticator app as well.
+4. Sign out, then sign in as the new user and set up the authenticator app.
+
+Nothing in Cozystack signs in as `admin`. The keycloak-operator and the configuration Jobs sign in to realm `master` as the confidential client `cozystack-operator`, whose credentials are in the Secret `keycloak-operator-client` in the namespace `cozy-keycloak`. A Job of the Keycloak package creates the client and checks it after every install and upgrade, and it needs `admin` only while the client is missing or broken. Once your own admin works, you may disable or delete `admin`. Keycloak reads the Secret `keycloak-credentials` only on the start that creates realm `master`, so it does not bring `admin` back.
+
+Keep the client `cozystack-operator`, its service account roles, its scope and client scopes, and the Secret `keycloak-operator-client` as they are. If the Secret is lost after `admin` is gone, copy the client secret shown under **Clients**, `cozystack-operator`, **Credentials** into the `password` key of the Secret.
+
+Then, signed in as your own admin:
 
 1. Switch realm to `cozy`.
 2. Create a user in the realm `cozy`.

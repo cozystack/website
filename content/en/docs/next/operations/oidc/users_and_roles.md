@@ -19,10 +19,8 @@ To create a user, refer to the following documentation:
 ## Assigning a Role to a User for a Tenant
 
 1. **Access Keycloak**:
-   To retrieve login credentials, check the secret by running the following command:
-   ```bash
-   kubectl get secret keycloak-credentials -n cozy-keycloak -o yaml
-   ```
+   Sign in as your own admin in realm `master`. The Secret `keycloak-credentials` in the namespace `cozy-keycloak` holds the bootstrap user `admin`, which is meant only for creating that admin, as described in [Enable OIDC Server]({{% ref "/docs/next/operations/oidc/enable_oidc" %}}).
+
    **Keycloak Address**:
    The Keycloak address will match the `publishing.host` value specified in your Platform Package. For example, if your Package includes:
 
