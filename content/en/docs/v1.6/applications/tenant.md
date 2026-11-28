@@ -84,6 +84,10 @@ tenant-u1
     └── postgres-db1
 ```
 
+### Network isolation
+
+Tenant network isolation is enforced with Cilium network policies. On the `isp-hosted` and `isp-hosted-slim` platform variants the CNI belongs to the host, so these policies are created only if the host serves the Cilium policy API when the tenant is installed or updated. On a host without Cilium, tenants get no network isolation from Cozystack, and isolating them is up to the host. If Cilium appears on the host later, the policies are created on the tenant's next chart or values change, not automatically.
+
 ## Parameters
 
 ### Common parameters
@@ -111,6 +115,7 @@ The `resourceQuotas` parameter allows you to limit resources available to the te
 - `memory` - Total memory (e.g., `"4Gi"` or `"512Mi"`)
 - `ephemeral-storage` - Ephemeral storage limit (e.g., `"10Gi"`)
 - `storage` - Total persistent storage (e.g., `"100Gi"`)
+- `hugepages-2Mi`, `hugepages-1Gi` - Total huge pages of that size (e.g., `"4Gi"`), converted to `requests.hugepages-<size>` only, as Kubernetes has no limits quota for huge pages
 
 **Object count quotas** (passed as-is):
 - `pods` - Maximum number of pods
